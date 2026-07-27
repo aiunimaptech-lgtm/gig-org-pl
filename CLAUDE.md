@@ -33,6 +33,21 @@ Skrypty są **idempotentne** — można powtórzyć (np. po aktualizacji treści
 - Katalog `skrypty/` i `backend/` NIE są deployowane (Root Directory na Vercel = `strona/`).
 - Canonical i domena: **gig.org.pl bez www** (www → 301 na apex w `vercel.json`).
 
+## Zależność od Supabase (ważne przy diagnozie awarii)
+Jeden projekt Supabase (`zlepwzeyjwpmhyxfnime`) obsługuje: katalog **Członkowie**, kalendarz
+**Szkoleń**, formularze + newsletter oraz panel `/admin/`. Gdy projekt zostanie **uśpiony**
+(darmowy plan usypia po ~7 dniach bezczynności), jego host **przestaje się rozwiązywać w DNS
+(NXDOMAIN)** — w przeglądarce widać `Failed to fetch`, a nie błąd HTTP. Szybki test:
+`nslookup zlepwzeyjwpmhyxfnime.supabase.co` → „Non-existent domain" = projekt uśpiony/skasowany.
+Naprawa: Supabase Dashboard → *Restore project* (dane po uśpieniu są zachowane).
+
+- **Katalog Członkowie ma zabezpieczenie offline**: gdy baza nie odpowiada, `/czlonkowie/`
+  renderuje statyczną kopię `strona/_assets/js/czlonkowie-fallback.js` (65 firm) — strona działa
+  mimo awarii. Kopia to *snapshot*, więc po zmianach członków w panelu odśwież ją i zacommituj:
+  `node skrypty/gen_czlonkowie_fallback.js --from-supabase`
+  (bez flagi generuje z `skrypty/_czlonkowie.json`). Pola www/social/opis/współrzędne/NIP
+  dokłada `czlonkowie-enrich.js`, więc fallback trzyma tylko dane podstawowe.
+
 ## Znane do dokończenia
 - **Duże biuletyny PDF (>25 MB)** — pominięte przy mirrorze, linki zostały absolutne (`gig.org.pl/biuletyn/...`).
   Po migracji domeny trzeba je dograć ręcznie do `strona/biuletyn/` albo wrzucić do Supabase Storage.
