@@ -23,3 +23,6 @@ node_modules/
 
 # Źródłowe zdjęcia (oryginały — nie publikujemy; w deployu są wersje z _assets/img)
 _zdjecia-zrodlowe/
+
+# Brudnopisy w skryptach (eksperymenty, nie część pipeline'u)
+skrypty/_test_*.py
