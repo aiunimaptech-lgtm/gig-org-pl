@@ -1,5 +1,8 @@
 {
   "trailingSlash": true,
+  "rewrites": [
+    { "source": "/wpis/:slug+", "destination": "/wpis/index.html" }
+  ],
   "redirects": [
     {
       "source": "/(.*)",

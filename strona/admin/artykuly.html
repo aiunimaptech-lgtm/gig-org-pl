@@ -85,7 +85,8 @@
               <option value="archived">Zarchiwizowany</option>
             </select></div>
         </div>
-        <div class="form-group"><label>Zajawka (excerpt)</label><textarea id="aExcerpt" class="form-control" rows="2"></textarea></div>
+        <div class="form-group"><label>Zajawka <span style="font-weight:400;color:#7a8794">— krótki opis widoczny na liście wpisów. Zostaw puste, a powstanie z pierwszych zdań treści.</span></label><textarea id="aExcerpt" class="form-control" rows="2"></textarea></div>
+        <div class="form-group"><label>Zdjęcie główne <span style="font-weight:400;color:#7a8794">— adres obrazka, np. /wp-content/uploads/2026/06/zdjecie.jpg. Puste = logo Izby.</span></label><input id="aImage" class="form-control" type="text" placeholder="/wp-content/uploads/…"></div>
         <div class="form-group"><label>Treść</label><div id="editor" style="background:#fff;"></div></div>
       </div>
       <div class="modal-footer">
@@ -138,6 +139,7 @@
       document.getElementById('aCategory').value = a ? (a.category||'aktualnosci') : 'aktualnosci';
       document.getElementById('aStatus').value = a ? (a.status||'draft') : 'draft';
       document.getElementById('aExcerpt').value = a ? (a.excerpt||'') : '';
+      document.getElementById('aImage').value = a ? (a.image_url||'') : '';
       quill.root.innerHTML = a ? (a.content||'') : '';
       openModal('editModal');
     }
@@ -153,6 +155,7 @@
         category: document.getElementById('aCategory').value,
         status,
         excerpt: document.getElementById('aExcerpt').value.trim(),
+        image_url: document.getElementById('aImage').value.trim() || null,
         content: quill.root.innerHTML,
         updated_at: new Date().toISOString(),
       };
