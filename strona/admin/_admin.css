@@ -596,3 +596,18 @@ select.form-control { cursor: pointer; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
 }
+
+/* ── Pole „przeciągnij zdjęcie" (gigPodepnijUpload) ── */
+.gig-up{position:relative;border:2px dashed #cfd8e0;border-radius:12px;background:#fafbfc;
+  padding:18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s;outline:none;}
+.gig-up:hover,.gig-up:focus-visible{border-color:#cc0a2b;background:#fff;}
+.gig-up.is-over{border-color:#cc0a2b;background:#fff5f6;}
+.gig-up.is-busy{pointer-events:none;opacity:.75;}
+.gig-up-pusty strong{display:block;font-size:15px;color:#16202a;margin-bottom:4px;}
+.gig-up-pusty span{display:block;font-size:13px;color:#7a8794;line-height:1.5;}
+.gig-up-podglad img{max-width:100%;max-height:220px;border-radius:9px;display:block;margin:0 auto 12px;}
+.gig-up-usun{background:#fff;border:1px solid #e0e6ea;color:#b3001e;font-weight:600;font-size:13px;
+  padding:7px 14px;border-radius:8px;cursor:pointer;}
+.gig-up-usun:hover{background:#fff5f6;border-color:#cc0a2b;}
+.gig-up-praca{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(255,255,255,.9);border-radius:12px;font-weight:600;color:#16202a;}

@@ -86,7 +86,7 @@
             </select></div>
         </div>
         <div class="form-group"><label>Zajawka <span style="font-weight:400;color:#7a8794">— krótki opis widoczny na liście wpisów. Zostaw puste, a powstanie z pierwszych zdań treści.</span></label><textarea id="aExcerpt" class="form-control" rows="2"></textarea></div>
-        <div class="form-group"><label>Zdjęcie główne <span style="font-weight:400;color:#7a8794">— adres obrazka, np. /wp-content/uploads/2026/06/zdjecie.jpg. Puste = logo Izby.</span></label><input id="aImage" class="form-control" type="text" placeholder="/wp-content/uploads/…"></div>
+        <div class="form-group"><label>Zdjęcie główne <span style="font-weight:400;color:#7a8794">— pokazuje się na liście wpisów i u góry artykułu. Nieobowiązkowe; bez niego użyjemy logo Izby.</span></label><div id="aImageBox"></div><input id="aImage" type="hidden"></div>
         <div class="form-group"><label>Treść</label><div id="editor" style="background:#fff;"></div></div>
       </div>
       <div class="modal-footer">
@@ -140,6 +140,8 @@
       document.getElementById('aStatus').value = a ? (a.status||'draft') : 'draft';
       document.getElementById('aExcerpt').value = a ? (a.excerpt||'') : '';
       document.getElementById('aImage').value = a ? (a.image_url||'') : '';
+      const box = document.getElementById('aImageBox');
+      if (box && box.gigPokaz) box.gigPokaz(a ? (a.image_url||'') : '');
       quill.root.innerHTML = a ? (a.content||'') : '';
       openModal('editModal');
     }
@@ -190,6 +192,7 @@
       if (!await requireAuth()) return;
       quill = new Quill('#editor', { theme: 'snow',
         modules: { toolbar: [['bold','italic','underline'],[{header:[2,3,false]}],['link','blockquote'],[{list:'ordered'},{list:'bullet'}],['clean']] } });
+      gigPodepnijUpload({ host: 'aImageBox', hidden: 'aImage', folder: 'artykuly' });
       document.getElementById('newBtn').addEventListener('click', () => openEditor(null));
       document.getElementById('saveBtn').addEventListener('click', save);
       document.getElementById('search').addEventListener('input', e => render(e.target.value));
