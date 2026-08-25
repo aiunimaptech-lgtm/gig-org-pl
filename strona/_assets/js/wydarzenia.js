@@ -38,6 +38,22 @@ window.GIG_WYDARZENIA = [
     link: ""
   },
   {
+    date: "2026-10-15",
+    dateLabel: "15–16 października 2026",
+    title: "29. Konferencja Naukowo-Techniczna SEKOCENBUD — pod patronatem GIG",
+    place: "Ciechocinek, Hotel Austeria Conference & SPA",
+    teaser: "Geodezyjna Izba Gospodarcza objęła patronatem 29. Konferencję Naukowo-Techniczną „Aktywne zarządzanie kosztami. Koszty pod kontrolą z perspektywy inwestora i wykonawcy”. Zapraszamy członków Izby do udziału.",
+    agendaTitle: "W imieniu Izby wystąpi:",
+    agenda: [
+      "Dariusz Tomaszewski, Wiceprezes GIG — referat „Węzeł Jakości Geodezji: jak wiarygodność danych geodezyjnych ogranicza ryzyko i koszty realizacji inwestycji budowlanych”"
+    ],
+    note: "Organizator: SEKOCENBUD Sp. z o.o.",
+    links: [
+      { label: "Szczegóły patronatu", url: "/patronat-gig-29-konferencja-sekocenbud/" },
+      { label: "Program i zapisy", url: "https://sekocenbud.pl/konferencja/" }
+    ]
+  },
+  {
     date: "2027-06-01",
     dateLabel: "Czerwiec 2027",
     title: "Walne Zebranie Członków GIG",

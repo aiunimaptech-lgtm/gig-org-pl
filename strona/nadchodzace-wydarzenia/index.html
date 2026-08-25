@@ -47,6 +47,7 @@
     .ev-card .ev-agenda{margin:0 0 12px;padding-left:0;list-style:none;}
     .ev-card .ev-agenda li{position:relative;padding-left:22px;margin:0 0 6px;font-size:15px;color:var(--ink);line-height:1.45;}
     .ev-card .ev-agenda li::before{content:"";position:absolute;left:6px;top:9px;width:6px;height:6px;border-radius:50%;background:var(--red);}
+    .ev-card .more+.more{margin-left:14px;}
     .ev-card .ev-note{font-size:14px;color:var(--muted);font-style:italic;margin:0 0 10px;}
     .ev-card .more{color:var(--red);font-weight:700;font-size:14px;}
     .ev-card .more:hover{text-decoration:underline;}
@@ -116,7 +117,16 @@
           +'<ul class="ev-agenda">'+e.agenda.map(function(t){return '<li>'+esc(t)+'</li>';}).join('')+'</ul>';
       }
       var note=e.note?'<p class="ev-note">'+esc(e.note)+'</p>':'';
-      var more=(e.link&&String(e.link).trim())?'<a class="more" href="'+esc(e.link)+'">Szczegóły →</a>':'';
+      /* Odnosniki: nowe pole `links` (tablica {label,url}) albo stare `link` (jeden adres). */
+      var lista=[];
+      if(Array.isArray(e.links)) lista=e.links.slice();
+      else if(e.link&&String(e.link).trim()) lista=[{label:'Szczegóły',url:e.link}];
+      var more=lista.filter(function(l){return l&&l.url;}).map(function(l){
+        var zewn=/^https?:\/\//i.test(l.url);
+        return '<a class="more" href="'+esc(l.url)+'"'
+          +(zewn?' target="_blank" rel="noopener"':'')+'>'
+          +esc(l.label||'Szczegóły')+' '+(zewn?'↗':'→')+'</a>';
+      }).join('');
       var label=e.dateLabel?esc(e.dateLabel):esc(e.date);
       return '<article class="ev-card">'
         +'<div class="badge"><span class="d">'+label+'</span></div>'
