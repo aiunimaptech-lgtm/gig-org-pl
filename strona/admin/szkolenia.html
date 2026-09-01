@@ -83,6 +83,7 @@
           <input type="checkbox" id="sOnline" style="width:auto;"> Szkolenie online (zamiast miejsca)
         </label>
         <div class="form-group"><label>Godziny <span style="font-weight:400;color:#7a8794">— np. 09:00–14:00</span></label><input type="text" id="sTime" class="form-control" placeholder="09:00–14:00"></div>
+        <div class="form-group"><label>Termin opisowy <span style="font-weight:400;color:#7a8794">— wpisz tylko, gdy nie znasz dokładnej daty, np. „Październik 2026 — termin wkrótce”. Zastąpi datę na kafelku; pole Data od służy wtedy do ustawienia kolejności.</span></label><input type="text" id="sDateLabel" class="form-control" placeholder="Październik 2026 — termin wkrótce"></div>
         <div class="form-group"><label>Opis <span style="font-weight:400;color:#7a8794">— dla kogo szkolenie, co uczestnik zyska. Pusta linia rozdziela akapity.</span></label><textarea id="sDesc" class="form-control" rows="5" placeholder="Krótki opis szkolenia…"></textarea></div>
         <div class="form-group"><label>Program <span style="font-weight:400;color:#7a8794">— jeden punkt w linii, wyświetli się jako lista</span></label><textarea id="sAgenda" class="form-control" rows="6" placeholder="Analiza materiałów źródłowych&#10;Ustalanie przebiegu granic&#10;Część warsztatowa"></textarea></div>
         <div class="grid-2">
@@ -133,7 +134,7 @@
       const s=id?data.find(x=>x.id===id):null;
       modalTitle.textContent=s?'Edytuj szkolenie':'Nowe szkolenie';
       sId.value=s?s.id:''; sTitle.value=s?s.title||'':''; sStart.value=s?s.date_start||'':''; sEnd.value=s?s.date_end||'':'';
-      sLocation.value=s?s.location||'':''; sStatus.value=s?s.status||'published':'published'; sOnline.checked=s?!!s.is_online:false; sDesc.value=s?s.description||'':''; sTime.value = s ? (s.time_range || '') : ''; sAgenda.value = s ? (s.agenda || '') : ''; sPrice.value = s ? (s.price || '') : ''; sPriceM.value = s ? (s.price_member || '') : ''; sLect.value = s ? (s.lecturer || '') : ''; sLectBio.value = s ? (s.lecturer_bio || '') : ''; sLectUrl.value = s ? (s.lecturer_url || '') : '';
+      sLocation.value=s?s.location||'':''; sStatus.value=s?s.status||'published':'published'; sOnline.checked=s?!!s.is_online:false; sDesc.value=s?s.description||'':''; sTime.value = s ? (s.time_range || '') : ''; sDateLabel.value = s ? (s.date_label || '') : ''; sAgenda.value = s ? (s.agenda || '') : ''; sPrice.value = s ? (s.price || '') : ''; sPriceM.value = s ? (s.price_member || '') : ''; sLect.value = s ? (s.lecturer || '') : ''; sLectBio.value = s ? (s.lecturer_bio || '') : ''; sLectUrl.value = s ? (s.lecturer_url || '') : '';
       openModal('editModal');
     }
     async function save(){
@@ -143,7 +144,7 @@
       const rec={ title, date_start:sStart.value||null, date_end:sEnd.value||null,
         location:sOnline.checked?null:(sLocation.value.trim()||null), is_online:sOnline.checked,
         description:sDesc.value.trim(), status:sStatus.value,
-        time_range:pusteNaNull(sTime.value), agenda:pusteNaNull(sAgenda.value),
+        time_range:pusteNaNull(sTime.value), date_label:pusteNaNull(sDateLabel.value), agenda:pusteNaNull(sAgenda.value),
         price:pusteNaNull(sPrice.value), price_member:pusteNaNull(sPriceM.value),
         lecturer:pusteNaNull(sLect.value), lecturer_bio:pusteNaNull(sLectBio.value),
         lecturer_url:pusteNaNull(sLectUrl.value),

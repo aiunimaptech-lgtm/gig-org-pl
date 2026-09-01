@@ -30,12 +30,26 @@ window.GIG_WYDARZENIA = [
     link: ""
   },
   {
-    date: "2026-09-01",
-    dateLabel: "Wrzesień 2026",
-    title: "Szkolenie online: zmiany w ustawie Prawo geodezyjne i kartograficzne",
+    date: "2026-10-08",
+    dateLabel: "8 października 2026",
+    title: "Szkolenie online: procedury geodezyjno-prawne określania granic gruntów",
+    place: "Online, godz. 09:00–14:00",
+    teaser: "Warsztaty dla geodetów i pracowników administracji geodezyjnej — od analizy materiałów źródłowych, przez ustalanie przebiegu granic działek, po dokumentację i sytuacje sporne. Część wykładowa i część warsztatowa oparta na pytaniach uczestników.",
+    note: "Prowadzi dr hab. inż. Paweł Hanus, prof. AGH \u00b7 400 zł, dla członków GIG 250 zł",
+    links: [
+      { label: "Program i zapisy", url: "/szkolenia/" }
+    ]
+  },
+  {
+    date: "2026-10-20",
+    dateLabel: "Październik 2026",
+    title: "Szkolenie online dla gmin: modernizacja EGiB a dochody i bezpieczeństwo prawne",
     place: "Online",
-    teaser: "Szkolenie online poświęcone planowanym zmianom w ustawie Prawo geodezyjne i kartograficzne. Dokładny termin podamy wkrótce.",
-    link: ""
+    teaser: "Szkolenie dla wójtów, burmistrzów, skarbników oraz pracowników referatów podatkowych, gospodarki nieruchomościami i planowania przestrzennego. Modernizacja ewidencji gruntów i budynków jako inwestycja przynosząca gminie wpływy podatkowe, oszczędności i bezpieczeństwo decyzji.",
+    note: "Prowadzi mgr inż. Marzena Danecka \u00b7 Dokładny termin podamy wkrótce",
+    links: [
+      { label: "Szczegóły szkolenia", url: "/szkolenia/" }
+    ]
   },
   {
     date: "2026-10-15",

@@ -23,6 +23,8 @@
     ".gig-szk-date{flex:0 0 64px;height:72px;border-radius:10px;background:" + RED + ";color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;}" +
     ".gig-szk-date .d{font-size:24px;font-weight:800;}" +
     ".gig-szk-date .m{font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}" +
+    ".gig-szk-date.opisowy{height:auto;min-height:72px;padding:10px 8px;text-align:center;}" +
+    ".gig-szk-date.opisowy .t{font-size:13px;font-weight:800;line-height:1.25;}" +
     ".gig-szk-body{flex:1;min-width:0;}" +
     ".gig-szk-body h3{font-size:17px;color:#16202a;margin:0 0 6px;line-height:1.3;}" +
     ".gig-szk-meta{font-size:13px;color:#7a8794;margin:0 0 8px;}" +
@@ -54,8 +56,9 @@
   var st = document.createElement("style"); st.textContent = css; document.head.appendChild(st);
 
   var MIES = ["sty","lut","mar","kwi","maj","cze","lip","sie","wrz","paź","lis","gru"];
-  function dayBadge(iso) {
-    if (!iso) return '<div class="gig-szk-date"><span class="d">?</span></div>';
+  function dayBadge(iso, label) {
+    if (label) return '<div class="gig-szk-date opisowy"><span class="t">' + esc(label) + "</span></div>";
+    if (!iso) return '<div class="gig-szk-date opisowy"><span class="t">termin<br>wkrótce</span></div>';
     var d = new Date(iso + "T00:00:00");
     return '<div class="gig-szk-date"><span class="d">' + d.getDate() + '</span><span class="m">' + MIES[d.getMonth()] + " " + d.getFullYear() + "</span></div>";
   }
@@ -77,7 +80,9 @@
 
   function card(r, archiwum) {
     var place = r.is_online ? "Online" : (r.location || "");
-    var when = dayHuman(r.date_start) + (r.date_end && r.date_end !== r.date_start ? " – " + dayHuman(r.date_end) : "");
+    var when = r.date_label
+      ? r.date_label
+      : dayHuman(r.date_start) + (r.date_end && r.date_end !== r.date_start ? " – " + dayHuman(r.date_end) : "");
     var meta = [when, place].filter(Boolean).join(" · ");
     var link = "/kontakt/?szkolenie=" + encodeURIComponent(r.title);
 
@@ -111,7 +116,7 @@
 
     var przycisk = archiwum ? "" : '<a class="gig-szk-btn" href="' + link + '">Zapisz się →</a>';
 
-    return '<article class="gig-szk-card">' + dayBadge(r.date_start) +
+    return '<article class="gig-szk-card">' + dayBadge(r.date_start, r.date_label) +
       '<div class="gig-szk-body"><h3>' + esc(r.title) + "</h3>" +
       (meta ? '<p class="gig-szk-meta">' + esc(meta) + "</p>" : "") +
       godziny + desc + program + ceny + wyk + przycisk +
@@ -127,9 +132,14 @@
       '<div class="gig-szk-loading" id="gigSzkLoading">Ładowanie szkoleń…</div>' +
       '<div class="gig-szk-grid" id="gigSzkUpcoming" style="display:none"></div>' +
       '<div id="gigSzkArchWrap"></div>';
-    var anchor = document.querySelector("footer, .elementor-location-footer, #colophon");
-    if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(sec, anchor);
-    else document.body.appendChild(sec);
+    var host = document.getElementById("gig-szkolenia");
+    if (host) {
+      host.appendChild(sec);
+    } else {
+      var anchor = document.querySelector("footer, .elementor-location-footer, #colophon");
+      if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(sec, anchor);
+      else document.body.appendChild(sec);
+    }
     return sec;
   }
 
@@ -166,7 +176,7 @@
 
       if (past.length) {
         document.getElementById("gigSzkArchWrap").innerHTML =
-          '<details class="gig-szk-arch"><summary>Archiwum szkoleń (' + past.length + ")</summary>" +
+          '<details class="gig-szk-arch"><summary>Szkolenia, które już się odbyły (' + past.length + ")</summary>" +
           '<div class="gig-szk-grid" style="margin-top:16px">' + past.map(function (x) { return card(x, true); }).join("") + "</div></details>";
       }
     } catch (e) {
