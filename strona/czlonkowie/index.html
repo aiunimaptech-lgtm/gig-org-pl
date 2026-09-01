@@ -160,13 +160,14 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
   <script src="https://unpkg.com/leaflet-gesture-handling@1.2.2/dist/leaflet-gesture-handling.min.js"></script>
-  <script src="/_assets/js/woj-geojson.js"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+<script src="/_assets/js/woj-geojson.js"></script>
   <script src="/_assets/js/czlonkowie-enrich.js"></script>
   <script src="/_assets/js/czlonkowie-fallback.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
-    var SUPABASE_URL="https://zlepwzeyjwpmhyxfnime.supabase.co";
-    var SUPABASE_ANON="sb_publishable_1KPF4mdln3C-cZHMIqAOFw_ZM8Go2Ji";
+    var SUPABASE_URL= window.GIG_CFG.SUPABASE_URL;
+    var SUPABASE_ANON= window.GIG_CFG.SUPABASE_ANON;
     var esc=function(s){return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");};
     var ALL=[];
 

@@ -7,7 +7,15 @@ import os, glob, datetime
 BASE = "https://gig.org.pl"
 STRONA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "strona")
 # strony do pominięcia w sitemapie (demo/techniczne)
-BLOCK = {"/admin/", "/przyklad/", "/about/", "/blog/", "/newsletter-wypisano.html"}
+# /wpis/ to szablon wpisow dynamicznych (tresc z Supabase), nie samodzielna strona.
+# /przyklad/, /about/, /blog/, /category/ usuniete z repo - zostaja tu jako zabezpieczenie,
+# gdyby crawl.py kiedys sciagnal je ponownie z WordPressa.
+# /aktualnosci/ i /artykuly/ to krotkie adresy z WordPressa - identyczne z wersjami
+# spod /baza-wiedzy/, do ktorych prowadzi menu. Zostaja czynne, ale wskazuja
+# canonicalem na wersje z menu, wiec w sitemapie ich nie ma.
+BLOCK = {"/admin/", "/wpis/", "/aktualnosci/", "/artykuly/",
+         "/przyklad/", "/about/", "/blog/", "/category/",
+         "/newsletter-wypisano.html"}
 PRIORITY = {"/": "1.0"}
 
 def page_path(fp):

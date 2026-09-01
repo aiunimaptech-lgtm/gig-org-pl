@@ -486,12 +486,8 @@ button.alt.loading:after:hover, input[type="button"].alt.loading:after:hover, in
 
 @font-face {
   font-family: 'mfn-icons';
-  src: url(/wp-content/themes/betheme/fonts/mfn/icons.eot);
-  src: url(/wp-content/themes/betheme/fonts/mfn/icons.eot) format('embedded-opentype'),
-       url(/wp-content/themes/betheme/fonts/mfn/icons.woff2) format('woff2'),
-       url(/wp-content/themes/betheme/fonts/mfn/icons.woff) format('woff'),
-       url(/wp-content/themes/betheme/fonts/mfn/icons.ttf) format('truetype'),
-       url(/wp-content/themes/betheme/fonts/mfn/icons.svg) format('svg');
+  
+  src:url(/wp-content/themes/betheme/fonts/mfn/icons.woff2) format('woff2'),url(/wp-content/themes/betheme/fonts/mfn/icons.woff) format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: swap;

@@ -17,8 +17,8 @@
 (function () {
   "use strict";
 
-  var SUPABASE_URL  = "https://zlepwzeyjwpmhyxfnime.supabase.co";
-  var SUPABASE_ANON = "sb_publishable_1KPF4mdln3C-cZHMIqAOFw_ZM8Go2Ji";
+  var SUPABASE_URL  = window.GIG_CFG.SUPABASE_URL;
+  var SUPABASE_ANON = window.GIG_CFG.SUPABASE_ANON;
 
   /* Która lista jest otwarta → jaką kategorię pokazujemy */
   var ROUTES = [

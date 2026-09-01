@@ -5,8 +5,8 @@
    https://supabase.com → New project → Settings → API
    ============================================================ */
 
-const SUPABASE_URL  = 'https://zlepwzeyjwpmhyxfnime.supabase.co';
-const SUPABASE_ANON = 'sb_publishable_1KPF4mdln3C-cZHMIqAOFw_ZM8Go2Ji';
+const SUPABASE_URL  = window.GIG_CFG.SUPABASE_URL;
+const SUPABASE_ANON = window.GIG_CFG.SUPABASE_ANON;
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON);
