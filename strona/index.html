@@ -1742,16 +1742,20 @@ var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false
       .slice(0,3);
     if(!items.length){sec.style.display='none';return;}
     box.innerHTML=items.map(function(e){
-      var hasLink=e.link&&String(e.link).trim()!=='';
+      /* Odnosniki: nowe pole `links` (tablica {label,url}) albo stare `link` (jeden adres).
+         Na stronie glownej klikalna jest cala karta, wiec bierzemy pierwszy odnosnik. */
+      var glowny=(Array.isArray(e.links)&&e.links.length&&e.links[0].url)?e.links[0]
+        :((e.link&&String(e.link).trim()!=='')?{label:'Szczegóły',url:e.link}:null);
+      var hasLink=!!glowny;
       var inner=''
         +'<div style="color:#cc0a2b;font-weight:700;font-size:14px;margin:0 0 6px;">'+esc(e.dateLabel||e.date)+'</div>'
         +'<h4 style="color:#16202a;font-size:19px;margin:0 0 8px;line-height:1.3;">'+esc(e.title)+'</h4>'
         +(e.place?'<div style="color:#6b7884;font-size:14px;margin:0 0 8px;">'+esc(e.place)+'</div>':'')
         +(e.teaser?'<p style="color:#16202a;font-size:15px;line-height:1.5;margin:0;">'+esc(e.teaser)+'</p>':'')
-        +(hasLink?'<div style="margin-top:12px;"><span style="color:#cc0a2b;font-weight:700;">Szczegóły &rarr;</span></div>':'');
+        +(hasLink?'<div style="margin-top:12px;"><span style="color:#cc0a2b;font-weight:700;">'+esc(glowny.label||'Szczegóły')+' &rarr;</span></div>':'');
       var cardStyle='background:#fff;border:1px solid #e6ebef;border-left:4px solid #cc0a2b;border-radius:12px;padding:18px;';
       if(hasLink){
-        return '<a href="'+esc(e.link)+'" style="'+cardStyle+'display:block;text-decoration:none;color:inherit;">'+inner+'</a>';
+        return '<a href="'+esc(glowny.url)+'" style="'+cardStyle+'display:block;text-decoration:none;color:inherit;">'+inner+'</a>';
       }
       return '<div style="'+cardStyle+'">'+inner+'</div>';
     }).join('');

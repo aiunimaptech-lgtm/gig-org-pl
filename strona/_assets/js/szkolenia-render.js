@@ -170,7 +170,7 @@
 
       document.getElementById("gigSzkLoading").style.display = "none";
       var up = document.getElementById("gigSzkUpcoming");
-      if (upcoming.length) { up.innerHTML = upcoming.map(card).join(""); up.style.display = ""; }
+      if (upcoming.length) { up.innerHTML = upcoming.map(function (x) { return card(x, false); }).join(""); up.style.display = ""; }
       else { up.style.display = "none";
         up.insertAdjacentHTML("beforebegin", '<div class="gig-szk-empty">Obecnie nie ma zaplanowanych szkoleń. Zapraszamy wkrótce — lub <a href="/kontakt/">napisz do nas</a>, by otrzymać informację o najbliższych terminach.</div>'); }
 

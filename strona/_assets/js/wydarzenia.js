@@ -41,14 +41,14 @@ window.GIG_WYDARZENIA = [
     ]
   },
   {
-    date: "2026-10-20",
-    dateLabel: "Październik 2026",
+    date: "2026-10-22",
+    dateLabel: "22 października 2026",
     title: "Szkolenie online dla gmin: modernizacja EGiB a dochody i bezpieczeństwo prawne",
     place: "Online",
     teaser: "Szkolenie dla wójtów, burmistrzów, skarbników oraz pracowników referatów podatkowych, gospodarki nieruchomościami i planowania przestrzennego. Modernizacja ewidencji gruntów i budynków jako inwestycja przynosząca gminie wpływy podatkowe, oszczędności i bezpieczeństwo decyzji.",
-    note: "Prowadzi mgr inż. Marzena Danecka \u00b7 Dokładny termin podamy wkrótce",
+    note: "Prowadzi mgr inż. Marzena Danecka",
     links: [
-      { label: "Szczegóły szkolenia", url: "/szkolenia/" }
+      { label: "Program i zapisy", url: "/szkolenia/" }
     ]
   },
   {

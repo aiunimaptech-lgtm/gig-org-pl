@@ -191,8 +191,15 @@
     var title = decodeURIComponent(m[1].replace(/\+/g, " "));
     var subj = document.querySelector('[name="your-subject"]');
     var msg = document.querySelector('[name="your-message"]');
-    if (subj && !subj.value) subj.value = "Zapis na szkolenie: " + title;
-    if (msg && !msg.value) msg.value = "Chcę zgłosić udział w szkoleniu: " + title + ".\n\nImię i nazwisko / firma:\nTelefon:\n";
+    /* CF7 po inicjalizacji woła form.reset() (klasa „resetting") i skasowałoby samo `value`.
+       Ustawiamy też `defaultValue` — to właśnie jego przywraca reset, więc treść zostaje. */
+    function wstaw(el, tekst) {
+      if (!el || el.value) return;
+      el.value = tekst;
+      el.defaultValue = tekst;
+    }
+    wstaw(subj, "Zapis na szkolenie: " + title);
+    wstaw(msg, "Chcę zgłosić udział w szkoleniu: " + title + ".\n\nImię i nazwisko / firma:\nTelefon:\n");
   }
 
   function init() {
