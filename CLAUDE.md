@@ -22,14 +22,16 @@ Skrypty są **idempotentne** — można powtórzyć (np. po aktualizacji treści
 - tel. 22 827 38 43 · biuro@gig.org.pl · NIP 525-20-34-024 · REGON 010753536
 - Menu: O nas / Baza wiedzy (Aktualności, Artykuły, Biuletyn) / Szkolenia / Dołącz do nas / Kontakt
 
-## ⚠️ Placeholdery do uzupełnienia (po założeniu Supabase)
-- `strona/admin/_admin.js` → `SUPABASE_URL`, `SUPABASE_ANON`
-- `strona/_assets/js/forms_integration.js` → `SUPABASE_URL`, `SUPABASE_ANON` (te same)
+## ⚠️ Konfiguracja Supabase
+- **Jedno miejsce na klucze**: `strona/_assets/js/gig-config.js` (`window.GIG_CFG`).
+  Plik wpięty bez `defer` przed wszystkimi skryptami GIG, na 31 stronach + w panelu.
+  Po rotacji klucza `anon` zmieniasz tylko ten plik — reszta czyta z `GIG_CFG`.
 - Sekrety Resend w Supabase (Edge Functions): `RESEND_API_KEY`, `FROM_EMAIL`, `SITE_URL`, `SUPABASE_SERVICE_ROLE_KEY`
 - Konto admina: Supabase → Authentication → Users → Add user (np. biuro@gig.org.pl)
 
 ## Żelazne zasady
-- Front używa wyłącznie klucza `sb_publishable_` (anon). `service_role`/`re_...` tylko w sekretach Supabase.
+- Front używa wyłącznie klucza `sb_publishable_` (anon), i to z `gig-config.js` — nie
+  wklejaj kluczy do kolejnych plików. `service_role`/`re_...` tylko w sekretach Supabase.
 - Katalog `skrypty/` i `backend/` NIE są deployowane (Root Directory na Vercel = `strona/`).
 - Canonical i domena: **gig.org.pl bez www** (www → 301 na apex w `vercel.json`).
 
