@@ -1,1 +1,514 @@
-[{"region": "Mazowieckie", "name": "\"GEOBEST\" Sp. z o.o.", "address": "Sokratesa 11B/4, 01-909 Warszawa", "person": "Mariusz Głodek", "email": "geodezja.geobest@gmail.com", "phone": "tel 629-41-57, 509-761-321"}, {"region": "Mazowieckie", "name": "GEODAR-BUD Ratyński Dariusz", "address": "ul. Akacjowa 50, 05-304 Ładzyń", "person": "Dariusz Ratyński", "email": "geodar_bud@wp.pl", "phone": "602411463"}, {"region": "Mazowieckie", "name": "Kancelaria Geodezyjna Karol Sołtysiak", "address": "ul. 1 Sierpnia 36B lok. 2, 02-134 Warszawa", "person": "Karol Sołtysiak", "email": "technoplan@wp.pl", "phone": "0602 103 404"}, {"region": "Mazowieckie", "name": "MAXNET Lech Wereszczyński", "address": "ul. Walecznych 11/1, 03-916 Warszawa", "person": "Lech Wereszczyński", "email": "l.wereszczynski@eu-maxnet.pl", "phone": "22/ 617 33 73, 602-788-824"}, {"region": "Mazowieckie", "name": "Piotr Wiśniewski GEOBUD", "address": "ul. Narutowicza 29, 05-120 Legionowo", "person": "Piotr Wiśniewski", "email": "piotrwisniewski@wp.pl", "phone": "608-076-616"}, {"region": "Mazowieckie", "name": "Prywatne Biuro Geodezyjne \"Do-Ba\" Zdzisław Radziszewski", "address": "ul. Wilanowska 10/31, 00-422 Warszawa", "person": "Zdzisław Radziszewski", "email": "zradziszewski@o2.pl", "phone": "508-398-677"}, {"region": "Mazowieckie", "name": "TPI sp. z o.o.", "address": "ul. Wał Miedzeszyński 598, 03-994 Warszawa", "person": "Andrzej Jaroszewicz", "email": "ksiegowosc@tpi.com.pl", "phone": "022/ 632 91 40, 022/651-03-06 do 08"}, {"region": "Mazowieckie", "name": "Usługi Geodezyjne mgr inż. Jarosław Żelazowski", "address": "Nizinna 10, 26-600 Radom", "person": "Jarosław Żelazowski", "email": "jzelazowski@op.pl", "phone": "608 51 35 36"}, {"region": "Podkarpackie", "name": "Firma Geodezyjna", "address": "Tomasz Szczepański, 37-114 Białobrzegi 67A", "person": "Tomasz Szczepański", "email": "tomaszszczepanski@o2.pl", "phone": "723-738-448"}, {"region": "Podkarpackie", "name": "GEOKART-INTERNATIONAL SP. Z O.O.", "address": "ul. Wita Stwosza 44, 35-113 Rzeszów", "person": "Sebastian Skalski", "email": "biuro@geokart.com.pl", "phone": "17/ 86-414-61"}, {"region": "Podkarpackie", "name": "GEORES Sp. z o.o.", "address": "ul. Targowa 3, 35-064 Rzeszów", "person": "Rafał Kraska", "email": "geores@geores.pl", "phone": "17/ 862-78-42"}, {"region": "Podkarpackie", "name": "GLOB-KART Usługi Geodezyjno-Kartograficzne mgr inż. Daniel Ruszała", "address": "Łukawiec 265, 36-004 Łąka", "person": "Daniel Ruszała", "email": "biuro@glob-kart.pl", "phone": "602-436-417"}, {"region": "Podkarpackie", "name": "Przedsiębiorstwo Usług Geodezyjno-Projektowych \"GEOMIAR\" sp. z o.o.", "address": "ul. Kościuszki 35, 37-500 Jarosław", "person": "Jan Połeć", "email": "biuro@geomiar.com.pl", "phone": "tel.016 / 621-52-82, 623-33-83"}, {"region": "Podkarpackie", "name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Maciej Krok", "address": "ul. Orzechowa 10, 38-500 Sanok", "person": "Maciej Krok", "email": "pugik@geodezja.sanok.pl", "phone": "13/ 463-50-02, 603-376 106"}, {"region": "Podkarpackie", "name": "Vector Sp. z o.o.", "address": "ul. Wincentego Witosa 2/36, 37-500 Jarosław", "person": "Michał Dyjak", "email": "michal.dyjak@vector-geodezja.pl", "phone": "534-949-494"}, {"region": "Małopolskie", "name": "\"GEOPRZEM Spółka z ograniczoną odpowiedzialnością\" Spółka komandytowa", "address": "ul. Piłsudskiego 10, 32-050 Skawina", "person": "Stanisław Wasyl, Dariusz Tomaszewski", "email": "biuro@geoprzem.pl", "phone": "012/277-81-83"}, {"region": "Małopolskie", "name": "\"MGGP\" SA", "address": "ul. Kaczkowskiego 6, 33-100 Tarnów", "person": "Franciszek Gryboś", "email": "mggp@mggp.com.pl", "phone": "tel. 014/ 626-38-90"}, {"region": "Małopolskie", "name": "AXIS Grupa Geodezyjna Sp. z o.o.", "address": "Piekary 383, 32-060 Liszki", "person": "Krzysztof Wysocki", "email": "krzysztof.wysocki@geodezja-axis.pl", "phone": "600-448-018"}, {"region": "Małopolskie", "name": "Ale Zarys Aleksandra Onak", "address": "ul. Tuchowska 25A, 33-100 Tarnów", "person": "Aleksandra Onak", "email": "alezarys@gmail.com", "phone": "512810216"}, {"region": "Małopolskie", "name": "Firma Usługowo-Handlowa VERTICAL Arkadiusz Mroszczyk", "address": "os. Kościuszkowskie 6/413, 31-858 Kraków", "person": "Arkadiusz Mroszczyk", "email": "arekm@vertical.krakow.pl", "phone": "506-556-464"}, {"region": "Małopolskie", "name": "GEO-S USŁUGI GEODEZYJNE Karolina Kowar,Tadeusz Piasek s.c.", "address": "ul. Szewska 41, 32-200 Miechów", "person": "Karolina Kowar", "email": "pugkip@interia.pl", "phone": "41/38-308-12, 502-091-451"}, {"region": "Małopolskie", "name": "Geodezja mgr inż. Marcin Tlałka s.c.", "address": "ul. Adama Vetulaniego 1A lok. 303, 31-226 Kraków", "person": "Marcin Tlałka", "email": "biuro.geosmart@gmail.com", "phone": "507-425-090"}, {"region": "Małopolskie", "name": "Przedsiębiorstwo Geodezyjne GEOPROF Jarosław Kożuch, Sławomir Zając Spółka Jawna", "address": "ul. Radzikowskiego 65K/12, 31-315 Kraków", "person": "Sławomir Zając", "email": "s.zajac@geoprof.pl", "phone": "12/ 661-39-31, 604-28-55-82"}, {"region": "Małopolskie", "name": "Usługi Geodezyjno Kartograficzne Rafał Jarek", "address": "ul. Kap. Jana Klimkowicza 17, 38-300 Gorlice", "person": "Rafał Jarek", "email": "geodezja.jarek@gmail.com", "phone": "0 603 385 719, 18/352-03-46"}, {"region": "Śląskie", "name": "\"GEOBID\" Sp. z o.o.", "address": "ul. Kossutha 9, 40-844 Katowice", "person": "Weronika Borys", "email": "hmecha@geobid.pl", "phone": "tel. 032/241-04-84"}, {"region": "Śląskie", "name": "\"PROGEO KATOWICE\" M.Rogala-Szczepańska, M.Nowak Spółka Jawna", "address": "Aleja Korfantego 79, 40-160 Katowice", "person": "Magdalena Rogala-Szczepańska, Mirosław Nowak", "email": "progeokatowice_mrs@wp.pl", "phone": "032/201-07-25, 691-394-629"}, {"region": "Śląskie", "name": "Biuro Geodezyjne \"GEODEX\" Mgr inż. Szymon P. Malinowski", "address": "ul. Sixta 5, 43-300 Bielsko-Biała", "person": "Szymon Malinowski", "email": "biuro@geodex.bielsko.pl", "phone": "tel. 033/ 815 93 21"}, {"region": "Śląskie", "name": "DARGEO Dariusz Przybycień", "address": "ul. Pokoju 28D, 41-800 Zabrze", "person": "Dariusz Przybycień", "email": "dprzybycien@dargeo.net", "phone": "601-490-062"}, {"region": "Śląskie", "name": "EXIGEO Sp. z o.o.", "address": "ul. Ligocka 103, 40-568 Katowice", "person": "Dawid Sienkiewicz", "email": "d.sienkiewicz@exigeo.pl", "phone": "519-866-936"}, {"region": "Śląskie", "name": "GROTECH Krzysztof Grochowina", "address": "ul. Pogodna 26, 42-263 Wrzosowa", "person": "Marcin Jamrozy", "email": "grotech.biuro@gmail.com", "phone": "503-510-121"}, {"region": "Śląskie", "name": "Geodezja i Kartografia Małgorzata August", "address": "ul. Pomrożycka 92, 42-400 Zawiercie", "person": "Małgorzata August", "email": "gik.zawiercie@gmail.com", "phone": "793 648 921"}, {"region": "Śląskie", "name": "KLECZKO MAREK MAPAN geodezja", "address": "ul. Hutnicza nr 4 lok. 36, 41-200 Sosnowiec", "person": "Marek Kleczko", "email": "marek@mapan.pl", "phone": "668 464 847"}, {"region": "Śląskie", "name": "Pracownia Geodezji Inżynieryjno - Przemysłowej \"GIPART\" Włodzimierz Dyba", "address": "ul. Matejki 8/31, 41-219 Sosnowiec", "person": "Włodzimierz Dyba", "email": "gipart@poczta.fm", "phone": "032/ 294-27-63"}, {"region": "Śląskie", "name": "Przedsiębiorstwo Usług Geodezyjnych sp. z o.o.", "address": "ul. Stefana Jaracza 4, 42-200 Częstochowa", "person": "Łukasz Kulesza", "email": "sekretariat@pug.net.pl", "phone": "tel. 034/360 56 11"}, {"region": "Śląskie", "name": "UnimapTech Jerzy Bryk", "address": "ul. Gallusa 10/13, 40-594 Katowice", "person": "Jerzy Bryk", "email": "jerzy.bryk@unimaptech.pl", "phone": "501-970-766"}, {"region": "Śląskie", "name": "Usługi Geodezyjne mgr inż. Marcin Pietrucha", "address": "ul. Towarowa 15/5, 41-200 Sosnowiec", "person": "Marcin Pietrucha", "email": "mpietruc@poczta.onet.pl", "phone": "32/363-75-85"}, {"region": "Śląskie", "name": "Usługi Geodezyjno - Miernicze Płonka Kazimierz", "address": "ul. Zazdrosna 30, 44-246 Palowice", "person": "Kazimierz Płonka", "email": "kazplonka@vp.pl", "phone": "032/4274059"}, {"region": "Śląskie", "name": "Zakład Usług Geodezyjnych i Kartograficznych \"PRYZMAT\" inż. Zenon Kulesza", "address": "ul.Solskiego 13, 42-200 Częstochowa", "person": "Zenon Kulesza", "email": "zugik@pryzmat.co", "phone": "34/362-18-34"}, {"region": "Opolskie", "name": "GEODEZJA inż. Mirosław Schumacher", "address": "ul. Światowida nr 5/16, 45-325 Opole", "person": "Mirosław Schumacher", "email": "schumacher.geodezja@wp.pl", "phone": "077/ 456-82-36, 601-982-830"}, {"region": "Dolnośląskie", "name": "PilotBSP.pl Gerard Szustek", "address": "ul. Tytusa Chałubińskiego 9 lok. 6, 58-302 Wałbrzych", "person": "Gerard Szustek", "email": "biuro@pilotbsp.pl", "phone": "579855940"}, {"region": "Dolnośląskie", "name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Antoni Buczek", "address": "ul. Budziszyńska 28/1, 59-300 Lubin", "person": "Antoni Buczek", "email": "antoni.buczek@interia.pl", "phone": "tel.076/844 11 33, 842 10 49"}, {"region": "Łódzkie", "name": "\"CONSULTING-TOKARSKI\"", "address": "ul. Droga Brzezińska 36, 98-200 Sieradz", "person": "Wojciech Tokarski", "email": "biuro@geoiso.pl", "phone": "043/ 822-47-65"}, {"region": "Łódzkie", "name": "GEOPLAN Andrzej Kwiatkowski", "address": "ul. Arkadiusza Musierowicza 4, 95-100 Zgierz", "person": "Andrzej Kwiatkowski", "email": "ak@geoplan.eu", "phone": "693-651-350"}, {"region": "Łódzkie", "name": "JAKETRON Jakub Fryziel", "address": "ul. Ludwikowska 78, 97-200 Tomaszów Mazowiecki", "person": "Jakub Fryziel", "email": "fryziel.jakub@gmail.com", "phone": "535 000 026"}, {"region": "Łódzkie", "name": "Kancelaria Geodezyjna Grzegorz Kwapisz", "address": "ul. Generała Stefana Grota-Roweckiego 7/4, 97-300 Piotrków Tryb.", "person": "Grzegorz Kwapisz", "email": "biuro@geodezja-piotrkow.pl", "phone": "512 267 627"}, {"region": "Łódzkie", "name": "Pracownia Geodezyjna GEODELTA sp. z o.o.", "address": "ul. Trzcińska 21/23, 96-100 Skierniewice", "person": "Adrian Cichoń", "email": "biuro@geo-delta.pl", "phone": "046/ 833-90-32, 0 507 141 818"}, {"region": "Łódzkie", "name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych \"GEOTRION\" s.c M. Chojnacki, P. Szyszka, P. Świderek", "address": "Al. Piłsudskiego 135, 92-318 Łódź", "person": "Mariusz Chojnacki, Piotr Szyszka, Paweł Świderek", "email": "geotrion@wp.pl", "phone": "42/ 674-13-13, 505-072-672"}, {"region": "Łódzkie", "name": "Łódzkie Przedsiębiorstwo Geodezyjno-Informatyczne s.c. Michał Pawłowski, Maciej Jasik", "address": "Ul. Narutowicza 77 lok. 201, 90-138 Łódź", "person": "Michał Pawłowski, Maciej Jasik", "email": "lpgi@op.pl", "phone": "42/ 672-12-91"}, {"region": "Wielkopolskie", "name": "Firma Handlowo Usługowa \"GEODROM\" Roman Nowakowski", "address": "ul. Kardynała Stefana Wyszyńskiego 5, 62-650 Kłodawa", "person": "Roman Nowakowski", "email": "geodrom@onet.pl", "phone": "601-890-382"}, {"region": "Wielkopolskie", "name": "Geodezja WIS s.c. Paweł Glinkowski, Sławomir Piotrowski, Zenon Zawodny", "address": "ul. Kołłątaja 11/5, 63-700 Krotoszyn", "person": "Paweł Glinkowski", "email": "geodezjawis@op.pl", "phone": "062/ 725-43-50"}, {"region": "Wielkopolskie", "name": "Klimczak Jacek Przedsiębiorstwo Usługowe \"MARS\"", "address": "ul. Sienkiewicza 31, 62-600 Koło", "person": "Jacek Klimczak", "email": "jacek.klimczak@pumars.pl", "phone": "690-890-602, 63 261 63 31"}, {"region": "Wielkopolskie", "name": "Przedsiębiorstwo Geodezyjne \"GEODETA\" Andrzej Bursztyn", "address": "ul. Hiacyntowa 3B/46, 62-510 Konin", "person": "Andrzej Bursztyn", "email": "info@geodeta.org", "phone": "tel.063/245-86-16"}, {"region": "Wielkopolskie", "name": "Przedsiębiorstwo Usług Geodezyjno-Kartograficznych \"MIERNIK\" Janusz Stanisławek", "address": "ul.Czereśniowa 2, 63-620 Laski", "person": "Janusz Stanisławek", "email": "biuro.miernik@interia.pl", "phone": "tel.062/ 78 15 810, 0601-880-572"}, {"region": "Wielkopolskie", "name": "Usługi Geodezyjno-Kartograficzne Grzegorz Jankowiak", "address": "ul. Powstańców Wlkp. 42, 64-500 Szamotuły", "person": "Grzegorz Jankowiak", "email": "geo-jan@wp.pl", "phone": "604 797 356"}, {"region": "Lubuskie", "name": "Geodeta Uprawniony Jacek Strzelecki", "address": "ul. Żerańska 14A, 66-400 Gorzów Wielkopolski", "person": "Radosław Strzelecki", "email": "radstrz@gmail.com", "phone": "733040733"}, {"region": "Lubuskie", "name": "Okręgowe Przedsiębiorstwo Geodezyjno-Kartograficzne GEOMAP sp. z o.o.", "address": "ul. Trasa Północna 16C, 65-119 Zielona Góra", "person": "Tomasz Soszka", "email": "geomap@geomap.pl", "phone": "tel. 068/ 326-34-64"}, {"region": "Warmińsko-Mazurskie", "name": "PROGEO Tomasz Gadzikowski", "address": "ul. Bolesława Jeziołowicza 3 lok. 5, 10-690 Olsztyn", "person": "Tomasz Gadzikowski", "email": "biuro@progeo.pro", "phone": "609 990 399"}, {"region": "Pomorskie", "name": "Firma Usługowo - Handlowa \"DIAZ\" Eugeniusz Lepacki", "address": "ul. Wiolinowa 25, 80-298 Gdańsk", "person": "Eugeniusz Lepacki", "email": "diaz@diaz.com.pl", "phone": "058/ 344-92-95, 058/ 344-42-12"}, {"region": "Pomorskie", "name": "Kancelaria Geodezyjna Maciej Kozielczyk", "address": "ul. Jesionowa 14/1, 80-261 Gdańsk", "person": "Maciej Kozielczyk", "email": "maciej.kozielczyk@wp.pl", "phone": "058/341-96-33, 0601-666-069"}, {"region": "Zachodniopomorskie", "name": "GEO-FINGER Andrzej Paluch", "address": "Mielecka nr 20, 70-737 Szczecin", "person": "Andrzej Paluch", "email": "geofinger@gmail.com", "phone": "603-334-615"}, {"region": "Zachodniopomorskie", "name": "GEO-KOMPLEKS Geodezja i Kartografia Sebastian Nowacki", "address": "ul. Szczygli Zaułek nr 10, lok. 8, 71-696 Szczecin", "person": "Sebastian Nowacki", "email": "biuro@geo-kompleks.pl", "phone": "608-405-099"}, {"region": "Zachodniopomorskie", "name": "GEODEZJA Michał Kaznocha", "address": "ul. Sprzymierzonych nr 2, 74-100 Gryfino", "person": "Michał Kaznocha", "email": "helena.kaznocha@geodezjasc.pl", "phone": "509-328-883, 91-415-11-26"}, {"region": "Zachodniopomorskie", "name": "GEOSYSTEM Jerzy Cieszko", "address": "Szczecinek, ul. Warcisława IV nr 6 lok. 2, 78-400 Szczecinek", "person": "Jerzy Cieszko", "email": "geosystem@ko.onet.pl", "phone": "602-105-840"}, {"region": "Zachodniopomorskie", "name": "GEOTOTAL PRO SP. Z. O.O", "address": "ul. Dworcowa 19, 70-206 Szczecin", "person": "Krzysztof Senderowicz", "email": "senderowicz@geototal.com.pl", "phone": "601-414-691, 91-434-11-67"}, {"region": "Zachodniopomorskie", "name": "PUGiK Zbigniew Królik", "address": "ul. Norwida 37, 73-200 Choszczno", "person": "Zbigniew Królik", "email": "zkpugik@op.pl", "phone": "604-066-385, 95-765-80-40"}]
+[
+ {
+  "region": "Mazowieckie",
+  "name": "\"GEOBEST\" Sp. z o.o.",
+  "address": "Sokratesa 11B/4, 01-909 Warszawa",
+  "person": "Mariusz Głodek",
+  "email": "geodezja.geobest@gmail.com",
+  "phone": "tel 629-41-57, 509-761-321"
+ },
+ {
+  "region": "Mazowieckie",
+  "name": "GEODAR-BUD Ratyński Dariusz",
+  "address": "ul. Akacjowa 50, 05-304 Ładzyń",
+  "person": "Dariusz Ratyński",
+  "email": "geodar_bud@wp.pl",
+  "phone": "602411463"
+ },
+ {
+  "region": "Mazowieckie",
+  "name": "Kancelaria Geodezyjna Karol Sołtysiak",
+  "address": "ul. 1 Sierpnia 36B lok. 2, 02-134 Warszawa",
+  "person": "Karol Sołtysiak",
+  "email": "technoplan@wp.pl",
+  "phone": "0602 103 404"
+ },
+ {
+  "region": "Mazowieckie",
+  "name": "Piotr Wiśniewski GEOBUD",
+  "address": "ul. Narutowicza 29, 05-120 Legionowo",
+  "person": "Piotr Wiśniewski",
+  "email": "piotrwisniewski@wp.pl",
+  "phone": "608-076-616"
+ },
+ {
+  "region": "Mazowieckie",
+  "name": "Prywatne Biuro Geodezyjne \"Do-Ba\" Zdzisław Radziszewski",
+  "address": "ul. Wilanowska 10/31, 00-422 Warszawa",
+  "person": "Zdzisław Radziszewski",
+  "email": "zradziszewski@o2.pl",
+  "phone": "508-398-677"
+ },
+ {
+  "region": "Mazowieckie",
+  "name": "TPI sp. z o.o.",
+  "address": "ul. Wał Miedzeszyński 598, 03-994 Warszawa",
+  "person": "Andrzej Jaroszewicz",
+  "email": "ksiegowosc@tpi.com.pl",
+  "phone": "022/ 632 91 40, 022/651-03-06 do 08"
+ },
+ {
+  "region": "Mazowieckie",
+  "name": "Usługi Geodezyjne mgr inż. Jarosław Żelazowski",
+  "address": "Nizinna 10, 26-600 Radom",
+  "person": "Jarosław Żelazowski",
+  "email": "jzelazowski@op.pl",
+  "phone": "608 51 35 36"
+ },
+ {
+  "region": "Podkarpackie",
+  "name": "Firma Geodezyjna",
+  "address": "Tomasz Szczepański, 37-114 Białobrzegi 67A",
+  "person": "Tomasz Szczepański",
+  "email": "tomaszszczepanski@o2.pl",
+  "phone": "723-738-448"
+ },
+ {
+  "region": "Podkarpackie",
+  "name": "GEOKART-INTERNATIONAL SP. Z O.O.",
+  "address": "ul. Wita Stwosza 44, 35-113 Rzeszów",
+  "person": "Sebastian Skalski",
+  "email": "biuro@geokart.com.pl",
+  "phone": "17/ 86-414-61"
+ },
+ {
+  "region": "Podkarpackie",
+  "name": "GEORES Sp. z o.o.",
+  "address": "ul. Targowa 3, 35-064 Rzeszów",
+  "person": "Rafał Kraska",
+  "email": "geores@geores.pl",
+  "phone": "17/ 862-78-42"
+ },
+ {
+  "region": "Podkarpackie",
+  "name": "GLOB-KART Usługi Geodezyjno-Kartograficzne mgr inż. Daniel Ruszała",
+  "address": "Łukawiec 265, 36-004 Łąka",
+  "person": "Daniel Ruszała",
+  "email": "biuro@glob-kart.pl",
+  "phone": "602-436-417"
+ },
+ {
+  "region": "Podkarpackie",
+  "name": "Przedsiębiorstwo Usług Geodezyjno-Projektowych \"GEOMIAR\" sp. z o.o.",
+  "address": "ul. Kościuszki 35, 37-500 Jarosław",
+  "person": "Jan Połeć",
+  "email": "biuro@geomiar.com.pl",
+  "phone": "tel.016 / 621-52-82, 623-33-83"
+ },
+ {
+  "region": "Podkarpackie",
+  "name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Maciej Krok",
+  "address": "ul. Orzechowa 10, 38-500 Sanok",
+  "person": "Maciej Krok",
+  "email": "pugik@geodezja.sanok.pl",
+  "phone": "13/ 463-50-02, 603-376 106"
+ },
+ {
+  "region": "Podkarpackie",
+  "name": "Vector Sp. z o.o.",
+  "address": "ul. Wincentego Witosa 2/36, 37-500 Jarosław",
+  "person": "Michał Dyjak",
+  "email": "michal.dyjak@vector-geodezja.pl",
+  "phone": "534-949-494"
+ },
+ {
+  "region": "Małopolskie",
+  "name": "\"GEOPRZEM Spółka z ograniczoną odpowiedzialnością\" Spółka komandytowa",
+  "address": "ul. Piłsudskiego 10, 32-050 Skawina",
+  "person": "Stanisław Wasyl, Dariusz Tomaszewski",
+  "email": "biuro@geoprzem.pl",
+  "phone": "012/277-81-83"
+ },
+ {
+  "region": "Małopolskie",
+  "name": "\"MGGP\" SA",
+  "address": "ul. Kaczkowskiego 6, 33-100 Tarnów",
+  "person": "Franciszek Gryboś",
+  "email": "mggp@mggp.com.pl",
+  "phone": "tel. 014/ 626-38-90"
+ },
+ {
+  "region": "Małopolskie",
+  "name": "AXIS Grupa Geodezyjna Sp. z o.o.",
+  "address": "Piekary 383, 32-060 Liszki",
+  "person": "Krzysztof Wysocki",
+  "email": "krzysztof.wysocki@geodezja-axis.pl",
+  "phone": "600-448-018"
+ },
+ {
+  "region": "Małopolskie",
+  "name": "Ale Zarys Aleksandra Onak",
+  "address": "ul. Tuchowska 25A, 33-100 Tarnów",
+  "person": "Aleksandra Onak",
+  "email": "alezarys@gmail.com",
+  "phone": "512810216"
+ },
+ {
+  "region": "Małopolskie",
+  "name": "Firma Usługowo-Handlowa VERTICAL Arkadiusz Mroszczyk",
+  "address": "os. Kościuszkowskie 6/413, 31-858 Kraków",
+  "person": "Arkadiusz Mroszczyk",
+  "email": "arekm@vertical.krakow.pl",
+  "phone": "506-556-464"
+ },
+ {
+  "region": "Małopolskie",
+  "name": "GEO-S USŁUGI GEODEZYJNE Karolina Kowar,Tadeusz Piasek s.c.",
+  "address": "ul. Szewska 41, 32-200 Miechów",
+  "person": "Karolina Kowar",
+  "email": "pugkip@interia.pl",
+  "phone": "41/38-308-12, 502-091-451"
+ },
+ {
+  "region": "Małopolskie",
+  "name": "Geodezja mgr inż. Marcin Tlałka s.c.",
+  "address": "ul. Adama Vetulaniego 1A lok. 303, 31-226 Kraków",
+  "person": "Marcin Tlałka",
+  "email": "biuro.geosmart@gmail.com",
+  "phone": "507-425-090"
+ },
+ {
+  "region": "Małopolskie",
+  "name": "Przedsiębiorstwo Geodezyjne GEOPROF Jarosław Kożuch, Sławomir Zając Spółka Jawna",
+  "address": "ul. Radzikowskiego 65K/12, 31-315 Kraków",
+  "person": "Sławomir Zając",
+  "email": "s.zajac@geoprof.pl",
+  "phone": "12/ 661-39-31, 604-28-55-82"
+ },
+ {
+  "region": "Małopolskie",
+  "name": "Usługi Geodezyjno Kartograficzne Rafał Jarek",
+  "address": "ul. Kap. Jana Klimkowicza 17, 38-300 Gorlice",
+  "person": "Rafał Jarek",
+  "email": "geodezja.jarek@gmail.com",
+  "phone": "0 603 385 719, 18/352-03-46"
+ },
+ {
+  "region": "Śląskie",
+  "name": "\"GEOBID\" Sp. z o.o.",
+  "address": "ul. Kossutha 9, 40-844 Katowice",
+  "person": "Weronika Borys",
+  "email": "hmecha@geobid.pl",
+  "phone": "tel. 032/241-04-84"
+ },
+ {
+  "region": "Śląskie",
+  "name": "\"PROGEO KATOWICE\" M.Rogala-Szczepańska, M.Nowak Spółka Jawna",
+  "address": "Aleja Korfantego 79, 40-160 Katowice",
+  "person": "Magdalena Rogala-Szczepańska, Mirosław Nowak",
+  "email": "progeokatowice_mrs@wp.pl",
+  "phone": "032/201-07-25, 691-394-629"
+ },
+ {
+  "region": "Śląskie",
+  "name": "Biuro Geodezyjne \"GEODEX\" Mgr inż. Szymon P. Malinowski",
+  "address": "ul. Sixta 5, 43-300 Bielsko-Biała",
+  "person": "Szymon Malinowski",
+  "email": "biuro@geodex.bielsko.pl",
+  "phone": "tel. 033/ 815 93 21"
+ },
+ {
+  "region": "Śląskie",
+  "name": "DARGEO Dariusz Przybycień",
+  "address": "ul. Pokoju 28D, 41-800 Zabrze",
+  "person": "Dariusz Przybycień",
+  "email": "dprzybycien@dargeo.net",
+  "phone": "601-490-062"
+ },
+ {
+  "region": "Śląskie",
+  "name": "EXIGEO Sp. z o.o.",
+  "address": "ul. Ligocka 103, 40-568 Katowice",
+  "person": "Dawid Sienkiewicz",
+  "email": "d.sienkiewicz@exigeo.pl",
+  "phone": "519-866-936"
+ },
+ {
+  "region": "Śląskie",
+  "name": "GROTECH Krzysztof Grochowina",
+  "address": "ul. Pogodna 26, 42-263 Wrzosowa",
+  "person": "Marcin Jamrozy",
+  "email": "grotech.biuro@gmail.com",
+  "phone": "503-510-121"
+ },
+ {
+  "region": "Śląskie",
+  "name": "Geodezja i Kartografia Małgorzata August",
+  "address": "ul. Pomrożycka 92, 42-400 Zawiercie",
+  "person": "Małgorzata August",
+  "email": "gik.zawiercie@gmail.com",
+  "phone": "793 648 921"
+ },
+ {
+  "region": "Śląskie",
+  "name": "KLECZKO MAREK MAPAN geodezja",
+  "address": "ul. Hutnicza nr 4 lok. 36, 41-200 Sosnowiec",
+  "person": "Marek Kleczko",
+  "email": "marek@mapan.pl",
+  "phone": "668 464 847"
+ },
+ {
+  "region": "Śląskie",
+  "name": "Pracownia Geodezji Inżynieryjno - Przemysłowej \"GIPART\" Włodzimierz Dyba",
+  "address": "ul. Matejki 8/31, 41-219 Sosnowiec",
+  "person": "Włodzimierz Dyba",
+  "email": "gipart@poczta.fm",
+  "phone": "032/ 294-27-63"
+ },
+ {
+  "region": "Śląskie",
+  "name": "Przedsiębiorstwo Usług Geodezyjnych sp. z o.o.",
+  "address": "ul. Stefana Jaracza 4, 42-200 Częstochowa",
+  "person": "Łukasz Kulesza",
+  "email": "sekretariat@pug.net.pl",
+  "phone": "tel. 034/360 56 11"
+ },
+ {
+  "region": "Śląskie",
+  "name": "UnimapTech Jerzy Bryk",
+  "address": "ul. Gallusa 10/13, 40-594 Katowice",
+  "person": "Jerzy Bryk",
+  "email": "jerzy.bryk@unimaptech.pl",
+  "phone": "501-970-766"
+ },
+ {
+  "region": "Śląskie",
+  "name": "Usługi Geodezyjne mgr inż. Marcin Pietrucha",
+  "address": "ul. Towarowa 15/5, 41-200 Sosnowiec",
+  "person": "Marcin Pietrucha",
+  "email": "mpietruc@poczta.onet.pl",
+  "phone": "32/363-75-85"
+ },
+ {
+  "region": "Śląskie",
+  "name": "Usługi Geodezyjno - Miernicze Płonka Kazimierz",
+  "address": "ul. Zazdrosna 30, 44-246 Palowice",
+  "person": "Kazimierz Płonka",
+  "email": "kazplonka@vp.pl",
+  "phone": "032/4274059"
+ },
+ {
+  "region": "Śląskie",
+  "name": "Zakład Usług Geodezyjnych i Kartograficznych \"PRYZMAT\" inż. Zenon Kulesza",
+  "address": "ul.Solskiego 13, 42-200 Częstochowa",
+  "person": "Zenon Kulesza",
+  "email": "zugik@pryzmat.co",
+  "phone": "34/362-18-34"
+ },
+ {
+  "region": "Opolskie",
+  "name": "GEODEZJA inż. Mirosław Schumacher",
+  "address": "ul. Światowida nr 5/16, 45-325 Opole",
+  "person": "Mirosław Schumacher",
+  "email": "schumacher.geodezja@wp.pl",
+  "phone": "077/ 456-82-36, 601-982-830"
+ },
+ {
+  "region": "Dolnośląskie",
+  "name": "PilotBSP.pl Gerard Szustek",
+  "address": "ul. Tytusa Chałubińskiego 9 lok. 6, 58-302 Wałbrzych",
+  "person": "Gerard Szustek",
+  "email": "biuro@pilotbsp.pl",
+  "phone": "579855940"
+ },
+ {
+  "region": "Dolnośląskie",
+  "name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Antoni Buczek",
+  "address": "ul. Budziszyńska 28/1, 59-300 Lubin",
+  "person": "Antoni Buczek",
+  "email": "antoni.buczek@interia.pl",
+  "phone": "tel.076/844 11 33, 842 10 49"
+ },
+ {
+  "region": "Łódzkie",
+  "name": "\"CONSULTING-TOKARSKI\"",
+  "address": "ul. Droga Brzezińska 36, 98-200 Sieradz",
+  "person": "Wojciech Tokarski",
+  "email": "biuro@geoiso.pl",
+  "phone": "043/ 822-47-65"
+ },
+ {
+  "region": "Łódzkie",
+  "name": "GEOPLAN Andrzej Kwiatkowski",
+  "address": "ul. Arkadiusza Musierowicza 4, 95-100 Zgierz",
+  "person": "Andrzej Kwiatkowski",
+  "email": "ak@geoplan.eu",
+  "phone": "693-651-350"
+ },
+ {
+  "region": "Łódzkie",
+  "name": "JAKETRON Jakub Fryziel",
+  "address": "ul. Ludwikowska 78, 97-200 Tomaszów Mazowiecki",
+  "person": "Jakub Fryziel",
+  "email": "fryziel.jakub@gmail.com",
+  "phone": "535 000 026"
+ },
+ {
+  "region": "Łódzkie",
+  "name": "Kancelaria Geodezyjna Grzegorz Kwapisz",
+  "address": "ul. Generała Stefana Grota-Roweckiego 7/4, 97-300 Piotrków Tryb.",
+  "person": "Grzegorz Kwapisz",
+  "email": "biuro@geodezja-piotrkow.pl",
+  "phone": "512 267 627"
+ },
+ {
+  "region": "Łódzkie",
+  "name": "Pracownia Geodezyjna GEODELTA sp. z o.o.",
+  "address": "ul. Trzcińska 21/23, 96-100 Skierniewice",
+  "person": "Adrian Cichoń",
+  "email": "biuro@geo-delta.pl",
+  "phone": "046/ 833-90-32, 0 507 141 818"
+ },
+ {
+  "region": "Łódzkie",
+  "name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych \"GEOTRION\" s.c M. Chojnacki, P. Szyszka, P. Świderek",
+  "address": "Al. Piłsudskiego 135, 92-318 Łódź",
+  "person": "Mariusz Chojnacki, Piotr Szyszka, Paweł Świderek",
+  "email": "geotrion@wp.pl",
+  "phone": "42/ 674-13-13, 505-072-672"
+ },
+ {
+  "region": "Łódzkie",
+  "name": "Łódzkie Przedsiębiorstwo Geodezyjno-Informatyczne s.c. Michał Pawłowski, Maciej Jasik",
+  "address": "Ul. Narutowicza 77 lok. 201, 90-138 Łódź",
+  "person": "Michał Pawłowski, Maciej Jasik",
+  "email": "lpgi@op.pl",
+  "phone": "42/ 672-12-91"
+ },
+ {
+  "region": "Wielkopolskie",
+  "name": "Firma Handlowo Usługowa \"GEODROM\" Roman Nowakowski",
+  "address": "ul. Kardynała Stefana Wyszyńskiego 5, 62-650 Kłodawa",
+  "person": "Roman Nowakowski",
+  "email": "geodrom@onet.pl",
+  "phone": "601-890-382"
+ },
+ {
+  "region": "Wielkopolskie",
+  "name": "Geodezja WIS s.c. Paweł Glinkowski, Sławomir Piotrowski, Zenon Zawodny",
+  "address": "ul. Kołłątaja 11/5, 63-700 Krotoszyn",
+  "person": "Paweł Glinkowski",
+  "email": "geodezjawis@op.pl",
+  "phone": "062/ 725-43-50"
+ },
+ {
+  "region": "Wielkopolskie",
+  "name": "Klimczak Jacek Przedsiębiorstwo Usługowe \"MARS\"",
+  "address": "ul. Sienkiewicza 31, 62-600 Koło",
+  "person": "Jacek Klimczak",
+  "email": "jacek.klimczak@pumars.pl",
+  "phone": "690-890-602, 63 261 63 31"
+ },
+ {
+  "region": "Wielkopolskie",
+  "name": "Przedsiębiorstwo Geodezyjne \"GEODETA\" Andrzej Bursztyn",
+  "address": "ul. Hiacyntowa 3B/46, 62-510 Konin",
+  "person": "Andrzej Bursztyn",
+  "email": "info@geodeta.org",
+  "phone": "tel.063/245-86-16"
+ },
+ {
+  "region": "Wielkopolskie",
+  "name": "Przedsiębiorstwo Usług Geodezyjno-Kartograficznych \"MIERNIK\" Janusz Stanisławek",
+  "address": "ul.Czereśniowa 2, 63-620 Laski",
+  "person": "Janusz Stanisławek",
+  "email": "biuro.miernik@interia.pl",
+  "phone": "tel.062/ 78 15 810, 0601-880-572"
+ },
+ {
+  "region": "Wielkopolskie",
+  "name": "Usługi Geodezyjno-Kartograficzne Grzegorz Jankowiak",
+  "address": "ul. Powstańców Wlkp. 42, 64-500 Szamotuły",
+  "person": "Grzegorz Jankowiak",
+  "email": "geo-jan@wp.pl",
+  "phone": "604 797 356"
+ },
+ {
+  "region": "Lubuskie",
+  "name": "Geodeta Uprawniony Jacek Strzelecki",
+  "address": "ul. Żerańska 14A, 66-400 Gorzów Wielkopolski",
+  "person": "Radosław Strzelecki",
+  "email": "radstrz@gmail.com",
+  "phone": "733040733"
+ },
+ {
+  "region": "Lubuskie",
+  "name": "Okręgowe Przedsiębiorstwo Geodezyjno-Kartograficzne GEOMAP sp. z o.o.",
+  "address": "ul. Trasa Północna 16C, 65-119 Zielona Góra",
+  "person": "Tomasz Soszka",
+  "email": "geomap@geomap.pl",
+  "phone": "tel. 068/ 326-34-64"
+ },
+ {
+  "region": "Warmińsko-Mazurskie",
+  "name": "PROGEO Tomasz Gadzikowski",
+  "address": "ul. Bolesława Jeziołowicza 3 lok. 5, 10-690 Olsztyn",
+  "person": "Tomasz Gadzikowski",
+  "email": "biuro@progeo.pro",
+  "phone": "609 990 399"
+ },
+ {
+  "region": "Pomorskie",
+  "name": "Firma Usługowo - Handlowa \"DIAZ\" Eugeniusz Lepacki",
+  "address": "ul. Wiolinowa 25, 80-298 Gdańsk",
+  "person": "Eugeniusz Lepacki",
+  "email": "diaz@diaz.com.pl",
+  "phone": "058/ 344-92-95, 058/ 344-42-12"
+ },
+ {
+  "region": "Pomorskie",
+  "name": "Kancelaria Geodezyjna Maciej Kozielczyk",
+  "address": "ul. Jesionowa 14/1, 80-261 Gdańsk",
+  "person": "Maciej Kozielczyk",
+  "email": "maciej.kozielczyk@wp.pl",
+  "phone": "058/341-96-33, 0601-666-069"
+ },
+ {
+  "region": "Zachodniopomorskie",
+  "name": "GEO-FINGER Andrzej Paluch",
+  "address": "Mielecka nr 20, 70-737 Szczecin",
+  "person": "Andrzej Paluch",
+  "email": "geofinger@gmail.com",
+  "phone": "603-334-615"
+ },
+ {
+  "region": "Zachodniopomorskie",
+  "name": "GEO-KOMPLEKS Geodezja i Kartografia Sebastian Nowacki",
+  "address": "ul. Szczygli Zaułek nr 10, lok. 8, 71-696 Szczecin",
+  "person": "Sebastian Nowacki",
+  "email": "biuro@geo-kompleks.pl",
+  "phone": "608-405-099"
+ },
+ {
+  "region": "Zachodniopomorskie",
+  "name": "GEODEZJA Michał Kaznocha",
+  "address": "ul. Sprzymierzonych nr 2, 74-100 Gryfino",
+  "person": "Michał Kaznocha",
+  "email": "helena.kaznocha@geodezjasc.pl",
+  "phone": "509-328-883, 91-415-11-26"
+ },
+ {
+  "region": "Zachodniopomorskie",
+  "name": "GEOSYSTEM Jerzy Cieszko",
+  "address": "Szczecinek, ul. Warcisława IV nr 6 lok. 2, 78-400 Szczecinek",
+  "person": "Jerzy Cieszko",
+  "email": "geosystem@ko.onet.pl",
+  "phone": "602-105-840"
+ },
+ {
+  "region": "Zachodniopomorskie",
+  "name": "GEOTOTAL PRO SP. Z. O.O",
+  "address": "ul. Dworcowa 19, 70-206 Szczecin",
+  "person": "Krzysztof Senderowicz",
+  "email": "senderowicz@geototal.com.pl",
+  "phone": "601-414-691, 91-434-11-67"
+ },
+ {
+  "region": "Zachodniopomorskie",
+  "name": "PUGiK Zbigniew Królik",
+  "address": "ul. Norwida 37, 73-200 Choszczno",
+  "person": "Zbigniew Królik",
+  "email": "zkpugik@op.pl",
+  "phone": "604-066-385, 95-765-80-40"
+ }
+]

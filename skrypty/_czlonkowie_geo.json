@@ -1,1 +1,450 @@
-[{"name": "\"GEOBEST\" Sp. z o.o.", "region": "Mazowieckie", "lat": 52.2854899, "lng": 20.9287094, "geo": "building"}, {"name": "GEODAR-BUD Ratyński Dariusz", "region": "Mazowieckie", "lat": 52.23633, "lng": 21.56052, "geo": "building"}, {"name": "Kancelaria Geodezyjna Karol Sołtysiak", "region": "Mazowieckie", "lat": 52.1952325, "lng": 20.9686262, "geo": "building"}, {"name": "MAXNET Lech Wereszczyński", "region": "Mazowieckie", "lat": 52.2349987, "lng": 21.0490695, "geo": "building"}, {"name": "Piotr Wiśniewski GEOBUD", "region": "Mazowieckie", "lat": 52.4101395, "lng": 20.92759, "geo": "building"}, {"name": "Prywatne Biuro Geodezyjne \"Do-Ba\" Zdzisław Radziszewski", "region": "Mazowieckie", "lat": 52.230345, "lng": 21.0390223, "geo": "building"}, {"name": "TPI sp. z o.o.", "region": "Mazowieckie", "lat": 52.2132916, "lng": 21.1047929, "geo": "building"}, {"name": "Usługi Geodezyjne mgr inż. Jarosław Żelazowski", "region": "Mazowieckie", "lat": 51.3921539, "lng": 21.104606, "geo": "building"}, {"name": "Firma Geodezyjna", "region": "Podkarpackie", "lat": 50.1046766, "lng": 22.3192681, "geo": "building"}, {"name": "GEOKART-INTERNATIONAL SP. Z O.O.", "region": "Podkarpackie", "lat": 50.0350357, "lng": 21.9836162, "geo": "building"}, {"name": "GEORES Sp. z o.o.", "region": "Podkarpackie", "lat": 50.0370455, "lng": 22.0093062, "geo": "building"}, {"name": "GLOB-KART Usługi Geodezyjno-Kartograficzne mgr inż. Daniel Ruszała", "region": "Podkarpackie", "lat": 50.0863214, "lng": 22.0975671, "geo": "city"}, {"name": "Przedsiębiorstwo Usług Geodezyjno-Projektowych \"GEOMIAR\" sp. z o.o.", "region": "Podkarpackie", "lat": 50.0170251, "lng": 22.6677926, "geo": "building"}, {"name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Maciej Krok", "region": "Podkarpackie", "lat": 49.5583208, "lng": 22.195394, "geo": "building"}, {"name": "Vector Sp. z o.o.", "region": "Podkarpackie", "lat": 50.0201704, "lng": 22.6666979, "geo": "building"}, {"name": "\"GEOPRZEM Spółka z ograniczoną odpowiedzialnością\" Spółka komandytowa", "region": "Małopolskie", "lat": 49.9743144, "lng": 19.8020133, "geo": "building"}, {"name": "\"MGGP\" SA", "region": "Małopolskie", "lat": 50.0098148, "lng": 20.9818997, "geo": "building"}, {"name": "AXIS Grupa Geodezyjna Sp. z o.o.", "region": "Małopolskie", "lat": 50.0233175, "lng": 19.7966261, "geo": "building"}, {"name": "Ale Zarys Aleksandra Onak", "region": "Małopolskie", "lat": 49.9978339, "lng": 20.9854844, "geo": "building"}, {"name": "Firma Usługowo-Handlowa VERTICAL Arkadiusz Mroszczyk", "region": "Małopolskie", "lat": 50.0837179, "lng": 20.0153062, "geo": "building"}, {"name": "GEO-S USŁUGI GEODEZYJNE Karolina Kowar,Tadeusz Piasek s.c.", "region": "Małopolskie", "lat": 50.3622779, "lng": 20.0401881, "geo": "building"}, {"name": "Geodezja mgr inż. Marcin Tlałka s.c.", "region": "Małopolskie", "lat": 50.0953498, "lng": 19.9236401, "geo": "building"}, {"name": "Przedsiębiorstwo Geodezyjne GEOPROF Jarosław Kożuch, Sławomir Zając Spółka Jawna", "region": "Małopolskie", "lat": 50.0853099, "lng": 19.8966088, "geo": "building"}, {"name": "Usługi Geodezyjno Kartograficzne Rafał Jarek", "region": "Małopolskie", "lat": 49.6536361, "lng": 21.1833783, "geo": "building"}, {"name": "\"GEOBID\" Sp. z o.o.", "region": "Śląskie", "lat": 50.2645769, "lng": 18.9774005, "geo": "building"}, {"name": "\"PROGEO KATOWICE\" M.Rogala-Szczepańska, M.Nowak Spółka Jawna", "region": "Śląskie", "lat": 50.2718244, "lng": 19.0252992, "geo": "building"}, {"name": "Biuro Geodezyjne \"GEODEX\" Mgr inż. Szymon P. Malinowski", "region": "Śląskie", "lat": 49.8273081, "lng": 19.0438723, "geo": "building"}, {"name": "DARGEO Dariusz Przybycień", "region": "Śląskie", "lat": 50.3036429, "lng": 18.7530067, "geo": "building"}, {"name": "EXIGEO Sp. z o.o.", "region": "Śląskie", "lat": 50.2341107, "lng": 18.9746528, "geo": "building"}, {"name": "GROTECH Krzysztof Grochowina", "region": "Śląskie", "lat": 50.7425295, "lng": 19.1384967, "geo": "building"}, {"name": "Geodezja i Kartografia Małgorzata August", "region": "Śląskie", "lat": 50.5219271, "lng": 19.4691283, "geo": "building"}, {"name": "KLECZKO MAREK MAPAN geodezja", "region": "Śląskie", "lat": 50.2920941, "lng": 19.1344149, "geo": "building"}, {"name": "Pracownia Geodezji Inżynieryjno - Przemysłowej \"GIPART\" Włodzimierz Dyba", "region": "Śląskie", "lat": 50.298447, "lng": 19.1543517, "geo": "building"}, {"name": "Przedsiębiorstwo Usług Geodezyjnych sp. z o.o.", "region": "Śląskie", "lat": 50.8096052, "lng": 19.1064315, "geo": "building"}, {"name": "UnimapTech Jerzy Bryk", "region": "Śląskie", "lat": 50.2437792, "lng": 18.9940125, "geo": "building"}, {"name": "Usługi Geodezyjne mgr inż. Marcin Pietrucha", "region": "Śląskie", "lat": 50.273223, "lng": 19.1232199, "geo": "building"}, {"name": "Usługi Geodezyjno - Miernicze Płonka Kazimierz", "region": "Śląskie", "lat": 50.1016403, "lng": 18.7367902, "geo": "building"}, {"name": "Zakład Usług Geodezyjnych i Kartograficznych \"PRYZMAT\" inż. Zenon Kulesza", "region": "Śląskie", "lat": 50.8375994, "lng": 19.1586405, "geo": "building"}, {"name": "GEODEZJA inż. Mirosław Schumacher", "region": "Opolskie", "lat": 50.6638095, "lng": 17.9594236, "geo": "building"}, {"name": "PilotBSP.pl Gerard Szustek", "region": "Dolnośląskie", "lat": 50.788505, "lng": 16.2764959, "geo": "building"}, {"name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Antoni Buczek", "region": "Dolnośląskie", "lat": 51.3905589, "lng": 16.2020926, "geo": "building"}, {"name": "\"CONSULTING-TOKARSKI\"", "region": "Łódzkie", "lat": 51.5861453, "lng": 18.7326366, "geo": "building"}, {"name": "GEOPLAN Andrzej Kwiatkowski", "region": "Łódzkie", "lat": 51.863791, "lng": 19.4036737, "geo": "building"}, {"name": "JAKETRON Jakub Fryziel", "region": "Łódzkie", "lat": 51.5162181, "lng": 20.0447403, "geo": "building"}, {"name": "Kancelaria Geodezyjna Grzegorz Kwapisz", "region": "Łódzkie", "lat": 51.4032884, "lng": 19.6763796, "geo": "building"}, {"name": "Pracownia Geodezyjna GEODELTA sp. z o.o.", "region": "Łódzkie", "lat": 51.9490865, "lng": 20.154261, "geo": "building"}, {"name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych \"GEOTRION\" s.c M. Chojnacki, P. Szyszka, P. Świderek", "region": "Łódzkie", "lat": 51.7625635, "lng": 19.5007366, "geo": "building"}, {"name": "Łódzkie Przedsiębiorstwo Geodezyjno-Informatyczne s.c. Michał Pawłowski, Maciej Jasik", "region": "Łódzkie", "lat": 51.7724992, "lng": 19.4791534, "geo": "building"}, {"name": "Firma Handlowo Usługowa \"GEODROM\" Roman Nowakowski", "region": "Wielkopolskie", "lat": 52.2548544, "lng": 18.9157714, "geo": "building"}, {"name": "Geodezja WIS s.c. Paweł Glinkowski, Sławomir Piotrowski, Zenon Zawodny", "region": "Wielkopolskie", "lat": 51.6923143, "lng": 17.4308869, "geo": "building"}, {"name": "Klimczak Jacek Przedsiębiorstwo Usługowe \"MARS\"", "region": "Wielkopolskie", "lat": 52.2007532, "lng": 18.6411131, "geo": "building"}, {"name": "Przedsiębiorstwo Geodezyjne \"GEODETA\" Andrzej Bursztyn", "region": "Wielkopolskie", "lat": 52.2344897, "lng": 18.2127592, "geo": "building"}, {"name": "Przedsiębiorstwo Usług Geodezyjno-Kartograficznych \"MIERNIK\" Janusz Stanisławek", "region": "Wielkopolskie", "lat": 51.1974513, "lng": 18.02811, "geo": "building"}, {"name": "Usługi Geodezyjno-Kartograficzne Grzegorz Jankowiak", "region": "Wielkopolskie", "lat": 52.6214412, "lng": 16.5665362, "geo": "building"}, {"name": "Geodeta Uprawniony Jacek Strzelecki", "region": "Lubuskie", "lat": 52.7238421, "lng": 15.2295407, "geo": "street"}, {"name": "Okręgowe Przedsiębiorstwo Geodezyjno-Kartograficzne GEOMAP sp. z o.o.", "region": "Lubuskie", "lat": 51.9630596, "lng": 15.5055971, "geo": "building"}, {"name": "PROGEO Tomasz Gadzikowski", "region": "Warmińsko-Mazurskie", "lat": 53.7430809, "lng": 20.5112148, "geo": "building"}, {"name": "Firma Usługowo - Handlowa \"DIAZ\" Eugeniusz Lepacki", "region": "Pomorskie", "lat": 54.3784106, "lng": 18.5230324, "geo": "building"}, {"name": "Kancelaria Geodezyjna Maciej Kozielczyk", "region": "Pomorskie", "lat": 54.3797311, "lng": 18.5988874, "geo": "building"}, {"name": "GEO-FINGER Andrzej Paluch", "region": "Zachodniopomorskie", "lat": 53.3631794, "lng": 14.6094258, "geo": "building"}, {"name": "GEO-KOMPLEKS Geodezja i Kartografia Sebastian Nowacki", "region": "Zachodniopomorskie", "lat": 53.4677214, "lng": 14.5658282, "geo": "building"}, {"name": "GEODEZJA Michał Kaznocha", "region": "Zachodniopomorskie", "lat": 53.2542229, "lng": 14.4918458, "geo": "building"}, {"name": "GEOSYSTEM Jerzy Cieszko", "region": "Zachodniopomorskie", "lat": 53.7016169, "lng": 16.699952, "geo": "building"}, {"name": "GEOTOTAL PRO SP. Z. O.O", "region": "Zachodniopomorskie", "lat": 53.4225538, "lng": 14.5522543, "geo": "building"}, {"name": "PUGiK Zbigniew Królik", "region": "Zachodniopomorskie", "lat": 53.1808849, "lng": 15.4136512, "geo": "building"}]
+[
+ {
+  "name": "\"GEOBEST\" Sp. z o.o.",
+  "region": "Mazowieckie",
+  "lat": 52.2854899,
+  "lng": 20.9287094,
+  "geo": "building"
+ },
+ {
+  "name": "GEODAR-BUD Ratyński Dariusz",
+  "region": "Mazowieckie",
+  "lat": 52.23633,
+  "lng": 21.56052,
+  "geo": "building"
+ },
+ {
+  "name": "Kancelaria Geodezyjna Karol Sołtysiak",
+  "region": "Mazowieckie",
+  "lat": 52.1952325,
+  "lng": 20.9686262,
+  "geo": "building"
+ },
+ {
+  "name": "Piotr Wiśniewski GEOBUD",
+  "region": "Mazowieckie",
+  "lat": 52.4101395,
+  "lng": 20.92759,
+  "geo": "building"
+ },
+ {
+  "name": "Prywatne Biuro Geodezyjne \"Do-Ba\" Zdzisław Radziszewski",
+  "region": "Mazowieckie",
+  "lat": 52.230345,
+  "lng": 21.0390223,
+  "geo": "building"
+ },
+ {
+  "name": "TPI sp. z o.o.",
+  "region": "Mazowieckie",
+  "lat": 52.2132916,
+  "lng": 21.1047929,
+  "geo": "building"
+ },
+ {
+  "name": "Usługi Geodezyjne mgr inż. Jarosław Żelazowski",
+  "region": "Mazowieckie",
+  "lat": 51.3921539,
+  "lng": 21.104606,
+  "geo": "building"
+ },
+ {
+  "name": "Firma Geodezyjna",
+  "region": "Podkarpackie",
+  "lat": 50.1046766,
+  "lng": 22.3192681,
+  "geo": "building"
+ },
+ {
+  "name": "GEOKART-INTERNATIONAL SP. Z O.O.",
+  "region": "Podkarpackie",
+  "lat": 50.0350357,
+  "lng": 21.9836162,
+  "geo": "building"
+ },
+ {
+  "name": "GEORES Sp. z o.o.",
+  "region": "Podkarpackie",
+  "lat": 50.0370455,
+  "lng": 22.0093062,
+  "geo": "building"
+ },
+ {
+  "name": "GLOB-KART Usługi Geodezyjno-Kartograficzne mgr inż. Daniel Ruszała",
+  "region": "Podkarpackie",
+  "lat": 50.0863214,
+  "lng": 22.0975671,
+  "geo": "city"
+ },
+ {
+  "name": "Przedsiębiorstwo Usług Geodezyjno-Projektowych \"GEOMIAR\" sp. z o.o.",
+  "region": "Podkarpackie",
+  "lat": 50.0170251,
+  "lng": 22.6677926,
+  "geo": "building"
+ },
+ {
+  "name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Maciej Krok",
+  "region": "Podkarpackie",
+  "lat": 49.5583208,
+  "lng": 22.195394,
+  "geo": "building"
+ },
+ {
+  "name": "Vector Sp. z o.o.",
+  "region": "Podkarpackie",
+  "lat": 50.0201704,
+  "lng": 22.6666979,
+  "geo": "building"
+ },
+ {
+  "name": "\"GEOPRZEM Spółka z ograniczoną odpowiedzialnością\" Spółka komandytowa",
+  "region": "Małopolskie",
+  "lat": 49.9743144,
+  "lng": 19.8020133,
+  "geo": "building"
+ },
+ {
+  "name": "\"MGGP\" SA",
+  "region": "Małopolskie",
+  "lat": 50.0098148,
+  "lng": 20.9818997,
+  "geo": "building"
+ },
+ {
+  "name": "AXIS Grupa Geodezyjna Sp. z o.o.",
+  "region": "Małopolskie",
+  "lat": 50.0233175,
+  "lng": 19.7966261,
+  "geo": "building"
+ },
+ {
+  "name": "Ale Zarys Aleksandra Onak",
+  "region": "Małopolskie",
+  "lat": 49.9978339,
+  "lng": 20.9854844,
+  "geo": "building"
+ },
+ {
+  "name": "Firma Usługowo-Handlowa VERTICAL Arkadiusz Mroszczyk",
+  "region": "Małopolskie",
+  "lat": 50.0837179,
+  "lng": 20.0153062,
+  "geo": "building"
+ },
+ {
+  "name": "GEO-S USŁUGI GEODEZYJNE Karolina Kowar,Tadeusz Piasek s.c.",
+  "region": "Małopolskie",
+  "lat": 50.3622779,
+  "lng": 20.0401881,
+  "geo": "building"
+ },
+ {
+  "name": "Geodezja mgr inż. Marcin Tlałka s.c.",
+  "region": "Małopolskie",
+  "lat": 50.0953498,
+  "lng": 19.9236401,
+  "geo": "building"
+ },
+ {
+  "name": "Przedsiębiorstwo Geodezyjne GEOPROF Jarosław Kożuch, Sławomir Zając Spółka Jawna",
+  "region": "Małopolskie",
+  "lat": 50.0853099,
+  "lng": 19.8966088,
+  "geo": "building"
+ },
+ {
+  "name": "Usługi Geodezyjno Kartograficzne Rafał Jarek",
+  "region": "Małopolskie",
+  "lat": 49.6536361,
+  "lng": 21.1833783,
+  "geo": "building"
+ },
+ {
+  "name": "\"GEOBID\" Sp. z o.o.",
+  "region": "Śląskie",
+  "lat": 50.2645769,
+  "lng": 18.9774005,
+  "geo": "building"
+ },
+ {
+  "name": "\"PROGEO KATOWICE\" M.Rogala-Szczepańska, M.Nowak Spółka Jawna",
+  "region": "Śląskie",
+  "lat": 50.2718244,
+  "lng": 19.0252992,
+  "geo": "building"
+ },
+ {
+  "name": "Biuro Geodezyjne \"GEODEX\" Mgr inż. Szymon P. Malinowski",
+  "region": "Śląskie",
+  "lat": 49.8273081,
+  "lng": 19.0438723,
+  "geo": "building"
+ },
+ {
+  "name": "DARGEO Dariusz Przybycień",
+  "region": "Śląskie",
+  "lat": 50.3036429,
+  "lng": 18.7530067,
+  "geo": "building"
+ },
+ {
+  "name": "EXIGEO Sp. z o.o.",
+  "region": "Śląskie",
+  "lat": 50.2341107,
+  "lng": 18.9746528,
+  "geo": "building"
+ },
+ {
+  "name": "GROTECH Krzysztof Grochowina",
+  "region": "Śląskie",
+  "lat": 50.7425295,
+  "lng": 19.1384967,
+  "geo": "building"
+ },
+ {
+  "name": "Geodezja i Kartografia Małgorzata August",
+  "region": "Śląskie",
+  "lat": 50.5219271,
+  "lng": 19.4691283,
+  "geo": "building"
+ },
+ {
+  "name": "KLECZKO MAREK MAPAN geodezja",
+  "region": "Śląskie",
+  "lat": 50.2920941,
+  "lng": 19.1344149,
+  "geo": "building"
+ },
+ {
+  "name": "Pracownia Geodezji Inżynieryjno - Przemysłowej \"GIPART\" Włodzimierz Dyba",
+  "region": "Śląskie",
+  "lat": 50.298447,
+  "lng": 19.1543517,
+  "geo": "building"
+ },
+ {
+  "name": "Przedsiębiorstwo Usług Geodezyjnych sp. z o.o.",
+  "region": "Śląskie",
+  "lat": 50.8096052,
+  "lng": 19.1064315,
+  "geo": "building"
+ },
+ {
+  "name": "UnimapTech Jerzy Bryk",
+  "region": "Śląskie",
+  "lat": 50.2437792,
+  "lng": 18.9940125,
+  "geo": "building"
+ },
+ {
+  "name": "Usługi Geodezyjne mgr inż. Marcin Pietrucha",
+  "region": "Śląskie",
+  "lat": 50.273223,
+  "lng": 19.1232199,
+  "geo": "building"
+ },
+ {
+  "name": "Usługi Geodezyjno - Miernicze Płonka Kazimierz",
+  "region": "Śląskie",
+  "lat": 50.1016403,
+  "lng": 18.7367902,
+  "geo": "building"
+ },
+ {
+  "name": "Zakład Usług Geodezyjnych i Kartograficznych \"PRYZMAT\" inż. Zenon Kulesza",
+  "region": "Śląskie",
+  "lat": 50.8375994,
+  "lng": 19.1586405,
+  "geo": "building"
+ },
+ {
+  "name": "GEODEZJA inż. Mirosław Schumacher",
+  "region": "Opolskie",
+  "lat": 50.6638095,
+  "lng": 17.9594236,
+  "geo": "building"
+ },
+ {
+  "name": "PilotBSP.pl Gerard Szustek",
+  "region": "Dolnośląskie",
+  "lat": 50.788505,
+  "lng": 16.2764959,
+  "geo": "building"
+ },
+ {
+  "name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Antoni Buczek",
+  "region": "Dolnośląskie",
+  "lat": 51.3905589,
+  "lng": 16.2020926,
+  "geo": "building"
+ },
+ {
+  "name": "\"CONSULTING-TOKARSKI\"",
+  "region": "Łódzkie",
+  "lat": 51.5861453,
+  "lng": 18.7326366,
+  "geo": "building"
+ },
+ {
+  "name": "GEOPLAN Andrzej Kwiatkowski",
+  "region": "Łódzkie",
+  "lat": 51.863791,
+  "lng": 19.4036737,
+  "geo": "building"
+ },
+ {
+  "name": "JAKETRON Jakub Fryziel",
+  "region": "Łódzkie",
+  "lat": 51.5162181,
+  "lng": 20.0447403,
+  "geo": "building"
+ },
+ {
+  "name": "Kancelaria Geodezyjna Grzegorz Kwapisz",
+  "region": "Łódzkie",
+  "lat": 51.4032884,
+  "lng": 19.6763796,
+  "geo": "building"
+ },
+ {
+  "name": "Pracownia Geodezyjna GEODELTA sp. z o.o.",
+  "region": "Łódzkie",
+  "lat": 51.9490865,
+  "lng": 20.154261,
+  "geo": "building"
+ },
+ {
+  "name": "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych \"GEOTRION\" s.c M. Chojnacki, P. Szyszka, P. Świderek",
+  "region": "Łódzkie",
+  "lat": 51.7625635,
+  "lng": 19.5007366,
+  "geo": "building"
+ },
+ {
+  "name": "Łódzkie Przedsiębiorstwo Geodezyjno-Informatyczne s.c. Michał Pawłowski, Maciej Jasik",
+  "region": "Łódzkie",
+  "lat": 51.7724992,
+  "lng": 19.4791534,
+  "geo": "building"
+ },
+ {
+  "name": "Firma Handlowo Usługowa \"GEODROM\" Roman Nowakowski",
+  "region": "Wielkopolskie",
+  "lat": 52.2548544,
+  "lng": 18.9157714,
+  "geo": "building"
+ },
+ {
+  "name": "Geodezja WIS s.c. Paweł Glinkowski, Sławomir Piotrowski, Zenon Zawodny",
+  "region": "Wielkopolskie",
+  "lat": 51.6923143,
+  "lng": 17.4308869,
+  "geo": "building"
+ },
+ {
+  "name": "Klimczak Jacek Przedsiębiorstwo Usługowe \"MARS\"",
+  "region": "Wielkopolskie",
+  "lat": 52.2007532,
+  "lng": 18.6411131,
+  "geo": "building"
+ },
+ {
+  "name": "Przedsiębiorstwo Geodezyjne \"GEODETA\" Andrzej Bursztyn",
+  "region": "Wielkopolskie",
+  "lat": 52.2344897,
+  "lng": 18.2127592,
+  "geo": "building"
+ },
+ {
+  "name": "Przedsiębiorstwo Usług Geodezyjno-Kartograficznych \"MIERNIK\" Janusz Stanisławek",
+  "region": "Wielkopolskie",
+  "lat": 51.1974513,
+  "lng": 18.02811,
+  "geo": "building"
+ },
+ {
+  "name": "Usługi Geodezyjno-Kartograficzne Grzegorz Jankowiak",
+  "region": "Wielkopolskie",
+  "lat": 52.6214412,
+  "lng": 16.5665362,
+  "geo": "building"
+ },
+ {
+  "name": "Geodeta Uprawniony Jacek Strzelecki",
+  "region": "Lubuskie",
+  "lat": 52.7238421,
+  "lng": 15.2295407,
+  "geo": "street"
+ },
+ {
+  "name": "Okręgowe Przedsiębiorstwo Geodezyjno-Kartograficzne GEOMAP sp. z o.o.",
+  "region": "Lubuskie",
+  "lat": 51.9630596,
+  "lng": 15.5055971,
+  "geo": "building"
+ },
+ {
+  "name": "PROGEO Tomasz Gadzikowski",
+  "region": "Warmińsko-Mazurskie",
+  "lat": 53.7430809,
+  "lng": 20.5112148,
+  "geo": "building"
+ },
+ {
+  "name": "Firma Usługowo - Handlowa \"DIAZ\" Eugeniusz Lepacki",
+  "region": "Pomorskie",
+  "lat": 54.3784106,
+  "lng": 18.5230324,
+  "geo": "building"
+ },
+ {
+  "name": "Kancelaria Geodezyjna Maciej Kozielczyk",
+  "region": "Pomorskie",
+  "lat": 54.3797311,
+  "lng": 18.5988874,
+  "geo": "building"
+ },
+ {
+  "name": "GEO-FINGER Andrzej Paluch",
+  "region": "Zachodniopomorskie",
+  "lat": 53.3631794,
+  "lng": 14.6094258,
+  "geo": "building"
+ },
+ {
+  "name": "GEO-KOMPLEKS Geodezja i Kartografia Sebastian Nowacki",
+  "region": "Zachodniopomorskie",
+  "lat": 53.4677214,
+  "lng": 14.5658282,
+  "geo": "building"
+ },
+ {
+  "name": "GEODEZJA Michał Kaznocha",
+  "region": "Zachodniopomorskie",
+  "lat": 53.2542229,
+  "lng": 14.4918458,
+  "geo": "building"
+ },
+ {
+  "name": "GEOSYSTEM Jerzy Cieszko",
+  "region": "Zachodniopomorskie",
+  "lat": 53.7016169,
+  "lng": 16.699952,
+  "geo": "building"
+ },
+ {
+  "name": "GEOTOTAL PRO SP. Z. O.O",
+  "region": "Zachodniopomorskie",
+  "lat": 53.4225538,
+  "lng": 14.5522543,
+  "geo": "building"
+ },
+ {
+  "name": "PUGiK Zbigniew Królik",
+  "region": "Zachodniopomorskie",
+  "lat": 53.1808849,
+  "lng": 15.4136512,
+  "geo": "building"
+ }
+]

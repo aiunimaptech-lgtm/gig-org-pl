@@ -1,375 +1,369 @@
 {
-"\"GEOBEST\" Sp. z o.o.": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"GEODAR-BUD Ratyński Dariusz": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Kancelaria Geodezyjna Karol Sołtysiak": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"MAXNET Lech Wereszczyński": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Piotr Wiśniewski GEOBUD": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Prywatne Biuro Geodezyjne \"Do-Ba\" Zdzisław Radziszewski": {
-"nip": "5260039556",
-"regon": "010019948",
-"krs": null,
-"gus": true,
-"nazwa_gus": "PRYWATNE BIURO GEODEZYJNE \"DO - BA\" ZDZISŁAW RADZISZEWSKI"
-},
-"TPI sp. z o.o.": {
-"nip": "5270205140",
-"regon": "008415083",
-"krs": "0000173850",
-"gus": true,
-"nazwa_gus": "TPI SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
-},
-"Usługi Geodezyjne mgr inż. Jarosław Żelazowski": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Firma Geodezyjna": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"GEOKART-INTERNATIONAL SP. Z O.O.": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"GEORES Sp. z o.o.": {
-"nip": "8130333566",
-"regon": "690020005",
-"krs": "0000017108",
-"gus": true,
-"nazwa_gus": "GEORES SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
-},
-"GLOB-KART Usługi Geodezyjno-Kartograficzne mgr inż. Daniel Ruszała": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Przedsiębiorstwo Usług Geodezyjno-Projektowych \"GEOMIAR\" sp. z o.o.": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Maciej Krok": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Vector Sp. z o.o.": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"\"GEOPRZEM Spółka z ograniczoną odpowiedzialnością\" Spółka komandytowa": {
-"nip": "6790004000",
-"regon": "351502340",
-"krs": "0000409303",
-"gus": true,
-"nazwa_gus": "\"GEOPRZEM SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ\" SPÓŁKA KOMANDYTOWA"
-},
-"\"MGGP\" SA": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"AXIS Grupa Geodezyjna Sp. z o.o.": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Ale Zarys Aleksandra Onak": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Firma Usługowo-Handlowa VERTICAL Arkadiusz Mroszczyk": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"GEO-S USŁUGI GEODEZYJNE Karolina Kowar,Tadeusz Piasek s.c.": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Geodezja mgr inż. Marcin Tlałka s.c.": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Przedsiębiorstwo Geodezyjne GEOPROF Jarosław Kożuch, Sławomir Zając Spółka Jawna": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Usługi Geodezyjno Kartograficzne Rafał Jarek": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"\"GEOBID\" Sp. z o.o.": {
-"nip": "6340132784",
-"regon": "271100591",
-"krs": "0000060944",
-"gus": true,
-"nazwa_gus": "GEOBID SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
-},
-"\"PROGEO KATOWICE\" M.Rogala-Szczepańska, M.Nowak Spółka Jawna": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Biuro Geodezyjne \"GEODEX\" Mgr inż. Szymon P. Malinowski": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"DARGEO Dariusz Przybycień": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"EXIGEO Sp. z o.o.": {
-"nip": "6342965175",
-"regon": "383979004",
-"krs": "0000796944",
-"gus": true,
-"nazwa_gus": "EXIGEO SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
-},
-"GROTECH Krzysztof Grochowina": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Geodezja i Kartografia Małgorzata August": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"KLECZKO MAREK MAPAN geodezja": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Pracownia Geodezji Inżynieryjno - Przemysłowej \"GIPART\" Włodzimierz Dyba": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Przedsiębiorstwo Usług Geodezyjnych sp. z o.o.": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"UnimapTech Jerzy Bryk": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Usługi Geodezyjne mgr inż. Marcin Pietrucha": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Usługi Geodezyjno - Miernicze Płonka Kazimierz": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Zakład Usług Geodezyjnych i Kartograficznych \"PRYZMAT\" inż. Zenon Kulesza": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"GEODEZJA inż. Mirosław Schumacher": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"PilotBSP.pl Gerard Szustek": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Antoni Buczek": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"\"CONSULTING-TOKARSKI\"": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"GEOPLAN Andrzej Kwiatkowski": {
-"nip": "7321642697",
-"regon": "471724948",
-"krs": null,
-"gus": true,
-"nazwa_gus": "GEOPLAN  ANDRZEJ KWIATKOWSKI"
-},
-"JAKETRON Jakub Fryziel": {
-"nip": "7732190311",
-"regon": "100901711",
-"krs": null,
-"gus": true,
-"nazwa_gus": "JAKETRON JAKUB FRYZIEL"
-},
-"Kancelaria Geodezyjna Grzegorz Kwapisz": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Pracownia Geodezyjna GEODELTA sp. z o.o.": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych \"GEOTRION\" s.c M. Chojnacki, P. Szyszka, P. Świderek": {
-"nip": "7280001026",
-"regon": "004314149",
-"krs": null,
-"gus": true,
-"nazwa_gus": "\"GEOTRION\" P.U.G.I K.  MARIUSZ CHOJNACKI, PIOTR SZYSZKA, PAWEŁ ŚWIDEREK"
-},
-"Łódzkie Przedsiębiorstwo Geodezyjno-Informatyczne s.c. Michał Pawłowski, Maciej Jasik": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Firma Handlowo Usługowa \"GEODROM\" Roman Nowakowski": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Geodezja WIS s.c. Paweł Glinkowski, Sławomir Piotrowski, Zenon Zawodny": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Klimczak Jacek Przedsiębiorstwo Usługowe \"MARS\"": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Przedsiębiorstwo Geodezyjne \"GEODETA\" Andrzej Bursztyn": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Przedsiębiorstwo Usług Geodezyjno-Kartograficznych \"MIERNIK\" Janusz Stanisławek": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Usługi Geodezyjno-Kartograficzne Grzegorz Jankowiak": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Geodeta Uprawniony Jacek Strzelecki": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Okręgowe Przedsiębiorstwo Geodezyjno-Kartograficzne GEOMAP sp. z o.o.": {
-"nip": "9290052581",
-"regon": "970002730",
-"krs": "0000053083",
-"gus": true,
-"nazwa_gus": "OKRĘGOWE PRZEDSIĘBIORSTWO GEODEZYJNO-KARTOGRAFICZNE \"GEOMAP\" SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
-},
-"PROGEO Tomasz Gadzikowski": {
-"nip": "7393153915",
-"regon": "381238019",
-"krs": null,
-"gus": true,
-"nazwa_gus": "PROGEO Tomasz Gadzikowski"
-},
-"Firma Usługowo - Handlowa \"DIAZ\" Eugeniusz Lepacki": {
-"nip": null,
-"regon": null,
-"krs": null,
-"gus": false
-},
-"Kancelaria Geodezyjna Maciej Kozielczyk": {
-"nip": "9570030907",
-"regon": "190482945",
-"krs": null,
-"gus": true,
-"nazwa_gus": "KANCELARIA GEODEZYJNA MACIEJ KOZIELCZYK"
-},
-"GEO-FINGER Andrzej Paluch": {
-"nip": "9551991830",
-"regon": "320341472",
-"krs": null,
-"gus": true,
-"nazwa_gus": "GEO-FINGER ANDRZEJ PALUCH"
-}
+ "\"GEOBEST\" Sp. z o.o.": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "GEODAR-BUD Ratyński Dariusz": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Kancelaria Geodezyjna Karol Sołtysiak": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Piotr Wiśniewski GEOBUD": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Prywatne Biuro Geodezyjne \"Do-Ba\" Zdzisław Radziszewski": {
+  "nip": "5260039556",
+  "regon": "010019948",
+  "krs": null,
+  "gus": true,
+  "nazwa_gus": "PRYWATNE BIURO GEODEZYJNE \"DO - BA\" ZDZISŁAW RADZISZEWSKI"
+ },
+ "TPI sp. z o.o.": {
+  "nip": "5270205140",
+  "regon": "008415083",
+  "krs": "0000173850",
+  "gus": true,
+  "nazwa_gus": "TPI SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
+ },
+ "Usługi Geodezyjne mgr inż. Jarosław Żelazowski": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Firma Geodezyjna": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "GEOKART-INTERNATIONAL SP. Z O.O.": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "GEORES Sp. z o.o.": {
+  "nip": "8130333566",
+  "regon": "690020005",
+  "krs": "0000017108",
+  "gus": true,
+  "nazwa_gus": "GEORES SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
+ },
+ "GLOB-KART Usługi Geodezyjno-Kartograficzne mgr inż. Daniel Ruszała": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Przedsiębiorstwo Usług Geodezyjno-Projektowych \"GEOMIAR\" sp. z o.o.": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Maciej Krok": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Vector Sp. z o.o.": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "\"GEOPRZEM Spółka z ograniczoną odpowiedzialnością\" Spółka komandytowa": {
+  "nip": "6790004000",
+  "regon": "351502340",
+  "krs": "0000409303",
+  "gus": true,
+  "nazwa_gus": "\"GEOPRZEM SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ\" SPÓŁKA KOMANDYTOWA"
+ },
+ "\"MGGP\" SA": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "AXIS Grupa Geodezyjna Sp. z o.o.": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Ale Zarys Aleksandra Onak": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Firma Usługowo-Handlowa VERTICAL Arkadiusz Mroszczyk": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "GEO-S USŁUGI GEODEZYJNE Karolina Kowar,Tadeusz Piasek s.c.": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Geodezja mgr inż. Marcin Tlałka s.c.": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Przedsiębiorstwo Geodezyjne GEOPROF Jarosław Kożuch, Sławomir Zając Spółka Jawna": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Usługi Geodezyjno Kartograficzne Rafał Jarek": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "\"GEOBID\" Sp. z o.o.": {
+  "nip": "6340132784",
+  "regon": "271100591",
+  "krs": "0000060944",
+  "gus": true,
+  "nazwa_gus": "GEOBID SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
+ },
+ "\"PROGEO KATOWICE\" M.Rogala-Szczepańska, M.Nowak Spółka Jawna": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Biuro Geodezyjne \"GEODEX\" Mgr inż. Szymon P. Malinowski": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "DARGEO Dariusz Przybycień": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "EXIGEO Sp. z o.o.": {
+  "nip": "6342965175",
+  "regon": "383979004",
+  "krs": "0000796944",
+  "gus": true,
+  "nazwa_gus": "EXIGEO SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
+ },
+ "GROTECH Krzysztof Grochowina": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Geodezja i Kartografia Małgorzata August": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "KLECZKO MAREK MAPAN geodezja": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Pracownia Geodezji Inżynieryjno - Przemysłowej \"GIPART\" Włodzimierz Dyba": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Przedsiębiorstwo Usług Geodezyjnych sp. z o.o.": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "UnimapTech Jerzy Bryk": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Usługi Geodezyjne mgr inż. Marcin Pietrucha": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Usługi Geodezyjno - Miernicze Płonka Kazimierz": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Zakład Usług Geodezyjnych i Kartograficznych \"PRYZMAT\" inż. Zenon Kulesza": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "GEODEZJA inż. Mirosław Schumacher": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "PilotBSP.pl Gerard Szustek": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych Antoni Buczek": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "\"CONSULTING-TOKARSKI\"": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "GEOPLAN Andrzej Kwiatkowski": {
+  "nip": "7321642697",
+  "regon": "471724948",
+  "krs": null,
+  "gus": true,
+  "nazwa_gus": "GEOPLAN  ANDRZEJ KWIATKOWSKI"
+ },
+ "JAKETRON Jakub Fryziel": {
+  "nip": "7732190311",
+  "regon": "100901711",
+  "krs": null,
+  "gus": true,
+  "nazwa_gus": "JAKETRON JAKUB FRYZIEL"
+ },
+ "Kancelaria Geodezyjna Grzegorz Kwapisz": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Pracownia Geodezyjna GEODELTA sp. z o.o.": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Przedsiębiorstwo Usług Geodezyjnych i Kartograficznych \"GEOTRION\" s.c M. Chojnacki, P. Szyszka, P. Świderek": {
+  "nip": "7280001026",
+  "regon": "004314149",
+  "krs": null,
+  "gus": true,
+  "nazwa_gus": "\"GEOTRION\" P.U.G.I K.  MARIUSZ CHOJNACKI, PIOTR SZYSZKA, PAWEŁ ŚWIDEREK"
+ },
+ "Łódzkie Przedsiębiorstwo Geodezyjno-Informatyczne s.c. Michał Pawłowski, Maciej Jasik": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Firma Handlowo Usługowa \"GEODROM\" Roman Nowakowski": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Geodezja WIS s.c. Paweł Glinkowski, Sławomir Piotrowski, Zenon Zawodny": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Klimczak Jacek Przedsiębiorstwo Usługowe \"MARS\"": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Przedsiębiorstwo Geodezyjne \"GEODETA\" Andrzej Bursztyn": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Przedsiębiorstwo Usług Geodezyjno-Kartograficznych \"MIERNIK\" Janusz Stanisławek": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Usługi Geodezyjno-Kartograficzne Grzegorz Jankowiak": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Geodeta Uprawniony Jacek Strzelecki": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Okręgowe Przedsiębiorstwo Geodezyjno-Kartograficzne GEOMAP sp. z o.o.": {
+  "nip": "9290052581",
+  "regon": "970002730",
+  "krs": "0000053083",
+  "gus": true,
+  "nazwa_gus": "OKRĘGOWE PRZEDSIĘBIORSTWO GEODEZYJNO-KARTOGRAFICZNE \"GEOMAP\" SPÓŁKA Z OGRANICZONĄ ODPOWIEDZIALNOŚCIĄ"
+ },
+ "PROGEO Tomasz Gadzikowski": {
+  "nip": "7393153915",
+  "regon": "381238019",
+  "krs": null,
+  "gus": true,
+  "nazwa_gus": "PROGEO Tomasz Gadzikowski"
+ },
+ "Firma Usługowo - Handlowa \"DIAZ\" Eugeniusz Lepacki": {
+  "nip": null,
+  "regon": null,
+  "krs": null,
+  "gus": false
+ },
+ "Kancelaria Geodezyjna Maciej Kozielczyk": {
+  "nip": "9570030907",
+  "regon": "190482945",
+  "krs": null,
+  "gus": true,
+  "nazwa_gus": "KANCELARIA GEODEZYJNA MACIEJ KOZIELCZYK"
+ },
+ "GEO-FINGER Andrzej Paluch": {
+  "nip": "9551991830",
+  "regon": "320341472",
+  "krs": null,
+  "gus": true,
+  "nazwa_gus": "GEO-FINGER ANDRZEJ PALUCH"
+ }
 }
