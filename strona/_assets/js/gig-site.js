@@ -48,6 +48,10 @@
        pasek robi się biały — biały napis znika. Podmieniamy na wariant z ciemnym napisem
        (oba sekcje: desktop i mobilna). U góry nad hero pasek jest przezroczysty → białe zostaje. */
     ".mfn-header-tmpl.mfn-header-main.gig-sticky .logo-wrapper img{content:url(/wp-content/uploads/2026/04/gig-logo-new-poziom-dark.svg) !important;}" +
+    /* Strony bez ciemnego hero (marker `gig-light-top` na <body>) maja bialy pasek
+       od samej gory — bialy napis w logo bylby na nim niewidoczny. Uzywamy wariantu
+       z ciemnym napisem od razu, nie dopiero po przyklejeniu przy scrollu. */
+    "body.gig-light-top .mfn-header-tmpl.mfn-header-main .logo-wrapper img{content:url(/wp-content/uploads/2026/04/gig-logo-new-poziom-dark.svg) !important;}" +
     /* płynne, eleganckie wjechanie przyklejonego paska z góry przy scrollu w dół.
        Stan spoczynkowy nie ma transformacji, więc pasek nigdy nie utknie poza ekranem;
        animacja tylko dla użytkowników bez preferencji ograniczenia ruchu. */
