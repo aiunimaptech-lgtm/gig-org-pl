@@ -6,11 +6,22 @@
 // Sekrety (Supabase → Edge Functions → Secrets):
 //   RESEND_API_KEY = re_xxxxxxxx
 //   FROM_EMAIL     = Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>  (domena zweryfikowana w Resend)
+//   NOTIFY_EMAILS  = biuro@gig.org.pl,jerzy.bryk@gmail.com   (opcjonalny; adresy po przecinku)
+//
+// Przy zgloszeniu z formularza kontaktowego ida DWA maile:
+//   1. powiadomienie do GIG (NOTIFY_EMAILS) z trescia zgloszenia, Reply-To = nadawca,
+//   2. potwierdzenie do nadawcy.
+// Zapis do newslettera generuje wylacznie potwierdzenie dla zapisujacego sie.
 // ============================================================
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const FROM_EMAIL = Deno.env.get("FROM_EMAIL") ?? "Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>";
 const FUNCTIONS_BASE = (Deno.env.get("SUPABASE_URL") ?? "") + "/functions/v1";
+
+// Adresy, na ktore ida powiadomienia o nowych zgloszeniach. Trzymane w sekrecie,
+// zeby dodanie/zmiana odbiorcy nie wymagala ponownego wdrozenia funkcji.
+const NOTIFY_EMAILS = (Deno.env.get("NOTIFY_EMAILS") ?? "biuro@gig.org.pl,jerzy.bryk@gmail.com")
+  .split(",").map((x) => x.trim()).filter(Boolean);
 
 const C = { dark: "#16314a", mid: "#2f6f9f", light: "#cfe0ee", bg: "#eef4f9" };
 
@@ -71,27 +82,113 @@ function kontaktMail(rec: Record<string, unknown>) {
   return { subject: "Otrzymaliśmy Twoją wiadomość — GIG", html: layout("Wiadomość przyjęta ✓", body) };
 }
 
+/* Rodzaj zgloszenia rozpoznajemy po prefiksie tematu, ktory ustawia
+   forms_integration.js: zapis na szkolenie, akces czlonkowski albo zwykly kontakt. */
+function rodzaj(subject: string): string {
+  if (/^Zapis na szkolenie:/i.test(subject)) return "Zapis na szkolenie";
+  if (/^Zgłoszenie członkowskie:/i.test(subject)) return "Zgłoszenie członkowskie";
+  return "Wiadomość z formularza kontaktowego";
+}
+
+/* Powiadomienie wewnetrzne dla GIG. Reply-To ustawiamy na adres nadawcy,
+   wiec odpowiedz z klienta poczty trafia wprost do niego. */
+function notifyMail(rec: Record<string, unknown>) {
+  const subject = (rec.subject as string) || "";
+  const typ = rodzaj(subject);
+  const name = (rec.name as string) || "—";
+  const from = (rec.email as string) || "—";
+  const msg = (rec.message as string) || "";
+  const kiedy = new Date().toLocaleString("pl-PL", { timeZone: "Europe/Warsaw" });
+
+  const wiersz = (etykieta: string, wartosc: string) => `
+    <tr>
+      <td style="padding:6px 12px 6px 0;font-size:13px;color:#6b7c8c;white-space:nowrap;vertical-align:top;">${etykieta}</td>
+      <td style="padding:6px 0;font-size:14px;color:${C.dark};">${wartosc}</td>
+    </tr>`;
+
+  const body = `
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;">Nowe zgłoszenie ze strony <strong>gig.org.pl</strong>.</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 18px;">
+      ${wiersz("Rodzaj", `<strong>${esc(typ)}</strong>`)}
+      ${wiersz("Od", esc(name))}
+      ${wiersz("E-mail", `<a href="mailto:${esc(from)}" style="color:${C.mid};">${esc(from)}</a>`)}
+      ${subject ? wiersz("Temat", esc(subject)) : ""}
+      ${wiersz("Otrzymano", esc(kiedy))}
+    </table>
+    ${msg ? `<div style="margin:0 0 18px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Treść zgłoszenia</p>
+      <p style="margin:0;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(msg)}</p></div>` : ""}
+    <p style="margin:0;font-size:13px;color:#6b7c8c;">
+      Odpowiadając na tego maila, piszesz bezpośrednio do nadawcy.
+      Zgłoszenie jest też w <a href="https://gig.org.pl/admin/" style="color:${C.mid};">panelu GIG</a>.
+    </p>`;
+
+  return {
+    subject: `[GIG] ${typ}${name && name !== "—" ? " — " + name : ""}`,
+    html: layout("Nowe zgłoszenie", body),
+  };
+}
+
+/* Jedno wywolanie Resend. Zwraca blad zamiast rzucac, zeby niepowodzenie
+   jednego maila nie blokowalo wyslania drugiego. */
+async function wyslij(
+  to: string[],
+  mail: { subject: string; html: string },
+  replyTo?: string,
+): Promise<{ ok: boolean; info: unknown }> {
+  const payload: Record<string, unknown> = {
+    from: FROM_EMAIL, to, subject: mail.subject, html: mail.html,
+  };
+  if (replyTo) payload.reply_to = replyTo;
+  try {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const wynik = await res.json();
+    if (!res.ok) console.error("Resend:", wynik);
+    return { ok: res.ok, info: wynik };
+  } catch (err) {
+    console.error("Resend (wyjatek):", err);
+    return { ok: false, info: String(err) };
+  }
+}
+
 Deno.serve(async (req) => {
   try {
     const payload = await req.json();
     const table = payload.table as string;
     const rec = (payload.record ?? {}) as Record<string, unknown>;
-    const to = (rec.email as string) || "";
-    if (!to) return new Response(JSON.stringify({ skipped: "brak email" }), { status: 200 });
+    const nadawca = (rec.email as string) || "";
+    if (!nadawca) return new Response(JSON.stringify({ skipped: "brak email" }), { status: 200 });
 
-    let mail: { subject: string; html: string } | null = null;
-    if (table === "submissions_newsletter") mail = newsletterMail(rec);
-    else if (table === "submissions_kontakt") mail = kontaktMail(rec);
-    else return new Response(JSON.stringify({ skipped: `tabela ${table}` }), { status: 200 });
+    const wyniki: Record<string, unknown> = {};
 
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject: mail.subject, html: mail.html }),
+    if (table === "submissions_kontakt") {
+      // 1) powiadomienie do GIG — Reply-To na nadawce, zeby dalo sie odpisac wprost
+      if (NOTIFY_EMAILS.length) {
+        const r = await wyslij(NOTIFY_EMAILS, notifyMail(rec), nadawca);
+        wyniki.powiadomienie = r.ok ? "wyslane" : r.info;
+      }
+      // 2) potwierdzenie dla nadawcy
+      const p = await wyslij([nadawca], kontaktMail(rec));
+      wyniki.potwierdzenie = p.ok ? "wyslane" : p.info;
+
+    } else if (table === "submissions_newsletter") {
+      // zapis do newslettera — tylko potwierdzenie dla zapisujacego sie
+      const p = await wyslij([nadawca], newsletterMail(rec));
+      wyniki.potwierdzenie = p.ok ? "wyslane" : p.info;
+
+    } else {
+      return new Response(JSON.stringify({ skipped: `tabela ${table}` }), { status: 200 });
+    }
+
+    // 200 nawet przy czesciowym niepowodzeniu: webhook Supabase nie ma sensownego
+    // ponawiania, a szczegoly i tak trafiaja do logow funkcji.
+    return new Response(JSON.stringify({ ok: true, ...wyniki }), {
+      status: 200, headers: { "Content-Type": "application/json" },
     });
-    const result = await res.json();
-    if (!res.ok) { console.error("Resend:", result); return new Response(JSON.stringify({ error: result }), { status: 500 }); }
-    return new Response(JSON.stringify({ ok: true, id: result.id }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (err) {
     console.error(err);
     return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
