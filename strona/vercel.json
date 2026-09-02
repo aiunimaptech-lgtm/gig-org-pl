@@ -1,21 +1,51 @@
 {
   "trailingSlash": true,
   "rewrites": [
-    { "source": "/wpis/:slug+/", "destination": "/wpis/index.html" },
-    { "source": "/wpis/:slug+", "destination": "/wpis/index.html" }
+    {
+      "source": "/wpis/:slug+/",
+      "destination": "/wpis/index.html"
+    },
+    {
+      "source": "/wpis/:slug+",
+      "destination": "/wpis/index.html"
+    }
   ],
   "redirects": [
     {
       "source": "/(.*)",
-      "has": [{ "type": "host", "value": "www.gig.org.pl" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.gig.org.pl"
+        }
+      ],
       "destination": "https://gig.org.pl/$1",
       "permanent": true
     },
-
-    { "source": "/about", "destination": "/o-nas/", "permanent": true },
-    { "source": "/blog", "destination": "/aktualnosci/", "permanent": true },
-    { "source": "/category/aktualnosci", "destination": "/aktualnosci/", "permanent": true },
-    { "source": "/category/artykuly", "destination": "/artykuly/", "permanent": true },
-    { "source": "/przyklad", "destination": "/", "permanent": true }
+    {
+      "source": "/about/",
+      "destination": "/o-nas/",
+      "permanent": true
+    },
+    {
+      "source": "/blog/",
+      "destination": "/baza-wiedzy/aktualnosci-gig/",
+      "permanent": true
+    },
+    {
+      "source": "/category/aktualnosci/",
+      "destination": "/baza-wiedzy/aktualnosci-gig/",
+      "permanent": true
+    },
+    {
+      "source": "/category/artykuly/",
+      "destination": "/baza-wiedzy/artykuly/",
+      "permanent": true
+    },
+    {
+      "source": "/przyklad/",
+      "destination": "/",
+      "permanent": true
+    }
   ]
 }
