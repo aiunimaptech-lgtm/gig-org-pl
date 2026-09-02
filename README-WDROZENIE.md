@@ -52,9 +52,15 @@ W panelu **kei.pl** (zarządzanie DNS domeny gig.org.pl) ustaw:
 
 ## 5) Resend (maile potwierdzające + wypis)
 1. resend.com → klucz `re_...`. Domains → dodaj `gig.org.pl` → wpisz wskazane TXT (SPF/DKIM) **w kei.pl** (nie ruszając poczty głównej). Poczekaj na Verified.
-2. Supabase → Edge Functions → Secrets: `RESEND_API_KEY`, `FROM_EMAIL="Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>"`, `SITE_URL="https://gig.org.pl"`, `SUPABASE_SERVICE_ROLE_KEY`,
-   `NOTIFY_EMAILS="biuro@gig.org.pl,jerzy.bryk@gmail.com"` — adresy, na które idą powiadomienia
-   o nowych zgłoszeniach z formularza (zmiana odbiorcy = zmiana sekretu, bez ponownego wdrożenia).
+2. Supabase → **Edge Functions → Secrets** (to NIE jest strona *API Keys*) — dodaj cztery:
+   - `RESEND_API_KEY` — klucz `re_...` z Resend (jedyny prawdziwy sekret)
+   - `FROM_EMAIL="Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>"`
+   - `NOTIFY_EMAILS="biuro@gig.org.pl,jerzy.bryk@gmail.com"` — adresy powiadomień o nowych
+     zgłoszeniach (zmiana odbiorcy = zmiana sekretu, bez ponownego wdrożenia funkcji)
+   - `SITE_URL="https://gig.org.pl"`
+
+   > `SUPABASE_URL`, `SUPABASE_ANON_KEY` i `SUPABASE_SERVICE_ROLE_KEY` Supabase wstrzykuje
+   > do Edge Functions automatycznie — NIE ustawiaj ich ręcznie.
 3. Wgraj funkcje: `supabase functions deploy send-confirmation` oraz `supabase functions deploy newsletter-unsubscribe` (Verify JWT = OFF dla unsubscribe).
 4. Database → Webhooks → Create: tabela `submissions_newsletter` (INSERT) → `send-confirmation`; osobno `submissions_kontakt` (INSERT) → `send-confirmation`.
 
