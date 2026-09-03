@@ -188,8 +188,7 @@ function zapisNotifyMail(rec: Record<string, unknown>) {
 
     ${blok("Uczestnicy",
       wierszTabeli("Liczba osób", esc(s("liczba_osob"))) +
-      wierszTabeli("Imiona i nazwiska", esc(s("uczestnicy")).replace(/
-/g, "<br>")))}
+      wierszTabeli("Imiona i nazwiska", esc(s("uczestnicy")).replace(/\n/g, "<br>")))}
 
     ${blok("Nabywca",
       wierszTabeli("Nazwa", esc(s("nabywca_nazwa"))) +
@@ -207,8 +206,7 @@ function zapisNotifyMail(rec: Record<string, unknown>) {
     ${blok("Kontakt",
       wierszTabeli("E-mail", `<a href="mailto:${esc(s("email"))}" style="color:${C.mid};">${esc(s("email"))}</a>`) +
       wierszTabeli("Telefon", esc(s("telefon"))) +
-      wierszTabeli("Uwagi", esc(s("uwagi")).replace(/
-/g, "<br>")))}
+      wierszTabeli("Uwagi", esc(s("uwagi")).replace(/\n/g, "<br>")))}
 
     <p style="margin:0;font-size:13px;color:#6b7c8c;">
       Odpowiadając na tego maila, piszesz bezpośrednio do zgłaszającego.
@@ -232,8 +230,7 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>) {
       Skontaktujemy się w sprawie szczegółów organizacyjnych i faktury.</p>
     ${osoby ? `<div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
       <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Zgłoszone osoby</p>
-      <p style="margin:0;font-size:14px;line-height:1.6;">${esc(osoby).replace(/
-/g, "<br>")}</p></div>` : ""}
+      <p style="margin:0;font-size:14px;line-height:1.6;">${esc(osoby).replace(/\n/g, "<br>")}</p></div>` : ""}
     <p style="margin:0;font-size:13px;color:#6b7c8c;">Jeśli któraś dana wymaga poprawki, odpisz na tę wiadomość.</p>`;
   return { subject: "Potwierdzenie zgłoszenia na szkolenie — GIG", html: layout("Zgłoszenie przyjęte ✓", body) };
 }
