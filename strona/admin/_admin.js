@@ -64,6 +64,7 @@ async function loadSidebarBadges() {
   const map = [
     { table: 'submissions_newsletter', id: 'navBadgeNewsletter' },
     { table: 'submissions_kontakt',    id: 'navBadgeKontakt' },
+    { table: 'zapisy_szkolenia',       id: 'navBadgeZapisy' },
   ];
   for (const m of map) {
     const el = document.getElementById(m.id);

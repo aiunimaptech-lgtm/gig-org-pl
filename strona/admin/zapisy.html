@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zapisy na szkolenia — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .zap-sum{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px;}
+    .zap-sum .k{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:12px 16px;min-width:190px;}
+    .zap-sum .k .t{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+    .zap-sum .k .v{font-size:22px;font-weight:800;color:#16202a;margin-top:3px;}
+    .zap-sum .k .v small{font-size:13px;font-weight:600;color:#6b7f84;}
+    .zap-osoby{font-size:12px;color:#6b7f84;line-height:1.5;margin-top:3px;}
+    .zap-dane dt{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:14px;}
+    .zap-dane dd{margin:3px 0 0;font-size:15px;color:#16202a;}
+    .zap-dane dd.pusto{color:#9aa7b2;font-style:italic;}
+    .zap-blok{background:#f7f9fb;border-radius:10px;padding:14px 16px;margin-top:12px;}
+    .zap-blok h4{margin:0 0 4px;font-size:14px;color:#16202a;}
+    .badge-confirmed{background:#e6f5ec;color:#1d7a45;}
+    .badge-cancelled{background:#f2f4f6;color:#8b98a4;text-decoration:line-through;}
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Zarządzanie</div>
+        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">▤</span> Szkolenia</a>
+        <a href="czlonkowie.html"><span class="nav-icon">⚇</span> Członkowie</a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Zapisy na szkolenia</div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" id="expUcz">↓ Uczestnicy (CSV)</button>
+          <button class="btn btn-primary btn-sm" id="expFakt">↓ Dane do faktur (CSV)</button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="zap-sum" id="podsumowanie"></div>
+
+        <div class="card"><div class="card-body">
+          <div class="toolbar" style="gap:12px;flex-wrap:wrap;">
+            <div class="search-box"><span class="search-icon">⌕</span>
+              <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: nazwisko, firma, e-mail, NIP…"></div>
+            <select id="fSzkolenie" class="form-control" style="max-width:320px;"><option value="">Wszystkie szkolenia</option></select>
+            <select id="fStatus" class="form-control" style="max-width:190px;">
+              <option value="">Wszystkie statusy</option>
+              <option value="new">Nowe</option>
+              <option value="read">Przeczytane</option>
+              <option value="confirmed">Potwierdzone</option>
+              <option value="cancelled">Anulowane</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Szkolenie</th><th>Zgłaszający</th><th>Osób</th><th>Nabywca</th><th>Data</th><th>Status</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="7" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table>
+          </div>
+        </div></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: pełne dane zgłoszenia -->
+  <div class="modal-overlay" id="zapModal">
+    <div class="modal-box" style="max-width:720px;">
+      <div class="modal-header">
+        <div class="modal-title" id="zapTytul">Zgłoszenie</div>
+        <button class="modal-close" data-modal-close="zapModal">×</button>
+      </div>
+      <div class="modal-body" id="zapTresc"></div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="zapKopiuj">⧉ Kopiuj dane do faktury</button>
+        <button class="btn btn-ghost" data-modal-close="zapModal">Zamknij</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    let dane = [], biezacy = null;
+
+    const ETYK = { new:'nowe', read:'przeczytane', confirmed:'potwierdzone', cancelled:'anulowane' };
+
+    function osoby(r){ return Number(r.liczba_osob) || (r.uczestnicy ? r.uczestnicy.split(/\n|,/).filter(x=>x.trim()).length : 1); }
+
+    /* Odbiorca faktury: własny albo taki sam jak nabywca */
+    function odbiorca(r){
+      if (r.odbiorca_taki_sam === false && (r.odbiorca_nazwa || r.odbiorca_adres || r.odbiorca_nip))
+        return { nazwa:r.odbiorca_nazwa, adres:r.odbiorca_adres, nip:r.odbiorca_nip, wlasny:true };
+      return { nazwa:r.nabywca_nazwa, adres:r.nabywca_adres, nip:r.nabywca_nip, wlasny:false };
+    }
+
+    async function ustawStatus(id, status){
+      const { error } = await db.from('zapisy_szkolenia').update({ status }).eq('id', id);
+      if (error) { toast('Nie udało się zmienić statusu', 'error'); return false; }
+      toast('Zapisano: ' + ETYK[status], 'success');
+      return true;
+    }
+
+    function podsumuj(rows){
+      const aktywne = rows.filter(r => r.status !== 'cancelled');
+      const wgSzkolen = {};
+      aktywne.forEach(r => {
+        const k = r.szkolenie || '(bez nazwy)';
+        wgSzkolen[k] = (wgSzkolen[k] || 0) + osoby(r);
+      });
+      const nowe = rows.filter(r => r.status === 'new').length;
+      let html = `<div class="k"><div class="t">Zgłoszenia</div><div class="v">${aktywne.length} <small>aktywnych</small></div></div>`;
+      html += `<div class="k"><div class="t">Uczestnicy łącznie</div><div class="v">${aktywne.reduce((s,r)=>s+osoby(r),0)} <small>osób</small></div></div>`;
+      if (nowe) html += `<div class="k" style="border-color:#f3ccd4;background:#fff5f6;"><div class="t">Nieobsłużone</div><div class="v" style="color:#cc0a2b;">${nowe}</div></div>`;
+      Object.entries(wgSzkolen).sort((a,b)=>b[1]-a[1]).forEach(([nazwa,n]) => {
+        html += `<div class="k"><div class="t" title="${esc(nazwa)}">${esc(nazwa.length>34?nazwa.slice(0,34)+'…':nazwa)}</div><div class="v">${n} <small>osób</small></div></div>`;
+      });
+      document.getElementById('podsumowanie').innerHTML = html;
+    }
+
+    function filtruj(){
+      const f = document.getElementById('szukaj').value.toLowerCase().trim();
+      const szk = document.getElementById('fSzkolenie').value;
+      const st = document.getElementById('fStatus').value;
+      return dane.filter(r => {
+        if (szk && (r.szkolenie||'') !== szk) return false;
+        if (st && (r.status||'new') !== st) return false;
+        if (!f) return true;
+        return [r.uczestnicy, r.email, r.telefon, r.nabywca_nazwa, r.nabywca_nip,
+                r.odbiorca_nazwa, r.odbiorca_nip, r.szkolenie, r.uwagi]
+          .some(v => (v||'').toString().toLowerCase().includes(f));
+      });
+    }
+
+    function render(){
+      const rows = filtruj();
+      const tb = document.getElementById('rows');
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#6b7f84;">Brak zgłoszeń spełniających kryteria.</td></tr>'; return; }
+      tb.innerHTML = rows.map(r => {
+        const st = r.status || 'new';
+        const ucz = (r.uczestnicy||'').split(/\n/).map(x=>x.trim()).filter(Boolean);
+        const odb = odbiorca(r);
+        return `
+        <tr>
+          <td style="max-width:230px;">${esc(r.szkolenie||'—')}</td>
+          <td>
+            <strong>${esc(ucz[0] || r.email)}</strong>
+            <div class="zap-osoby">${esc(r.email)}${r.telefon?' · '+esc(r.telefon):''}</div>
+          </td>
+          <td style="text-align:center;"><strong>${osoby(r)}</strong></td>
+          <td style="max-width:220px;">
+            ${esc(r.nabywca_nazwa||'—')}
+            <div class="zap-osoby">${r.nabywca_nip?'NIP '+esc(r.nabywca_nip):''}${r.nabywca_jst?' · JST':''}${odb.wlasny?' · inny odbiorca':''}</div>
+          </td>
+          <td style="white-space:nowrap;">${fmtDate(r.created_at)}</td>
+          <td><span class="badge badge-${st==='new'?'new':st}">${ETYK[st]||st}</span></td>
+          <td class="actions" style="white-space:nowrap;">
+            <button class="btn btn-ghost btn-xs" data-podglad="${r.id}">Szczegóły</button>
+            ${st!=='confirmed'?`<button class="btn btn-outline btn-xs" data-potw="${r.id}" title="Potwierdź udział">✓</button>`:''}
+            ${st!=='cancelled'?`<button class="btn btn-danger btn-xs" data-anul="${r.id}" title="Anuluj zgłoszenie">✕</button>`:''}
+          </td>
+        </tr>`;
+      }).join('');
+
+      tb.querySelectorAll('[data-podglad]').forEach(b => b.addEventListener('click', () => pokaz(b.dataset.podglad)));
+      tb.querySelectorAll('[data-potw]').forEach(b => b.addEventListener('click', async () => {
+        if (await ustawStatus(b.dataset.potw, 'confirmed')) load();
+      }));
+      tb.querySelectorAll('[data-anul]').forEach(b => b.addEventListener('click', async () => {
+        if (!confirm('Anulować to zgłoszenie? Pozostanie na liście ze statusem „anulowane”.')) return;
+        if (await ustawStatus(b.dataset.anul, 'cancelled')) load();
+      }));
+    }
+
+    function wiersz(etykieta, wartosc){
+      return `<dt>${esc(etykieta)}</dt><dd class="${wartosc?'':'pusto'}">${wartosc?esc(wartosc):'nie podano'}</dd>`;
+    }
+
+    function pokaz(id){
+      const r = dane.find(x => x.id === id);
+      if (!r) return;
+      biezacy = r;
+      const ucz = (r.uczestnicy||'').split(/\n/).map(x=>x.trim()).filter(Boolean);
+      const odb = odbiorca(r);
+      document.getElementById('zapTytul').textContent = r.szkolenie || 'Zgłoszenie';
+      document.getElementById('zapTresc').innerHTML = `
+        <dl class="zap-dane" style="margin:0;">
+          ${wiersz('Zgłoszono', fmtDate(r.created_at))}
+          ${wiersz('Liczba osób', String(osoby(r)))}
+          <dt>Uczestnicy</dt>
+          <dd class="${ucz.length?'':'pusto'}">${ucz.length?ucz.map(x=>esc(x)).join('<br>'):'nie podano'}</dd>
+          ${wiersz('E-mail', r.email)}
+          ${wiersz('Telefon', r.telefon)}
+          ${wiersz('Uwagi', r.uwagi)}
+        </dl>
+        <div class="zap-blok">
+          <h4>Nabywca${r.nabywca_jst?' <span class="badge badge-read">jednostka samorządu</span>':''}</h4>
+          <dl class="zap-dane" style="margin:0;">
+            ${wiersz('Nazwa', r.nabywca_nazwa)}
+            ${wiersz('Adres', r.nabywca_adres)}
+            ${wiersz('NIP', r.nabywca_nip)}
+          </dl>
+        </div>
+        <div class="zap-blok">
+          <h4>Odbiorca ${odb.wlasny?'':'<span style="font-weight:400;color:#6b7f84;font-size:13px;">— taki sam jak nabywca</span>'}</h4>
+          ${odb.wlasny?`<dl class="zap-dane" style="margin:0;">
+            ${wiersz('Nazwa', odb.nazwa)}
+            ${wiersz('Adres', odb.adres)}
+            ${wiersz('NIP / ID wewn.', odb.nip)}
+          </dl>`:''}
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <a class="btn btn-outline btn-sm" href="mailto:${esc(r.email)}?subject=${encodeURIComponent('Szkolenie GIG: '+(r.szkolenie||''))}">↩ Odpowiedz</a>
+          ${r.telefon?`<a class="btn btn-ghost btn-sm" href="tel:${esc((r.telefon||'').replace(/\s/g,''))}">☎ Zadzwoń</a>`:''}
+        </div>`;
+      openModal('zapModal');
+    }
+
+    function tekstFaktury(r){
+      const odb = odbiorca(r);
+      const L = [];
+      L.push('Szkolenie: ' + (r.szkolenie||'—'));
+      L.push('Liczba osób: ' + osoby(r));
+      L.push('');
+      L.push('NABYWCA');
+      L.push(r.nabywca_nazwa||'—');
+      L.push(r.nabywca_adres||'—');
+      L.push('NIP: ' + (r.nabywca_nip||'—'));
+      if (odb.wlasny) {
+        L.push('');
+        L.push('ODBIORCA');
+        L.push(odb.nazwa||'—');
+        L.push(odb.adres||'—');
+        L.push('NIP / ID wewn.: ' + (odb.nip||'—'));
+      }
+      L.push('');
+      L.push('Kontakt: ' + r.email + (r.telefon?' · '+r.telefon:''));
+      return L.join('\n');
+    }
+
+    async function load(){
+      const { data, error } = await db.from('zapisy_szkolenia').select('*').order('created_at', { ascending:false });
+      if (error) { toast('Błąd ładowania zgłoszeń', 'error'); console.error(error); return; }
+      dane = data || [];
+
+      const sel = document.getElementById('fSzkolenie');
+      const biezaceSzk = sel.value;
+      const nazwy = [...new Set(dane.map(r => r.szkolenie).filter(Boolean))].sort();
+      sel.innerHTML = '<option value="">Wszystkie szkolenia</option>' +
+        nazwy.map(n => `<option value="${esc(n)}">${esc(n.length>52?n.slice(0,52)+'…':n)}</option>`).join('');
+      sel.value = biezaceSzk;
+
+      podsumuj(dane);
+      render();
+      loadSidebarBadges();
+    }
+
+    (async () => {
+      if (!await requireAuth()) return;
+      ['szukaj'].forEach(id => document.getElementById(id).addEventListener('input', render));
+      ['fSzkolenie','fStatus'].forEach(id => document.getElementById(id).addEventListener('change', render));
+
+      document.getElementById('zapKopiuj').addEventListener('click', async () => {
+        if (!biezacy) return;
+        try { await navigator.clipboard.writeText(tekstFaktury(biezacy)); toast('Skopiowano dane do faktury', 'success'); }
+        catch (_) { toast('Przeglądarka nie pozwoliła skopiować', 'error'); }
+      });
+
+      /* Eksport 1: lista uczestników — po jednym wierszu na osobę */
+      document.getElementById('expUcz').addEventListener('click', () => {
+        const wiersze = [];
+        filtruj().filter(r => r.status !== 'cancelled').forEach(r => {
+          const ucz = (r.uczestnicy||'').split(/\n/).map(x=>x.trim()).filter(Boolean);
+          (ucz.length ? ucz : ['(nie podano)']).forEach(osoba => wiersze.push({
+            szkolenie: r.szkolenie||'', uczestnik: osoba, firma: r.nabywca_nazwa||'',
+            email: r.email||'', telefon: r.telefon||'', status: ETYK[r.status||'new'], zgloszono: fmtDate(r.created_at)
+          }));
+        });
+        if (!wiersze.length) { toast('Brak danych do eksportu'); return; }
+        exportCSV(wiersze, [
+          { key:'szkolenie', label:'Szkolenie' }, { key:'uczestnik', label:'Uczestnik' },
+          { key:'firma', label:'Firma/instytucja' }, { key:'email', label:'E-mail' },
+          { key:'telefon', label:'Telefon' }, { key:'status', label:'Status' }, { key:'zgloszono', label:'Zgłoszono' },
+        ], 'uczestnicy-szkolen.csv');
+      });
+
+      /* Eksport 2: dane do faktur — po jednym wierszu na zgłoszenie */
+      document.getElementById('expFakt').addEventListener('click', () => {
+        const wiersze = filtruj().filter(r => r.status !== 'cancelled').map(r => {
+          const odb = odbiorca(r);
+          return {
+            szkolenie: r.szkolenie||'', osob: osoby(r),
+            nabywca: r.nabywca_nazwa||'', nabywca_adres: r.nabywca_adres||'', nabywca_nip: r.nabywca_nip||'',
+            jst: r.nabywca_jst ? 'tak' : 'nie',
+            odbiorca: odb.wlasny ? (odb.nazwa||'') : '(taki sam)',
+            odbiorca_adres: odb.wlasny ? (odb.adres||'') : '',
+            odbiorca_nip: odb.wlasny ? (odb.nip||'') : '',
+            email: r.email||'', telefon: r.telefon||'', zgloszono: fmtDate(r.created_at),
+          };
+        });
+        if (!wiersze.length) { toast('Brak danych do eksportu'); return; }
+        exportCSV(wiersze, [
+          { key:'szkolenie', label:'Szkolenie' }, { key:'osob', label:'Liczba osób' },
+          { key:'nabywca', label:'Nabywca' }, { key:'nabywca_adres', label:'Adres nabywcy' },
+          { key:'nabywca_nip', label:'NIP nabywcy' }, { key:'jst', label:'JST' },
+          { key:'odbiorca', label:'Odbiorca' }, { key:'odbiorca_adres', label:'Adres odbiorcy' },
+          { key:'odbiorca_nip', label:'NIP/ID odbiorcy' },
+          { key:'email', label:'E-mail' }, { key:'telefon', label:'Telefon' }, { key:'zgloszono', label:'Zgłoszono' },
+        ], 'zapisy-dane-do-faktur.csv');
+      });
+
+      load();
+    })();
+  </script>
+</body>
+</html>
