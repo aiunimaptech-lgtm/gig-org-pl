@@ -202,7 +202,7 @@ function zapisNotifyMail(rec: Record<string, unknown>) {
       : blok("Odbiorca",
           wierszTabeli("Nazwa", esc(s("odbiorca_nazwa"))) +
           wierszTabeli("Adres", esc(s("odbiorca_adres"))) +
-          wierszTabeli("NIP", esc(s("odbiorca_nip"))))}
+          wierszTabeli("NIP / ID-wewn.", esc(s("odbiorca_nip"))))}
 
     ${blok("Kontakt",
       wierszTabeli("E-mail", `<a href="mailto:${esc(s("email"))}" style="color:${C.mid};">${esc(s("email"))}</a>`) +
