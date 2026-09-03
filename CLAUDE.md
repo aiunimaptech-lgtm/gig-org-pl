@@ -1,5 +1,7 @@
 # Projekt: gig.org.pl — migracja WordPress → statyka + panel
 
+> 📌 **Stan bieżący, pułapki i lista zadań: [`HANDOVER.md`](HANDOVER.md)** — czytaj przy przejęciu projektu.
+
 ## Cel
 Migracja strony **Geodezyjnej Izby Gospodarczej** (gig.org.pl) z WordPressa na **statykę
 hostowaną na Vercel**, z panelem administracyjnym `/admin/` (Supabase + Resend) do obsługi
@@ -10,6 +12,13 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
 - **Backend**: Supabase (PostgreSQL + Auth + Edge Functions), maile przez Resend.
 - **Panel**: `/admin/` — login, pulpit, formularze (newsletter+kontakt), artykuły (CRUD, edytor Quill).
 - Formularze CF7 przechwytywane przez `_assets/js/forms_integration.js` → Supabase (fallback `mailto:`).
+- **Zapisy na szkolenia**: osobna strona `/zapisy/` (ręczna, nie mirror) → tabela `zapisy_szkolenia`.
+  Zbiera uczestników i dane do faktury (nabywca + odbiorca, znacznik JST). Przycisk „Zapisz się”
+  w kalendarzu prowadzi tam z `?szkolenie=<tytuł>`.
+- **Maile**: każdy wpis do `submissions_kontakt` / `submissions_newsletter` / `zapisy_szkolenia`
+  wyzwala trigger `pg_net` → Edge Function `send-confirmation` → Resend. Idą dwa maile:
+  powiadomienie do GIG (`Reply-To` = zgłaszający) i potwierdzenie do zgłaszającego.
+  Definicje triggerów: `backend/supabase_webhooki_maile.sql`, `backend/supabase_zapisy.sql`.
 
 ## Jak powstał mirror (skrypty w `skrypty/`, POZA deployem)
 1. `crawl.py` — pobrał strony + zasoby, zlokalizował URL-e (root-relative), zachował strukturę.
@@ -53,6 +62,6 @@ Naprawa: Supabase Dashboard → *Restore project* (dane po uśpieniu są zachowa
 ## Znane do dokończenia
 - **Duże biuletyny PDF (>25 MB)** — pominięte przy mirrorze, linki zostały absolutne (`gig.org.pl/biuletyn/...`).
   Po migracji domeny trzeba je dograć ręcznie do `strona/biuletyn/` albo wrzucić do Supabase Storage.
-- **Publiczne renderowanie artykułów z panelu** — panel zapisuje do `articles`; podpięcie wyświetlania
-  na stronach Aktualności/Artykuły (client-side fetch z Supabase) to następny krok.
+- **Panel `/admin/` nie ma widoku zapisów na szkolenia** (`zapisy_szkolenia`) — powiadomienia
+  mailowe działają, ale nie ma listy ani eksportu uczestników. Wzór: `strona/admin/formularze.html`.
 - Mirror to snapshot — dynamiczne listy WP są „zamrożone".
