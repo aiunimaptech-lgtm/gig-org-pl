@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zapis na szkolenie — Geodezyjna Izba Gospodarcza</title>
+  <meta name="description" content="Formularz zgłoszenia udziału w szkoleniu Geodezyjnej Izby Gospodarczej — dane uczestników oraz dane do faktury.">
+  <link rel="canonical" href="https://gig.org.pl/zapisy/">
+  <!-- formularz, nie treść dla wyszukiwarki; „follow" żeby linki wewnętrzne nadal liczyły się w nawigacji -->
+  <meta name="robots" content="noindex,follow">
+  <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+  <style>
+    :root{--red:#cc0a2b;--ink:#16202a;--muted:#6b7884;--line:#e6ebef;--bg:#f4f6f8;}
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.65;}
+    a{color:var(--red);text-decoration:none;} a:hover{text-decoration:underline;}
+    .wrap{max-width:1140px;margin:0 auto;padding:0 22px;}
+
+    /* hero */
+    .z-hero{background:linear-gradient(180deg,#fff,var(--bg));padding:34px 0 26px;border-bottom:1px solid var(--line);}
+    .z-hero h1{font-size:clamp(25px,4vw,36px);margin:9px 0 10px;line-height:1.2;}
+    .z-hero .lead{color:var(--muted);max-width:70ch;margin:0;}
+    .z-kicker{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:4px 12px;border-radius:20px;}
+    .z-szk{margin:18px 0 0;padding:14px 18px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;font-weight:700;}
+    .z-szk small{display:block;font-weight:500;color:var(--muted);font-size:12.5px;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+
+    /* formularz */
+    form.z-form{max-width:820px;margin:0 auto;padding:30px 22px 56px;}
+    fieldset{border:1px solid var(--line);border-radius:14px;padding:22px;margin:0 0 20px;}
+    legend{font-weight:800;font-size:16px;padding:0 10px;}
+    legend .opis{display:block;font-weight:400;font-size:13px;color:var(--muted);padding-top:2px;}
+    .row{display:grid;gap:16px;grid-template-columns:1fr 1fr;}
+    @media(max-width:640px){.row{grid-template-columns:1fr;}}
+    label{display:block;font-size:13.5px;font-weight:600;margin:0 0 6px;}
+    label .wym{color:var(--red);}
+    .pole{margin:0 0 16px;}
+    input[type=text],input[type=email],input[type=tel],input[type=number],textarea,select{
+      width:100%;padding:11px 13px;border:1px solid #d6dde3;border-radius:9px;font:inherit;font-size:15px;background:#fff;color:var(--ink);}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(204,10,43,.10);}
+    textarea{min-height:104px;resize:vertical;}
+    .hint{font-size:12.5px;color:var(--muted);margin:5px 0 0;line-height:1.5;}
+    .chk{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin:0 0 14px;}
+    .chk input{margin-top:3px;flex:none;width:17px;height:17px;accent-color:var(--red);}
+    .chk label{font-weight:500;margin:0;}
+    .z-send{background:var(--red);color:#fff;border:0;border-radius:30px;padding:14px 34px;font:inherit;font-weight:700;font-size:16px;cursor:pointer;}
+    .z-send:hover{filter:brightness(.93);}
+    .z-send:disabled{opacity:.55;cursor:not-allowed;filter:none;}
+    .z-msg{margin:16px 0 0;padding:13px 16px;border-radius:10px;font-size:14.5px;display:none;}
+    .z-msg.ok{display:block;background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .z-msg.err{display:block;background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .z-ok-box{display:none;max-width:820px;margin:0 auto;padding:52px 22px 70px;text-align:center;}
+    .z-ok-box h2{font-size:26px;margin:0 0 12px;}
+    .z-ok-box p{color:var(--muted);max-width:60ch;margin:0 auto 8px;}
+
+    /* footer — spójny z pozostałymi podstronami autorskimi */
+    .site-foot{background:var(--ink);color:rgba(255,255,255,.75);margin-top:0;padding:40px 0 26px;}
+    .foot-in{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;}
+    .site-foot strong{color:#fff;} .site-foot a{color:#fff;}
+    .foot-soc a{display:inline-block;margin-left:14px;}
+  </style>
+  <link rel="stylesheet" href="/_assets/css/gig-subhead.css">
+</head>
+<body>
+
+<header class="site-head"><div class="wrap head-in"><a class="logo" href="/"><img src="/wp-content/uploads/2026/04/gig-logo-new-poziom-dark.svg" alt="Geodezyjna Izba Gospodarcza"></a><nav class="nav"><a href="/">Home</a><span class="nav-item"><a href="/o-nas/">O nas</a><span class="nav-sub"><a href="/czlonkowie/">Członkowie</a></span></span><span class="nav-item"><a href="/baza-wiedzy/aktualnosci-gig/">Aktualności</a><span class="nav-sub"><a href="/nadchodzace-wydarzenia/">Nadchodzące wydarzenia</a></span></span><span class="nav-item"><a href="/baza-wiedzy/">Baza wiedzy</a><span class="nav-sub"><a href="/baza-wiedzy/artykuly/">Artykuły</a><a href="/biuletyn-gig/">Biuletyn</a></span></span><a href="/szkolenia/" class="active">Szkolenia</a><span class="nav-item"><a href="/kontakt/">Kontakt</a><span class="nav-sub"><a href="/dolacz-do-nas/">Dołącz do nas</a></span></span></nav><a class="head-phone" href="tel:+48228273843"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z"/></svg> +48 22 / 827 38 43</a></div></header>
+
+<section class="z-hero">
+  <div class="wrap">
+    <span class="z-kicker">Zgłoszenie udziału</span>
+    <h1>Zapis na szkolenie</h1>
+    <p class="lead">Dane nabywcy i odbiorcy zbieramy już teraz, żeby nie dopytywać przed wystawieniem faktury. Pola oznaczone <span style="color:#cc0a2b">*</span> są obowiązkowe.</p>
+    <div class="z-szk" id="zSzk" hidden><small>Szkolenie</small><span id="zSzkNazwa"></span></div>
+  </div>
+</section>
+
+<form class="z-form" id="zForm" novalidate>
+  <fieldset>
+    <legend>Uczestnicy<span class="opis">Kogo zgłaszasz na szkolenie</span></legend>
+    <div class="pole" style="max-width:220px">
+      <label for="liczba_osob">Liczba osób z organizacji <span class="wym">*</span></label>
+      <input type="number" id="liczba_osob" name="liczba_osob" min="1" max="99" step="1" value="1" required>
+    </div>
+    <div class="pole">
+      <label for="uczestnicy">Imiona i nazwiska <span class="wym">*</span></label>
+      <textarea id="uczestnicy" name="uczestnicy" required placeholder="Jan Kowalski&#10;Anna Nowak"></textarea>
+      <p class="hint">Każda osoba w osobnej linii.</p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Dane nabywcy<span class="opis">Podmiot, na który wystawimy fakturę</span></legend>
+    <div class="pole">
+      <label for="nabywca_nazwa">Nazwa firmy / instytucji <span class="wym">*</span></label>
+      <input type="text" id="nabywca_nazwa" name="nabywca_nazwa" required>
+    </div>
+    <div class="pole">
+      <label for="nabywca_adres">Adres <span class="wym">*</span></label>
+      <input type="text" id="nabywca_adres" name="nabywca_adres" required placeholder="ul. Przykładowa 1, 00-000 Miasto">
+    </div>
+    <div class="row">
+      <div class="pole">
+        <label for="nabywca_nip">NIP <span class="wym">*</span></label>
+        <input type="text" id="nabywca_nip" name="nabywca_nip" required inputmode="numeric" placeholder="0000000000">
+      </div>
+      <div class="pole">
+        <label for="nabywca_jst">Czy nabywca jest jednostką samorządu terytorialnego?</label>
+        <select id="nabywca_jst" name="nabywca_jst">
+          <option value="nie">Nie</option>
+          <option value="tak">Tak</option>
+        </select>
+        <p class="hint">W samorządzie nabywcą jest zwykle gmina lub powiat, a odbiorcą urząd albo jednostka podległa — wtedy odznacz pole poniżej.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Dane odbiorcy<span class="opis">Kto figuruje na fakturze jako odbiorca</span></legend>
+    <div class="chk">
+      <input type="checkbox" id="odbiorca_taki_sam" name="odbiorca_taki_sam" checked>
+      <label for="odbiorca_taki_sam">Odbiorca taki sam jak nabywca</label>
+    </div>
+    <div id="zOdbiorca" hidden>
+      <div class="pole">
+        <label for="odbiorca_nazwa">Nazwa firmy / instytucji <span class="wym">*</span></label>
+        <input type="text" id="odbiorca_nazwa" name="odbiorca_nazwa">
+      </div>
+      <div class="pole">
+        <label for="odbiorca_adres">Adres</label>
+        <input type="text" id="odbiorca_adres" name="odbiorca_adres">
+      </div>
+      <div class="pole" style="max-width:320px">
+        <label for="odbiorca_nip">NIP</label>
+        <input type="text" id="odbiorca_nip" name="odbiorca_nip" inputmode="numeric">
+      </div>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Kontakt<span class="opis">Na te dane odezwiemy się w sprawie szkolenia</span></legend>
+    <div class="row">
+      <div class="pole">
+        <label for="email">Adres e-mail <span class="wym">*</span></label>
+        <input type="email" id="email" name="email" required>
+      </div>
+      <div class="pole">
+        <label for="telefon">Numer telefonu <span class="wym">*</span></label>
+        <input type="tel" id="telefon" name="telefon" required>
+      </div>
+    </div>
+    <div class="pole">
+      <label for="uwagi">Uwagi (opcjonalnie)</label>
+      <textarea id="uwagi" name="uwagi" style="min-height:80px"></textarea>
+    </div>
+  </fieldset>
+
+  <div class="chk">
+    <input type="checkbox" id="rodo" name="rodo" required>
+    <label for="rodo">Zapoznałem/-am się z <a href="/polityka-prywatnosci-rodo/" target="_blank" rel="noopener">Polityką prywatności</a> i wyrażam zgodę na przetwarzanie danych osobowych w celu obsługi zgłoszenia. <span class="wym">*</span></label>
+  </div>
+
+  <button type="submit" class="z-send" id="zSend">Wyślij zgłoszenie</button>
+  <div class="z-msg" id="zMsg"></div>
+</form>
+
+<div class="z-ok-box" id="zOk">
+  <h2>Zgłoszenie przyjęte ✓</h2>
+  <p>Dziękujemy. Potwierdzenie wysłaliśmy na podany adres e-mail.</p>
+  <p>Skontaktujemy się w sprawie szczegółów organizacyjnych i faktury.</p>
+  <p style="margin-top:24px"><a href="/szkolenia/">← Wróć do kalendarza szkoleń</a></p>
+</div>
+
+<footer class="site-foot"><div class="wrap foot-in">
+    <div>
+      <strong>Geodezyjna Izba Gospodarcza</strong><br>
+      ul. Czackiego 3/5, 00-043 Warszawa<br>
+      tel. 22 827 38 43 · <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a><br>
+      eDoręczenia: AE:PL-54372-78798-CHRDS-30
+    </div>
+    <div class="foot-soc">
+      <a href="https://www.facebook.com/gigorgpl" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://www.linkedin.com/company/gig-geodezyjna-izba-gospodarcza" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div></footer>
+
+<script src="/_assets/js/gig-config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var form = document.getElementById("zForm");
+  var msg  = document.getElementById("zMsg");
+  var btn  = document.getElementById("zSend");
+
+  /* Tytuł szkolenia przychodzi w ?szkolenie= (z przycisku „Zapisz się" w kalendarzu). */
+  var m = location.search.match(/[?&]szkolenie=([^&]+)/);
+  var szkolenie = m ? decodeURIComponent(m[1].replace(/\+/g, " ")) : "";
+  if (szkolenie) {
+    document.getElementById("zSzkNazwa").textContent = szkolenie;
+    document.getElementById("zSzk").hidden = false;
+    document.title = "Zapis: " + szkolenie + " — GIG";
+  }
+
+  /* Dane odbiorcy pokazujemy dopiero, gdy różni się od nabywcy — w samorządzie
+     to częsty przypadek, ale dla firm byłoby to zbędne dublowanie pól. */
+  var taki   = document.getElementById("odbiorca_taki_sam");
+  var boxOdb = document.getElementById("zOdbiorca");
+  function przelaczOdbiorce() { boxOdb.hidden = taki.checked; }
+  taki.addEventListener("change", przelaczOdbiorce);
+  przelaczOdbiorce();
+
+  function pokaz(tekst, ok) {
+    msg.textContent = tekst;
+    msg.className = "z-msg " + (ok ? "ok" : "err");
+  }
+  function val(id) { return (document.getElementById(id).value || "").trim(); }
+
+  function loadSdk() {
+    return new Promise(function (res, rej) {
+      if (window.supabase) return res();
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js";
+      s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+
+  form.addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    /* Walidacja własna zamiast natywnej (`novalidate`): komunikaty po polsku,
+       jeden na raz, zawsze widoczne w tym samym miejscu pod przyciskiem. */
+    if (!val("uczestnicy"))    return pokaz("Podaj imiona i nazwiska uczestników.", false);
+    if (!val("nabywca_nazwa")) return pokaz("Podaj nazwę firmy lub instytucji nabywcy.", false);
+    if (!val("nabywca_adres")) return pokaz("Podaj adres nabywcy.", false);
+    if (!val("nabywca_nip"))   return pokaz("Podaj NIP nabywcy.", false);
+    if (!taki.checked && !val("odbiorca_nazwa"))
+      return pokaz("Podaj nazwę odbiorcy albo zaznacz, że jest taki sam jak nabywca.", false);
+    var email = val("email");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return pokaz("Podaj poprawny adres e-mail.", false);
+    if (!val("telefon"))       return pokaz("Podaj numer telefonu.", false);
+    if (!document.getElementById("rodo").checked)
+      return pokaz("Zaznacz zgodę na przetwarzanie danych osobowych.", false);
+
+    btn.disabled = true;
+    pokaz("Wysyłanie…", true);
+
+    var dane = {
+      szkolenie:         szkolenie || null,
+      liczba_osob:       parseInt(val("liczba_osob"), 10) || null,
+      uczestnicy:        val("uczestnicy"),
+      nabywca_nazwa:     val("nabywca_nazwa"),
+      nabywca_adres:     val("nabywca_adres"),
+      nabywca_nip:       val("nabywca_nip"),
+      nabywca_jst:       document.getElementById("nabywca_jst").value === "tak",
+      odbiorca_taki_sam: taki.checked,
+      odbiorca_nazwa:    taki.checked ? null : val("odbiorca_nazwa"),
+      odbiorca_adres:    taki.checked ? null : val("odbiorca_adres"),
+      odbiorca_nip:      taki.checked ? null : val("odbiorca_nip"),
+      email:             email,
+      telefon:           val("telefon"),
+      uwagi:             val("uwagi") || null,
+      status:            "new"
+    };
+
+    try {
+      await loadSdk();
+      var db  = window.supabase.createClient(window.GIG_CFG.SUPABASE_URL, window.GIG_CFG.SUPABASE_ANON);
+      var res = await db.from("zapisy_szkolenia").insert(dane);
+      if (res.error) throw res.error;
+      form.style.display = "none";
+      document.getElementById("zOk").style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+      pokaz("Nie udało się wysłać zgłoszenia. Spróbuj ponownie lub napisz na biuro@gig.org.pl.", false);
+    }
+  });
+})();
+</script>
+<script defer src="/_assets/js/gig-site.js"></script>
+</body>
+</html>

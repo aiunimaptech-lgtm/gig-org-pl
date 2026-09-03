@@ -13,7 +13,7 @@ STRONA = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))
 # /aktualnosci/ i /artykuly/ to krotkie adresy z WordPressa - identyczne z wersjami
 # spod /baza-wiedzy/, do ktorych prowadzi menu. Zostaja czynne, ale wskazuja
 # canonicalem na wersje z menu, wiec w sitemapie ich nie ma.
-BLOCK = {"/admin/", "/wpis/", "/aktualnosci/", "/artykuly/",
+BLOCK = {"/admin/", "/wpis/", "/zapisy/", "/aktualnosci/", "/artykuly/",
          "/przyklad/", "/about/", "/blog/", "/category/",
          "/newsletter-wypisano.html"}
 PRIORITY = {"/": "1.0"}

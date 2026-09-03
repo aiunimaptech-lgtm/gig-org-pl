@@ -84,7 +84,9 @@
       ? r.date_label
       : dayHuman(r.date_start) + (r.date_end && r.date_end !== r.date_start ? " – " + dayHuman(r.date_end) : "");
     var meta = [when, place].filter(Boolean).join(" · ");
-    var link = "/kontakt/?szkolenie=" + encodeURIComponent(r.title);
+    /* Zapis prowadzi na dedykowany formularz /zapisy/ (dane uczestnikow i do faktury),
+       a nie na ogolny formularz kontaktowy. */
+    var link = "/zapisy/?szkolenie=" + encodeURIComponent(r.title);
 
     var godziny = r.time_range ? '<p class="gig-szk-time">Godziny: <b>' + esc(r.time_range) + "</b></p>" : "";
     var desc = r.description ? akapity(r.description) : "";

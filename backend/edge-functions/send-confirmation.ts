@@ -159,6 +159,85 @@ function notifyNewsletterMail(rec: Record<string, unknown>) {
   return { subject: `[GIG] Nowy zapis do newslettera — ${adres}`, html: layout("Nowy zapis do newslettera", body) };
 }
 
+/* --- ZAPISY NA SZKOLENIA (tabela zapisy_szkolenia) --------------------- */
+
+function wierszTabeli(etykieta: string, wartosc: string): string {
+  if (!wartosc) return "";
+  return `<tr>
+      <td style="padding:6px 12px 6px 0;font-size:13px;color:#6b7c8c;white-space:nowrap;vertical-align:top;">${etykieta}</td>
+      <td style="padding:6px 0;font-size:14px;color:${C.dark};">${wartosc}</td>
+    </tr>`;
+}
+
+/* Powiadomienie dla GIG: komplet danych potrzebnych do wystawienia faktury,
+   zeby nie trzeba bylo wchodzic do panelu przy kazdym zgloszeniu. */
+function zapisNotifyMail(rec: Record<string, unknown>) {
+  const s = (k: string) => String(rec[k] ?? "").trim();
+  const szkolenie = s("szkolenie") || "(nie podano)";
+  const takiSam = rec.odbiorca_taki_sam !== false;
+  const jst = rec.nabywca_jst === true;
+
+  const blok = (tytul: string, tresc: string) => `
+    <div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
+      <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">${tytul}</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">${tresc}</table>
+    </div>`;
+
+  const body = `
+    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;">Nowe zgłoszenie na szkolenie <strong>${esc(szkolenie)}</strong>.</p>
+
+    ${blok("Uczestnicy",
+      wierszTabeli("Liczba osób", esc(s("liczba_osob"))) +
+      wierszTabeli("Imiona i nazwiska", esc(s("uczestnicy")).replace(/
+/g, "<br>")))}
+
+    ${blok("Nabywca",
+      wierszTabeli("Nazwa", esc(s("nabywca_nazwa"))) +
+      wierszTabeli("Adres", esc(s("nabywca_adres"))) +
+      wierszTabeli("NIP", esc(s("nabywca_nip"))) +
+      wierszTabeli("Jednostka samorządu", jst ? "<strong>TAK</strong>" : "nie"))}
+
+    ${takiSam
+      ? blok("Odbiorca", wierszTabeli("Odbiorca", "taki sam jak nabywca"))
+      : blok("Odbiorca",
+          wierszTabeli("Nazwa", esc(s("odbiorca_nazwa"))) +
+          wierszTabeli("Adres", esc(s("odbiorca_adres"))) +
+          wierszTabeli("NIP", esc(s("odbiorca_nip"))))}
+
+    ${blok("Kontakt",
+      wierszTabeli("E-mail", `<a href="mailto:${esc(s("email"))}" style="color:${C.mid};">${esc(s("email"))}</a>`) +
+      wierszTabeli("Telefon", esc(s("telefon"))) +
+      wierszTabeli("Uwagi", esc(s("uwagi")).replace(/
+/g, "<br>")))}
+
+    <p style="margin:0;font-size:13px;color:#6b7c8c;">
+      Odpowiadając na tego maila, piszesz bezpośrednio do zgłaszającego.
+      Zgłoszenie jest też w <a href="https://gig.org.pl/admin/" style="color:${C.mid};">panelu GIG</a>.
+    </p>`;
+
+  return {
+    subject: `[GIG] Zapis na szkolenie — ${s("nabywca_nazwa") || s("email")}`,
+    html: layout("Nowy zapis na szkolenie", body),
+  };
+}
+
+/* Potwierdzenie dla zglaszajacego. */
+function zapisPotwierdzenieMail(rec: Record<string, unknown>) {
+  const szkolenie = String(rec.szkolenie ?? "").trim();
+  const osoby = String(rec.uczestnicy ?? "").trim();
+  const body = `
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">Dzień dobry,</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">
+      potwierdzamy przyjęcie zgłoszenia${szkolenie ? ` na szkolenie <strong>${esc(szkolenie)}</strong>` : ""}.
+      Skontaktujemy się w sprawie szczegółów organizacyjnych i faktury.</p>
+    ${osoby ? `<div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Zgłoszone osoby</p>
+      <p style="margin:0;font-size:14px;line-height:1.6;">${esc(osoby).replace(/
+/g, "<br>")}</p></div>` : ""}
+    <p style="margin:0;font-size:13px;color:#6b7c8c;">Jeśli któraś dana wymaga poprawki, odpisz na tę wiadomość.</p>`;
+  return { subject: "Potwierdzenie zgłoszenia na szkolenie — GIG", html: layout("Zgłoszenie przyjęte ✓", body) };
+}
+
 /* Jedno wywolanie Resend. Zwraca blad zamiast rzucac, zeby niepowodzenie
    jednego maila nie blokowalo wyslania drugiego. */
 async function wyslij(
@@ -203,6 +282,16 @@ Deno.serve(async (req) => {
       }
       // 2) potwierdzenie dla nadawcy
       const p = await wyslij([nadawca], kontaktMail(rec));
+      wyniki.potwierdzenie = p.ok ? "wyslane" : p.info;
+
+    } else if (table === "zapisy_szkolenia") {
+      // 1) powiadomienie do GIG z kompletem danych do faktury
+      if (NOTIFY_EMAILS.length) {
+        const r = await wyslij(NOTIFY_EMAILS, zapisNotifyMail(rec), nadawca);
+        wyniki.powiadomienie = r.ok ? "wyslane" : r.info;
+      }
+      // 2) potwierdzenie dla zglaszajacego
+      const p = await wyslij([nadawca], zapisPotwierdzenieMail(rec));
       wyniki.potwierdzenie = p.ok ? "wyslane" : p.info;
 
     } else if (table === "submissions_newsletter") {
