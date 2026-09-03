@@ -1,6 +1,6 @@
 # Przekazanie sesji — gig.org.pl
 
-**Stan na:** 3 września 2026 · ostatni commit `a56202c` · wszystko wypchnięte na `origin/main`
+**Stan na:** 4 września 2026 · ostatni commit `40673d4` · wszystko wypchnięte na `origin/main`
 **Repo:** https://github.com/aiunimaptech-lgtm/gig-org-pl · **Deploy:** Vercel, Root Directory = `strona/`
 **Supabase:** projekt `zlepwzeyjwpmhyxfnime` (org `jbryk's Org`, plan Free)
 
@@ -95,32 +95,66 @@ supabase_functions does not exist`). Triggery wołają `pg_net` wprost — patrz
 
 ## 3. Do zrobienia — w kolejności ważności
 
-### A. Panel `/admin/` nie pokazuje zapisów na szkolenia ⚠️
-Tabela `zapisy_szkolenia` nie ma widoku w panelu. Powiadomienia mailowe działają, więc nic nie
-ginie, ale nie ma gdzie zobaczyć listy, oznaczyć obsłużonych ani wyeksportować uczestników do
-faktur. Wzór do naśladowania: `strona/admin/formularze.html` (czyta `submissions_*`, liczniki
-nieprzeczytanych w `_admin.js`). Statusy w tabeli: `new / read / confirmed / cancelled`.
+### ✅ A. Panel `/admin/` — zapisy na szkolenia — ZROBIONE
+`admin/zapisy.html`: podsumowanie (zgłoszenia, uczestnicy, nieobsłużone, rozbicie na szkolenia),
+filtry, modal ze szczegółami i osobnymi blokami Nabywca/Odbiorca, statusy
+`new/read/confirmed/cancelled`, kopiowanie danych do faktury, dwa eksporty CSV
+(uczestnicy — wiersz na osobę; dane do faktur — wiersz na zgłoszenie). Licznik
+nieobsłużonych w menu bocznym wszystkich stron panelu.
+**Nie testowane na żywych danych — tabela `zapisy_szkolenia` jest pusta.**
 
-### B. Nieobsłużone zgłoszenie
-`submissions_kontakt`, 2 września 10:28 — **Agnieszka Horbaczewska**, zapis na szkolenie Hanusa,
-status `new`. Sprzed uruchomienia powiadomień, więc nikt o nim nie wiedział. Wymaga odpowiedzi.
+### ~~B. Nieobsłużone zgłoszenie~~ — nieaktualne
+Zgłoszenie Agnieszki Horbaczewskiej to **mail testowy** (Agnieszka jest pracownicą biura).
+Nie wymaga odpowiedzi.
 
-### C. `send-confirmation` przyjmuje klucz publiczny
-Funkcja akceptuje wywołania z kluczem `anon`, który jest jawny w `gig-config.js`. Ktoś może ją
-wywołać ręcznie i wysłać mail na dowolny adres oraz zaspamować skrzynki GIG. Zamknięcie:
-wspólny sekret sprawdzany w nagłówku (kilkanaście linijek + jeden sekret).
+### ⚠️ C. `send-confirmation` przyjmuje klucz publiczny — CZĘŚCIOWO
+**Zrobione:** schemat `private` + tabela `gig_sekrety` z tokenem wygenerowanym w bazie
+(`gen_random_bytes(32)`), trigger dokłada nagłówek `x-gig-token`
+(`backend/supabase_sekret_hooka.sql`, migracja już zastosowana). W kodzie funkcji
+(`backend/edge-functions/send-confirmation.ts`) jest brama z porównaniem o stałym czasie.
 
-### D. Sprzątanie „Poziom 3" (odłożone świadomie)
-- `be.css` — 512 KB, w tym 79 reguł WooCommerce, 21 bbPress, 16 Tribe Events, 11 BuddyPress
-  dla wtyczek, których nie ma. ~250–350 KB do odzyskania, ale wymaga testów strona po stronie.
-- CF7 wskazuje na nieistniejące `/wp-json/` — skrypt może bić w 404.
-- jQuery UI (`core`, `tabs`) — sprawdzić, czy w ogóle używane.
+**Zostało — dwa kroki, w tej kolejności:**
+1. **Wdrożyć funkcję** z pliku w repo. Nie przez przepisywanie — schowkiem:
+   ```powershell
+   Set-Clipboard -Value (Get-Content -LiteralPath 'backend\edge-functions\send-confirmation.ts' -Raw -Encoding UTF8)
+   ```
+   Brama jest bezczynna, dopóki sekret nie istnieje, więc wdrożenie **nie przerwie wysyłki**.
+2. **Dodać sekret** `GIG_HOOK_TOKEN` w Supabase → Edge Functions → Secrets. Wartość:
+   ```sql
+   select wartosc from private.gig_sekrety where klucz = 'hook_token';
+   ```
+   Dopiero ten krok włącza ochronę. Odwrotna kolejność zablokowałaby maile.
 
-### E. Duże biuletyny PDF (>25 MB)
-Pominięte przy mirrorze, linki zostały absolutne. Do dograna do `strona/biuletyn/` albo do
-Supabase Storage.
+Weryfikacja: wyślij testowe zgłoszenie i sprawdź `net._http_response` — ma być
+`{"ok":true,...}`. `401` i `{"error":"brak uprawnien"}` = sekret różni się od tokenu w bazie.
 
----
+### ✅ D. Sprzątanie „Poziom 3" — ZROBIONE (141 KB)
+`be.css` 516→464 KB oraz inline CSS na 26 stronach (−100 KB). Usunięte reguły WooCommerce,
+bbPress, Tribe Events, BuddyPress, portfolio, koszyka i wishlisty. Cięcie na **selektorach**,
+nie na blokach. Dowód bezpieczeństwa: dla 360 usuniętych selektorów sprawdzono kolizję
+z 1447 klasami i id używanymi w HTML — **zero kolizji**, więc żaden nie mógł niczego dopasować.
+
+**Skorygowany szacunek:** wcześniejsze 250–350 KB było optymistyczne (liczyło reguły, a te są
+krótkie). Prawdziwy ciężar to własny kod BeTheme — `mfn-*` to 22% arkusza i **jest używany**.
+Więcej odzyska dopiero dokończenie migracji stron z mirrora na strony autorskie.
+Nietknięte, do sprawdzenia kiedyś: CF7 bijący w nieistniejące `/wp-json/`, jQuery UI.
+
+### ⚠️ E. Duże biuletyny PDF — PRAWIE ZROBIONE
+Audyt 24 odnośników wykazał trzy usterki, dwie naprawione:
+- `02_Regulamin_Pracy_Rady_GIG` — plik miał w **nazwie** dosłowne `%20`; przeglądarka
+  dekodowała je na spację i szukała innego pliku. Przemianowany.
+- `04_Regulamin Przedstawiciela Regionalnego` — pliku nie było w repo, odnośnik wskazywał
+  na stary serwer. Odnaleziony w `dokumenty izby/`, dograny, odnośnik względny.
+- **`biuletyn/Biuletyn-Informacyjny-GIG-nr-8.pdf` — PLIKU BRAK.** Nie ma go ani w repo,
+  ani w katalogach na dysku. Wymaga dostarczenia przez GIG. Odnośnik jest już względny,
+  więc zadziała od razu po wgraniu pliku pod tą nazwą.
+
+Zero odnośników `http://` do starej domeny (były też niezabezpieczone na stronie po https).
+23 z 24 plików PDF na miejscu.
+
+**Pułapka z tej pracy:** przy naprawie odnośników szeroki wzorzec na `https://gig.org.pl/...`
+zamienił na względne również `canonical` i `og:url`. `og:url` **musi** być bezwzględny
+(wymóg Facebooka i LinkedIna). Cofnięte — podmieniaj adresy punktowo, nie regexem po domenie.
 
 ## 4. Historia zmian w tej sesji
 
