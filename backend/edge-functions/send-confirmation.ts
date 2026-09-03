@@ -8,6 +8,7 @@
 //   FROM_EMAIL     = Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>  (domena zweryfikowana w Resend)
 //   NOTIFY_EMAILS  = biuro@gig.org.pl,jerzy.bryk@gmail.com   (opcjonalny; adresy po przecinku)
 //   NOTIFY_NEWSLETTER_EMAILS = jerzy.bryk@gmail.com           (opcjonalny; osobna lista)
+//   GIG_HOOK_TOKEN = <wartosc z private.gig_sekrety>          (opcjonalny; wlacza brame)
 //
 // Przy zgloszeniu z formularza kontaktowego ida DWA maile:
 //   1. powiadomienie do GIG (NOTIFY_EMAILS) z trescia zgloszenia, Reply-To = nadawca,
@@ -29,6 +30,21 @@ const NOTIFY_EMAILS = (Deno.env.get("NOTIFY_EMAILS") ?? "biuro@gig.org.pl,jerzy.
 // niz zapytania z formularza i zwykle interesuje wezsze grono.
 const NOTIFY_NEWSLETTER = (Deno.env.get("NOTIFY_NEWSLETTER_EMAILS") ?? "jerzy.bryk@gmail.com")
   .split(",").map((x) => x.trim()).filter(Boolean);
+
+// Wspolny sekret miedzy triggerem w bazie a ta funkcja.
+// Dopoki sekret NIE jest ustawiony, funkcja dziala jak dotad (zeby wdrozenie
+// kodu nie przerwalo wysylki maili). Gdy sekret zostanie dodany w
+// Supabase -> Edge Functions -> Secrets, ochrona wlacza sie sama.
+// Wartosc po stronie bazy: private.gig_sekrety, klucz 'hook_token'.
+const HOOK_TOKEN = Deno.env.get("GIG_HOOK_TOKEN") ?? "";
+
+// Porownanie o stalym czasie - nie zdradza, ile pierwszych znakow sie zgadza.
+function rowneStalyCzas(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let roznica = 0;
+  for (let i = 0; i < a.length; i++) roznica |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return roznica === 0;
+}
 
 const C = { dark: "#16314a", mid: "#2f6f9f", light: "#cfe0ee", bg: "#eef4f9" };
 
@@ -263,6 +279,20 @@ async function wyslij(
 
 Deno.serve(async (req) => {
   try {
+    // Brama: klucz publiczny (anon) jest jawny na stronie, wiec sam w sobie
+    // nie dowodzi, ze wywolanie pochodzi z naszego triggera. Gdy sekret jest
+    // ustawiony, wymagamy zgodnego naglowka - inaczej mozna by tym kanalem
+    // wysylac maile z domeny Izby na dowolny adres.
+    if (HOOK_TOKEN) {
+      const podany = req.headers.get("x-gig-token") ?? "";
+      if (!rowneStalyCzas(podany, HOOK_TOKEN)) {
+        return new Response(JSON.stringify({ error: "brak uprawnien" }), {
+          status: 401,
+          headers: { "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const payload = await req.json();
     const table = payload.table as string;
     const rec = (payload.record ?? {}) as Record<string, unknown>;
