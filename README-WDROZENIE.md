@@ -56,7 +56,9 @@ W panelu **kei.pl** (zarządzanie DNS domeny gig.org.pl) ustaw:
    - `RESEND_API_KEY` — klucz `re_...` z Resend (jedyny prawdziwy sekret)
    - `FROM_EMAIL="Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>"`
    - `NOTIFY_EMAILS="biuro@gig.org.pl,jerzy.bryk@gmail.com"` — adresy powiadomień o nowych
-     zgłoszeniach (zmiana odbiorcy = zmiana sekretu, bez ponownego wdrożenia funkcji)
+     zgłoszeniach z formularza (zmiana odbiorcy = zmiana sekretu, bez ponownego wdrożenia)
+   - `NOTIFY_NEWSLETTER_EMAILS="jerzy.bryk@gmail.com"` — osobna lista dla powiadomień
+     o nowych zapisach do newslettera (domyślnie ten adres, więc sekret jest opcjonalny)
    - `SITE_URL="https://gig.org.pl"`
 
    > `SUPABASE_URL`, `SUPABASE_ANON_KEY` i `SUPABASE_SERVICE_ROLE_KEY` Supabase wstrzykuje
