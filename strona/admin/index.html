@@ -21,6 +21,11 @@
     .login-card .btn-primary { width:100%; justify-content:center; padding:11px; font-size:14px; margin-top:6px; }
     .login-err { background:#fbeaea; color:#9b2222; border:1px solid #e6b8b8; border-radius:6px;
       padding:9px 12px; font-size:13px; margin-top:14px; display:none; }
+    .login-ok { background:#eaf6ee; color:#1c6b39; border:1px solid #bfe3cb; border-radius:6px;
+      padding:9px 12px; font-size:13px; margin-top:14px; display:none; }
+    .login-alt { text-align:center; margin:16px 0 0; font-size:13px; }
+    .login-alt a { color:#2E7981; text-decoration:none; font-weight:600; cursor:pointer; }
+    .login-alt a:hover { text-decoration:underline; }
   </style>
 </head>
 <body>
@@ -33,6 +38,8 @@
       </div>
       <h1>Zaloguj się</h1>
       <p class="sub">Dostęp tylko dla administratorów GIG.</p>
+
+      <!-- LOGOWANIE -->
       <form id="loginForm">
         <div class="form-group">
           <label for="email">E-mail</label>
@@ -44,6 +51,20 @@
         </div>
         <button type="submit" class="btn btn-primary" id="loginBtn">Zaloguj</button>
         <div class="login-err" id="loginErr"></div>
+        <p class="login-alt"><a id="showReset">Nie pamiętasz hasła?</a></p>
+      </form>
+
+      <!-- ODZYSKANIE HASŁA -->
+      <form id="resetForm" hidden>
+        <p class="sub" style="margin-bottom:20px;">Podaj adres e-mail administratora — wyślemy na niego link do ustawienia nowego hasła.</p>
+        <div class="form-group">
+          <label for="resetEmail">E-mail</label>
+          <input type="email" id="resetEmail" class="form-control" autocomplete="username" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="resetBtn">Wyślij link</button>
+        <div class="login-err" id="resetErr"></div>
+        <div class="login-ok" id="resetOk"></div>
+        <p class="login-alt"><a id="backToLogin">← Wróć do logowania</a></p>
       </form>
     </div>
   </div>
@@ -72,6 +93,44 @@
         errBox.style.display = 'block';
       } else {
         window.location.href = 'dashboard.html';
+      }
+    });
+
+    /* ── Odzyskanie hasła ──
+       Przełączamy widok na formularz e-maila; Supabase wysyła link do
+       /admin/nowe-haslo.html, gdzie ustawia się nowe hasło. Adres zwrotny
+       (redirectTo) musi być na liście „Redirect URLs" w Supabase → Auth. */
+    const resetForm = document.getElementById('resetForm');
+    document.getElementById('showReset').addEventListener('click', () => {
+      form.hidden = true; resetForm.hidden = false;
+      document.getElementById('resetEmail').value = document.getElementById('email').value.trim();
+    });
+    document.getElementById('backToLogin').addEventListener('click', () => {
+      resetForm.hidden = true; form.hidden = false;
+    });
+
+    const resetErr = document.getElementById('resetErr');
+    const resetOk  = document.getElementById('resetOk');
+    const resetBtn = document.getElementById('resetBtn');
+    resetForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      resetErr.style.display = 'none'; resetOk.style.display = 'none';
+      const email = document.getElementById('resetEmail').value.trim();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        resetErr.textContent = 'Podaj poprawny adres e-mail.'; resetErr.style.display = 'block'; return;
+      }
+      resetBtn.disabled = true; resetBtn.textContent = 'Wysyłanie…';
+      const { error } = await db.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/admin/nowe-haslo.html'
+      });
+      resetBtn.disabled = false; resetBtn.textContent = 'Wyślij link';
+      if (error) {
+        resetErr.textContent = 'Nie udało się wysłać linku: ' + error.message;
+        resetErr.style.display = 'block';
+      } else {
+        /* Neutralny komunikat — nie zdradzamy, czy konto istnieje. */
+        resetOk.textContent = 'Jeśli konto o tym adresie istnieje, wysłaliśmy na nie link do ustawienia nowego hasła. Sprawdź skrzynkę (także folder spam).';
+        resetOk.style.display = 'block';
       }
     });
   </script>

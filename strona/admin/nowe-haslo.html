@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Ustaw nowe hasło — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+      background:linear-gradient(135deg,#002C34,#2E7981); }
+    .login-card { background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+      width:100%; max-width:400px; padding:36px 34px; }
+    .login-logo { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+    .login-logo .ic { width:44px; height:44px; border-radius:10px; background:#2E7981; color:#fff;
+      display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; }
+    .login-card h1 { font-size:20px; color:#002C34; margin:14px 0 4px; }
+    .login-card p.sub { color:#6b7f84; font-size:13px; margin-bottom:24px; }
+    .login-card .btn-primary { width:100%; justify-content:center; padding:11px; font-size:14px; margin-top:6px; }
+    .login-err { background:#fbeaea; color:#9b2222; border:1px solid #e6b8b8; border-radius:6px;
+      padding:9px 12px; font-size:13px; margin-top:14px; display:none; }
+    .login-ok { background:#eaf6ee; color:#1c6b39; border:1px solid #bfe3cb; border-radius:6px;
+      padding:9px 12px; font-size:13px; margin-top:14px; display:none; }
+    .login-alt { text-align:center; margin:16px 0 0; font-size:13px; }
+    .login-alt a { color:#2E7981; text-decoration:none; font-weight:600; }
+    .login-alt a:hover { text-decoration:underline; }
+    .login-hint { color:#6b7f84; font-size:12px; margin:6px 0 0; }
+    .spinner { width:26px; height:26px; border:3px solid #d7e3e5; border-top-color:#2E7981;
+      border-radius:50%; animation:spin .8s linear infinite; margin:6px auto 14px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="ic">GIG</span>
+        <div class="logo-text" style="color:#002C34;font-weight:800;font-size:14px;">Panel zarządzania<br>
+          <span style="font-weight:400;font-size:11px;color:#6b7f84;">Geodezyjna Izba Gospodarcza</span></div>
+      </div>
+
+      <!-- 1) Sprawdzanie linku -->
+      <div id="stanCzekaj">
+        <h1>Ustaw nowe hasło</h1>
+        <div class="spinner"></div>
+        <p class="sub" style="text-align:center;margin:0;">Weryfikujemy link z wiadomości e-mail…</p>
+      </div>
+
+      <!-- 2) Formularz nowego hasła -->
+      <form id="stanFormularz" hidden>
+        <h1>Ustaw nowe hasło</h1>
+        <p class="sub">Wpisz nowe hasło do panelu. Po zapisaniu zalogujemy Cię automatycznie.</p>
+        <div class="form-group">
+          <label for="pass1">Nowe hasło</label>
+          <input type="password" id="pass1" class="form-control" autocomplete="new-password" required>
+          <p class="login-hint">Co najmniej 8 znaków.</p>
+        </div>
+        <div class="form-group">
+          <label for="pass2">Powtórz hasło</label>
+          <input type="password" id="pass2" class="form-control" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="setBtn">Ustaw hasło</button>
+        <div class="login-err" id="setErr"></div>
+        <div class="login-ok" id="setOk"></div>
+      </form>
+
+      <!-- 3) Link nieważny / otwarty bez tokenu -->
+      <div id="stanBlad" hidden>
+        <h1>Link jest nieprawidłowy</h1>
+        <p class="sub">Ten link do ustawienia hasła wygasł, został już użyty albo strona została otwarta bezpośrednio. Poproś o nowy link na stronie logowania.</p>
+        <p class="login-alt"><a href="index.html">← Wróć do logowania</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    /* Po kliknięciu w link z maila Supabase przekierowuje tutaj z tokenem
+       odzyskiwania w adresie. supabase-js (detectSessionInUrl) sam go
+       przetwarza i zakłada tymczasową sesję — wtedy updateUser() może
+       ustawić nowe hasło. */
+    let gotowe = false;
+
+    function pokaz(id) {
+      ['stanCzekaj','stanFormularz','stanBlad'].forEach(s => document.getElementById(s).hidden = (s !== id));
+    }
+
+    db.auth.onAuthStateChange((event, session) => {
+      if (gotowe) return;
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session) || session) {
+        gotowe = true; pokaz('stanFormularz'); document.getElementById('pass1').focus();
+      }
+    });
+
+    /* Zapasowo: gdy zdarzenie nie przyszło (np. brak tokenu), po chwili
+       sprawdzamy sesję i pokazujemy błąd, jeśli linku nie da się użyć. */
+    (async () => {
+      await new Promise(r => setTimeout(r, 1600));
+      if (gotowe) return;
+      const { data } = await db.auth.getSession();
+      if (data && data.session) { gotowe = true; pokaz('stanFormularz'); document.getElementById('pass1').focus(); }
+      else { pokaz('stanBlad'); }
+    })();
+
+    const setBtn = document.getElementById('setBtn');
+    const setErr = document.getElementById('setErr');
+    const setOk  = document.getElementById('setOk');
+
+    document.getElementById('stanFormularz').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      setErr.style.display = 'none'; setOk.style.display = 'none';
+      const p1 = document.getElementById('pass1').value;
+      const p2 = document.getElementById('pass2').value;
+      if (p1.length < 8) { setErr.textContent = 'Hasło musi mieć co najmniej 8 znaków.'; setErr.style.display = 'block'; return; }
+      if (p1 !== p2)     { setErr.textContent = 'Hasła nie są takie same.'; setErr.style.display = 'block'; return; }
+
+      setBtn.disabled = true; setBtn.textContent = 'Zapisywanie…';
+      const { error } = await db.auth.updateUser({ password: p1 });
+      if (error) {
+        setBtn.disabled = false; setBtn.textContent = 'Ustaw hasło';
+        setErr.textContent = 'Nie udało się ustawić hasła: ' + error.message;
+        setErr.style.display = 'block';
+        return;
+      }
+      /* Token z adresu jest już zużyty — czyścimy go, żeby odświeżenie nie próbowało go użyć ponownie. */
+      history.replaceState(null, '', location.pathname);
+      setOk.textContent = 'Hasło ustawione. Za chwilę przeniesiemy Cię do panelu…';
+      setOk.style.display = 'block';
+      setTimeout(() => { window.location.href = 'dashboard.html'; }, 1400);
+    });
+  </script>
+</body>
+</html>
