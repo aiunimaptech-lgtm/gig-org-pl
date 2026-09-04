@@ -1,6 +1,6 @@
 # Przekazanie sesji — gig.org.pl
 
-**Stan na:** 4 września 2026 · ostatni commit `40673d4` · wszystko wypchnięte na `origin/main`
+**Stan na:** 4 września 2026 (sesja 2) · ostatni commit `67706fb` · wszystko wypchnięte na `origin/main`
 **Repo:** https://github.com/aiunimaptech-lgtm/gig-org-pl · **Deploy:** Vercel, Root Directory = `strona/`
 **Supabase:** projekt `zlepwzeyjwpmhyxfnime` (org `jbryk's Org`, plan Free)
 
@@ -38,6 +38,23 @@ Pola: liczba osób, imiona i nazwiska, nabywca (nazwa/adres/NIP + znacznik JST),
 odbiorca (nazwa/adres/**NIP / ID-wewn.**, domyślnie ukryty), e-mail, telefon, uwagi, RODO.
 Przycisk „Zapisz się" w kalendarzu szkoleń prowadzi tu z `?szkolenie=<tytuł>`.
 
+### Panel `/admin/` — szkolenia i zapisy (stan po sesji 2)
+Jedno konto administratora: `biuro@gig.org.pl` (Supabase → Authentication → Users).
+Widoki związane ze szkoleniami: **Pulpit** (karta „Zapisów na szkolenia" + zapisy w „Ostatnich
+zgłoszeniach"), **Szkolenia** (CRUD + kolumna „Zgłoszeń" z linkiem do przefiltrowanych zapisów),
+**Zapisy na szkolenia** (`zapisy.html` — podsumowanie, filtry, modal, statusy, dwa eksporty CSV;
+otwarcie szczegółów zdejmuje status „nowe"). Zgłoszenia łączą się ze szkoleniem **po tytule**
+(tekst z `?szkolenie=`), nie po kluczu — zmiana tytułu szkolenia w panelu „odłącza" wcześniejsze
+zgłoszenia (porównanie ignoruje wielkość liter i spacje na końcach, ale nie więcej).
+
+**Skąd „puste" zapisy:** do 3 września przycisk „Zapisz się" prowadził na formularz kontaktowy,
+więc 4 zgłoszenia z 2–3.09 (wszystkie testowe: Agnieszka H. z biura i J. Bryk) siedzą w
+`submissions_kontakt` z tematem „Zapis na szkolenie: …" — widać je w zakładce **Kontakt**, nie
+w Zapisach. Od 3.09 nowe zgłoszenia idą do `zapisy_szkolenia`.
+
+Formularz na `/szkolenia/`, który wygląda jak zapis, to **newsletter w stopce** (przycisk „Zapisz
+się" jest na każdej stronie). Zapis na szkolenie to „Zapisz się →" na kafelku → `/zapisy/`.
+
 ### Sekrety w Supabase (Edge Functions → Secrets)
 `RESEND_API_KEY`, `FROM_EMAIL`, `NOTIFY_EMAILS`, `NOTIFY_NEWSLETTER_EMAILS`, `SITE_URL`.
 `SUPABASE_URL` / `ANON_KEY` / `SERVICE_ROLE_KEY` Supabase wstrzykuje **automatycznie** — nie ustawiać.
@@ -50,6 +67,22 @@ oraz DKIM `resend._domainkey`. Poczta firmowa (MX `poczta.gig.org.pl`) i SPF dom
 ---
 
 ## 2. Pułapki — przeczytaj, zanim stracisz na nie godzinę
+
+**Jest konektor MCP do Supabase w Claude Code** (projekt `zlepwzeyjwpmhyxfnime`): `execute_sql`,
+`list_tables`, `get_edge_function`, `deploy_edge_function`, `apply_migration`. Zapytania SQL,
+podgląd wdrożonego kodu funkcji i wdrożenie nowej wersji idą **bez panelu Supabase i bez schowka**
+— większość pułapek poniżej dotyczy pracy przez dashboard. Konektor nie zmienia ustawień Auth
+(np. rejestracji kont) — to nadal tylko dashboard.
+
+**Panel przeglądarki: zrzuty ekranu bywają time-outem, JS działa.** Przy testach panelu
+`computer.screenshot` potrafił przekraczać 5 s, gdy JS i `read_page` działały normalnie.
+Weryfikuj stan strony przez `javascript_tool` (odczyt DOM), zrzut rób na końcu i z `scale`.
+
+**Testy panelu bez logowania:** atrapa `supabase-js` (plik `_mock_supabase.js` podstawiony
+w miejsce skryptu CDN, `from().select/eq/neq/order/limit/update` + `auth.getSession`) pozwala
+obejrzeć każdy widok na danych testowych bez konta i bez dotykania bazy. Tak przetestowano
+`zapisy.html`, `dashboard.html`, `szkolenia.html`. Atrapa była w scratchpadzie sesji — jeśli
+będzie potrzebna ponownie, odtworzenie to ~80 linii.
 
 **Panel Supabase połyka błędy wdrożenia.** Dialog „Confirm to deploy updates" zamyka się bez
 komunikatu, a znacznik czasu zostaje stary. Wygląda jak zawieszony dashboard — a to może być
@@ -95,13 +128,26 @@ supabase_functions does not exist`). Triggery wołają `pg_net` wprost — patrz
 
 ## 3. Do zrobienia — w kolejności ważności
 
-### ✅ A. Panel `/admin/` — zapisy na szkolenia — ZROBIONE
-`admin/zapisy.html`: podsumowanie (zgłoszenia, uczestnicy, nieobsłużone, rozbicie na szkolenia),
-filtry, modal ze szczegółami i osobnymi blokami Nabywca/Odbiorca, statusy
-`new/read/confirmed/cancelled`, kopiowanie danych do faktury, dwa eksporty CSV
-(uczestnicy — wiersz na osobę; dane do faktur — wiersz na zgłoszenie). Licznik
-nieobsłużonych w menu bocznym wszystkich stron panelu.
-**Nie testowane na żywych danych — tabela `zapisy_szkolenia` jest pusta.**
+### 🔴 F. Bezpieczeństwo: każdy może założyć konto admina — DO ZAMKNIĘCIA NATYCHMIAST
+`GET /auth/v1/settings` zwraca `disable_signup: false` przy włączonym logowaniu e-mailem, a wszystkie
+polityki RLS (`submissions_*`, `zapisy_szkolenia`, `szkolenia`, `czlonkowie`, `articles`) dają
+pełny dostęp warunkiem `auth.role() = 'authenticated'`. Klucz publiczny jest w źródle strony, więc
+każdy może wywołać `/auth/v1/signup`, potwierdzić własny e-mail i **czytać oraz edytować wszystko**.
+
+1. **Dashboard Supabase → Authentication → Sign In / Providers → Email → wyłącz „Allow new users
+   to sign up"** (tego nie da się zrobić konektorem MCP).
+2. Druga warstwa (opcjonalnie, przez `apply_migration`): w politykach zastąpić
+   `auth.role() = 'authenticated'` warunkiem na listę adresów, np.
+   `(auth.jwt() ->> 'email') in ('biuro@gig.org.pl')`. Uwaga: pomyłka w adresie zablokuje panel —
+   sprawdź logowanie zaraz po migracji.
+
+### ✅ A. Panel `/admin/` — zapisy na szkolenia — ZROBIONE i rozszerzone (sesja 2)
+`admin/zapisy.html` + pulpit + kolumna „Zgłoszeń" na liście szkoleń (szczegóły w sekcji 1).
+Przetestowane na atrapie danych (7 zgłoszeń, wszystkie statusy, odbiorca ≠ nabywca, wstrzyknięty
+HTML w polach): podsumowania, filtry, modal, zmiana statusu, oba CSV, escapowanie — bez błędów.
+**Nadal nie testowane na żywych danych — `zapisy_szkolenia` wciąż pusta.** Test bez maili:
+`ALTER TABLE zapisy_szkolenia DISABLE TRIGGER on_zapis_insert; INSERT …; ALTER TABLE … ENABLE
+TRIGGER on_zapis_insert;` w jednej transakcji (inaczej trigger wyśle maile do biura).
 
 ### ~~B. Nieobsłużone zgłoszenie~~ — nieaktualne
 Zgłoszenie Agnieszki Horbaczewskiej to **mail testowy** (Agnieszka jest pracownicą biura).
@@ -114,7 +160,10 @@ Nie wymaga odpowiedzi.
 (`backend/edge-functions/send-confirmation.ts`) jest brama z porównaniem o stałym czasie.
 
 **Zostało — dwa kroki, w tej kolejności:**
-1. **Wdrożyć funkcję** z pliku w repo. Nie przez przepisywanie — schowkiem:
+1. **Wdrożyć funkcję** z pliku w repo. Najprościej konektorem MCP: `deploy_edge_function`
+   (slug `send-confirmation`, plik `index.ts` = treść `backend/edge-functions/send-confirmation.ts`).
+   Sprawdzone 4.09: wdrożona jest **wersja 3** = repo bez bramy (`get_edge_function` pokazuje kod).
+   Zapasowo — schowkiem:
    ```powershell
    Set-Clipboard -Value (Get-Content -LiteralPath 'backend\edge-functions\send-confirmation.ts' -Raw -Encoding UTF8)
    ```
@@ -156,7 +205,18 @@ Zero odnośników `http://` do starej domeny (były też niezabezpieczone na str
 zamienił na względne również `canonical` i `og:url`. `og:url` **musi** być bezwzględny
 (wymóg Facebooka i LinkedIna). Cofnięte — podmieniaj adresy punktowo, nie regexem po domenie.
 
-## 4. Historia zmian w tej sesji
+## 4. Historia zmian
+
+### Sesja 2 (4 września 2026)
+
+| commit | co |
+|---|---|
+| `67706fb` | panel: zapisy na pulpicie, kolumna „Zgłoszeń" na liście szkoleń, filtr z `?szkolenie=`, auto-„przeczytane" |
+
+Poza kodem: audyt stanu (produkcja = repo, formularz `/zapisy/` i panel działają, tabela pusta),
+odkrycie otwartej rejestracji kont (punkt F), porównanie wdrożonej funkcji z repo (punkt C).
+
+### Sesja 1
 
 | commit | co |
 |---|---|
