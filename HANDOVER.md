@@ -55,6 +55,18 @@ w Zapisach. Od 3.09 nowe zgłoszenia idą do `zapisy_szkolenia`.
 Formularz na `/szkolenia/`, który wygląda jak zapis, to **newsletter w stopce** (przycisk „Zapisz
 się" jest na każdej stronie). Zapis na szkolenie to „Zapisz się →" na kafelku → `/zapisy/`.
 
+### Baza e-mail (`admin/baza-email.html`, tabela `baza_email`)
+3791 adresów z listy MailerLite wzbogaconych researchem (plik `dane_firm_z_maili_GIG.xlsx`
+z 4.09.2026 — **nie ma go w repo, repo jest publiczne; dane żyją tylko w bazie**). Filtry:
+Pochodzenie / Grupa / Rodzaj-branża (słowniki z arkusza „Listy" w kodzie strony jako `GRUPY`,
+`RODZAJE`, `POCHODZENIA` + wartości z danych), szukanie, edycja, statusy `active/unsubscribed/bounced`,
+eksport CSV, mail do przefiltrowanych (limit 200 — masówki robić w MailerLite).
+**Ponowny import / aktualizacja:** uruchom `backend/supabase_baza_email.sql` (wstawi nowy
+`import_token`), odczytaj token zapytaniem z końca pliku, potem
+`GIG_IMPORT_TOKEN=<token> python skrypty/import_baza_email.py <plik.xlsx>` — upsert po e-mailu,
+puste pola nie nadpisują. Token kasuje się po imporcie (skrypt nie — zrób to zapytaniem z pliku SQL,
+jeśli import przerwano).
+
 ### Sekrety w Supabase (Edge Functions → Secrets)
 `RESEND_API_KEY`, `FROM_EMAIL`, `NOTIFY_EMAILS`, `NOTIFY_NEWSLETTER_EMAILS`, `SITE_URL`.
 `SUPABASE_URL` / `ANON_KEY` / `SERVICE_ROLE_KEY` Supabase wstrzykuje **automatycznie** — nie ustawiać.
@@ -220,6 +232,9 @@ zamienił na względne również `canonical` i `og:url`. `og:url` **musi** być 
 | `ce798c7` | `pierwsze-haslo.html?token=…` + Edge Function `pierwsze-haslo` + `backend/supabase_pierwsze_haslo.sql` — hasło bez maila, token jednorazowy |
 | `513bb43` | kreator e-maili do uczestników (Edge Function `wyslij-mail`, Resend, tylko z sesją admina), paleta czerwona GIG, ikona 🎓 |
 | `a21d784` | kreator wspólny w `_admin.js` (`gigKreatorMaila`), „Odpowiedz" do jednej osoby w zapisach i kontakcie (status `replied`), liczniki znikają po wejściu do zakładki, siatka kafelków, checkbox RODO w kalendarzu `/szkolenia/`, maile w czerwieni (`send-confirmation` v4 z bramą, `wyslij-mail` v2) |
+
+| `7f64ee2` | linki Newsletter/Kontakt w menu przełączają zakładkę (hashchange) |
+| `3fcd9f2` | zakładka **Baza e-mail**: tabela `baza_email`, import 3791 adresów przez RPC z tokenem, filtry/edycja/CSV/mail; `wyslij-mail` v3 (stopka `baza`) |
 
 **Kreator e-maili:** `gigKreatorMaila({odbiorcy, temat, rodzaj, szkolenie, opis, cytat, poWyslaniu})` w `_admin.js`;
 strona musi ładować Quill. Backend `wyslij-mail` sprawdza sesję admina (`auth.getUser`), wysyła osobno
