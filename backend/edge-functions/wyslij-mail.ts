@@ -1,14 +1,16 @@
 // ============================================================
 // GIG — Edge Function: wyslij-mail
-// Wysyła wiadomość z panelu do uczestników szkoleń (Resend).
-// Wołana z /admin/zapisy.html (kreator e-maila).
+// Wysyła wiadomość z panelu (Resend): do uczestników szkoleń albo jako
+// odpowiedź na wiadomość z formularza kontaktowego.
+// Wołana z panelu przez gigKreatorMaila() w /admin/_admin.js.
 //
 // Autoryzacja: nagłówek Authorization: Bearer <access_token zalogowanego
 // administratora>. Funkcja sprawdza token przez auth.getUser() — bez
 // zalogowanego użytkownika panelu nic nie wyśle. Wdrożenie z
 // verify_jwt = false (klucz sb_publishable_ nie jest JWT; sprawdzamy sami).
 //
-// Body: { subject, html, recipients: [{email, name?}], szkolenie? }
+// Body: { subject, html, recipients: [{email, name?}],
+//         rodzaj?: 'szkolenie' | 'kontakt', szkolenie? }
 // Każdy odbiorca dostaje osobny mail (nie widzi pozostałych adresów).
 // Reply-To = biuro@gig.org.pl, żeby odpowiedzi trafiały do Izby.
 //
@@ -28,7 +30,8 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-const C = { dark: "#16202a", mid: "#cc0a2b", bg: "#f4f6f8" };
+/* Paleta strony gig.org.pl — ta sama, co w send-confirmation. */
+const C = { dark: "#16202a", mid: "#cc0a2b", bg: "#fdecef" };
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
@@ -68,12 +71,14 @@ function layout(title: string, body: string, stopka: string): string {
 </body></html>`;
 }
 
-/* Treść z edytora Quill: zostawiamy proste znaczniki, wycinamy skrypty/atrybuty zdarzeń. */
+/* Treść z edytora Quill: zostawiamy proste znaczniki, wycinamy skrypty/atrybuty zdarzeń.
+   Cytat (blockquote) dostaje styl inline, bo klienci poczty nie czytają arkuszy. */
 function oczyscHtml(html: string): string {
   return html
     .replace(/<\s*(script|style|iframe|object|embed)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>/gi, "")
     .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
-    .replace(/javascript:/gi, "");
+    .replace(/javascript:/gi, "")
+    .replace(/<blockquote>/gi, `<blockquote style="margin:12px 0;padding:4px 0 4px 14px;border-left:3px solid #e6ebef;color:#6b7c8c;">`);
 }
 
 async function wyslijJeden(to: string, subject: string, html: string): Promise<{ ok: boolean; info: unknown }> {
@@ -110,6 +115,7 @@ Deno.serve(async (req) => {
 
   const subject = String(body.subject ?? "").trim();
   const html = oczyscHtml(String(body.html ?? "")).trim();
+  const rodzaj = String(body.rodzaj ?? "").trim();
   const szkolenie = String(body.szkolenie ?? "").trim();
   const odbiorcy = Array.isArray(body.recipients) ? body.recipients as Array<Record<string, unknown>> : [];
 
@@ -120,9 +126,15 @@ Deno.serve(async (req) => {
   if (!adresy.length) return json({ error: "brak poprawnych odbiorcow" }, 400);
   if (adresy.length > MAX_ODBIORCOW) return json({ error: `za duzo odbiorcow (max ${MAX_ODBIORCOW})` }, 400);
 
-  const stopka = szkolenie
-    ? `Otrzymujesz tę wiadomość, ponieważ zgłoszono Cię na szkolenie GIG: <strong>${esc(szkolenie)}</strong>. Odpowiedź na ten mail trafi do biura Izby.`
-    : "Otrzymujesz tę wiadomość jako uczestnik szkoleń Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.";
+  /* Stopka mówi odbiorcy, skąd ma tę wiadomość. */
+  let stopka: string;
+  if (rodzaj === "kontakt") {
+    stopka = "To odpowiedź na Twoją wiadomość wysłaną przez formularz na gig.org.pl. Odpisując na ten mail, piszesz do biura Izby.";
+  } else if (szkolenie) {
+    stopka = `Otrzymujesz tę wiadomość, ponieważ zgłoszono Cię na szkolenie GIG: <strong>${esc(szkolenie)}</strong>. Odpowiedź na ten mail trafi do biura Izby.`;
+  } else {
+    stopka = "Otrzymujesz tę wiadomość jako uczestnik szkoleń Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.";
+  }
   const tresc = layout(subject, html, stopka);
 
   const wyniki: Array<{ email: string; ok: boolean; blad?: unknown }> = [];
@@ -131,6 +143,6 @@ Deno.serve(async (req) => {
     wyniki.push({ email, ok: r.ok, ...(r.ok ? {} : { blad: r.info }) });
   }
   const wyslane = wyniki.filter((w) => w.ok).length;
-  console.log(`wyslij-mail: ${u.user.email} -> ${wyslane}/${adresy.length} (${subject})`);
+  console.log(`wyslij-mail: ${u.user.email} -> ${wyslane}/${adresy.length} [${rodzaj || "-"}] (${subject})`);
   return json({ ok: true, wyslane, razem: adresy.length, wyniki });
 });

@@ -378,6 +378,23 @@ table.admin-table .actions { display: flex; gap: 6px; }
 .badge-archived { background: #fafafa; color: #bbb; }
 .badge-confirmed{ background: #e6f5ec; color: #1d7a45; }
 .badge-cancelled{ background: #f2f4f6; color: #8b98a4; text-decoration: line-through; }
+.badge-replied  { background: #e6f5ec; color: #1d7a45; }
+
+/* ── KREATOR E-MAILA (gigKreatorMaila w _admin.js) ── */
+.mail-odb { background: #f7f9fb; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; font-size: 13px; }
+.mail-odb strong { color: var(--brand-dark); }
+.mail-odb details { margin-top: 6px; }
+.mail-odb summary { cursor: pointer; color: var(--brand-mid); font-weight: 600; }
+.mail-odb ul { margin: 8px 0 0 18px; padding: 0; columns: 2; color: var(--text-muted); font-size: 12.5px; }
+.mail-hint { font-size: 12px; color: var(--text-muted); margin: 6px 0 0; }
+#gigMailEdytor { min-height: 220px; font-family: inherit; font-size: 14px; }
+#gigMailEdytor blockquote { border-left: 3px solid var(--border); color: var(--text-muted); margin: 6px 0; padding-left: 12px; }
+.ql-toolbar.ql-snow { border-radius: 6px 6px 0 0; border-color: var(--border); }
+.ql-container.ql-snow { border-radius: 0 0 6px 6px; border-color: var(--border); }
+.mail-wynik { margin-top: 12px; font-size: 13px; display: none; padding: 10px 12px; border-radius: 8px; }
+.mail-wynik.ok  { display: block; background: #eaf6ee; border: 1px solid #bfe3cb; color: #1c6b39; }
+.mail-wynik.err { display: block; background: #fdecef; border: 1px solid #f3ccd4; color: #a3122c; }
+.mail-wynik ul { margin: 6px 0 0 18px; }
 
 /* ── FORMS ── */
 .form-group { margin-bottom: 16px; }

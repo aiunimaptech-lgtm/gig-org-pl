@@ -46,7 +46,7 @@ function rowneStalyCzas(a: string, b: string): boolean {
   return roznica === 0;
 }
 
-const C = { dark: "#16314a", mid: "#2f6f9f", light: "#cfe0ee", bg: "#eef4f9" };
+const C = { dark: "#16202a", mid: "#cc0a2b", light: "#f3ccd4", bg: "#fdecef" };
 
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -54,9 +54,9 @@ function esc(s: string): string {
 
 function layout(title: string, body: string): string {
   return `<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;background:#eef0f3;font-family:'Segoe UI',Arial,sans-serif;color:#16314a;">
+<body style="margin:0;background:#eef0f3;font-family:'Segoe UI',Arial,sans-serif;color:#16202a;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 6px 24px rgba(22,49,74,.10);">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 6px 24px rgba(22,32,42,.10);">
       <tr><td style="background:${C.dark};padding:24px 32px;color:#fff;">
         <table role="presentation" cellpadding="0" cellspacing="0"><tr>
           <td style="background:${C.mid};width:46px;height:46px;border-radius:8px;text-align:center;vertical-align:middle;color:#fff;font-weight:800;font-size:15px;">GIG</td>

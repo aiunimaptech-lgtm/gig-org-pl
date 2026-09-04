@@ -3,7 +3,8 @@
    Wstawia sekcję „Kalendarz szkoleń" na stronie /szkolenia/:
    karty najbliższych szkoleń + archiwum. Dane z tabeli `szkolenia`
    (RLS: publiczny odczyt opublikowanych). Przycisk „Zapisz się” prowadzi
-   do formularza kontaktowego z wpisanym tematem.
+   do formularza /zapisy/ z wpisanym tytułem; jest aktywny dopiero po
+   zaznaczeniu zgody na politykę prywatności (checkbox nad przyciskiem).
    ===================================================================== */
 (function () {
   "use strict";
@@ -31,6 +32,12 @@
     ".gig-szk-desc{font-size:14px;color:#46535f;margin:0 0 14px;line-height:1.55;}" +
     ".gig-szk-btn{display:inline-block;background:" + RED + ";color:#fff;text-decoration:none;font-weight:700;font-size:13px;padding:9px 18px;border-radius:8px;}" +
     ".gig-szk-btn:hover{filter:brightness(.92);color:#fff;}" +
+    /* zgoda RODO nad przyciskiem; bez zaznaczenia przycisk jest szary i nieklikalny */
+    ".gig-szk-zgoda{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:#46535f;line-height:1.45;margin:14px 0 10px;cursor:pointer;}" +
+    ".gig-szk-zgoda input{margin:2px 0 0;flex:none;width:16px;height:16px;accent-color:" + RED + ";cursor:pointer;}" +
+    ".gig-szk-zgoda a{color:" + RED + ";}" +
+    ".gig-szk-btn.wylaczony{background:#c9ced4;pointer-events:none;cursor:not-allowed;}" +
+    ".gig-szk-btn.wylaczony:hover{filter:none;}" +
     ".gig-szk-empty{text-align:center;color:#7a8794;background:#f5f7f9;border:1px dashed #d6dde3;border-radius:12px;padding:30px;}" +
     ".gig-szk-arch{margin-top:34px;}" +
     ".gig-szk-arch summary{cursor:pointer;font-weight:700;color:#16202a;font-size:16px;padding:10px 0;}" +
@@ -116,7 +123,12 @@
         "</div>";
     }
 
-    var przycisk = archiwum ? "" : '<a class="gig-szk-btn" href="' + link + '">Zapisz się →</a>';
+    /* Przycisk startuje jako wyłączony; odblokowuje go checkbox zgody (obsługa niżej, delegowana). */
+    var przycisk = archiwum ? "" :
+      '<label class="gig-szk-zgoda"><input type="checkbox" class="gig-szk-chk">' +
+      '<span>Zapoznałem/-am się z <a href="/polityka-prywatnosci-rodo/" target="_blank" rel="noopener">Polityką prywatności</a> ' +
+      'i wyrażam zgodę na przetwarzanie danych osobowych w celu obsługi zgłoszenia.</span></label>' +
+      '<a class="gig-szk-btn wylaczony" href="' + link + '" aria-disabled="true" tabindex="-1">Zapisz się →</a>';
 
     return '<article class="gig-szk-card">' + dayBadge(r.date_start, r.date_label) +
       '<div class="gig-szk-body"><h3>' + esc(r.title) + "</h3>" +
@@ -187,6 +199,22 @@
       if (l) l.outerHTML = '<div class="gig-szk-empty">Lista szkoleń jest właśnie aktualizowana. Zapraszamy wkrótce — lub <a href="/kontakt/">napisz do nas</a> po informacje o najbliższych terminach.</div>';
     }
   }
+
+  /* Zgoda RODO: jeden nasłuch na dokumencie obsługuje wszystkie karty (także dorenderowane później). */
+  document.addEventListener("change", function (e) {
+    var chk = e.target;
+    if (!chk.classList || !chk.classList.contains("gig-szk-chk")) return;
+    var body = chk.closest(".gig-szk-body");
+    var btn = body && body.querySelector(".gig-szk-btn");
+    if (!btn) return;
+    btn.classList.toggle("wylaczony", !chk.checked);
+    btn.setAttribute("aria-disabled", chk.checked ? "false" : "true");
+    btn.tabIndex = chk.checked ? 0 : -1;
+  });
+  document.addEventListener("click", function (e) {
+    var a = e.target.closest && e.target.closest(".gig-szk-btn.wylaczony");
+    if (a) e.preventDefault();
+  });
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();

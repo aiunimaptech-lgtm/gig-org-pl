@@ -156,6 +156,146 @@ function gigLiczbaOsob(r) {
   return Number(r.liczba_osob) || (r.uczestnicy ? r.uczestnicy.split(/\n|,/).filter(x => x.trim()).length : 1);
 }
 
+/* ============================================================
+   KREATOR E-MAILA — wspólny dla zapisów (uczestnicy) i kontaktu
+   ------------------------------------------------------------
+   gigKreatorMaila({
+     odbiorcy:   [{email, name}]        // wymagane; duplikaty adresów odpadają
+     temat:      'wstępny temat',
+     rodzaj:     'szkolenie' | 'kontakt', // dobiera stopkę maila w funkcji
+     szkolenie:  'nazwa szkolenia',      // do stopki (rodzaj 'szkolenie')
+     opis:       'HTML obok liczby odbiorców (już escapowany)',
+     cytat:      'tekst cytowany pod treścią (odpowiedź na wiadomość)',
+     poWyslaniu: async (wynik) => {}     // po udanej wysyłce
+   })
+   Wysyłka: Edge Function `wyslij-mail` (Resend) — tylko z sesją admina.
+   Strona musi ładować Quill (quill.js + quill.snow.css).
+   ============================================================ */
+let gigMailQuill = null, gigMailOpcje = null;
+
+function gigMailZbuduj() {
+  if (document.getElementById('gigMailModal')) return;
+  const host = document.createElement('div');
+  host.innerHTML = `
+  <div class="modal-overlay" id="gigMailModal">
+    <div class="modal-box" style="max-width:760px;">
+      <div class="modal-header">
+        <div class="modal-title" id="gigMailTytul">Wiadomość</div>
+        <button class="modal-close" type="button" data-zamknij>×</button>
+      </div>
+      <div class="modal-body">
+        <div class="mail-odb" id="gigMailOdbiorcy"></div>
+        <div class="form-group">
+          <label for="gigMailTemat">Temat</label>
+          <input type="text" id="gigMailTemat" class="form-control" placeholder="Temat wiadomości">
+        </div>
+        <div class="form-group">
+          <label>Treść</label>
+          <div id="gigMailEdytor"></div>
+          <p class="mail-hint">Mail wychodzi w szacie GIG (jak potwierdzenia zapisu), osobno do każdego odbiorcy. Odpowiedzi trafią na biuro@gig.org.pl.</p>
+        </div>
+        <div class="mail-wynik" id="gigMailWynik"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" type="button" data-zamknij>Anuluj</button>
+        <button class="btn btn-primary" type="button" id="gigMailWyslij">✉ Wyślij</button>
+      </div>
+    </div>
+  </div>`;
+  const modal = host.firstElementChild;
+  document.body.appendChild(modal);
+  modal.querySelectorAll('[data-zamknij]').forEach(b => b.addEventListener('click', () => closeModal('gigMailModal')));
+  modal.addEventListener('click', e => { if (e.target === modal) closeModal('gigMailModal'); });
+  document.getElementById('gigMailWyslij').addEventListener('click', gigMailWyslij);
+}
+
+function gigKreatorMaila(o) {
+  if (typeof Quill === 'undefined') { toast('Edytor nie załadował się — odśwież stronę', 'error'); return; }
+  const widziane = new Set(), odbiorcy = [];
+  (o.odbiorcy || []).forEach(r => {
+    const e = (r.email || '').trim().toLowerCase();
+    if (!e || widziane.has(e)) return;
+    widziane.add(e); odbiorcy.push({ email: e, name: (r.name || '').trim() });
+  });
+  if (!odbiorcy.length) { toast('Brak odbiorców'); return; }
+  gigMailZbuduj();
+  gigMailOpcje = { ...o, odbiorcy };
+
+  document.getElementById('gigMailTytul').textContent =
+    odbiorcy.length === 1 ? 'Wiadomość do: ' + (odbiorcy[0].name || odbiorcy[0].email) : 'Wiadomość do uczestników';
+  const box = document.getElementById('gigMailOdbiorcy');
+  if (odbiorcy.length === 1) {
+    box.innerHTML = `Do: <strong>${esc(odbiorcy[0].email)}</strong>${odbiorcy[0].name ? ' — ' + esc(odbiorcy[0].name) : ''}`
+      + (o.opis ? ' · ' + o.opis : '');
+  } else {
+    box.innerHTML = `Odbiorcy: <strong>${odbiorcy.length}</strong> adresów` + (o.opis ? ' · ' + o.opis : '')
+      + `<details><summary>pokaż listę</summary><ul>${odbiorcy.map(r => `<li>${esc(r.email)}${r.name ? ' — ' + esc(r.name) : ''}</li>`).join('')}</ul></details>`;
+  }
+  document.getElementById('gigMailTemat').value = o.temat || '';
+
+  if (!gigMailQuill) {
+    gigMailQuill = new Quill('#gigMailEdytor', { theme: 'snow', placeholder: 'Treść wiadomości…',
+      modules: { toolbar: [['bold', 'italic', 'underline'], [{ header: [2, 3, false] }],
+                           [{ list: 'ordered' }, { list: 'bullet' }], ['link'], ['clean']] } });
+  }
+  gigMailQuill.setText('');
+  if (o.cytat) {
+    /* cytowana wiadomość pod dwiema pustymi liniami — kursor zostaje u góry */
+    const ops = [{ insert: '\n\n' }];
+    String(o.cytat).split(/\n/).forEach(l => {
+      if (l) ops.push({ insert: l });
+      ops.push({ insert: '\n', attributes: { blockquote: true } });
+    });
+    gigMailQuill.setContents(ops);
+    gigMailQuill.setSelection(0, 0);
+  }
+  const w = document.getElementById('gigMailWynik'); w.className = 'mail-wynik'; w.innerHTML = '';
+  const btn = document.getElementById('gigMailWyslij'); btn.disabled = false; btn.textContent = '✉ Wyślij';
+  openModal('gigMailModal');
+  setTimeout(() => document.getElementById('gigMailTemat').focus(), 60);
+}
+
+async function gigMailWyslij() {
+  const o = gigMailOpcje; if (!o) return;
+  const temat = document.getElementById('gigMailTemat').value.trim();
+  const html  = gigMailQuill.root.innerHTML;
+  const tekst = (gigMailQuill.root.innerText || '').trim();
+  const wynik = document.getElementById('gigMailWynik');
+  const pokaz = (k, m) => { wynik.className = 'mail-wynik ' + k; wynik.innerHTML = m; };
+  if (!temat) return pokaz('err', 'Podaj temat wiadomości.');
+  if (!tekst) return pokaz('err', 'Wpisz treść wiadomości.');
+  const n = o.odbiorcy.length;
+  if (!confirm(`Wysłać wiadomość „${temat}” do ${n} ${n === 1 ? 'osoby' : 'osób'}?`)) return;
+
+  const btn = document.getElementById('gigMailWyslij');
+  btn.disabled = true; btn.textContent = 'Wysyłanie…';
+  try {
+    const sesja = await getSession();
+    if (!sesja) throw new Error('sesja wygasła — zaloguj się ponownie');
+    const res = await fetch(SUPABASE_URL + '/functions/v1/wyslij-mail', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
+      body: JSON.stringify({ subject: temat, html, recipients: o.odbiorcy, rodzaj: o.rodzaj || '', szkolenie: o.szkolenie || '' }),
+    });
+    const w = await res.json().catch(() => ({}));
+    if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
+    const nieudane = (w.wyniki || []).filter(x => !x.ok);
+    if (nieudane.length) {
+      pokaz('err', `Wysłano ${w.wyslane} z ${w.razem}. Nie dotarło do:<ul>${nieudane.map(x => `<li>${esc(x.email)}</li>`).join('')}</ul>`);
+      btn.disabled = false; btn.textContent = '✉ Wyślij';
+      return;
+    }
+    pokaz('ok', `Wysłano do ${w.wyslane} ${w.wyslane === 1 ? 'osoby' : 'osób'}.`);
+    toast('E-mail wysłany', 'success');
+    if (typeof o.poWyslaniu === 'function') { try { await o.poWyslaniu(w); } catch (e) { console.error(e); } }
+    setTimeout(() => { closeModal('gigMailModal'); document.getElementById('gigMailTemat').value = ''; gigMailQuill.setText(''); }, 1400);
+  } catch (e) {
+    console.error(e);
+    pokaz('err', 'Nie udało się wysłać: ' + esc(e.message));
+    btn.disabled = false; btn.textContent = '✉ Wyślij';
+  }
+}
+
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
   initToasts();

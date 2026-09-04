@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/admin/_admin.css">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
 </head>
 <body>
   <div class="admin-layout">
@@ -85,10 +86,25 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
   <script src="/_assets/js/gig-config.js"></script>
 <script src="/admin/_admin.js"></script>
   <script>
     let nlData = [], ktData = [];
+    const TABELA = { newsletter: 'submissions_newsletter', kontakt: 'submissions_kontakt' };
+    const ETYK_KT = { new:'nowa', read:'przeczytana', replied:'odpowiedziano' };
+
+    /* Wejście do zakładki zdejmuje status „nowe” ze wszystkich jej wpisów (licznik w menu znika);
+       w tabeli wpisy zostają podświetlone do następnego odświeżenia, żeby było widać, co doszło. */
+    async function oznaczWidziane(tab) {
+      const tabela = TABELA[tab]; if (!tabela) return;
+      const lista = tab === 'newsletter' ? nlData : ktData;
+      if (!lista.some(r => r.status === 'new')) return;
+      const { error } = await db.from(tabela).update({ status: 'read' }).eq('status', 'new');
+      if (error) { console.error(error); return; }
+      lista.forEach(r => { if (r.status === 'new') r._nowaPrzedChwila = true; });
+      loadSidebarBadges();
+    }
 
     async function markRead(table, id) {
       const { error } = await db.from(table).update({ status: 'read' }).eq('id', id);
@@ -128,14 +144,28 @@
           <td>${esc(r.subject||'—')}</td>
           <td style="max-width:340px;">${esc((r.message||'').slice(0,140))}${(r.message||'').length>140?'…':''}</td>
           <td style="white-space:nowrap;">${fmtDate(r.created_at)}</td>
-          <td><span class="badge badge-${r.status==='new'?'new':'read'}">${r.status==='new'?'nowa':'przeczytana'}</span></td>
+          <td><span class="badge badge-${r.status==='new'?'new':(r.status==='replied'?'replied':'read')}">${ETYK_KT[r.status]||r.status}</span></td>
           <td class="actions">
-            <a class="btn btn-outline btn-xs" href="mailto:${esc(r.email)}?subject=${encodeURIComponent('Re: '+(r.subject||'wiadomość ze strony GIG'))}">↩ Odpowiedz</a>
+            <button type="button" class="btn btn-outline btn-xs" data-odp="${r.id}">↩ Odpowiedz</button>
             ${r.status==='new'?`<button class="btn btn-ghost btn-xs" data-mark="${r.id}">✓</button>`:''}
           </td>
         </tr>`).join('');
       tb.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', async () => {
         if (await markRead('submissions_kontakt', b.dataset.mark)) load();
+      }));
+      /* Odpowiedź: kreator maila do nadawcy, z „Re:” i cytatem jego wiadomości; po wysłaniu status „odpowiedziano” */
+      tb.querySelectorAll('[data-odp]').forEach(b => b.addEventListener('click', () => {
+        const r = ktData.find(x => x.id === b.dataset.odp); if (!r) return;
+        gigKreatorMaila({
+          odbiorcy: [{ email: r.email, name: r.name || '' }],
+          temat: 'Re: ' + (r.subject || 'wiadomość ze strony GIG'),
+          rodzaj: 'kontakt', cytat: r.message || '',
+          opis: r.subject ? esc(r.subject) : '',
+          poWyslaniu: async () => {
+            await db.from('submissions_kontakt').update({ status: 'replied' }).eq('id', r.id);
+            load();
+          }
+        });
       }));
     }
 
@@ -163,7 +193,11 @@
       // aktywuj zakładkę z hasha
       const h = location.hash.replace('#','');
       if (h) { const b = document.querySelector(`.tab-btn[data-tab="${h}"]`); if (b) b.click(); }
-      load();
+      await load();
+      /* otwarcie zakładki = „widziane”: teraz dla aktywnej, potem przy każdym przełączeniu */
+      const aktywna = document.querySelector('#tabsRoot .tab-btn.active');
+      if (aktywna) oznaczWidziane(aktywna.dataset.tab);
+      document.querySelectorAll('#tabsRoot .tab-btn').forEach(b => b.addEventListener('click', () => oznaczWidziane(b.dataset.tab)));
     })();
   </script>
 </body>
