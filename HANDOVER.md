@@ -74,6 +74,12 @@ podgląd wdrożonego kodu funkcji i wdrożenie nowej wersji idą **bez panelu Su
 — większość pułapek poniżej dotyczy pracy przez dashboard. Konektor nie zmienia ustawień Auth
 (np. rejestracji kont) — to nadal tylko dashboard.
 
+**Vercel Checkpoint łapie też `curl` po kilku zapytaniach.** Odpowiedź ma nagłówek
+`X-Vercel-Mitigated: challenge` i treść strony-wyzwania, więc `grep -c` zwraca 0 i wygląda to jak
+brak wdrożenia. Sprawdzaj nagłówki (`curl -D -`) i stan wdrożenia konektorem Vercel
+(`list_deployments`, projekt `prj_S8elWsI7MkgSH2cK35yFZfCdXv88`, team `team_SVIUxNaDzlEbBHcHVxBpGFGa`)
+zamiast pętli odpytującej produkcję.
+
 **Panel przeglądarki: zrzuty ekranu bywają time-outem, JS działa.** Przy testach panelu
 `computer.screenshot` potrafił przekraczać 5 s, gdy JS i `read_page` działały normalnie.
 Weryfikuj stan strony przez `javascript_tool` (odczyt DOM), zrzut rób na końcu i z `scale`.
@@ -212,6 +218,14 @@ zamienił na względne również `canonical` i `og:url`. `og:url` **musi** być 
 | commit | co |
 |---|---|
 | `67706fb` | panel: zapisy na pulpicie, kolumna „Zgłoszeń" na liście szkoleń, filtr z `?szkolenie=`, auto-„przeczytane" |
+| `4cb90a5` | logowanie: „Nie pamiętasz hasła?" (mail z linkiem) + `nowe-haslo.html`; wymaga Redirect URL w Supabase Auth |
+| `ce798c7` | `pierwsze-haslo.html?token=…` + Edge Function `pierwsze-haslo` + `backend/supabase_pierwsze_haslo.sql` — hasło bez maila, token jednorazowy |
+| `513bb43` | kreator e-maili do uczestników (Edge Function `wyslij-mail`, Resend, tylko z sesją admina), paleta czerwona GIG, ikona 🎓 |
+
+Konta: użytkownik ustawił hasło przez `pierwsze-haslo` i jest zalogowany. Token setup zużyty —
+nowy: ponownie `backend/supabase_pierwsze_haslo.sql` (insert) i zapytanie z końca pliku.
+Edge Functions w projekcie: `send-confirmation` (v3, bez bramy), `newsletter-unsubscribe`,
+`pierwsze-haslo`, `wyslij-mail` — dwie ostatnie z `verify_jwt=false` (autoryzacja w kodzie).
 
 Poza kodem: audyt stanu (produkcja = repo, formularz `/zapisy/` i panel działają, tabela pusta),
 odkrycie otwartej rejestracji kont (punkt F), porównanie wdrożonej funkcji z repo (punkt C).
