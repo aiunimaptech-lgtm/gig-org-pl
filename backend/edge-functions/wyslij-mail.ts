@@ -130,6 +130,8 @@ Deno.serve(async (req) => {
   let stopka: string;
   if (rodzaj === "kontakt") {
     stopka = "To odpowiedź na Twoją wiadomość wysłaną przez formularz na gig.org.pl. Odpisując na ten mail, piszesz do biura Izby.";
+  } else if (rodzaj === "baza") {
+    stopka = "Otrzymujesz tę wiadomość, ponieważ Twój adres jest w bazie kontaktów Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.";
   } else if (szkolenie) {
     stopka = `Otrzymujesz tę wiadomość, ponieważ zgłoszono Cię na szkolenie GIG: <strong>${esc(szkolenie)}</strong>. Odpowiedź na ten mail trafi do biura Izby.`;
   } else {

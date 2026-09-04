@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Baza e-mail — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+  <style>
+    .be-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:18px;}
+    .be-sum .k{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:12px 16px;min-width:0;cursor:pointer;transition:border-color .15s;}
+    .be-sum .k:hover{border-color:#cc0a2b;}
+    .be-sum .k.on{border-color:#cc0a2b;background:#fff5f6;}
+    .be-sum .k .t{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .be-sum .k .v{font-size:22px;font-weight:800;color:#16202a;margin-top:3px;}
+    .be-sum .k .v small{font-size:13px;font-weight:600;color:#6b7f84;}
+    .be-filtry{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
+    .be-filtry select{max-width:230px;}
+    .be-filtry .search-box{flex:1 1 260px;}
+    .be-licznik{font-size:13px;color:#6b7f84;margin-left:auto;white-space:nowrap;}
+    .be-sub{font-size:12px;color:#6b7f84;}
+    .be-pag{display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:12px 0 0;font-size:13px;color:#6b7f84;flex-wrap:wrap;}
+    .be-pag select{width:auto;padding:5px 8px;font-size:12px;}
+    .be-tag{display:inline-block;background:#f2f4f6;color:#46535f;border-radius:6px;padding:1px 7px;font-size:11.5px;font-weight:600;white-space:nowrap;}
+    .be-tag.jst{background:#e3f2fd;color:#1565c0;}
+    .be-tag.firma{background:#f2f4f6;}
+    .be-tag.nauka{background:#f3e8fd;color:#6a1b9a;}
+    .be-tag.adm{background:#fff3e0;color:#e65100;}
+    .be-tag.kom{background:#e6f5ec;color:#1d7a45;}
+    td.be-email{white-space:nowrap;}
+    td.be-firma{max-width:280px;}
+    .be-firma .osoba{font-size:12px;color:#6b7f84;}
+    .be-www a{font-size:12px;}
+    .badge-unsubscribed{background:#f2f4f6;color:#8b98a4;text-decoration:line-through;}
+    .badge-bounced{background:#fdecef;color:#a3122c;}
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Zarządzanie</div>
+        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <a href="czlonkowie.html"><span class="nav-icon">⚇</span> Członkowie</a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Baza e-mail</div>
+        <div class="topbar-actions">
+          <button class="btn btn-ghost btn-sm" id="btnNowy">+ Dodaj adres</button>
+          <button class="btn btn-outline btn-sm" id="btnCsv">↓ Eksport CSV</button>
+          <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do adresów z bieżącego filtra">✉ Wyślij e-mail</button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="be-sum" id="podsumowanie"></div>
+
+        <div class="card"><div class="card-body">
+          <div class="be-filtry">
+            <div class="search-box"><span class="search-icon">⌕</span>
+              <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: e-mail, firma, osoba, adres, NIP, www…"></div>
+            <select id="fPochodzenie" class="form-control"><option value="">Pochodzenie: wszystkie</option></select>
+            <select id="fGrupa" class="form-control"><option value="">Grupa: wszystkie</option></select>
+            <select id="fRodzaj" class="form-control"><option value="">Rodzaj/branża: wszystkie</option></select>
+            <select id="fDane" class="form-control" style="max-width:190px;">
+              <option value="">Dane firmy: dowolne</option>
+              <option value="tak">tylko z danymi firmy</option>
+              <option value="nie">tylko bez danych</option>
+            </select>
+            <span class="be-licznik" id="licznik"></span>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>E-mail</th><th>Firma / instytucja</th><th>Grupa</th><th>Rodzaj / branża</th><th>Adres</th><th>Telefon</th><th>WWW</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table>
+          </div>
+          <div class="be-pag">
+            <span id="pagInfo"></span>
+            <button class="btn btn-ghost btn-xs" id="pagPrev">‹ poprzednia</button>
+            <button class="btn btn-ghost btn-xs" id="pagNext">następna ›</button>
+            <select id="pagRozmiar" class="form-control"><option value="50">50 / stronę</option><option value="100">100 / stronę</option><option value="200">200 / stronę</option></select>
+          </div>
+        </div></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: edycja / nowy adres -->
+  <div class="modal-overlay" id="edModal">
+    <div class="modal-box" style="max-width:720px;">
+      <div class="modal-header">
+        <div class="modal-title" id="edTytul">Adres</div>
+        <button class="modal-close" data-modal-close="edModal">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edId">
+        <div class="grid-2">
+          <div class="form-group"><label>E-mail *</label><input type="email" id="edEmail" class="form-control"></div>
+          <div class="form-group"><label>Pochodzenie</label><input type="text" id="edPochodzenie" class="form-control" list="dlPochodzenie" placeholder="MailerLite / formularz / ręcznie"><datalist id="dlPochodzenie"></datalist></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>Grupa</label><select id="edGrupa" class="form-control"></select></div>
+          <div class="form-group"><label>Rodzaj / branża</label><select id="edRodzaj" class="form-control"></select></div>
+        </div>
+        <div class="form-group"><label>Firma / instytucja</label><input type="text" id="edFirma" class="form-control"></div>
+        <div class="form-group"><label>Adres</label><input type="text" id="edAdres" class="form-control"></div>
+        <div class="grid-2">
+          <div class="form-group"><label>NIP</label><input type="text" id="edNip" class="form-control"></div>
+          <div class="form-group"><label>Telefon</label><input type="text" id="edTelefon" class="form-control"></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>Osoba kontaktowa</label><input type="text" id="edOsoba" class="form-control"></div>
+          <div class="form-group"><label>Stanowisko</label><input type="text" id="edStanowisko" class="form-control"></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>WWW</label><input type="text" id="edWww" class="form-control"></div>
+          <div class="form-group"><label>Status</label>
+            <select id="edStatus" class="form-control">
+              <option value="active">aktywny</option>
+              <option value="unsubscribed">wypisany</option>
+              <option value="bounced">odbity (adres nie działa)</option>
+            </select></div>
+        </div>
+        <div class="form-group"><label>Uwagi</label><textarea id="edUwagi" class="form-control" rows="2"></textarea></div>
+        <p class="be-sub" id="edMeta"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-danger" id="edUsun" style="margin-right:auto;">🗑 Usuń</button>
+        <button class="btn btn-ghost" data-modal-close="edModal">Anuluj</button>
+        <button class="btn btn-primary" id="edZapisz">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    /* Słowniki z pliku źródłowego (arkusz „Listy"). Do list w filtrach i formularzu
+       dokładamy też wartości, które faktycznie występują w bazie. */
+    const GRUPY   = ['JST', 'Firma', 'Spółki komunalne', 'Administracja rządowa', 'Nauka', 'Nieustalone'];
+    const RODZAJE = ['geodezja', 'inne', 'PODGiK', 'urząd miasta/gminy', 'urząd marszałkowski', 'WBGiTR', 'PWiK',
+                     'GUGiK', 'WINGiK', 'urząd wojewódzki', 'administracja rządowa', 'uczelnia wyższa', 'instytut badawczy'];
+    const POCHODZENIA = ['MailerLite', 'formularz', 'ręcznie'];
+    const KLASA_GRUPY = { 'JST':'jst', 'Firma':'firma', 'Nauka':'nauka', 'Administracja rządowa':'adm', 'Spółki komunalne':'kom' };
+    const STATUS = { active:'aktywny', unsubscribed:'wypisany', bounced:'odbity' };
+
+    let dane = [], strona = 1, kafelekGrupa = '';
+
+    /* PostgREST zwraca maks. 1000 wierszy na zapytanie — pobieramy stronami. */
+    async function pobierzWszystko() {
+      const out = []; const KROK = 1000;
+      for (let od = 0; ; od += KROK) {
+        const { data, error } = await db.from('baza_email').select('*').order('email').range(od, od + KROK - 1);
+        if (error) throw error;
+        out.push(...(data || []));
+        if (!data || data.length < KROK) break;
+      }
+      return out;
+    }
+
+    function maDane(r) { return !!(r.firma || r.adres || r.nip || r.telefon || r.osoba || r.www); }
+
+    function opcje(sel, kanon, wartosciZDanych, etykieta) {
+      const licz = {};
+      wartosciZDanych.forEach(v => { const k = v || '(puste)'; licz[k] = (licz[k] || 0) + 1; });
+      const lista = [...new Set([...kanon, ...Object.keys(licz).filter(k => k !== '(puste)')])];
+      if (licz['(puste)']) lista.push('(puste)');
+      const biezaca = sel.value;
+      sel.innerHTML = `<option value="">${etykieta}: wszystkie</option>` +
+        lista.map(v => `<option value="${esc(v)}">${esc(v)}${licz[v] ? ' (' + licz[v] + ')' : ''}</option>`).join('');
+      sel.value = biezaca;
+    }
+
+    function filtruj() {
+      const f = document.getElementById('szukaj').value.toLowerCase().trim();
+      const fp = document.getElementById('fPochodzenie').value;
+      const fg = document.getElementById('fGrupa').value;
+      const fr = document.getElementById('fRodzaj').value;
+      const fd = document.getElementById('fDane').value;
+      const pasuje = (v, w) => !w || (w === '(puste)' ? !v : v === w);
+      return dane.filter(r => {
+        if (!pasuje(r.pochodzenie, fp) || !pasuje(r.grupa, fg) || !pasuje(r.rodzaj, fr)) return false;
+        if (fd === 'tak' && !maDane(r)) return false;
+        if (fd === 'nie' && maDane(r)) return false;
+        if (!f) return true;
+        return [r.email, r.firma, r.osoba, r.adres, r.nip, r.www, r.telefon, r.uwagi]
+          .some(v => (v || '').toString().toLowerCase().includes(f));
+      });
+    }
+
+    function podsumuj() {
+      const wg = {};
+      dane.forEach(r => { const k = r.grupa || 'Nieustalone'; wg[k] = (wg[k] || 0) + 1; });
+      const zDanymi = dane.filter(maDane).length;
+      let html = `<div class="k ${kafelekGrupa === '' ? 'on' : ''}" data-grupa=""><div class="t">Wszystkie adresy</div><div class="v">${dane.length} <small>· ${zDanymi} z danymi firmy</small></div></div>`;
+      Object.entries(wg).sort((a, b) => b[1] - a[1]).forEach(([g, n]) => {
+        html += `<div class="k ${kafelekGrupa === g ? 'on' : ''}" data-grupa="${esc(g)}" title="Filtruj: ${esc(g)}"><div class="t">${esc(g)}</div><div class="v">${n}</div></div>`;
+      });
+      const box = document.getElementById('podsumowanie');
+      box.innerHTML = html;
+      box.querySelectorAll('.k').forEach(k => k.addEventListener('click', () => {
+        kafelekGrupa = k.dataset.grupa;
+        document.getElementById('fGrupa').value = kafelekGrupa;
+        strona = 1; render();
+      }));
+    }
+
+    function tag(g) { return g ? `<span class="be-tag ${KLASA_GRUPY[g] || ''}">${esc(g)}</span>` : '<span class="be-sub">—</span>'; }
+
+    function render() {
+      const rows = filtruj();
+      const rozmiar = parseInt(document.getElementById('pagRozmiar').value, 10) || 50;
+      const stron = Math.max(1, Math.ceil(rows.length / rozmiar));
+      if (strona > stron) strona = stron;
+      const od = (strona - 1) * rozmiar, wid = rows.slice(od, od + rozmiar);
+
+      document.getElementById('licznik').textContent = rows.length === dane.length
+        ? `${dane.length} adresów` : `${rows.length} z ${dane.length} adresów`;
+      document.getElementById('pagInfo').textContent = rows.length ? `${od + 1}–${od + wid.length} z ${rows.length} · strona ${strona}/${stron}` : '';
+      document.getElementById('pagPrev').disabled = strona <= 1;
+      document.getElementById('pagNext').disabled = strona >= stron;
+      kafelekGrupa = document.getElementById('fGrupa').value;
+      document.querySelectorAll('#podsumowanie .k').forEach(k => k.classList.toggle('on', k.dataset.grupa === kafelekGrupa));
+
+      const tb = document.getElementById('rows');
+      if (!wid.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak adresów spełniających kryteria.</td></tr>'; return; }
+      tb.innerHTML = wid.map(r => `
+        <tr>
+          <td class="be-email"><strong>${esc(r.email)}</strong>${r.status && r.status !== 'active' ? ` <span class="badge badge-${esc(r.status)}">${STATUS[r.status] || r.status}</span>` : ''}</td>
+          <td class="be-firma">${esc(r.firma || '—')}${r.osoba ? `<div class="osoba">${esc(r.osoba)}${r.stanowisko ? ' · ' + esc(r.stanowisko) : ''}</div>` : ''}</td>
+          <td>${tag(r.grupa)}</td>
+          <td>${esc(r.rodzaj || '—')}</td>
+          <td style="max-width:220px;">${esc(r.adres || '—')}${r.nip ? `<div class="be-sub">NIP ${esc(r.nip)}</div>` : ''}</td>
+          <td style="white-space:nowrap;">${esc(r.telefon || '—')}</td>
+          <td class="be-www">${r.www ? `<a href="${esc(/^https?:/i.test(r.www) ? r.www : 'https://' + r.www)}" target="_blank" rel="noopener">${esc(r.www.replace(/^https?:\/\//i, ''))}</a>` : '—'}</td>
+          <td class="actions"><button class="btn btn-ghost btn-xs" data-edytuj="${r.id}">✎</button></td>
+        </tr>`).join('');
+      tb.querySelectorAll('[data-edytuj]').forEach(b => b.addEventListener('click', () => otworz(b.dataset.edytuj)));
+    }
+
+    /* ── edycja ── */
+    function wypelnijSelect(sel, kanon, biezaca) {
+      const lista = [...new Set([...kanon, ...dane.map(r => sel.id === 'edGrupa' ? r.grupa : r.rodzaj).filter(Boolean)])];
+      if (biezaca && !lista.includes(biezaca)) lista.push(biezaca);
+      sel.innerHTML = '<option value="">— nie ustalono —</option>' + lista.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+      sel.value = biezaca || '';
+    }
+    function otworz(id) {
+      const r = id ? dane.find(x => x.id === id) : null;
+      document.getElementById('edTytul').textContent = r ? r.email : 'Nowy adres';
+      document.getElementById('edId').value = r ? r.id : '';
+      const v = (k) => (r && r[k]) || '';
+      edEmail.value = v('email'); edPochodzenie.value = r ? v('pochodzenie') : 'ręcznie';
+      wypelnijSelect(edGrupa, GRUPY, v('grupa')); wypelnijSelect(edRodzaj, RODZAJE, v('rodzaj'));
+      edFirma.value = v('firma'); edAdres.value = v('adres'); edNip.value = v('nip'); edTelefon.value = v('telefon');
+      edOsoba.value = v('osoba'); edStanowisko.value = v('stanowisko'); edWww.value = v('www'); edUwagi.value = v('uwagi');
+      edStatus.value = (r && r.status) || 'active';
+      document.getElementById('edMeta').textContent = r
+        ? [r.pewnosc ? 'pewność danych: ' + r.pewnosc : '', r.zrodlo ? 'źródło: ' + r.zrodlo : '', 'dodano ' + fmtDate(r.created_at)].filter(Boolean).join(' · ')
+        : '';
+      document.getElementById('edUsun').style.display = r ? '' : 'none';
+      openModal('edModal');
+    }
+    async function zapisz() {
+      const email = edEmail.value.trim().toLowerCase();
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Podaj poprawny adres e-mail', 'error'); return; }
+      const p = (el) => (el.value || '').trim() || null;
+      const rec = { email, pochodzenie: p(edPochodzenie), grupa: p(edGrupa), rodzaj: p(edRodzaj), firma: p(edFirma), adres: p(edAdres),
+                    nip: p(edNip), telefon: p(edTelefon), osoba: p(edOsoba), stanowisko: p(edStanowisko), www: p(edWww),
+                    uwagi: p(edUwagi), status: edStatus.value, updated_at: new Date().toISOString() };
+      const id = document.getElementById('edId').value;
+      const btn = document.getElementById('edZapisz'); btn.disabled = true;
+      const res = id ? await db.from('baza_email').update(rec).eq('id', id) : await db.from('baza_email').insert(rec);
+      btn.disabled = false;
+      if (res.error) { console.error(res.error); toast(/duplicate|unique/i.test(res.error.message) ? 'Ten adres już jest w bazie' : 'Błąd zapisu', 'error'); return; }
+      toast('Zapisano', 'success'); closeModal('edModal'); load();
+    }
+    async function usun() {
+      const id = document.getElementById('edId').value; if (!id) return;
+      if (!confirm('Usunąć ten adres z bazy?')) return;
+      const { error } = await db.from('baza_email').delete().eq('id', id);
+      if (error) { toast('Błąd usuwania', 'error'); return; }
+      toast('Usunięto', 'success'); closeModal('edModal'); load();
+    }
+
+    async function load() {
+      try { dane = await pobierzWszystko(); }
+      catch (e) { console.error(e); toast('Błąd ładowania bazy (czy uruchomiono supabase_baza_email.sql?)', 'error'); return; }
+      opcje(document.getElementById('fPochodzenie'), POCHODZENIA, dane.map(r => r.pochodzenie), 'Pochodzenie');
+      opcje(document.getElementById('fGrupa'), GRUPY, dane.map(r => r.grupa), 'Grupa');
+      opcje(document.getElementById('fRodzaj'), RODZAJE, dane.map(r => r.rodzaj), 'Rodzaj/branża');
+      document.getElementById('dlPochodzenie').innerHTML = [...new Set([...POCHODZENIA, ...dane.map(r => r.pochodzenie).filter(Boolean)])].map(v => `<option value="${esc(v)}">`).join('');
+      podsumuj(); render();
+    }
+
+    (async () => {
+      if (!await requireAuth()) return;
+      document.getElementById('szukaj').addEventListener('input', () => { strona = 1; render(); });
+      ['fPochodzenie', 'fGrupa', 'fRodzaj', 'fDane', 'pagRozmiar'].forEach(id => document.getElementById(id).addEventListener('change', () => { strona = 1; render(); }));
+      document.getElementById('pagPrev').addEventListener('click', () => { strona--; render(); });
+      document.getElementById('pagNext').addEventListener('click', () => { strona++; render(); });
+      document.getElementById('btnNowy').addEventListener('click', () => otworz(null));
+      document.getElementById('edZapisz').addEventListener('click', zapisz);
+      document.getElementById('edUsun').addEventListener('click', usun);
+
+      document.getElementById('btnCsv').addEventListener('click', () => {
+        const rows = filtruj();
+        if (!rows.length) { toast('Brak danych do eksportu'); return; }
+        exportCSV(rows.map(r => ({ ...r, status: STATUS[r.status] || r.status })), [
+          { key:'email', label:'E-mail' }, { key:'pochodzenie', label:'Pochodzenie' }, { key:'grupa', label:'Grupa' },
+          { key:'rodzaj', label:'Rodzaj/branża' }, { key:'firma', label:'Firma / instytucja' }, { key:'adres', label:'Adres' },
+          { key:'nip', label:'NIP' }, { key:'telefon', label:'Telefon' }, { key:'osoba', label:'Osoba kontaktowa' },
+          { key:'stanowisko', label:'Stanowisko' }, { key:'www', label:'WWW' }, { key:'pewnosc', label:'Pewność' },
+          { key:'status', label:'Status' }, { key:'uwagi', label:'Uwagi' },
+        ], 'baza-email-gig.csv');
+      });
+
+      /* Mail do przefiltrowanych (bez wypisanych i odbitych). Funkcja wysyłkowa ma limit 200
+         adresów — do masowej wysyłki służy MailerLite, tu wysyłamy do wąskich grup. */
+      document.getElementById('btnMail').addEventListener('click', () => {
+        const odb = filtruj().filter(r => !r.status || r.status === 'active').map(r => ({ email: r.email, name: r.osoba || r.firma || '' }));
+        if (!odb.length) { toast('Brak aktywnych odbiorców w bieżącym filtrze'); return; }
+        if (odb.length > 200) { toast(`Za dużo odbiorców (${odb.length}). Zawęź filtr do maks. 200 adresów — masowe wysyłki rób w MailerLite.`, 'error', 7000); return; }
+        const opisy = [];
+        const g = document.getElementById('fGrupa').value, rz = document.getElementById('fRodzaj').value;
+        if (g) opisy.push('grupa: <strong>' + esc(g) + '</strong>');
+        if (rz) opisy.push('branża: <strong>' + esc(rz) + '</strong>');
+        gigKreatorMaila({ odbiorcy: odb, rodzaj: 'baza', opis: opisy.join(' · ') || '<strong>bieżący filtr</strong>' });
+      });
+
+      load();
+    })();
+  </script>
+</body>
+</html>
