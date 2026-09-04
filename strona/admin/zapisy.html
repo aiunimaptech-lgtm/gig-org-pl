@@ -8,7 +8,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/admin/_admin.css">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
   <style>
+    /* kreator e-maila */
+    .mail-odb{background:#f7f9fb;border:1px solid #e6ebef;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;}
+    .mail-odb strong{color:#16202a;}
+    .mail-odb details{margin-top:6px;}
+    .mail-odb summary{cursor:pointer;color:#cc0a2b;font-weight:600;}
+    .mail-odb ul{margin:8px 0 0 18px;padding:0;columns:2;color:#6b7f84;font-size:12.5px;}
+    #mailEdytor{min-height:220px;font-family:inherit;font-size:14px;}
+    .ql-toolbar.ql-snow{border-radius:6px 6px 0 0;border-color:#e6ebef;}
+    .ql-container.ql-snow{border-radius:0 0 6px 6px;border-color:#e6ebef;}
+    .mail-wynik{margin-top:12px;font-size:13px;display:none;padding:10px 12px;border-radius:8px;}
+    .mail-wynik.ok{display:block;background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .mail-wynik.err{display:block;background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .mail-wynik ul{margin:6px 0 0 18px;}
     .zap-sum{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px;}
     .zap-sum .k{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:12px 16px;min-width:190px;}
     .zap-sum .k .t{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
@@ -40,7 +54,7 @@
         <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
         <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
         <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
-        <a href="szkolenia.html"><span class="nav-icon">▤</span> Szkolenia</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
         <a href="czlonkowie.html"><span class="nav-icon">⚇</span> Członkowie</a>
         <div class="nav-section">Strona</div>
         <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
@@ -59,7 +73,8 @@
         <div class="topbar-title">Zapisy na szkolenia</div>
         <div class="topbar-actions">
           <button class="btn btn-outline btn-sm" id="expUcz">↓ Uczestnicy (CSV)</button>
-          <button class="btn btn-primary btn-sm" id="expFakt">↓ Dane do faktur (CSV)</button>
+          <button class="btn btn-outline btn-sm" id="expFakt">↓ Dane do faktur (CSV)</button>
+          <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do zgłaszających z bieżącego filtra">✉ Wyślij e-mail</button>
         </div>
       </header>
 
@@ -105,11 +120,39 @@
     </div>
   </div>
 
+  <!-- MODAL: kreator e-maila do uczestników -->
+  <div class="modal-overlay" id="mailModal">
+    <div class="modal-box" style="max-width:760px;">
+      <div class="modal-header">
+        <div class="modal-title">Wiadomość do uczestników</div>
+        <button class="modal-close" data-modal-close="mailModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="mail-odb" id="mailOdbiorcy"></div>
+        <div class="form-group">
+          <label for="mailTemat">Temat</label>
+          <input type="text" id="mailTemat" class="form-control" placeholder="np. Szczegóły organizacyjne szkolenia 8 października">
+        </div>
+        <div class="form-group">
+          <label>Treść</label>
+          <div id="mailEdytor"></div>
+          <p style="font-size:12px;color:#6b7f84;margin:6px 0 0;">Każdy odbiorca dostanie osobny mail w szacie GIG (jak potwierdzenia zapisu). Odpowiedzi trafią na biuro@gig.org.pl.</p>
+        </div>
+        <div class="mail-wynik" id="mailWynik"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-modal-close="mailModal">Anuluj</button>
+        <button class="btn btn-primary" id="mailWyslij">✉ Wyślij</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
   <script src="/_assets/js/gig-config.js"></script>
   <script src="/admin/_admin.js"></script>
   <script>
-    let dane = [], biezacy = null;
+    let dane = [], biezacy = null, quill = null;
     /* ?szkolenie=<tytuł> — wejście z listy szkoleń w panelu; ustawia filtr przy pierwszym ładowaniu */
     let szkolenieZUrl = new URLSearchParams(location.search).get('szkolenie') || '';
 
@@ -306,6 +349,77 @@
         if (!biezacy) return;
         try { await navigator.clipboard.writeText(tekstFaktury(biezacy)); toast('Skopiowano dane do faktury', 'success'); }
         catch (_) { toast('Przeglądarka nie pozwoliła skopiować', 'error'); }
+      });
+
+      /* ── Kreator e-maila: odbiorcy = zgłaszający z bieżącego filtra (bez anulowanych) ── */
+      function odbiorcyMaila(){
+        const widziane = new Set(), lista = [];
+        filtruj().filter(r => r.status !== 'cancelled').forEach(r => {
+          const e = (r.email||'').trim().toLowerCase();
+          if (!e || widziane.has(e)) return;
+          widziane.add(e);
+          lista.push({ email: e, name: ((r.uczestnicy||'').split(/\n/)[0] || r.nabywca_nazwa || '').trim() });
+        });
+        return lista;
+      }
+
+      document.getElementById('btnMail').addEventListener('click', () => {
+        const odb = odbiorcyMaila();
+        const szk = document.getElementById('fSzkolenie').value;
+        const box = document.getElementById('mailOdbiorcy');
+        if (!odb.length) { toast('Brak odbiorców — zmień filtr albo poczekaj na zgłoszenia'); return; }
+        box.innerHTML = `Odbiorcy: <strong>${odb.length}</strong> ${odb.length===1?'adres':'adresów'}`
+          + (szk ? ` · szkolenie: <strong>${esc(szk)}</strong>` : ' · <strong>wszystkie szkolenia</strong> (zawęź filtrem, jeśli trzeba)')
+          + `<details><summary>pokaż listę</summary><ul>${odb.map(o=>`<li>${esc(o.email)}${o.name?' — '+esc(o.name):''}</li>`).join('')}</ul></details>`;
+        if (!quill) {
+          quill = new Quill('#mailEdytor', { theme:'snow', placeholder:'Treść wiadomości…',
+            modules:{ toolbar:[['bold','italic','underline'],[{header:[2,3,false]}],[{list:'ordered'},{list:'bullet'}],['link'],['clean']] } });
+        }
+        document.getElementById('mailWynik').className = 'mail-wynik';
+        document.getElementById('mailWyslij').disabled = false;
+        openModal('mailModal');
+      });
+
+      document.getElementById('mailWyslij').addEventListener('click', async () => {
+        const temat = document.getElementById('mailTemat').value.trim();
+        const html  = quill ? quill.root.innerHTML : '';
+        const tekst = quill ? (quill.root.innerText || '').trim() : '';
+        const wynik = document.getElementById('mailWynik');
+        const pokazWynik = (klasa, msg) => { wynik.className = 'mail-wynik ' + klasa; wynik.innerHTML = msg; };
+        if (!temat)  { pokazWynik('err', 'Podaj temat wiadomości.'); return; }
+        if (!tekst)  { pokazWynik('err', 'Wpisz treść wiadomości.'); return; }
+        const odb = odbiorcyMaila();
+        if (!odb.length) { pokazWynik('err', 'Brak odbiorców.'); return; }
+        if (!confirm(`Wysłać wiadomość „${temat}” do ${odb.length} ${odb.length===1?'osoby':'osób'}?`)) return;
+
+        const btn = document.getElementById('mailWyslij');
+        btn.disabled = true; btn.textContent = 'Wysyłanie…';
+        try {
+          const sesja = await getSession();
+          if (!sesja) throw new Error('sesja wygasła — zaloguj się ponownie');
+          const res = await fetch(window.GIG_CFG.SUPABASE_URL + '/functions/v1/wyslij-mail', {
+            method:'POST',
+            headers:{ 'Content-Type':'application/json', 'apikey': window.GIG_CFG.SUPABASE_ANON,
+                      'Authorization':'Bearer ' + sesja.access_token },
+            body: JSON.stringify({ subject: temat, html, recipients: odb,
+                                   szkolenie: document.getElementById('fSzkolenie').value || '' })
+          });
+          const w = await res.json().catch(() => ({}));
+          if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
+          const nieudane = (w.wyniki||[]).filter(x => !x.ok);
+          if (nieudane.length) {
+            pokazWynik('err', `Wysłano ${w.wyslane} z ${w.razem}. Nie dotarło do:<ul>${nieudane.map(x=>`<li>${esc(x.email)}</li>`).join('')}</ul>`);
+          } else {
+            pokazWynik('ok', `Wysłano do ${w.wyslane} ${w.wyslane===1?'osoby':'osób'}.`);
+            toast('E-mail wysłany', 'success');
+            setTimeout(() => { closeModal('mailModal'); document.getElementById('mailTemat').value=''; quill.setText(''); }, 1500);
+          }
+        } catch (e) {
+          console.error(e);
+          pokazWynik('err', 'Nie udało się wysłać: ' + esc(e.message));
+        } finally {
+          btn.disabled = false; btn.textContent = '✉ Wyślij';
+        }
       });
 
       /* Eksport 1: lista uczestników — po jednym wierszu na osobę */

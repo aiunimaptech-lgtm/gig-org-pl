@@ -2,11 +2,12 @@
    PZROD Admin Panel — Global Styles
    ============================================================ */
 
+/* Paleta spójna ze stroną główną (gig.org.pl): czerwień GIG + granatowa czerń */
 :root {
-  --brand-dark:   #002C34;
-  --brand-mid:    #2E7981;
-  --brand-light:  #76C8D7;
-  --brand-bg:     #EBF5FA;
+  --brand-dark:   #16202a;
+  --brand-mid:    #cc0a2b;
+  --brand-light:  #ff8fa0;
+  --brand-bg:     #fdecef;
   --sidebar-w:    240px;
   --topbar-h:     58px;
   --danger:       #e53935;
@@ -14,9 +15,9 @@
   --warning:      #f57c00;
   --text:         #1c2e33;
   --text-muted:   #6b7f84;
-  --border:       #d8eaeb;
-  --shadow-sm:    0 2px 8px rgba(0,44,52,.07);
-  --shadow-md:    0 4px 18px rgba(0,44,52,.12);
+  --border:       #e6ebef;
+  --shadow-sm:    0 2px 8px rgba(22,32,42,.07);
+  --shadow-md:    0 4px 18px rgba(22,32,42,.12);
   --radius:       10px;
   --radius-sm:    6px;
 }
@@ -25,7 +26,7 @@
 
 body {
   font-family: 'Nunito', 'Roboto', -apple-system, system-ui, sans-serif;
-  background: #f0f4f5;
+  background: #f4f6f8;
   color: var(--text);
   font-size: 14px;
   line-height: 1.5;
@@ -119,7 +120,7 @@ a:hover { text-decoration: underline; }
   text-decoration: none;
 }
 .sidebar-nav a.active {
-  background: rgba(118,200,215,.12);
+  background: rgba(204,10,43,.16);
   color: var(--brand-light);
   border-left-color: var(--brand-light);
 }
@@ -310,7 +311,7 @@ a:hover { text-decoration: underline; }
   background: var(--brand-mid);
   color: #fff;
 }
-.btn-primary:hover { background: #256168; color: #fff; }
+.btn-primary:hover { background: #a80823; color: #fff; }
 .btn-outline {
   background: transparent;
   color: var(--brand-mid);
@@ -403,7 +404,7 @@ table.admin-table .actions { display: flex; gap: 6px; }
 .form-control:focus {
   outline: none;
   border-color: var(--brand-mid);
-  box-shadow: 0 0 0 3px rgba(46,121,129,.1);
+  box-shadow: 0 0 0 3px rgba(204,10,43,.12);
 }
 .form-control::placeholder { color: #b0bec5; }
 select.form-control { cursor: pointer; }
