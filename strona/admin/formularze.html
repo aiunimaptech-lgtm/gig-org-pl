@@ -190,14 +190,25 @@
         exportCSV(nlData, [{key:'email',label:'E-mail'},{key:'status',label:'Status'},{key:'created_at',label:'Data'}], 'newsletter-gig.csv'));
       document.getElementById('ktExport').addEventListener('click', () =>
         exportCSV(ktData, [{key:'name',label:'Imię'},{key:'email',label:'E-mail'},{key:'subject',label:'Temat'},{key:'message',label:'Wiadomość'},{key:'created_at',label:'Data'}], 'kontakt-gig.csv'));
-      // aktywuj zakładkę z hasha
-      const h = location.hash.replace('#','');
-      if (h) { const b = document.querySelector(`.tab-btn[data-tab="${h}"]`); if (b) b.click(); }
+      /* Zakładka ↔ hash w adresie. Menu boczne linkuje do #newsletter / #kontakt;
+         gdy strona jest już otwarta, kliknięcie zmienia tylko hash (bez przeładowania),
+         więc nasłuchujemy hashchange. W drugą stronę: klik w zakładkę ustawia hash,
+         żeby podświetlenie w menu bocznym nadążało. */
+      function zakladkaZHasha() {
+        const h = location.hash.replace('#','');
+        const b = h && document.querySelector(`#tabsRoot .tab-btn[data-tab="${h}"]`);
+        if (b && !b.classList.contains('active')) b.click();
+      }
+      window.addEventListener('hashchange', zakladkaZHasha);
+      document.querySelectorAll('#tabsRoot .tab-btn').forEach(b => b.addEventListener('click', () => {
+        if (location.hash !== '#' + b.dataset.tab) history.replaceState(null, '', '#' + b.dataset.tab);
+        highlightNav();
+        oznaczWidziane(b.dataset.tab);   // otwarcie zakładki = „widziane”
+      }));
+      zakladkaZHasha();
       await load();
-      /* otwarcie zakładki = „widziane”: teraz dla aktywnej, potem przy każdym przełączeniu */
       const aktywna = document.querySelector('#tabsRoot .tab-btn.active');
       if (aktywna) oznaczWidziane(aktywna.dataset.tab);
-      document.querySelectorAll('#tabsRoot .tab-btn').forEach(b => b.addEventListener('click', () => oznaczWidziane(b.dataset.tab)));
     })();
   </script>
 </body>
