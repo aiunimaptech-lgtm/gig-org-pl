@@ -268,6 +268,7 @@ a:hover { text-decoration: underline; }
 .stat-icon.blue   { background: #e3f2fd; }
 .stat-icon.teal   { background: var(--brand-bg); }
 .stat-icon.orange { background: #fff3e0; }
+.stat-icon.rose   { background: #fdecef; }
 .stat-body { flex: 1; }
 .stat-value {
   font-size: 26px;
@@ -374,6 +375,8 @@ table.admin-table .actions { display: flex; gap: 6px; }
 .badge-published{ background: #e8f5e9; color: var(--success); }
 .badge-draft    { background: #fff3e0; color: var(--warning); }
 .badge-archived { background: #fafafa; color: #bbb; }
+.badge-confirmed{ background: #e6f5ec; color: #1d7a45; }
+.badge-cancelled{ background: #f2f4f6; color: #8b98a4; text-decoration: line-through; }
 
 /* ── FORMS ── */
 .form-group { margin-bottom: 16px; }

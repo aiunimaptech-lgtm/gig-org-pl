@@ -20,8 +20,8 @@
     .zap-dane dd.pusto{color:#9aa7b2;font-style:italic;}
     .zap-blok{background:#f7f9fb;border-radius:10px;padding:14px 16px;margin-top:12px;}
     .zap-blok h4{margin:0 0 4px;font-size:14px;color:#16202a;}
-    .badge-confirmed{background:#e6f5ec;color:#1d7a45;}
-    .badge-cancelled{background:#f2f4f6;color:#8b98a4;text-decoration:line-through;}
+    /* długie tytuły szkoleń: dwie linie w tabeli, całość w dymku */
+    .zap-tytul{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;}
   </style>
 </head>
 <body>
@@ -110,10 +110,12 @@
   <script src="/admin/_admin.js"></script>
   <script>
     let dane = [], biezacy = null;
+    /* ?szkolenie=<tytuł> — wejście z listy szkoleń w panelu; ustawia filtr przy pierwszym ładowaniu */
+    let szkolenieZUrl = new URLSearchParams(location.search).get('szkolenie') || '';
 
     const ETYK = { new:'nowe', read:'przeczytane', confirmed:'potwierdzone', cancelled:'anulowane' };
 
-    function osoby(r){ return Number(r.liczba_osob) || (r.uczestnicy ? r.uczestnicy.split(/\n|,/).filter(x=>x.trim()).length : 1); }
+    const osoby = gigLiczbaOsob;   // wspólne z pulpitem i listą szkoleń (_admin.js)
 
     /* Odbiorca faktury: własny albo taki sam jak nabywca */
     function odbiorca(r){
@@ -170,7 +172,7 @@
         const odb = odbiorca(r);
         return `
         <tr>
-          <td style="max-width:230px;">${esc(r.szkolenie||'—')}</td>
+          <td style="max-width:260px;"><span class="zap-tytul" title="${esc(r.szkolenie||'')}">${esc(r.szkolenie||'—')}</span></td>
           <td>
             <strong>${esc(ucz[0] || r.email)}</strong>
             <div class="zap-osoby">${esc(r.email)}${r.telefon?' · '+esc(r.telefon):''}</div>
@@ -204,10 +206,20 @@
       return `<dt>${esc(etykieta)}</dt><dd class="${wartosc?'':'pusto'}">${wartosc?esc(wartosc):'nie podano'}</dd>`;
     }
 
+    /* Otwarcie szczegółów zdejmuje status „nowe” — jak w skrzynce pocztowej.
+       Licznik „nieobsłużone” pokazuje wtedy tylko zgłoszenia, których nikt jeszcze nie otworzył. */
+    async function oznaczPrzeczytane(r){
+      const { error } = await db.from('zapisy_szkolenia').update({ status:'read' }).eq('id', r.id);
+      if (error) { console.error(error); return; }
+      r.status = 'read';
+      podsumuj(dane); render(); loadSidebarBadges();
+    }
+
     function pokaz(id){
       const r = dane.find(x => x.id === id);
       if (!r) return;
       biezacy = r;
+      if ((r.status || 'new') === 'new') oznaczPrzeczytane(r);
       const ucz = (r.uczestnicy||'').split(/\n/).map(x=>x.trim()).filter(Boolean);
       const odb = odbiorca(r);
       document.getElementById('zapTytul').textContent = r.szkolenie || 'Zgłoszenie';
@@ -272,8 +284,10 @@
       dane = data || [];
 
       const sel = document.getElementById('fSzkolenie');
-      const biezaceSzk = sel.value;
-      const nazwy = [...new Set(dane.map(r => r.szkolenie).filter(Boolean))].sort();
+      const biezaceSzk = sel.value || szkolenieZUrl;
+      szkolenieZUrl = '';   // tylko przy pierwszym ładowaniu; potem rządzi wybór użytkownika
+      /* szkolenie z adresu dokładamy do listy nawet bez zgłoszeń — filtr ma wtedy pokazać „brak zgłoszeń” */
+      const nazwy = [...new Set([...dane.map(r => r.szkolenie), biezaceSzk].filter(Boolean))].sort();
       sel.innerHTML = '<option value="">Wszystkie szkolenia</option>' +
         nazwy.map(n => `<option value="${esc(n)}">${esc(n.length>52?n.slice(0,52)+'…':n)}</option>`).join('');
       sel.value = biezaceSzk;

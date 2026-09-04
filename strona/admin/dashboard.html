@@ -57,6 +57,9 @@
           <div class="stat-card"><div class="stat-icon blue">☎</div><div class="stat-body">
             <div class="stat-value" id="stKontakt">—</div><div class="stat-label">Wiadomości kontaktowych</div>
             <div class="stat-delta up" id="stKontaktNew"></div></div></div>
+          <div class="stat-card"><div class="stat-icon rose">✓</div><div class="stat-body">
+            <div class="stat-value" id="stZapisy">—</div><div class="stat-label">Zapisów na szkolenia</div>
+            <div class="stat-delta up" id="stZapisyNew"></div></div></div>
           <div class="stat-card"><div class="stat-icon green">✎</div><div class="stat-body">
             <div class="stat-value" id="stArticles">—</div><div class="stat-label">Opublikowanych artykułów</div></div></div>
           <div class="stat-card"><div class="stat-icon orange">◷</div><div class="stat-body">
@@ -88,16 +91,19 @@
 
       async function cnt(table, opts) {
         let q = db.from(table).select('id', { count: 'exact', head: true });
-        if (opts && opts.eq) q = q.eq(opts.eq[0], opts.eq[1]);
+        if (opts && opts.eq)  q = q.eq(opts.eq[0], opts.eq[1]);
+        if (opts && opts.neq) q = q.neq(opts.neq[0], opts.neq[1]);
         const { count } = await q;
         return count || 0;
       }
       try {
-        const [nl, nlNew, kt, ktNew, pub, draft] = await Promise.all([
+        const [nl, nlNew, kt, ktNew, zp, zpNew, pub, draft] = await Promise.all([
           cnt('submissions_newsletter'),
           cnt('submissions_newsletter', { eq: ['status', 'new'] }),
           cnt('submissions_kontakt'),
           cnt('submissions_kontakt', { eq: ['status', 'new'] }),
+          cnt('zapisy_szkolenia', { neq: ['status', 'cancelled'] }),   // anulowane nie liczą się jako zapis
+          cnt('zapisy_szkolenia', { eq: ['status', 'new'] }),
           cnt('articles', { eq: ['status', 'published'] }),
           cnt('articles', { eq: ['status', 'draft'] }),
         ]);
@@ -105,30 +111,41 @@
         stNewsletterNew.textContent = nlNew ? `+${nlNew} nowych` : '';
         stKontakt.textContent = kt;
         stKontaktNew.textContent = ktNew ? `+${ktNew} nowych` : '';
+        stZapisy.textContent = zp;
+        stZapisyNew.textContent = zpNew ? `+${zpNew} nowych` : '';
         stArticles.textContent = pub;
         stDrafts.textContent = draft;
       } catch (e) { console.error(e); toast('Błąd ładowania statystyk', 'error'); }
 
-      // ostatnie zgłoszenia (newsletter + kontakt, scalone)
+      // ostatnie zgłoszenia (newsletter + kontakt + zapisy na szkolenia, scalone)
+      const ETYK  = { new:'nowe', read:'przeczytane', replied:'odpowiedziano', confirmed:'potwierdzone', cancelled:'anulowane', unsubscribed:'wypisany' };
+      const KLASA = { new:'new', confirmed:'confirmed', cancelled:'cancelled' };
       try {
-        const [nlRes, ktRes] = await Promise.all([
+        const [nlRes, ktRes, zpRes] = await Promise.all([
           db.from('submissions_newsletter').select('*').order('created_at', { ascending: false }).limit(5),
           db.from('submissions_kontakt').select('*').order('created_at', { ascending: false }).limit(5),
+          db.from('zapisy_szkolenia').select('*').order('created_at', { ascending: false }).limit(5),
         ]);
         const rows = [
-          ...(nlRes.data || []).map(r => ({ ...r, _type: 'Newsletter' })),
-          ...(ktRes.data || []).map(r => ({ ...r, _type: 'Kontakt' })),
+          ...(nlRes.data || []).map(r => ({ ...r, _type: 'Newsletter', _href: 'formularze.html#newsletter' })),
+          ...(ktRes.data || []).map(r => ({ ...r, _type: 'Kontakt',    _href: 'formularze.html#kontakt' })),
+          /* zapis na szkolenie: jako „nadawcę” pokazujemy pierwszego uczestnika, w temacie szkolenie i liczbę osób */
+          ...(zpRes.data || []).map(r => ({ ...r, _type: 'Szkolenie', _href: 'zapisy.html',
+            name: (r.uczestnicy || '').split(/\n/)[0].trim() || r.nabywca_nazwa || '',
+            subject: (r.szkolenie || 'zapis na szkolenie') + ' · ' + gigLiczbaOsob(r) + ' os.' })),
         ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
         const tb = document.getElementById('recentRows');
         if (!rows.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#6b7f84;padding:24px;">Brak zgłoszeń.</td></tr>'; return; }
-        tb.innerHTML = rows.map(r => `
+        tb.innerHTML = rows.map(r => {
+          const st = r.status || 'new';
+          return `
           <tr>
-            <td><strong>${r._type}</strong></td>
+            <td><a href="${r._href}"><strong>${r._type}</strong></a></td>
             <td>${esc(r.name || '')}<br><span style="color:#6b7f84;font-size:12px;">${esc(r.email || '')}</span></td>
             <td>${esc((r.subject || r.message || '').slice(0, 60))}</td>
             <td style="white-space:nowrap;">${fmtDate(r.created_at)}</td>
-            <td><span class="badge badge-${r.status === 'new' ? 'new' : 'read'}">${r.status === 'new' ? 'nowe' : 'przeczytane'}</span></td>
-          </tr>`).join('');
+            <td><span class="badge badge-${KLASA[st] || 'read'}">${ETYK[st] || st}</span></td>
+          </tr>`; }).join('');
       } catch (e) { console.error(e); }
     })();
   </script>

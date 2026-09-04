@@ -48,8 +48,8 @@
         <div class="card"><div class="card-body">
           <div class="table-wrap">
             <table class="admin-table">
-              <thead><tr><th>Termin</th><th>Tytuł</th><th>Miejsce</th><th>Status</th><th></th></tr></thead>
-              <tbody id="rows"><tr><td colspan="5" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+              <thead><tr><th>Termin</th><th>Tytuł</th><th>Miejsce</th><th>Zgłoszeń</th><th>Status</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
             </table>
           </div>
         </div></div>
@@ -106,8 +106,19 @@
   <script src="/_assets/js/gig-config.js"></script>
 <script src="/admin/_admin.js"></script>
   <script>
-    let data = [];
+    let data = [], zapisy = {};
     const fmtDay = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+
+    /* Zgłoszenia łączą się ze szkoleniem po tytule (formularz /zapisy/ dostaje go w ?szkolenie=),
+       więc porównujemy bez wielkości liter i spacji na końcach — drobna korekta tytułu
+       w panelu nie „gubi” wcześniejszych zgłoszeń. */
+    const klucz = t => (t||'').trim().toLowerCase();
+    function komorkaZgloszen(r){
+      const z = zapisy[klucz(r.title)];
+      if(!z) return '<span style="color:#b0bec5;">—</span>';
+      return `<a href="zapisy.html?szkolenie=${encodeURIComponent(r.title)}" title="Pokaż zgłoszenia na to szkolenie" style="white-space:nowrap;">
+        <strong>${z.zgloszen}</strong> <span style="color:#6b7f84;">· ${z.osob} os.</span></a>`;
+    }
 
     function termin(r){
       if(!r.date_start) return '—';
@@ -115,7 +126,7 @@
     }
     function render(){
       const tb=document.getElementById('rows');
-      if(!data.length){ tb.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#6b7f84;">Brak szkoleń. Kliknij „+ Nowe szkolenie”.</td></tr>'; return; }
+      if(!data.length){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak szkoleń. Kliknij „+ Nowe szkolenie”.</td></tr>'; return; }
       const badge=s=>s==='published'?'published':(s==='draft'?'draft':'archived');
       const label=s=>s==='published'?'opublikowane':(s==='draft'?'szkic':'archiwum');
       tb.innerHTML=data.map(r=>`
@@ -123,6 +134,7 @@
           <td style="white-space:nowrap;">${termin(r)}</td>
           <td><strong>${esc(r.title)}</strong></td>
           <td>${r.is_online?'<em>online</em>':esc(r.location||'—')}</td>
+          <td>${komorkaZgloszen(r)}</td>
           <td><span class="badge badge-${badge(r.status)}">${label(r.status)}</span></td>
           <td class="actions">
             <button class="btn btn-ghost btn-xs" data-edit="${r.id}">✎ Edytuj</button>
@@ -165,9 +177,20 @@
       toast('Usunięto','success'); load();
     }
     async function load(){
-      const {data:d,error}=await db.from('szkolenia').select('*').order('date_start',{ascending:false});
-      if(error){ toast('Błąd ładowania (czy uruchomiłeś supabase_szkolenia.sql?)','error'); console.error(error); return; }
-      data=d||[]; render();
+      const [szk, zap] = await Promise.all([
+        db.from('szkolenia').select('*').order('date_start',{ascending:false}),
+        db.from('zapisy_szkolenia').select('szkolenie,liczba_osob,uczestnicy,status'),
+      ]);
+      if(szk.error){ toast('Błąd ładowania (czy uruchomiłeś supabase_szkolenia.sql?)','error'); console.error(szk.error); return; }
+      data=szk.data||[];
+      /* liczba zgłoszeń i osób na szkolenie — bez anulowanych */
+      zapisy={};
+      (zap.data||[]).filter(z=>z.status!=='cancelled').forEach(z=>{
+        const k=klucz(z.szkolenie); if(!k) return;
+        const w=zapisy[k]||(zapisy[k]={zgloszen:0,osob:0});
+        w.zgloszen++; w.osob+=gigLiczbaOsob(z);
+      });
+      render();
     }
     (async()=>{
       if(!await requireAuth()) return;

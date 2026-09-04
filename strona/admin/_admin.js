@@ -149,6 +149,13 @@ function esc(s) {
     .replace(/"/g, '&quot;');
 }
 
+/* ── Zapisy na szkolenia: liczba osób w zgłoszeniu ──
+   Deklarowana liczba, a gdy jej brak — liczba wpisanych nazwisk (linia lub przecinek).
+   Używane przez pulpit, listę szkoleń i widok zapisów, żeby liczyły tak samo. */
+function gigLiczbaOsob(r) {
+  return Number(r.liczba_osob) || (r.uczestnicy ? r.uczestnicy.split(/\n|,/).filter(x => x.trim()).length : 1);
+}
+
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
   initToasts();
