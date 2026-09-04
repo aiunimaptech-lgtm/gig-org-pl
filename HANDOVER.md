@@ -165,16 +165,14 @@ Nie wymaga odpowiedzi.
 (`backend/supabase_sekret_hooka.sql`, migracja już zastosowana). W kodzie funkcji
 (`backend/edge-functions/send-confirmation.ts`) jest brama z porównaniem o stałym czasie.
 
-**Zostało — dwa kroki, w tej kolejności:**
-1. **Wdrożyć funkcję** z pliku w repo. Najprościej konektorem MCP: `deploy_edge_function`
-   (slug `send-confirmation`, plik `index.ts` = treść `backend/edge-functions/send-confirmation.ts`).
-   Sprawdzone 4.09: wdrożona jest **wersja 3** = repo bez bramy (`get_edge_function` pokazuje kod).
-   Zapasowo — schowkiem:
+**Krok 1 ZROBIONY (4.09, sesja 2):** funkcja z repo wdrożona przez MCP jako **wersja 4** (brama
++ czerwona paleta). Brama jest bezczynna, dopóki sekret nie istnieje — maile chodzą jak dotąd.
+Zapasowa droga wdrożenia (schowkiem) nadal działa:
    ```powershell
    Set-Clipboard -Value (Get-Content -LiteralPath 'backend\edge-functions\send-confirmation.ts' -Raw -Encoding UTF8)
    ```
-   Brama jest bezczynna, dopóki sekret nie istnieje, więc wdrożenie **nie przerwie wysyłki**.
-2. **Dodać sekret** `GIG_HOOK_TOKEN` w Supabase → Edge Functions → Secrets. Wartość:
+
+**Został krok 2:** **dodać sekret** `GIG_HOOK_TOKEN` w Supabase → Edge Functions → Secrets. Wartość:
    ```sql
    select wartosc from private.gig_sekrety where klucz = 'hook_token';
    ```
@@ -221,6 +219,11 @@ zamienił na względne również `canonical` i `og:url`. `og:url` **musi** być 
 | `4cb90a5` | logowanie: „Nie pamiętasz hasła?" (mail z linkiem) + `nowe-haslo.html`; wymaga Redirect URL w Supabase Auth |
 | `ce798c7` | `pierwsze-haslo.html?token=…` + Edge Function `pierwsze-haslo` + `backend/supabase_pierwsze_haslo.sql` — hasło bez maila, token jednorazowy |
 | `513bb43` | kreator e-maili do uczestników (Edge Function `wyslij-mail`, Resend, tylko z sesją admina), paleta czerwona GIG, ikona 🎓 |
+| `a21d784` | kreator wspólny w `_admin.js` (`gigKreatorMaila`), „Odpowiedz" do jednej osoby w zapisach i kontakcie (status `replied`), liczniki znikają po wejściu do zakładki, siatka kafelków, checkbox RODO w kalendarzu `/szkolenia/`, maile w czerwieni (`send-confirmation` v4 z bramą, `wyslij-mail` v2) |
+
+**Kreator e-maili:** `gigKreatorMaila({odbiorcy, temat, rodzaj, szkolenie, opis, cytat, poWyslaniu})` w `_admin.js`;
+strona musi ładować Quill. Backend `wyslij-mail` sprawdza sesję admina (`auth.getUser`), wysyła osobno
+do każdego adresu, stopka wg `rodzaj` (`szkolenie` / `kontakt`). Limit 200 adresów.
 
 Konta: użytkownik ustawił hasło przez `pierwsze-haslo` i jest zalogowany. Token setup zużyty —
 nowy: ponownie `backend/supabase_pierwsze_haslo.sql` (insert) i zapytanie z końca pliku.
