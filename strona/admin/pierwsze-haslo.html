@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pierwsze hasło — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+      background:linear-gradient(135deg,#002C34,#2E7981); }
+    .login-card { background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+      width:100%; max-width:400px; padding:36px 34px; }
+    .login-logo { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+    .login-logo .ic { width:44px; height:44px; border-radius:10px; background:#2E7981; color:#fff;
+      display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; }
+    .login-card h1 { font-size:20px; color:#002C34; margin:14px 0 4px; }
+    .login-card p.sub { color:#6b7f84; font-size:13px; margin-bottom:24px; }
+    .login-card .btn-primary { width:100%; justify-content:center; padding:11px; font-size:14px; margin-top:6px; }
+    .login-err { background:#fbeaea; color:#9b2222; border:1px solid #e6b8b8; border-radius:6px;
+      padding:9px 12px; font-size:13px; margin-top:14px; display:none; }
+    .login-ok { background:#eaf6ee; color:#1c6b39; border:1px solid #bfe3cb; border-radius:6px;
+      padding:9px 12px; font-size:13px; margin-top:14px; display:none; }
+    .login-alt { text-align:center; margin:16px 0 0; font-size:13px; }
+    .login-alt a { color:#2E7981; text-decoration:none; font-weight:600; }
+    .login-hint { color:#6b7f84; font-size:12px; margin:6px 0 0; }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="ic">GIG</span>
+        <div class="logo-text" style="color:#002C34;font-weight:800;font-size:14px;">Panel zarządzania<br>
+          <span style="font-weight:400;font-size:11px;color:#6b7f84;">Geodezyjna Izba Gospodarcza</span></div>
+      </div>
+
+      <form id="setupForm">
+        <h1>Ustaw hasło administratora</h1>
+        <p class="sub">Podaj e-mail konta i nowe hasło. Jeśli konto nie istnieje, zostanie założone. Link działa jeden raz.</p>
+        <div class="form-group">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" class="form-control" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="pass1">Hasło</label>
+          <input type="password" id="pass1" class="form-control" autocomplete="new-password" required>
+          <p class="login-hint">Co najmniej 8 znaków.</p>
+        </div>
+        <div class="form-group">
+          <label for="pass2">Powtórz hasło</label>
+          <input type="password" id="pass2" class="form-control" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="setupBtn">Zapisz hasło i zaloguj</button>
+        <div class="login-err" id="setupErr"></div>
+        <div class="login-ok" id="setupOk"></div>
+      </form>
+
+      <div id="brakTokenu" hidden>
+        <h1>Brak tokenu</h1>
+        <p class="sub">Tę stronę otwiera się z linku zawierającego jednorazowy token (<code>?token=…</code>). Bez niego nie da się ustawić hasła.</p>
+        <p class="login-alt"><a href="index.html">← Wróć do logowania</a></p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    /* Hasło NIE idzie mailem: strona wysyła e-mail + hasło + jednorazowy token
+       do Edge Function `pierwsze-haslo`, która zapisuje je w bazie. Potem
+       logujemy od razu tym hasłem. */
+    const token = new URLSearchParams(location.search).get('token') || '';
+    const form  = document.getElementById('setupForm');
+    if (!/^[0-9a-f]{64}$/.test(token)) {
+      form.hidden = true; document.getElementById('brakTokenu').hidden = false;
+    }
+
+    const btn = document.getElementById('setupBtn');
+    const err = document.getElementById('setupErr');
+    const ok  = document.getElementById('setupOk');
+    const pokazBlad = m => { err.textContent = m; err.style.display = 'block'; };
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.style.display = 'none'; ok.style.display = 'none';
+      const email = document.getElementById('email').value.trim();
+      const p1 = document.getElementById('pass1').value;
+      const p2 = document.getElementById('pass2').value;
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return pokazBlad('Podaj poprawny adres e-mail.');
+      if (p1.length < 8) return pokazBlad('Hasło musi mieć co najmniej 8 znaków.');
+      if (p1 !== p2)     return pokazBlad('Hasła nie są takie same.');
+
+      btn.disabled = true; btn.textContent = 'Zapisywanie…';
+      try {
+        const res = await fetch(window.GIG_CFG.SUPABASE_URL + '/functions/v1/pierwsze-haslo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': window.GIG_CFG.SUPABASE_ANON,
+                     'Authorization': 'Bearer ' + window.GIG_CFG.SUPABASE_ANON },
+          body: JSON.stringify({ email, password: p1, token })
+        });
+        const wynik = await res.json().catch(() => ({}));
+        if (!res.ok || !wynik.ok) throw new Error(wynik.error || ('HTTP ' + res.status));
+
+        ok.textContent = (wynik.utworzono ? 'Konto założone. ' : 'Hasło zapisane. ') + 'Logowanie…';
+        ok.style.display = 'block';
+        const { error } = await db.auth.signInWithPassword({ email, password: p1 });
+        if (error) throw new Error('Hasło zapisane, ale logowanie nie powiodło się: ' + error.message);
+        history.replaceState(null, '', location.pathname);
+        window.location.href = 'dashboard.html';
+      } catch (ex) {
+        btn.disabled = false; btn.textContent = 'Zapisz hasło i zaloguj';
+        pokazBlad(ex.message === 'brak uprawnien'
+          ? 'Token jest nieprawidłowy albo został już użyty.'
+          : 'Nie udało się: ' + ex.message);
+      }
+    });
+  </script>
+</body>
+</html>
