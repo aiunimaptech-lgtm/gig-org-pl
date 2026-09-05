@@ -136,6 +136,18 @@
       return true;
     }
 
+    /* Trwałe usunięcie — inaczej niż „anuluj”, które zostawia wpis na liście.
+       Nie da się cofnąć, więc pytamy z nazwiskiem/firmą dla pewności. */
+    async function usunZgloszenie(id){
+      const r = dane.find(x => x.id === id);
+      const kto = r ? ((r.uczestnicy||'').split(/\n/)[0].trim() || r.nabywca_nazwa || r.email) : '';
+      if (!confirm('Usunąć zgłoszenie' + (kto ? ' „' + kto + '”' : '') + ' na trwałe? Tej operacji nie można cofnąć.\n\nJeśli chcesz tylko oznaczyć rezygnację, użyj „Anuluj” — wpis zostanie na liście.')) return false;
+      const { error } = await db.from('zapisy_szkolenia').delete().eq('id', id);
+      if (error) { toast('Nie udało się usunąć zgłoszenia', 'error'); console.error(error); return false; }
+      toast('Zgłoszenie usunięte', 'success');
+      return true;
+    }
+
     function podsumuj(rows){
       const aktywne = rows.filter(r => r.status !== 'cancelled');
       const wgSzkolen = {};
@@ -192,7 +204,8 @@
           <td class="actions" style="white-space:nowrap;">
             <button class="btn btn-ghost btn-xs" data-podglad="${r.id}">Szczegóły</button>
             ${st!=='confirmed'?`<button class="btn btn-outline btn-xs" data-potw="${r.id}" title="Potwierdź udział">✓</button>`:''}
-            ${st!=='cancelled'?`<button class="btn btn-danger btn-xs" data-anul="${r.id}" title="Anuluj zgłoszenie">✕</button>`:''}
+            ${st!=='cancelled'?`<button class="btn btn-outline btn-xs" data-anul="${r.id}" title="Anuluj zgłoszenie (zostaje na liście)">✕ anuluj</button>`:''}
+            <button class="btn btn-danger btn-xs" data-usun="${r.id}" title="Usuń zgłoszenie na trwałe">🗑</button>
           </td>
         </tr>`;
       }).join('');
@@ -204,6 +217,9 @@
       tb.querySelectorAll('[data-anul]').forEach(b => b.addEventListener('click', async () => {
         if (!confirm('Anulować to zgłoszenie? Pozostanie na liście ze statusem „anulowane”.')) return;
         if (await ustawStatus(b.dataset.anul, 'cancelled')) load();
+      }));
+      tb.querySelectorAll('[data-usun]').forEach(b => b.addEventListener('click', async () => {
+        if (await usunZgloszenie(b.dataset.usun)) load();
       }));
     }
 
@@ -257,7 +273,12 @@
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
           <button type="button" class="btn btn-outline btn-sm" id="zapOdpowiedz">↩ Odpowiedz</button>
           ${r.telefon?`<a class="btn btn-ghost btn-sm" href="tel:${esc((r.telefon||'').replace(/\s/g,''))}">☎ Zadzwoń</a>`:''}
+          <button type="button" class="btn btn-danger btn-sm" id="zapUsun" style="margin-left:auto;">🗑 Usuń zgłoszenie</button>
         </div>`;
+      /* Usuń z okna szczegółów — po usunięciu zamykamy modal i odświeżamy listę */
+      document.getElementById('zapUsun').addEventListener('click', async () => {
+        if (await usunZgloszenie(r.id)) { closeModal('zapModal'); load(); }
+      });
       /* Odpowiedź: kreator maila do tego jednego zgłaszającego, z tematem szkolenia */
       document.getElementById('zapOdpowiedz').addEventListener('click', () => {
         closeModal('zapModal');

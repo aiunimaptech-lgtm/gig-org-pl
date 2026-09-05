@@ -377,7 +377,7 @@ table.admin-table .actions { display: flex; gap: 6px; }
 .badge-draft    { background: #fff3e0; color: var(--warning); }
 .badge-archived { background: #fafafa; color: #bbb; }
 .badge-confirmed{ background: #e6f5ec; color: #1d7a45; }
-.badge-cancelled{ background: #f2f4f6; color: #8b98a4; text-decoration: line-through; }
+.badge-cancelled{ background: #fdecef; color: #cc0a2b; text-decoration: line-through; }
 .badge-replied  { background: #e6f5ec; color: #1d7a45; }
 
 /* ── KREATOR E-MAILA (gigKreatorMaila w _admin.js) ── */
