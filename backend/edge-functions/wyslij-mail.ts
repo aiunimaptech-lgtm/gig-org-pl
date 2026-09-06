@@ -67,6 +67,10 @@ function layout(title: string, body: string, stopka: string, unsubUrl: string): 
           <a href="mailto:biuro@gig.org.pl" style="color:${RED};text-decoration:none;">biuro@gig.org.pl</a> &middot;
           <a href="https://gig.org.pl" style="color:${RED};text-decoration:none;">gig.org.pl</a>
         </p>
+        <p style="margin:12px 0 0;font-size:12px;color:#7a8b97;line-height:1.7;">
+          Więcej informacji o szkoleniach znajdziesz na stronie <a href="https://gig.org.pl/szkolenia/" style="color:${RED};text-decoration:none;">gig.org.pl/szkolenia</a>.<br>
+          Chcesz być na bieżąco ze szkoleniami i wydarzeniami Izby? <a href="https://gig.org.pl/" style="color:${RED};text-decoration:none;">Zapisz się do newslettera GIG</a>.
+        </p>
         ${wypis}
       </td></tr>
     </table>
