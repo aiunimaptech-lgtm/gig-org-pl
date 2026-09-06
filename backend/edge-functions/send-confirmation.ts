@@ -100,7 +100,7 @@ function newsletterMail(rec: Record<string, unknown>) {
       <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Co będziesz otrzymywać</p>
       <p style="margin:0;font-size:14px;line-height:1.7;">
         &bull; terminy i programy szkoleń Izby,<br>
-        &bull; aktualności i biuletyny GIG,<br>
+        &bull; aktualności Izby,<br>
         &bull; zaproszenia na wydarzenia branżowe.
       </p>
     </div>
@@ -189,7 +189,7 @@ function notifyNewsletterMail(rec: Record<string, unknown>) {
       </tr>
     </table>
     <p style="margin:0;font-size:13px;color:#6b7c8c;">
-      Pelna lista zapisow jest w <a href="https://gig.org.pl/admin/" style="color:${C.mid};">panelu GIG</a>.
+      Pełna lista zapisów jest w <a href="https://gig.org.pl/admin/" style="color:${C.mid};">panelu GIG</a>.
     </p>`;
   return { subject: `[GIG] Nowy zapis do newslettera — ${adres}`, html: layout("Nowy zapis do newslettera", body, false) };
 }
