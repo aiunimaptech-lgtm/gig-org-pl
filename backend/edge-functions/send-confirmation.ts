@@ -254,19 +254,51 @@ function zapisNotifyMail(rec: Record<string, unknown>) {
   };
 }
 
-/* Potwierdzenie dla zglaszajacego. */
+/* Potwierdzenie dla zglaszajacego. Powtarza KOMPLET podanych danych — zglaszajacy ma szanse wychwycic
+   literowke w NIP-ie czy nazwisku, zanim wystawimy fakture. */
 function zapisPotwierdzenieMail(rec: Record<string, unknown>) {
-  const szkolenie = String(rec.szkolenie ?? "").trim();
-  const osoby = String(rec.uczestnicy ?? "").trim();
+  const s = (k: string) => String(rec[k] ?? "").trim();
+  const szkolenie = s("szkolenie");
+  const takiSam = rec.odbiorca_taki_sam !== false;
+  const jst = rec.nabywca_jst === true;
+
+  const blok = (tytul: string, tresc: string) => tresc ? `
+    <div style="margin:0 0 14px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
+      <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">${tytul}</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;">${tresc}</table>
+    </div>` : "";
+
   const body = `
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">Dzień dobry,</p>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">
       potwierdzamy przyjęcie zgłoszenia${szkolenie ? ` na szkolenie <strong>${esc(szkolenie)}</strong>` : ""}.
       Skontaktujemy się w sprawie szczegółów organizacyjnych i faktury.</p>
-    ${osoby ? `<div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
-      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Zgłoszone osoby</p>
-      <p style="margin:0;font-size:14px;line-height:1.6;">${esc(osoby).replace(/\n/g, "<br>")}</p></div>` : ""}
-    <p style="margin:0;font-size:13px;color:#6b7c8c;">Jeśli któraś dana wymaga poprawki, odpisz na tę wiadomość.</p>`;
+    <p style="margin:0 0 16px;font-size:14px;line-height:1.6;">Poniżej dane, które otrzymaliśmy — prosimy o ich sprawdzenie:</p>
+
+    ${blok("Uczestnicy",
+      wierszTabeli("Liczba osób", esc(s("liczba_osob"))) +
+      wierszTabeli("Imiona i nazwiska", esc(s("uczestnicy")).replace(/\n/g, "<br>")))}
+
+    ${blok("Nabywca (dane do faktury)",
+      wierszTabeli("Nazwa", esc(s("nabywca_nazwa"))) +
+      wierszTabeli("Adres", esc(s("nabywca_adres"))) +
+      wierszTabeli("NIP", esc(s("nabywca_nip"))) +
+      wierszTabeli("Jednostka samorządu", jst ? "TAK" : "nie"))}
+
+    ${takiSam
+      ? blok("Odbiorca", wierszTabeli("Odbiorca", "taki sam jak nabywca"))
+      : blok("Odbiorca",
+          wierszTabeli("Nazwa", esc(s("odbiorca_nazwa"))) +
+          wierszTabeli("Adres", esc(s("odbiorca_adres"))) +
+          wierszTabeli("NIP / ID-wewn.", esc(s("odbiorca_nip"))))}
+
+    ${blok("Kontakt",
+      wierszTabeli("E-mail", esc(s("email"))) +
+      wierszTabeli("Telefon", esc(s("telefon"))) +
+      wierszTabeli("Uwagi", esc(s("uwagi")).replace(/\n/g, "<br>")))}
+
+    <p style="margin:18px 0 0;font-size:13px;color:#6b7c8c;line-height:1.6;">
+      Jeśli któraś dana jest niepoprawna, odpisz na tę wiadomość — poprawimy ją przed wystawieniem faktury.</p>`;
   return { subject: "Potwierdzenie zgłoszenia na szkolenie — GIG", html: layout("Zgłoszenie przyjęte ✓", body) };
 }
 
