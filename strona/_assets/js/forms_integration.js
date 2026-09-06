@@ -45,9 +45,11 @@
       box.className = "wpcf7-response-output";
       form.appendChild(box);
     }
-    box.style.cssText = "display:block;margin-top:12px;padding:10px 14px;border-radius:6px;font-size:14px;" +
+    box.style.cssText = "margin-top:12px;padding:10px 14px;border-radius:6px;font-size:14px;" +
       (ok ? "background:#e8f3ec;color:#1f6b3b;border:1px solid #b6dcc4;"
           : "background:#fbeaea;color:#9b2222;border:1px solid #e6b8b8;");
+    // CF7 ukrywa .wpcf7-response-output własnym CSS — wymuszamy widoczność
+    box.style.setProperty("display", "block", "important");
     box.textContent = text;
   }
 
@@ -171,17 +173,51 @@
     }
   }
 
+  /* Jedno wejście dla obu ścieżek (klik w przycisk i Enter w polu), z blokadą
+     podwójnego wysłania. */
+  function obsluz(form) {
+    if (form.dataset.gigBusy === "1") return;
+    form.dataset.gigBusy = "1";
+    var kind = classify(form);
+    var p = kind === "newsletter"   ? handleNewsletter(form)
+          : kind === "czlonkostwo"  ? handleCzlonkostwo(form)
+          : kind === "kontakt"      ? handleKontakt(form)
+          : null;
+    Promise.resolve(p).catch(function () {}).then(function () { form.dataset.gigBusy = ""; });
+  }
+
   function hook(form) {
     if (form.dataset.gigHooked) return;
     form.dataset.gigHooked = "1";
+
+    // Enter w polu / programowy submit
     form.addEventListener("submit", function (e) {
       e.preventDefault();
       e.stopImmediatePropagation(); // zablokuj własny handler CF7
-      var kind = classify(form);
-      if (kind === "newsletter") handleNewsletter(form);
-      else if (kind === "czlonkostwo") handleCzlonkostwo(form);
-      else if (kind === "kontakt") handleKontakt(form);
+      obsluz(form);
     }, true); // capture
+
+    var btn = form.querySelector('.wpcf7-submit, [type="submit"]');
+    if (!btn) return;
+
+    /* Cloudflare Turnstile (z czasów WordPressa) trzyma przycisk wyłączony do czasu
+       rozwiązania testu. Na statycznym mirrorze nie ma backendu CF7, który by go
+       zweryfikował, więc przycisk potrafi zostać wyłączony na zawsze i formularz
+       „nie działa”. Wysyłkę i tak obsługujemy sami (Supabase), więc odblokowujemy
+       przycisk — i pilnujemy, gdyby CF7 wyłączył go ponownie (asynchronicznie). */
+    var wlacz = function () { if (btn.disabled) btn.disabled = false; };
+    wlacz();
+    try {
+      new MutationObserver(wlacz).observe(btn, { attributes: true, attributeFilter: ["disabled"] });
+    } catch (_) { setInterval(wlacz, 1000); }
+
+    /* Klik obsługujemy sami — dzięki preventDefault natywny submit się nie odpali,
+       więc handler powyżej nie zadziała drugi raz. */
+    btn.addEventListener("click", function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      obsluz(form);
+    }, true);
   }
 
   // Wstępne wypełnienie formularza po przyjściu z „Zapisz się” (/kontakt/?szkolenie=...)
