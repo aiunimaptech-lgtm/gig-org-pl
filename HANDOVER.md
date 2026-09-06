@@ -163,8 +163,14 @@ supabase_functions does not exist`). Triggery wołają `pg_net` wprost — patrz
 
 ## 3. Do zrobienia — w kolejności ważności
 
-### 🔴 F. Bezpieczeństwo: każdy może założyć konto admina — DO ZAMKNIĘCIA NATYCHMIAST
-`GET /auth/v1/settings` zwraca `disable_signup: false` przy włączonym logowaniu e-mailem, a wszystkie
+### ✅ F. Bezpieczeństwo: otwarta rejestracja — ZAMKNIĘTE (6 września 2026)
+Rejestracja wyłączona w dashboardzie; zweryfikowane twardo — `POST /auth/v1/signup` kluczem
+publicznym zwraca `422 signup_disabled`. Nowych adminów dodaje się przez Authentication → Users
+→ Add user, hasło ustawiają przez `/admin/pierwsze-haslo.html`. Wyciekły token `sbp_…` unieważniony
+(lista Access Tokens pusta). **Punkt 2 poniżej dalej wart zrobienia jako druga warstwa.**
+
+Opis pierwotnego problemu (do zrozumienia, dlaczego to było krytyczne):
+`GET /auth/v1/settings` zwracał `disable_signup: false` przy włączonym logowaniu e-mailem, a wszystkie
 polityki RLS (`submissions_*`, `zapisy_szkolenia`, `szkolenia`, `czlonkowie`, `articles`) dają
 pełny dostęp warunkiem `auth.role() = 'authenticated'`. Klucz publiczny jest w źródle strony, więc
 każdy może wywołać `/auth/v1/signup`, potwierdzić własny e-mail i **czytać oraz edytować wszystko**.
@@ -258,7 +264,24 @@ strona musi ładować Quill. Backend `wyslij-mail` (v4) sprawdza sesję admina (
 do każdego adresu, stopka wg `rodzaj` (`szkolenie` / `kontakt` / `baza`). Limit 200 adresów.
 **Szata maila:** jasna, z logo `strona/_assets/img/gig-logo-email.png` (PNG, bo SVG nie renderuje się
 w mailach — wyrenderowane sharpem z `gig-logo-new-poziom-dark.svg`) i czerwoną kreską zamiast ciemnego pasa.
-`send-confirmation` ma jeszcze starszą (ciemną) szatę — do ujednolicenia kiedyś.
+### Sesja 3 (6 września 2026)
+
+| commit | co |
+|---|---|
+| `1f998a3` | lista szkoleń podzielona na **Aktualne** / **Już się odbyły**; kasowanie wpisów newslettera i kontaktu; `send-confirmation` v5 — jasna szata z logo |
+| `9025ff6` | `send-confirmation` v6 — bez biuletynów w „Co będziesz otrzymywać" (Izba ich nie wydaje) |
+
+**Podział szkoleń** (`admin/szkolenia.html`, funkcja `grupy()`): granicą jest **ostatni dzień**
+(`date_end || date_start`), więc kilkudniowe szkolenie trwające dziś zostaje w aktualnych.
+Aktualne rosnąco (najbliższe u góry), wpisy bez daty na końcu tej grupy; minione malejąco.
+
+**Szata `send-confirmation`** jest już ujednolicona z `wyslij-mail` — wspólny `layout(title, body, zacheta)`.
+Trzeci argument `zacheta=false` wyłącza stopkę zachęcającą do zapisu na newsletter; ustawiony
+w potwierdzeniu newslettera (adresat już jest zapisany) i we wszystkich powiadomieniach wewnętrznych.
+
+**Adresaci powiadomień:** kontakt i zapisy → `NOTIFY_EMAILS` (domyślnie `biuro@gig.org.pl` +
+`jerzy.bryk@gmail.com`); newsletter → osobna `NOTIFY_NEWSLETTER_EMAILS` (domyślnie tylko
+`jerzy.bryk@gmail.com`), żeby nie zasypywać biura przy masowych zapisach. **Tak ma zostać.**
 
 ### Kampanie mailowe (`admin/wysylki.html`, tabele `wysylki` + `wysylki_odbiorcy`)
 Do wysyłek masowych (tysiące adresów), bo `wyslij-mail` ma limit 200 i wysyła po jednym.
