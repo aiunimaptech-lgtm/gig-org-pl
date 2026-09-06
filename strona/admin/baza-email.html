@@ -41,6 +41,21 @@
     .ed-err.show{display:block;}
     /* znacznik: wpis edytowany w panelu — chroniony przed nadpisaniem przy imporcie */
     .be-tag.panel{background:#eaf3ff;color:#1558b0;}
+    /* filtry wielokrotnego wyboru (checkbox-dropdown) */
+    .ms{position:relative;}
+    .ms-btn{cursor:pointer;text-align:left;background:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px;padding-right:26px;}
+    .ms-btn::after{content:'▾';position:absolute;right:10px;color:#8b98a4;font-size:11px;pointer-events:none;}
+    .ms-btn.ms-on{border-color:#cc0a2b;color:#16202a;font-weight:600;}
+    .ms-menu{position:absolute;z-index:60;top:calc(100% + 4px);left:0;min-width:240px;max-height:340px;overflow:auto;background:#fff;border:1px solid #d6dde3;border-radius:8px;box-shadow:0 8px 24px rgba(22,32,42,.16);padding:8px;}
+    .ms-head{font-size:12px;padding:2px 6px 8px;border-bottom:1px solid #eef2f5;margin-bottom:6px;color:#6b7f84;}
+    .ms-head a{color:#cc0a2b;cursor:pointer;font-weight:600;}
+    .ms-opt{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:6px;font-size:13px;cursor:pointer;}
+    .ms-opt:hover{background:#f6f8fa;}
+    .ms-opt input{width:15px;height:15px;accent-color:#cc0a2b;flex:none;}
+    .ms-opt .n{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .ms-opt .c{color:#8b98a4;font-size:12px;}
+    .ms-empty{color:#8b98a4;font-size:12px;padding:6px;}
+    .btn.btn-ghost.btn-sm.be-clear{border:1px solid var(--border);}
   </style>
 </head>
 <body>
@@ -91,9 +106,16 @@
           <div class="be-filtry">
             <div class="search-box"><span class="search-icon">⌕</span>
               <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: e-mail, firma, osoba, adres, NIP, www…"></div>
-            <select id="fPochodzenie" class="form-control"><option value="">Pochodzenie: wszystkie</option></select>
-            <select id="fGrupa" class="form-control"><option value="">Grupa: wszystkie</option></select>
-            <select id="fRodzaj" class="form-control"><option value="">Rodzaj/branża: wszystkie</option></select>
+            <!-- filtry wielokrotnego wyboru: każdy przyjmuje dowolną kombinację wartości -->
+            <div class="ms" id="msPochodzenie"></div>
+            <div class="ms" id="msGrupa"></div>
+            <div class="ms" id="msRodzaj"></div>
+            <select id="fStatus" class="form-control" style="max-width:200px;">
+              <option value="">Status: wszystkie</option>
+              <option value="active">aktywne (do wysyłki)</option>
+              <option value="unsubscribed">wypisane</option>
+              <option value="bounced">odbite</option>
+            </select>
             <select id="fDane" class="form-control" style="max-width:190px;">
               <option value="">Dane firmy: dowolne</option>
               <option value="tak">tylko z danymi firmy</option>
@@ -104,6 +126,7 @@
               <option value="tak">edytowane w panelu (chronione)</option>
               <option value="nie">nietknięte w panelu</option>
             </select>
+            <button type="button" class="btn btn-ghost btn-sm be-clear" id="btnClear">Wyczyść filtry</button>
             <span class="be-licznik" id="licznik"></span>
           </div>
           <div class="table-wrap">
@@ -181,7 +204,7 @@
     const GRUPY   = ['JST', 'Firma', 'Spółki komunalne', 'Administracja rządowa', 'Nauka', 'Nieustalone', 'Test'];
     const RODZAJE = ['geodezja', 'inne', 'PODGiK', 'urząd miasta/gminy', 'urząd marszałkowski', 'WBGiTR', 'PWiK',
                      'GUGiK', 'WINGiK', 'urząd wojewódzki', 'administracja rządowa', 'uczelnia wyższa', 'instytut badawczy'];
-    const POCHODZENIA = ['MailerLite', 'formularz', 'ręcznie'];
+    const POCHODZENIA = ['MailerLite', 'prospecting', 'formularz', 'ręcznie'];
     const KLASA_GRUPY = { 'JST':'jst', 'Firma':'firma', 'Nauka':'nauka', 'Administracja rządowa':'adm', 'Spółki komunalne':'kom' };
     const STATUS = { active:'aktywny', unsubscribed:'wypisany', bounced:'odbity' };
 
@@ -207,30 +230,69 @@
        adresy z pustą grupą, a filtr po „Nieustalone” już ich nie zwracał. */
     const GRUPA_OF = r => (r.grupa && r.grupa.trim()) || 'Nieustalone';
 
-    function opcje(sel, kanon, wartosciZDanych, etykieta) {
+    /* Wartości filtra + liczności, z danych. Puste (null/'') jako token „(puste)". */
+    function pary(wartosci) {
       const licz = {};
-      wartosciZDanych.forEach(v => { const k = v || '(puste)'; licz[k] = (licz[k] || 0) + 1; });
-      const lista = [...new Set([...kanon, ...Object.keys(licz).filter(k => k !== '(puste)')])];
-      if (licz['(puste)']) lista.push('(puste)');
-      const biezaca = sel.value;
-      sel.innerHTML = `<option value="">${etykieta}: wszystkie</option>` +
-        lista.map(v => `<option value="${esc(v)}">${esc(v)}${licz[v] ? ' (' + licz[v] + ')' : ''}</option>`).join('');
-      sel.value = biezaca;
+      wartosci.forEach(v => { const k = (v && v.toString().trim()) ? v : '(puste)'; licz[k] = (licz[k] || 0) + 1; });
+      const out = Object.keys(licz).filter(k => k !== '(puste)').sort((a, b) => licz[b] - licz[a]).map(v => ({ value: v, count: licz[v] }));
+      if (licz['(puste)']) out.push({ value: '(puste)', count: licz['(puste)'] });
+      return out;
+    }
+
+    /* Filtr wielokrotnego wyboru (checkbox-dropdown). Pusty wybór = wszystkie. */
+    function multiSelect(hostId, etykieta, onChange) {
+      const host = document.getElementById(hostId);
+      let opts = [];
+      const sel = new Set();
+      host.innerHTML =
+        '<button type="button" class="ms-btn form-control"></button>' +
+        '<div class="ms-menu" hidden><div class="ms-head"><a data-all>zaznacz wszystkie</a> · <a data-none>wyczyść</a></div><div class="ms-list"></div></div>';
+      const btn = host.querySelector('.ms-btn'), menu = host.querySelector('.ms-menu'), list = host.querySelector('.ms-list');
+      const etyk = () => sel.size === 0 ? etykieta + ': wszystkie' : sel.size === 1 ? etykieta + ': ' + [...sel][0] : etykieta + ': ' + sel.size + ' wybrane';
+      const rysujBtn = () => { btn.textContent = etyk(); btn.classList.toggle('ms-on', sel.size > 0); };
+      const rysujList = () => {
+        list.innerHTML = opts.length ? opts.map(o =>
+          `<label class="ms-opt"><input type="checkbox" value="${esc(o.value)}" ${sel.has(o.value) ? 'checked' : ''}><span class="n">${esc(o.value)}</span><span class="c">${o.count}</span></label>`).join('')
+          : '<div class="ms-empty">brak wartości</div>';
+        list.querySelectorAll('input').forEach(cb => cb.addEventListener('change', () => {
+          if (cb.checked) sel.add(cb.value); else sel.delete(cb.value);
+          rysujBtn(); onChange();
+        }));
+      };
+      btn.addEventListener('click', e => { e.stopPropagation(); const otworz = menu.hidden; document.querySelectorAll('.ms-menu').forEach(m => m.hidden = true); menu.hidden = !otworz; });
+      menu.addEventListener('click', e => e.stopPropagation());
+      host.querySelector('[data-all]').addEventListener('click', e => { e.preventDefault(); opts.forEach(o => sel.add(o.value)); rysujList(); rysujBtn(); onChange(); });
+      host.querySelector('[data-none]').addEventListener('click', e => { e.preventDefault(); sel.clear(); rysujList(); rysujBtn(); onChange(); });
+      rysujBtn();
+      return {
+        setOptions(pairs) { opts = pairs; [...sel].forEach(v => { if (!opts.some(o => o.value === v)) sel.delete(v); }); rysujList(); rysujBtn(); },
+        values() { return [...sel]; },
+        size() { return sel.size; },
+        only(v) { sel.clear(); if (v != null && v !== '') sel.add(v); rysujList(); rysujBtn(); onChange(); },
+        clear() { sel.clear(); rysujList(); rysujBtn(); },
+      };
+    }
+    document.addEventListener('click', () => document.querySelectorAll('.ms-menu').forEach(m => m.hidden = true));
+
+    let msPochodzenie, msGrupa, msRodzaj;
+    /* Dopasowanie wiersza do multi-selecta: pusty wybór = wszystko; „(puste)" łapie brak wartości. */
+    function msPasuje(ms, val) {
+      if (ms.size() === 0) return true;
+      const v = (val && val.toString().trim()) ? val : '(puste)';
+      return ms.values().includes(v);
     }
 
     function filtruj() {
       const f = document.getElementById('szukaj').value.toLowerCase().trim();
-      const fp = document.getElementById('fPochodzenie').value;
-      const fg = document.getElementById('fGrupa').value;
-      const fr = document.getElementById('fRodzaj').value;
+      const fs = document.getElementById('fStatus').value;
       const fd = document.getElementById('fDane').value;
       const fe = document.getElementById('fEdyt').value;
-      const pasuje = (v, w) => !w || (w === '(puste)' ? !v : v === w);
       return dane.filter(r => {
-        if (fg && GRUPA_OF(r) !== fg) return false;                 // pusta grupa = „Nieustalone”
+        if (msGrupa.size() && !msGrupa.values().includes(GRUPA_OF(r))) return false;   // pusta grupa = „Nieustalone”
+        if (!msPasuje(msPochodzenie, r.pochodzenie) || !msPasuje(msRodzaj, r.rodzaj)) return false;
+        if (fs && (r.status || 'active') !== fs) return false;
         if (fe === 'tak' && !r.edytowany_panel) return false;
         if (fe === 'nie' && r.edytowany_panel) return false;
-        if (!pasuje(r.pochodzenie, fp) || !pasuje(r.rodzaj, fr)) return false;
         if (fd === 'tak' && !maDane(r)) return false;
         if (fd === 'nie' && maDane(r)) return false;
         if (!f) return true;
@@ -249,11 +311,20 @@
       });
       const box = document.getElementById('podsumowanie');
       box.innerHTML = html;
+      /* Klik w kafelek = filtr grupy na tę jedną wartość (albo „Wszystkie” czyści grupę). */
       box.querySelectorAll('.k').forEach(k => k.addEventListener('click', () => {
-        kafelekGrupa = k.dataset.grupa;
-        document.getElementById('fGrupa').value = kafelekGrupa;
-        strona = 1; render();
+        if (k.dataset.grupa === '') msGrupa.only(''); else msGrupa.only(k.dataset.grupa);
       }));
+    }
+
+    /* Podświetlenie kafelków wg wyboru grupy (multi-select). */
+    function odswiezKafelki() {
+      const g = msGrupa ? msGrupa.values() : [];
+      document.querySelectorAll('#podsumowanie .k').forEach(k => {
+        const dg = k.dataset.grupa;
+        const on = dg === '' ? g.length === 0 : (g.length === 1 && g[0] === dg);
+        k.classList.toggle('on', on);
+      });
     }
 
     function tag(g) { return g ? `<span class="be-tag ${KLASA_GRUPY[g] || ''}">${esc(g)}</span>` : '<span class="be-sub">—</span>'; }
@@ -270,8 +341,7 @@
       document.getElementById('pagInfo').textContent = rows.length ? `${od + 1}–${od + wid.length} z ${rows.length} · strona ${strona}/${stron}` : '';
       document.getElementById('pagPrev').disabled = strona <= 1;
       document.getElementById('pagNext').disabled = strona >= stron;
-      kafelekGrupa = document.getElementById('fGrupa').value;
-      document.querySelectorAll('#podsumowanie .k').forEach(k => k.classList.toggle('on', k.dataset.grupa === kafelekGrupa));
+      odswiezKafelki();
 
       const tb = document.getElementById('rows');
       if (!wid.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak adresów spełniających kryteria.</td></tr>'; return; }
@@ -353,17 +423,26 @@
     async function load() {
       try { dane = await pobierzWszystko(); }
       catch (e) { console.error(e); toast('Błąd ładowania bazy (czy uruchomiono supabase_baza_email.sql?)', 'error'); return; }
-      opcje(document.getElementById('fPochodzenie'), POCHODZENIA, dane.map(r => r.pochodzenie), 'Pochodzenie');
-      opcje(document.getElementById('fGrupa'), GRUPY, dane.map(GRUPA_OF), 'Grupa');
-      opcje(document.getElementById('fRodzaj'), RODZAJE, dane.map(r => r.rodzaj), 'Rodzaj/branża');
+      msPochodzenie.setOptions(pary(dane.map(r => r.pochodzenie)));
+      msGrupa.setOptions(pary(dane.map(GRUPA_OF)));
+      msRodzaj.setOptions(pary(dane.map(r => r.rodzaj)));
       document.getElementById('dlPochodzenie').innerHTML = [...new Set([...POCHODZENIA, ...dane.map(r => r.pochodzenie).filter(Boolean)])].map(v => `<option value="${esc(v)}">`).join('');
       podsumuj(); render();
     }
 
     (async () => {
       if (!await requireAuth()) return;
-      document.getElementById('szukaj').addEventListener('input', () => { strona = 1; render(); });
-      ['fPochodzenie', 'fGrupa', 'fRodzaj', 'fDane', 'fEdyt', 'pagRozmiar'].forEach(id => document.getElementById(id).addEventListener('change', () => { strona = 1; render(); }));
+      const przefiltruj = () => { strona = 1; render(); };
+      msPochodzenie = multiSelect('msPochodzenie', 'Pochodzenie', przefiltruj);
+      msGrupa       = multiSelect('msGrupa', 'Grupa', przefiltruj);
+      msRodzaj      = multiSelect('msRodzaj', 'Rodzaj/branża', przefiltruj);
+      document.getElementById('szukaj').addEventListener('input', przefiltruj);
+      ['fStatus', 'fDane', 'fEdyt', 'pagRozmiar'].forEach(id => document.getElementById(id).addEventListener('change', przefiltruj));
+      document.getElementById('btnClear').addEventListener('click', () => {
+        msPochodzenie.clear(); msGrupa.clear(); msRodzaj.clear();
+        ['szukaj', 'fStatus', 'fDane', 'fEdyt'].forEach(id => document.getElementById(id).value = '');
+        przefiltruj();
+      });
       document.getElementById('pagPrev').addEventListener('click', () => { strona--; render(); });
       document.getElementById('pagNext').addEventListener('click', () => { strona++; render(); });
       document.getElementById('btnNowy').addEventListener('click', () => otworz(null));
@@ -390,9 +469,9 @@
         if (!odb.length) { toast('Brak aktywnych odbiorców w bieżącym filtrze'); return; }
         if (odb.length > 200) { toast(`Za dużo odbiorców (${odb.length}). Zawęź filtr do maks. 200 adresów — masowe wysyłki rób w MailerLite.`, 'error', 7000); return; }
         const opisy = [];
-        const g = document.getElementById('fGrupa').value, rz = document.getElementById('fRodzaj').value;
-        if (g) opisy.push('grupa: <strong>' + esc(g) + '</strong>');
-        if (rz) opisy.push('branża: <strong>' + esc(rz) + '</strong>');
+        if (msPochodzenie.size()) opisy.push('źródło: <strong>' + esc(msPochodzenie.values().join(', ')) + '</strong>');
+        if (msGrupa.size()) opisy.push('grupa: <strong>' + esc(msGrupa.values().join(', ')) + '</strong>');
+        if (msRodzaj.size()) opisy.push('branża: <strong>' + esc(msRodzaj.values().join(', ')) + '</strong>');
         gigKreatorMaila({ odbiorcy: odb, rodzaj: 'baza', opis: opisy.join(' · ') || '<strong>bieżący filtr</strong>' });
       });
 

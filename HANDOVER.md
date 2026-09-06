@@ -57,10 +57,13 @@ się" jest na każdej stronie). Zapis na szkolenie to „Zapisz się →" na kaf
 
 ### Baza e-mail (`admin/baza-email.html`, tabela `baza_email`)
 3791 adresów z listy MailerLite wzbogaconych researchem (plik `dane_firm_z_maili_GIG.xlsx`
-z 4.09.2026 — **nie ma go w repo, repo jest publiczne; dane żyją tylko w bazie**). Filtry:
-Pochodzenie / Grupa / Rodzaj-branża (słowniki z arkusza „Listy" w kodzie strony jako `GRUPY`,
-`RODZAJE`, `POCHODZENIA` + wartości z danych), szukanie, edycja, statusy `active/unsubscribed/bounced`,
-eksport CSV, mail do przefiltrowanych (limit 200 — masówki robić w MailerLite).
+z 4.09.2026 — **nie ma go w repo, repo jest publiczne; dane żyją tylko w bazie**). Filtry
+**wielokrotnego wyboru** (checkbox-dropdown, komponent `multiSelect` w kodzie strony): Pochodzenie /
+Grupa / Rodzaj-branża — można zaznaczyć dowolną kombinację wartości (np. MailerLite + prospecting),
+z licznikami; do tego filtr statusu, „dane firmy", „edycja", szukanie i przycisk „Wyczyść filtry".
+Kafelki nad tabelą ustawiają filtr grupy. Bieżący, złożony filtr jest zarazem listą do wysyłki
+(przycisk „Wyślij e-mail", limit 200 — masówki w MailerLite) i do eksportu CSV. Słowniki `GRUPY`,
+`RODZAJE`, `POCHODZENIA` (z „prospecting") tylko dla formularza edycji; filtry biorą wartości z danych.
 **Ponowny import / aktualizacja:** uruchom `backend/supabase_baza_email.sql` (wstawi nowy
 `import_token`), odczytaj token zapytaniem z końca pliku, potem
 `GIG_IMPORT_TOKEN=<token> python skrypty/import_baza_email.py <plik.xlsx>` — upsert po e-mailu,
