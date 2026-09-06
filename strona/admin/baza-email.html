@@ -36,6 +36,9 @@
     .be-www a{font-size:12px;}
     .badge-unsubscribed{background:#f2f4f6;color:#8b98a4;text-decoration:line-through;}
     .badge-bounced{background:#fdecef;color:#a3122c;}
+    /* komunikat błędu wewnątrz okna dodawania/edycji adresu */
+    .ed-err{display:none;margin-top:14px;padding:10px 12px;border-radius:8px;background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;font-size:13px;}
+    .ed-err.show{display:block;}
   </style>
 </head>
 <body>
@@ -151,6 +154,7 @@
         </div>
         <div class="form-group"><label>Uwagi</label><textarea id="edUwagi" class="form-control" rows="2"></textarea></div>
         <p class="be-sub" id="edMeta"></p>
+        <div class="ed-err" id="edErr"></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-danger" id="edUsun" style="margin-right:auto;">🗑 Usuń</button>
@@ -190,6 +194,10 @@
 
     function maDane(r) { return !!(r.firma || r.adres || r.nip || r.telefon || r.osoba || r.www); }
 
+    /* Pusta grupa liczy się i filtruje jako „Nieustalone” — inaczej kafelek pokazywał
+       adresy z pustą grupą, a filtr po „Nieustalone” już ich nie zwracał. */
+    const GRUPA_OF = r => (r.grupa && r.grupa.trim()) || 'Nieustalone';
+
     function opcje(sel, kanon, wartosciZDanych, etykieta) {
       const licz = {};
       wartosciZDanych.forEach(v => { const k = v || '(puste)'; licz[k] = (licz[k] || 0) + 1; });
@@ -209,7 +217,8 @@
       const fd = document.getElementById('fDane').value;
       const pasuje = (v, w) => !w || (w === '(puste)' ? !v : v === w);
       return dane.filter(r => {
-        if (!pasuje(r.pochodzenie, fp) || !pasuje(r.grupa, fg) || !pasuje(r.rodzaj, fr)) return false;
+        if (fg && GRUPA_OF(r) !== fg) return false;                 // pusta grupa = „Nieustalone”
+        if (!pasuje(r.pochodzenie, fp) || !pasuje(r.rodzaj, fr)) return false;
         if (fd === 'tak' && !maDane(r)) return false;
         if (fd === 'nie' && maDane(r)) return false;
         if (!f) return true;
@@ -220,7 +229,7 @@
 
     function podsumuj() {
       const wg = {};
-      dane.forEach(r => { const k = r.grupa || 'Nieustalone'; wg[k] = (wg[k] || 0) + 1; });
+      dane.forEach(r => { const k = GRUPA_OF(r); wg[k] = (wg[k] || 0) + 1; });
       const zDanymi = dane.filter(maDane).length;
       let html = `<div class="k ${kafelekGrupa === '' ? 'on' : ''}" data-grupa=""><div class="t">Wszystkie adresy</div><div class="v">${dane.length} <small>· ${zDanymi} z danymi firmy</small></div></div>`;
       Object.entries(wg).sort((a, b) => b[1] - a[1]).forEach(([g, n]) => {
@@ -289,11 +298,14 @@
         ? [r.pewnosc ? 'pewność danych: ' + r.pewnosc : '', r.zrodlo ? 'źródło: ' + r.zrodlo : '', 'dodano ' + fmtDate(r.created_at)].filter(Boolean).join(' · ')
         : '';
       document.getElementById('edUsun').style.display = r ? '' : 'none';
+      document.getElementById('edErr').classList.remove('show');   // czysto przy każdym otwarciu
       openModal('edModal');
     }
+    function bladEd(msg){ const e = document.getElementById('edErr'); e.textContent = msg; e.classList.add('show'); }
     async function zapisz() {
+      document.getElementById('edErr').classList.remove('show');
       const email = edEmail.value.trim().toLowerCase();
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Podaj poprawny adres e-mail', 'error'); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { bladEd('Podaj poprawny adres e-mail.'); edEmail.focus(); return; }
       const p = (el) => (el.value || '').trim() || null;
       const rec = { email, pochodzenie: p(edPochodzenie), grupa: p(edGrupa), rodzaj: p(edRodzaj), firma: p(edFirma), adres: p(edAdres),
                     nip: p(edNip), telefon: p(edTelefon), osoba: p(edOsoba), stanowisko: p(edStanowisko), www: p(edWww),
@@ -302,7 +314,12 @@
       const btn = document.getElementById('edZapisz'); btn.disabled = true;
       const res = id ? await db.from('baza_email').update(rec).eq('id', id) : await db.from('baza_email').insert(rec);
       btn.disabled = false;
-      if (res.error) { console.error(res.error); toast(/duplicate|unique/i.test(res.error.message) ? 'Ten adres już jest w bazie' : 'Błąd zapisu', 'error'); return; }
+      if (res.error) {
+        console.error(res.error);
+        if (/duplicate|unique/i.test(res.error.message)) { bladEd('Ten adres już jest w bazie — nie dodano drugi raz.'); edEmail.focus(); }
+        else bladEd('Nie udało się zapisać: ' + res.error.message);
+        return;
+      }
       toast('Zapisano', 'success'); closeModal('edModal'); load();
     }
     async function usun() {
@@ -317,7 +334,7 @@
       try { dane = await pobierzWszystko(); }
       catch (e) { console.error(e); toast('Błąd ładowania bazy (czy uruchomiono supabase_baza_email.sql?)', 'error'); return; }
       opcje(document.getElementById('fPochodzenie'), POCHODZENIA, dane.map(r => r.pochodzenie), 'Pochodzenie');
-      opcje(document.getElementById('fGrupa'), GRUPY, dane.map(r => r.grupa), 'Grupa');
+      opcje(document.getElementById('fGrupa'), GRUPY, dane.map(GRUPA_OF), 'Grupa');
       opcje(document.getElementById('fRodzaj'), RODZAJE, dane.map(r => r.rodzaj), 'Rodzaj/branża');
       document.getElementById('dlPochodzenie').innerHTML = [...new Set([...POCHODZENIA, ...dane.map(r => r.pochodzenie).filter(Boolean)])].map(v => `<option value="${esc(v)}">`).join('');
       podsumuj(); render();
