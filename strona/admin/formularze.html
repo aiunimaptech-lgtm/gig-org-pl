@@ -125,12 +125,22 @@
           <td><strong>${esc(r.email)}</strong></td>
           <td style="white-space:nowrap;">${fmtDate(r.created_at)}</td>
           <td><span class="badge badge-${r.status==='new'?'new':'read'}">${r.status==='new'?'nowy':'przeczytany'}</span></td>
-          <td class="actions">
+          <td class="actions" style="white-space:nowrap;">
             ${r.status==='new'?`<button class="btn btn-ghost btn-xs" data-mark="${r.id}">✓ przeczytane</button>`:''}
+            <button class="btn btn-danger btn-xs" data-usun-nl="${r.id}" title="Usuń adres z listy newslettera">🗑</button>
           </td>
         </tr>`).join('');
       tb.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', async () => {
         if (await markRead('submissions_newsletter', b.dataset.mark)) load();
+      }));
+      /* Trwałe usunięcie adresu z listy newslettera (RODO: prawo do usunięcia danych). */
+      tb.querySelectorAll('[data-usun-nl]').forEach(b => b.addEventListener('click', async () => {
+        const r = nlData.find(x => x.id === b.dataset.usunNl); if (!r) return;
+        if (!confirm(`Usunąć adres „${r.email}” z listy newslettera?\n\nTej operacji nie można cofnąć.`)) return;
+        const { error } = await db.from('submissions_newsletter').delete().eq('id', r.id);
+        if (error) { console.error(error); toast('Nie udało się usunąć adresu', 'error'); return; }
+        toast('Adres usunięty', 'success');
+        load();
       }));
     }
 
@@ -147,13 +157,23 @@
           <td style="max-width:340px;">${esc((r.message||'').slice(0,140))}${(r.message||'').length>140?'…':''}</td>
           <td style="white-space:nowrap;">${fmtDate(r.created_at)}</td>
           <td><span class="badge badge-${r.status==='new'?'new':(r.status==='replied'?'replied':'read')}">${ETYK_KT[r.status]||r.status}</span></td>
-          <td class="actions">
+          <td class="actions" style="white-space:nowrap;">
             <button type="button" class="btn btn-outline btn-xs" data-odp="${r.id}">↩ Odpowiedz</button>
             ${r.status==='new'?`<button class="btn btn-ghost btn-xs" data-mark="${r.id}">✓</button>`:''}
+            <button class="btn btn-danger btn-xs" data-usun-kt="${r.id}" title="Usuń wiadomość">🗑</button>
           </td>
         </tr>`).join('');
       tb.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', async () => {
         if (await markRead('submissions_kontakt', b.dataset.mark)) load();
+      }));
+      /* Trwałe usunięcie wiadomości z formularza kontaktowego. */
+      tb.querySelectorAll('[data-usun-kt]').forEach(b => b.addEventListener('click', async () => {
+        const r = ktData.find(x => x.id === b.dataset.usunKt); if (!r) return;
+        if (!confirm(`Usunąć wiadomość od „${r.name || r.email}”?\n\nTej operacji nie można cofnąć.`)) return;
+        const { error } = await db.from('submissions_kontakt').delete().eq('id', r.id);
+        if (error) { console.error(error); toast('Nie udało się usunąć wiadomości', 'error'); return; }
+        toast('Wiadomość usunięta', 'success');
+        load();
       }));
       /* Odpowiedź: kreator maila do nadawcy, z „Re:” i cytatem jego wiadomości; po wysłaniu status „odpowiedziano” */
       tb.querySelectorAll('[data-odp]').forEach(b => b.addEventListener('click', () => {

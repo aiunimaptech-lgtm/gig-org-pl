@@ -126,12 +126,26 @@
       if(!r.date_start) return '—';
       return r.date_end && r.date_end!==r.date_start ? fmtDay(r.date_start)+' – '+fmtDay(r.date_end) : fmtDay(r.date_start);
     }
+    /* Szkolenie „minęło”, gdy jego OSTATNI dzień jest wcześniejszy niż dziś —
+       kilkudniowe szkolenie zostaje w aktualnych do końca ostatniego dnia.
+       Wpisy bez daty (np. sam „termin opisowy”) trafiają do aktualnych, na koniec. */
+    const dzisISO = () => { const d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10); };
+    const koniec = r => r.date_end || r.date_start || '';
+    function grupy(){
+      const dzis = dzisISO(), akt = [], min = [];
+      data.forEach(r => (koniec(r) && koniec(r) < dzis ? min : akt).push(r));
+      // aktualne: najbliższe na górze, bez daty na końcu; minione: najświeższe na górze
+      akt.sort((a,b)=>{ const x=a.date_start||'', y=b.date_start||''; if(!x) return 1; if(!y) return -1; return x<y?-1:x>y?1:0; });
+      min.sort((a,b)=>{ const x=koniec(a), y=koniec(b); return x<y?1:x>y?-1:0; });
+      return { akt, min };
+    }
+
     function render(){
       const tb=document.getElementById('rows');
       if(!data.length){ tb.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak szkoleń. Kliknij „+ Nowe szkolenie”.</td></tr>'; return; }
       const badge=s=>s==='published'?'published':(s==='draft'?'draft':'archived');
       const label=s=>s==='published'?'opublikowane':(s==='draft'?'szkic':'archiwum');
-      tb.innerHTML=data.map(r=>`
+      const wiersz = r=>`
         <tr>
           <td style="white-space:nowrap;">${termin(r)}</td>
           <td><strong>${esc(r.title)}</strong></td>
@@ -142,7 +156,19 @@
             <button class="btn btn-ghost btn-xs" data-edit="${r.id}">✎ Edytuj</button>
             <button class="btn btn-danger btn-xs" data-del="${r.id}">🗑</button>
           </td>
-        </tr>`).join('');
+        </tr>`;
+      const naglowek = (t,n,kolor)=>`
+        <tr><td colspan="6" style="background:#f5f7f9;border-top:2px solid ${kolor};padding:10px 12px;">
+          <strong style="color:${kolor};text-transform:uppercase;letter-spacing:.04em;font-size:12px;">${t}</strong>
+          <span style="color:#6b7f84;font-size:12px;"> · ${n}</span>
+        </td></tr>`;
+      const pusto = t=>`<tr><td colspan="6" style="text-align:center;padding:14px;color:#9bacb4;font-size:13px;">${t}</td></tr>`;
+      const { akt, min } = grupy();
+      tb.innerHTML =
+        naglowek('Aktualne', akt.length ? `${akt.length} — najbliższe na górze` : 'brak', '#cc0a2b') +
+        (akt.length ? akt.map(wiersz).join('') : pusto('Brak zaplanowanych szkoleń.')) +
+        naglowek('Już się odbyły', min.length ? `${min.length}` : 'brak', '#8a99a3') +
+        (min.length ? min.map(wiersz).join('') : pusto('Brak archiwalnych szkoleń.'));
       tb.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEditor(b.dataset.edit)));
       tb.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>del(b.dataset.del)));
     }
