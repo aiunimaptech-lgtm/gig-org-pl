@@ -261,6 +261,7 @@
             ${wiersz('Nazwa', r.nabywca_nazwa)}
             ${wiersz('Adres', r.nabywca_adres)}
             ${wiersz('NIP', r.nabywca_nip)}
+            ${wiersz('Faktura', r.faktura_kiedy === 'po' ? 'po szkoleniu' : (r.faktura_kiedy === 'przed' ? 'przed szkoleniem' : ''))}
           </dl>
         </div>
         <div class="zap-blok">
@@ -383,6 +384,7 @@
             szkolenie: r.szkolenie||'', osob: osoby(r),
             nabywca: r.nabywca_nazwa||'', nabywca_adres: r.nabywca_adres||'', nabywca_nip: r.nabywca_nip||'',
             jst: r.nabywca_jst ? 'tak' : 'nie',
+            faktura: r.faktura_kiedy === 'po' ? 'po szkoleniu' : 'przed szkoleniem',
             odbiorca: odb.wlasny ? (odb.nazwa||'') : '(taki sam)',
             odbiorca_adres: odb.wlasny ? (odb.adres||'') : '',
             odbiorca_nip: odb.wlasny ? (odb.nip||'') : '',
@@ -394,6 +396,7 @@
           { key:'szkolenie', label:'Szkolenie' }, { key:'osob', label:'Liczba osób' },
           { key:'nabywca', label:'Nabywca' }, { key:'nabywca_adres', label:'Adres nabywcy' },
           { key:'nabywca_nip', label:'NIP nabywcy' }, { key:'jst', label:'JST' },
+          { key:'faktura', label:'Faktura' },
           { key:'odbiorca', label:'Odbiorca' }, { key:'odbiorca_adres', label:'Adres odbiorcy' },
           { key:'odbiorca_nip', label:'NIP/ID odbiorcy' },
           { key:'email', label:'E-mail' }, { key:'telefon', label:'Telefon' }, { key:'zgloszono', label:'Zgłoszono' },

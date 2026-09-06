@@ -64,8 +64,9 @@
         <input type="text" id="nabywca_nip" name="nabywca_nip" required inputmode="numeric" placeholder="0000000000">
       </div>
       <div class="pole">
-        <label for="nabywca_jst">Czy nabywca jest jednostką samorządu terytorialnego?</label>
-        <select id="nabywca_jst" name="nabywca_jst">
+        <label for="nabywca_jst">Czy nabywca jest jednostką samorządu terytorialnego? <span class="wym">*</span></label>
+        <select id="nabywca_jst" name="nabywca_jst" required>
+          <option value="">— wybierz —</option>
           <option value="nie">Nie</option>
           <option value="tak">Tak</option>
         </select>
@@ -86,13 +87,21 @@
         <input type="text" id="odbiorca_nazwa" name="odbiorca_nazwa">
       </div>
       <div class="pole">
-        <label for="odbiorca_adres">Adres</label>
+        <label for="odbiorca_adres">Adres <span class="wym">*</span></label>
         <input type="text" id="odbiorca_adres" name="odbiorca_adres">
       </div>
       <div class="pole" style="max-width:320px">
         <label for="odbiorca_nip">NIP / ID-wewn. <span class="wym">*</span></label>
         <input type="text" id="odbiorca_nip" name="odbiorca_nip">
       </div>
+    </div>
+    <div class="pole" id="zFaktura" style="max-width:420px" hidden>
+      <label for="faktura_kiedy">Kiedy wystawić fakturę? <span class="wym">*</span></label>
+      <select id="faktura_kiedy" name="faktura_kiedy">
+        <option value="przed">Przed szkoleniem</option>
+        <option value="po">Po szkoleniu</option>
+      </select>
+      <p class="hint">Jednostki samorządu często rozliczają szkolenie z góry — wybierz moment, który pasuje Waszej księgowości.</p>
     </div>
   </fieldset>
 
@@ -171,7 +180,11 @@
   /* W samorządzie nabywcą jest gmina/powiat, a odbiorcą urząd lub jednostka podległa,
      więc po wybraniu „Tak" sami odznaczamy „taki sam" i pokazujemy pola odbiorcy.
      Powrót na „Nie" nie zaznacza z powrotem — użytkownik mógł już coś wpisać. */
+  /* Wybór momentu faktury dotyczy tylko samorządu — firmy dostają ją standardowo
+     przed szkoleniem, więc dla nich pole jest ukryte i wysyłamy „przed". */
+  var boxFak = document.getElementById("zFaktura");
   jst.addEventListener("change", function () {
+    boxFak.hidden = jst.value !== "tak";
     if (jst.value === "tak" && taki.checked) {
       taki.checked = false;
       przelaczOdbiorce();
@@ -200,12 +213,18 @@
 
     /* Walidacja własna zamiast natywnej (`novalidate`): komunikaty po polsku,
        jeden na raz, zawsze widoczne w tym samym miejscu pod przyciskiem. */
+    var ile = parseInt(val("liczba_osob"), 10);
+    if (!ile || ile < 1)       return pokaz("Podaj liczbę osób (co najmniej 1).", false);
     if (!val("uczestnicy"))    return pokaz("Podaj imiona i nazwiska uczestników.", false);
     if (!val("nabywca_nazwa")) return pokaz("Podaj nazwę firmy lub instytucji nabywcy.", false);
     if (!val("nabywca_adres")) return pokaz("Podaj adres nabywcy.", false);
     if (!val("nabywca_nip"))   return pokaz("Podaj NIP nabywcy.", false);
+    if (!val("nabywca_jst"))
+      return pokaz("Zaznacz, czy nabywca jest jednostką samorządu terytorialnego.", false);
     if (!taki.checked && !val("odbiorca_nazwa"))
       return pokaz("Podaj nazwę odbiorcy albo zaznacz, że jest taki sam jak nabywca.", false);
+    if (!taki.checked && !val("odbiorca_adres"))
+      return pokaz("Podaj adres odbiorcy.", false);
     /* Osobny odbiorca bez identyfikatora blokuje wystawienie faktury (w JST zwykle
        ID-wewnętrzny z systemu urzędu), więc wymagamy go razem z nazwą. */
     if (!taki.checked && !val("odbiorca_nip"))
@@ -227,6 +246,7 @@
       nabywca_adres:     val("nabywca_adres"),
       nabywca_nip:       val("nabywca_nip"),
       nabywca_jst:       document.getElementById("nabywca_jst").value === "tak",
+      faktura_kiedy:     boxFak.hidden ? "przed" : (val("faktura_kiedy") || "przed"),
       odbiorca_taki_sam: taki.checked,
       odbiorca_nazwa:    taki.checked ? null : val("odbiorca_nazwa"),
       odbiorca_adres:    taki.checked ? null : val("odbiorca_adres"),

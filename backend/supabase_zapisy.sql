@@ -57,3 +57,9 @@ SELECT column_name, data_type
 FROM information_schema.columns
 WHERE table_name = 'zapisy_szkolenia'
 ORDER BY ordinal_position;
+
+-- ── Wrzesien 2026: moment wystawienia faktury ─────────────────────────────
+-- Widoczne w formularzu tylko dla JST (firmy dostaja fakture przed szkoleniem).
+alter table public.zapisy_szkolenia
+  add column if not exists faktura_kiedy text
+  check (faktura_kiedy is null or faktura_kiedy in ('przed','po'));

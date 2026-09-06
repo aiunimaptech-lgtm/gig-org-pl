@@ -211,6 +211,8 @@ function zapisNotifyMail(rec: Record<string, unknown>) {
   const szkolenie = s("szkolenie") || "(nie podano)";
   const takiSam = rec.odbiorca_taki_sam !== false;
   const jst = rec.nabywca_jst === true;
+  const faktura = rec.faktura_kiedy === "po" ? "po szkoleniu"
+    : (rec.faktura_kiedy === "przed" ? "przed szkoleniem" : "");
 
   const blok = (tytul: string, tresc: string) => `
     <div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
@@ -229,7 +231,8 @@ function zapisNotifyMail(rec: Record<string, unknown>) {
       wierszTabeli("Nazwa", esc(s("nabywca_nazwa"))) +
       wierszTabeli("Adres", esc(s("nabywca_adres"))) +
       wierszTabeli("NIP", esc(s("nabywca_nip"))) +
-      wierszTabeli("Jednostka samorządu", jst ? "<strong>TAK</strong>" : "nie"))}
+      wierszTabeli("Jednostka samorządu", jst ? "<strong>TAK</strong>" : "nie") +
+      wierszTabeli("Faktura", faktura))}
 
     ${takiSam
       ? blok("Odbiorca", wierszTabeli("Odbiorca", "taki sam jak nabywca"))
@@ -261,6 +264,8 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>) {
   const szkolenie = s("szkolenie");
   const takiSam = rec.odbiorca_taki_sam !== false;
   const jst = rec.nabywca_jst === true;
+  const faktura = rec.faktura_kiedy === "po" ? "po szkoleniu"
+    : (rec.faktura_kiedy === "przed" ? "przed szkoleniem" : "");
 
   const blok = (tytul: string, tresc: string) => tresc ? `
     <div style="margin:0 0 14px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
@@ -283,7 +288,8 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>) {
       wierszTabeli("Nazwa", esc(s("nabywca_nazwa"))) +
       wierszTabeli("Adres", esc(s("nabywca_adres"))) +
       wierszTabeli("NIP", esc(s("nabywca_nip"))) +
-      wierszTabeli("Jednostka samorządu", jst ? "TAK" : "nie"))}
+      wierszTabeli("Jednostka samorządu", jst ? "TAK" : "nie") +
+      wierszTabeli("Faktura", faktura))}
 
     ${takiSam
       ? blok("Odbiorca", wierszTabeli("Odbiorca", "taki sam jak nabywca"))
