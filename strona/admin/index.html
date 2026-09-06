@@ -52,6 +52,22 @@
         <button type="submit" class="btn btn-primary" id="loginBtn">Zaloguj</button>
         <div class="login-err" id="loginErr"></div>
         <p class="login-alt"><a id="showReset">Nie pamiętasz hasła?</a></p>
+        <p class="login-alt" style="margin-top:6px;"><a href="rejestracja.html">Poproś o dostęp do panelu</a></p>
+      </form>
+
+      <!-- DRUGI SKŁADNIK: kod z e-maila -->
+      <form id="kodForm" hidden>
+        <p class="sub" style="margin-bottom:20px;">Wysłaliśmy 6-cyfrowy kod na <strong id="kodAdres"></strong>.
+          Wpisz go poniżej, aby dokończyć logowanie.</p>
+        <div class="form-group">
+          <label for="kod">Kod z e-maila</label>
+          <input type="text" id="kod" class="form-control" inputmode="numeric" autocomplete="one-time-code"
+                 maxlength="6" placeholder="000000"
+                 style="letter-spacing:8px;font-size:20px;text-align:center;font-weight:700;" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="kodBtn">Potwierdź i zaloguj</button>
+        <div class="login-err" id="kodErr"></div>
+        <p class="login-alt"><a id="kodWroc">← Zacznij logowanie od nowa</a></p>
       </form>
 
       <!-- ODZYSKANIE HASŁA -->
@@ -80,20 +96,75 @@
     const form = document.getElementById('loginForm');
     const errBox = document.getElementById('loginErr');
     const btn = document.getElementById('loginBtn');
+    /* ── Logowanie dwuskładnikowe ──
+       Hasła NIE sprawdzamy w przeglądarce: gdyby tak było, sesja powstawałaby
+       już po haśle, a kod z maila byłby tylko zasłoną w interfejsie. Robi to
+       Edge Function `panel-logowanie`, która trzyma tokeny sesji u siebie
+       i oddaje je dopiero po podaniu kodu. */
+    const FUN = GIG_CFG.SUPABASE_URL + '/functions/v1/panel-logowanie';
+    const kodForm = document.getElementById('kodForm');
+    const kodErr  = document.getElementById('kodErr');
+    const kodBtn  = document.getElementById('kodBtn');
+    let wyzwanie = null;
+
+    async function wolaj(dane) {
+      const r = await fetch(FUN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': GIG_CFG.SUPABASE_ANON },
+        body: JSON.stringify(dane)
+      });
+      let tresc = {};
+      try { tresc = await r.json(); } catch (_) {}
+      return { ok: r.ok, tresc };
+    }
+
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       errBox.style.display = 'none';
       btn.disabled = true; btn.textContent = 'Logowanie…';
       const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const { error } = await db.auth.signInWithPassword({ email, password });
+      const haslo = document.getElementById('password').value;
+
+      const { ok, tresc } = await wolaj({ akcja: 'start', email, haslo });
       btn.disabled = false; btn.textContent = 'Zaloguj';
-      if (error) {
-        errBox.textContent = 'Błędny e-mail lub hasło.';
+      if (!ok || !tresc.id) {
+        errBox.textContent = tresc.error || 'Błędny e-mail lub hasło.';
         errBox.style.display = 'block';
-      } else {
-        window.location.href = 'dashboard.html';
+        return;
       }
+      wyzwanie = tresc.id;
+      document.getElementById('kodAdres').textContent = email;
+      form.hidden = true; kodForm.hidden = false;
+      document.getElementById('password').value = '';
+      document.getElementById('kod').focus();
+    });
+
+    kodForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      kodErr.style.display = 'none';
+      kodBtn.disabled = true; kodBtn.textContent = 'Sprawdzanie…';
+      const kod = document.getElementById('kod').value.replace(/\s/g, '');
+      const { ok, tresc } = await wolaj({ akcja: 'potwierdz', id: wyzwanie, kod });
+      kodBtn.disabled = false; kodBtn.textContent = 'Potwierdź i zaloguj';
+      if (!ok || !tresc.session) {
+        kodErr.textContent = tresc.error || 'Nieprawidłowy kod.';
+        kodErr.style.display = 'block';
+        return;
+      }
+      const { error } = await db.auth.setSession(tresc.session);
+      if (error) {
+        kodErr.textContent = 'Nie udało się otworzyć sesji. Spróbuj jeszcze raz.';
+        kodErr.style.display = 'block';
+        return;
+      }
+      window.location.href = 'dashboard.html';
+    });
+
+    document.getElementById('kodWroc').addEventListener('click', () => {
+      wyzwanie = null;
+      kodForm.hidden = true; form.hidden = false;
+      document.getElementById('kod').value = '';
+      kodErr.style.display = 'none';
     });
 
     /* ── Odzyskanie hasła ──

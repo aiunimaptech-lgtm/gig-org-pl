@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Panel GIG — wniosek o dostęp</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+      background:linear-gradient(135deg,#16202a,#cc0a2b); }
+    .login-card { background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+      width:100%; max-width:440px; padding:36px 34px; }
+    .login-logo { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+    .login-logo .ic { width:44px; height:44px; border-radius:10px; background:#cc0a2b; color:#fff;
+      display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; }
+    .login-card h1 { font-size:20px; color:#16202a; margin:14px 0 4px; }
+    .login-card p.sub { color:#6b7f84; font-size:13px; margin-bottom:24px; }
+    .login-card .btn-primary { width:100%; justify-content:center; padding:11px; font-size:14px; margin-top:6px; }
+    .login-err { background:#fbeaea; color:#9b2222; border:1px solid #e6b8b8; border-radius:6px;
+      padding:9px 12px; font-size:13px; margin-top:14px; display:none; }
+    .login-ok { background:#eaf6ee; color:#1c6b39; border:1px solid #bfe3cb; border-radius:6px;
+      padding:11px 13px; font-size:13px; margin-top:14px; display:none; line-height:1.6; }
+    .login-alt { text-align:center; margin:16px 0 0; font-size:13px; }
+    .login-alt a { color:#cc0a2b; text-decoration:none; font-weight:600; cursor:pointer; }
+    .info { background:#fdecef; border-left:4px solid #cc0a2b; border-radius:6px; padding:11px 13px;
+      font-size:12.5px; color:#6b4048; line-height:1.6; margin-bottom:20px; }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="ic">GIG</span>
+        <div class="logo-text" style="color:#16202a;font-weight:800;font-size:14px;">Panel zarządzania<br>
+          <span style="font-weight:400;font-size:11px;color:#6b7f84;">Geodezyjna Izba Gospodarcza</span></div>
+      </div>
+      <h1>Wniosek o dostęp</h1>
+      <p class="sub">Konta nie zakładasz sam — wniosek zatwierdza biuro Izby.</p>
+
+      <div class="info">W panelu są dane osobowe (zapisy na szkolenia, wiadomości, baza adresów),
+        dlatego każdy wniosek trafia do <strong>biuro@gig.org.pl</strong> i konto powstaje dopiero
+        po ręcznej akceptacji. Hasło ustawisz sam z linku, który wtedy dostaniesz.</div>
+
+      <form id="regForm">
+        <div class="form-group">
+          <label for="imie">Imię i nazwisko</label>
+          <input type="text" id="imie" class="form-control" autocomplete="name" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Służbowy e-mail</label>
+          <input type="email" id="email" class="form-control" autocomplete="username" required>
+        </div>
+        <div class="form-group">
+          <label for="uzasadnienie">Po co Ci dostęp? <span style="font-weight:400;color:#7a8794">— pomoże biuru rozpoznać wniosek</span></label>
+          <textarea id="uzasadnienie" class="form-control" rows="3"
+                    placeholder="np. obsługa zapisów na szkolenia"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" id="regBtn">Wyślij wniosek</button>
+        <div class="login-err" id="regErr"></div>
+        <div class="login-ok" id="regOk"></div>
+        <p class="login-alt"><a href="index.html">← Wróć do logowania</a></p>
+      </form>
+    </div>
+  </div>
+
+  <script src="/_assets/js/gig-config.js"></script>
+  <script>
+    const form = document.getElementById('regForm');
+    const err  = document.getElementById('regErr');
+    const ok   = document.getElementById('regOk');
+    const btn  = document.getElementById('regBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.style.display = 'none'; ok.style.display = 'none';
+      const imie = document.getElementById('imie').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const uzasadnienie = document.getElementById('uzasadnienie').value.trim();
+      if (!imie) { err.textContent = 'Podaj imię i nazwisko.'; err.style.display = 'block'; return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        err.textContent = 'Podaj poprawny adres e-mail.'; err.style.display = 'block'; return;
+      }
+
+      btn.disabled = true; btn.textContent = 'Wysyłanie…';
+      let odp = {};
+      try {
+        const r = await fetch(GIG_CFG.SUPABASE_URL + '/functions/v1/panel-rejestracja', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': GIG_CFG.SUPABASE_ANON },
+          body: JSON.stringify({ akcja: 'zloz', imie, email, uzasadnienie })
+        });
+        odp = await r.json();
+        if (!r.ok) throw new Error(odp.error || 'blad');
+      } catch (e2) {
+        btn.disabled = false; btn.textContent = 'Wyślij wniosek';
+        err.textContent = e2.message === 'blad' ? 'Nie udało się wysłać wniosku.' : e2.message;
+        err.style.display = 'block';
+        return;
+      }
+
+      btn.disabled = false; btn.textContent = 'Wyślij wniosek';
+      form.reset();
+      /* Ta sama odpowiedź także wtedy, gdy wniosek tym adresem już czeka —
+         formularz nie może zdradzać, kto stara się o dostęp. */
+      ok.innerHTML = 'Wniosek trafił do biura Izby. Gdy zostanie zatwierdzony, dostaniesz e-mail '
+        + 'z linkiem do ustawienia hasła. Jeśli nie przyjdzie w ciągu kilku dni, zadzwoń: 22 827 38 43.';
+      ok.style.display = 'block';
+    });
+  </script>
+</body>
+</html>
