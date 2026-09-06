@@ -25,7 +25,10 @@
     "#gigw .gigw-tx b{display:block;font-size:14px;}#gigw .gigw-tx span{font-size:12px;color:#6b7884;}" +
     "#gigw .gigw-launch{display:flex;align-items:center;gap:8px;background:" + RED + ";color:#fff;border:0;border-radius:30px;padding:12px 18px;font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 10px 30px rgba(204,10,43,.4);font-family:inherit;}" +
     "#gigw .gigw-launch:hover{filter:brightness(.95);}" +
-    "#gigw .gigw-nlform{display:none;gap:8px;margin-top:8px;}#gigw .gigw-nl.exp .gigw-nlform{display:flex;flex-direction:column;}" +
+    /* klasę `exp` JS dodaje na .gigw-nlwrap, a formularz jest RODZEŃSTWEM zakładki
+       (nie jej dzieckiem) — selektor musi wychodzić od wrappera, inaczej pole
+       e-mail nigdy się nie pokaże i „Kliknij i zapisz się” wygląda na martwe. */
+    "#gigw .gigw-nlform{display:none;gap:8px;margin-top:8px;}#gigw .gigw-nlwrap.exp .gigw-nlform{display:flex;flex-direction:column;}" +
     "#gigw .gigw-nlform input{padding:9px 11px;border:1px solid #d6dde3;border-radius:8px;font-size:13px;font-family:inherit;}" +
     "#gigw .gigw-nlform button{background:" + RED + ";color:#fff;border:0;border-radius:8px;padding:9px;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;}" +
     "#gigw .gigw-msg{font-size:12px;margin-top:4px;}" +
