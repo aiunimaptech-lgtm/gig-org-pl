@@ -465,7 +465,7 @@
       /* Mail do przefiltrowanych (bez wypisanych i odbitych). Funkcja wysyłkowa ma limit 200
          adresów — do masowej wysyłki służy MailerLite, tu wysyłamy do wąskich grup. */
       document.getElementById('btnMail').addEventListener('click', () => {
-        const odb = filtruj().filter(r => !r.status || r.status === 'active').map(r => ({ email: r.email, name: r.osoba || r.firma || '' }));
+        const odb = filtruj().filter(r => !r.status || r.status === 'active').map(r => ({ email: r.email, name: r.osoba || r.firma || '', id: r.id }));
         if (!odb.length) { toast('Brak aktywnych odbiorców w bieżącym filtrze'); return; }
         if (odb.length > 200) { toast(`Za dużo odbiorców (${odb.length}). Zawęź filtr do maks. 200 adresów — masowe wysyłki rób w MailerLite.`, 'error', 7000); return; }
         const opisy = [];

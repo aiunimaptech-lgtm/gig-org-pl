@@ -248,8 +248,17 @@ zamienił na względne również `canonical` i `og:url`. `og:url` **musi** być 
 | `3fcd9f2` | zakładka **Baza e-mail**: tabela `baza_email`, import 3791 adresów przez RPC z tokenem, filtry/edycja/CSV/mail; `wyslij-mail` v3 (stopka `baza`) |
 
 **Kreator e-maili:** `gigKreatorMaila({odbiorcy, temat, rodzaj, szkolenie, opis, cytat, poWyslaniu})` w `_admin.js`;
-strona musi ładować Quill. Backend `wyslij-mail` sprawdza sesję admina (`auth.getUser`), wysyła osobno
-do każdego adresu, stopka wg `rodzaj` (`szkolenie` / `kontakt`). Limit 200 adresów.
+strona musi ładować Quill. Backend `wyslij-mail` (v4) sprawdza sesję admina (`auth.getUser`), wysyła osobno
+do każdego adresu, stopka wg `rodzaj` (`szkolenie` / `kontakt` / `baza`). Limit 200 adresów.
+**Szata maila:** jasna, z logo `strona/_assets/img/gig-logo-email.png` (PNG, bo SVG nie renderuje się
+w mailach — wyrenderowane sharpem z `gig-logo-new-poziom-dark.svg`) i czerwoną kreską zamiast ciemnego pasa.
+`send-confirmation` ma jeszcze starszą (ciemną) szatę — do ujednolicenia kiedyś.
+
+**Rezygnacja z maili (unsubscribe):** wysyłki `rodzaj:'baza'` dostają w stopce link „Wypisz się" →
+Edge Function `baza-wypis?id=<uuid wiersza>` (verify_jwt=false), która ustawia `status='unsubscribed'`
+i pokazuje stronę potwierdzenia. `id` bierze się z `baza_email` (panel przekazuje je w `recipients`).
+Wypisani wypadają z wysyłek (filtr `status==='active'`); w panelu widać ich filtrem **Status → wypisane**
+i po przekreślonym badge'u. Import nie rusza `status`, więc wypis jest trwały. Sprawdzone end-to-end.
 
 Konta: użytkownik ustawił hasło przez `pierwsze-haslo` i jest zalogowany. Token setup zużyty —
 nowy: ponownie `backend/supabase_pierwsze_haslo.sql` (insert) i zapytanie z końca pliku.

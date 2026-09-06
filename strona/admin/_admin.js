@@ -215,7 +215,7 @@ function gigKreatorMaila(o) {
   (o.odbiorcy || []).forEach(r => {
     const e = (r.email || '').trim().toLowerCase();
     if (!e || widziane.has(e)) return;
-    widziane.add(e); odbiorcy.push({ email: e, name: (r.name || '').trim() });
+    widziane.add(e); odbiorcy.push({ email: e, name: (r.name || '').trim(), id: r.id || null });
   });
   if (!odbiorcy.length) { toast('Brak odbiorców'); return; }
   gigMailZbuduj();

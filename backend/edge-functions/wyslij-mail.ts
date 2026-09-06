@@ -1,21 +1,21 @@
 // ============================================================
 // GIG — Edge Function: wyslij-mail
-// Wysyła wiadomość z panelu (Resend): do uczestników szkoleń albo jako
-// odpowiedź na wiadomość z formularza kontaktowego.
+// Wysyła wiadomość z panelu (Resend): do uczestników szkoleń, jako odpowiedź
+// na wiadomość z formularza kontaktowego albo do adresów z bazy (rodzaj 'baza').
 // Wołana z panelu przez gigKreatorMaila() w /admin/_admin.js.
 //
-// Autoryzacja: nagłówek Authorization: Bearer <access_token zalogowanego
-// administratora>. Funkcja sprawdza token przez auth.getUser() — bez
-// zalogowanego użytkownika panelu nic nie wyśle. Wdrożenie z
-// verify_jwt = false (klucz sb_publishable_ nie jest JWT; sprawdzamy sami).
+// Autoryzacja: Authorization: Bearer <access_token zalogowanego admina>.
+// Funkcja sprawdza token przez auth.getUser() — bez zalogowanego użytkownika
+// nic nie wyśle. Wdrożenie z verify_jwt = false (klucz publishable nie jest JWT).
 //
-// Body: { subject, html, recipients: [{email, name?}],
-//         rodzaj?: 'szkolenie' | 'kontakt', szkolenie? }
+// Body: { subject, html, recipients: [{email, name?, id?}],
+//         rodzaj?: 'szkolenie' | 'kontakt' | 'baza', szkolenie? }
 // Każdy odbiorca dostaje osobny mail (nie widzi pozostałych adresów).
-// Reply-To = biuro@gig.org.pl, żeby odpowiedzi trafiały do Izby.
+// Przy rodzaj='baza' i podanym id (wiersz baza_email) mail dostaje link
+// „wypisz się" -> Edge Function baza-wypis, która oznacza status=unsubscribed.
+// Reply-To = biuro@gig.org.pl.
 //
-// Sekrety: RESEND_API_KEY, FROM_EMAIL (jak w send-confirmation),
-//          SUPABASE_URL i SUPABASE_ANON_KEY wstrzykuje Supabase.
+// Sekrety: RESEND_API_KEY, FROM_EMAIL; SUPABASE_URL i SUPABASE_ANON_KEY wstrzykiwane.
 // ============================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -23,6 +23,8 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const FROM_EMAIL = Deno.env.get("FROM_EMAIL") ?? "Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>";
 const REPLY_TO = Deno.env.get("REPLY_TO_EMAIL") ?? "biuro@gig.org.pl";
+const FUNCTIONS_BASE = (Deno.env.get("SUPABASE_URL") ?? "") + "/functions/v1";
+const LOGO = "https://gig.org.pl/_assets/img/gig-logo-email.png";
 const MAX_ODBIORCOW = 200;
 
 const CORS = {
@@ -30,8 +32,7 @@ const CORS = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
-/* Paleta strony gig.org.pl — ta sama, co w send-confirmation. */
-const C = { dark: "#16202a", mid: "#cc0a2b", bg: "#fdecef" };
+const RED = "#cc0a2b";
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
@@ -40,31 +41,33 @@ function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/* Ta sama ramka, co w mailach potwierdzających — spójny wygląd. */
-function layout(title: string, body: string, stopka: string): string {
+/* Lekka, jasna szata: białe tło, logo GIG w nagłówku, czerwona kreska zamiast
+   ciężkiego ciemnego pasa. Stopka z danymi Izby i (opcjonalnie) linkiem wypisu. */
+function layout(title: string, body: string, stopka: string, unsubUrl: string): string {
+  const wypis = unsubUrl
+    ? `<p style="margin:14px 0 0;font-size:12px;color:#9aa7b2;line-height:1.6;">Nie chcesz otrzymywać wiadomości od Izby? <a href="${unsubUrl}" style="color:#9aa7b2;text-decoration:underline;">Wypisz się z listy</a>.</p>`
+    : "";
   return `<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;background:#eef0f3;font-family:'Segoe UI',Arial,sans-serif;color:${C.dark};">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="padding:32px 16px;"><tr><td align="center">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 6px 24px rgba(22,32,42,.10);">
-      <tr><td style="background:${C.dark};padding:24px 32px;color:#fff;">
-        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-          <td style="background:${C.mid};width:46px;height:46px;border-radius:8px;text-align:center;vertical-align:middle;color:#fff;font-weight:800;font-size:15px;">GIG</td>
-          <td style="padding-left:12px;font-weight:700;font-size:15px;">Geodezyjna Izba Gospodarcza<br><span style="font-weight:400;font-size:12px;color:rgba(255,255,255,.6);">gig.org.pl</span></td>
-        </tr></table>
+<body style="margin:0;padding:0;background:#eef1f4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#2b3a45;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef1f4;padding:28px 14px;"><tr><td align="center">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #e6ebef;border-radius:14px;overflow:hidden;box-shadow:0 4px 18px rgba(22,32,42,.06);">
+      <tr><td style="padding:26px 34px 18px;background:#ffffff;">
+        <img src="${LOGO}" width="196" alt="Geodezyjna Izba Gospodarcza" style="display:block;border:0;height:auto;outline:none;text-decoration:none;">
       </td></tr>
-      <tr><td style="height:3px;background:${C.mid};"></td></tr>
-      <tr><td style="padding:32px;font-size:15px;line-height:1.65;">
-        <h1 style="margin:0 0 16px;font-size:20px;color:${C.dark};">${esc(title)}</h1>
-        <div class="tresc">${body}</div>
-        ${stopka ? `<p style="margin:22px 0 0;padding-top:14px;border-top:1px solid #e6ebef;font-size:12px;color:#90a4b4;">${stopka}</p>` : ""}
+      <tr><td style="height:3px;background:${RED};font-size:0;line-height:3px;">&nbsp;</td></tr>
+      <tr><td style="padding:30px 34px 26px;">
+        <h1 style="margin:0 0 14px;font-size:21px;line-height:1.3;color:#16202a;font-weight:800;">${esc(title)}</h1>
+        <div style="font-size:15px;line-height:1.65;color:#38444e;">${body}</div>
+        ${stopka ? `<div style="margin:22px 0 0;padding-top:16px;border-top:1px solid #edf1f4;font-size:12.5px;color:#9aa7b2;line-height:1.6;">${stopka}</div>` : ""}
       </td></tr>
-      <tr><td style="background:#f6f8fa;padding:20px 32px;border-top:1px solid #e6ebef;">
-        <p style="margin:0;font-size:12px;color:#6b7c8c;line-height:1.6;">
-          <strong style="color:${C.dark};">Geodezyjna Izba Gospodarcza</strong><br>
+      <tr><td style="background:#f5f8fa;padding:20px 34px;border-top:1px solid #e6ebef;">
+        <p style="margin:0;font-size:12px;color:#7a8b97;line-height:1.7;">
+          <strong style="color:#16202a;">Geodezyjna Izba Gospodarcza</strong><br>
           ul. Czackiego 3/5, 00-043 Warszawa &middot; tel. 22 827 38 43<br>
-          <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};text-decoration:none;">biuro@gig.org.pl</a> &middot;
-          <a href="https://gig.org.pl" style="color:${C.mid};text-decoration:none;">gig.org.pl</a>
+          <a href="mailto:biuro@gig.org.pl" style="color:${RED};text-decoration:none;">biuro@gig.org.pl</a> &middot;
+          <a href="https://gig.org.pl" style="color:${RED};text-decoration:none;">gig.org.pl</a>
         </p>
+        ${wypis}
       </td></tr>
     </table>
   </td></tr></table>
@@ -117,16 +120,23 @@ Deno.serve(async (req) => {
   const html = oczyscHtml(String(body.html ?? "")).trim();
   const rodzaj = String(body.rodzaj ?? "").trim();
   const szkolenie = String(body.szkolenie ?? "").trim();
-  const odbiorcy = Array.isArray(body.recipients) ? body.recipients as Array<Record<string, unknown>> : [];
+  const wejscie = Array.isArray(body.recipients) ? body.recipients as Array<Record<string, unknown>> : [];
 
   if (!subject) return json({ error: "brak tematu" }, 400);
   if (!html || html.replace(/<[^>]+>/g, "").trim().length < 2) return json({ error: "brak tresci" }, 400);
-  const adresy = [...new Set(odbiorcy.map((r) => String(r.email ?? "").trim().toLowerCase())
-    .filter((e) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)))];
-  if (!adresy.length) return json({ error: "brak poprawnych odbiorcow" }, 400);
-  if (adresy.length > MAX_ODBIORCOW) return json({ error: `za duzo odbiorcow (max ${MAX_ODBIORCOW})` }, 400);
 
-  /* Stopka mówi odbiorcy, skąd ma tę wiadomość. */
+  // dedup po e-mailu, zachowujemy id (do linku wypisu)
+  const widziane = new Set<string>();
+  const odb: Array<{ email: string; id: string | null }> = [];
+  for (const r of wejscie) {
+    const e = String(r.email ?? "").trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e) || widziane.has(e)) continue;
+    widziane.add(e);
+    odb.push({ email: e, id: r.id ? String(r.id) : null });
+  }
+  if (!odb.length) return json({ error: "brak poprawnych odbiorcow" }, 400);
+  if (odb.length > MAX_ODBIORCOW) return json({ error: `za duzo odbiorcow (max ${MAX_ODBIORCOW})` }, 400);
+
   let stopka: string;
   if (rodzaj === "kontakt") {
     stopka = "To odpowiedź na Twoją wiadomość wysłaną przez formularz na gig.org.pl. Odpisując na ten mail, piszesz do biura Izby.";
@@ -137,14 +147,16 @@ Deno.serve(async (req) => {
   } else {
     stopka = "Otrzymujesz tę wiadomość jako uczestnik szkoleń Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.";
   }
-  const tresc = layout(subject, html, stopka);
 
   const wyniki: Array<{ email: string; ok: boolean; blad?: unknown }> = [];
-  for (const email of adresy) {
-    const r = await wyslijJeden(email, subject, tresc);
-    wyniki.push({ email, ok: r.ok, ...(r.ok ? {} : { blad: r.info }) });
+  for (const r of odb) {
+    // link wypisu tylko dla wysyłek do bazy i gdy znamy wiersz (id)
+    const unsubUrl = (rodzaj === "baza" && r.id) ? `${FUNCTIONS_BASE}/baza-wypis?id=${encodeURIComponent(r.id)}` : "";
+    const tresc = layout(subject, html, stopka, unsubUrl);
+    const w = await wyslijJeden(r.email, subject, tresc);
+    wyniki.push({ email: r.email, ok: w.ok, ...(w.ok ? {} : { blad: w.info }) });
   }
   const wyslane = wyniki.filter((w) => w.ok).length;
-  console.log(`wyslij-mail: ${u.user.email} -> ${wyslane}/${adresy.length} [${rodzaj || "-"}] (${subject})`);
-  return json({ ok: true, wyslane, razem: adresy.length, wyniki });
+  console.log(`wyslij-mail: ${u.user.email} -> ${wyslane}/${odb.length} [${rodzaj || "-"}] (${subject})`);
+  return json({ ok: true, wyslane, razem: odb.length, wyniki });
 });
