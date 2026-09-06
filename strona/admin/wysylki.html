@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Wysyłki — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .wy-post{min-width:190px;}
+    .wy-bar{height:8px;border-radius:6px;background:#eef2f5;overflow:hidden;margin-bottom:5px;}
+    .wy-bar i{display:block;height:100%;background:var(--brand-mid);transition:width .3s;}
+    .wy-sub{font-size:12px;color:var(--text-muted);}
+    .wy-temat{font-weight:700;color:var(--brand-dark);}
+    .badge-robocza{background:#eef2f5;color:#6b7f84;}
+    .badge-w_toku{background:#e3f2fd;color:#1565c0;}
+    .badge-wstrzymana{background:#fff3e0;color:#e65100;}
+    .badge-zakonczona{background:#e6f5ec;color:#1d7a45;}
+    .wy-info{background:#fff8e6;border:1px solid #f3e0b5;color:#7a5b12;border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.6;margin-bottom:18px;}
+    .wy-log{font-size:12px;color:var(--text-muted);margin-top:6px;white-space:pre-wrap;}
+    #podglad{font-size:15px;line-height:1.65;}
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Zarządzanie</div>
+        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <a href="czlonkowie.html"><span class="nav-icon">⚇</span> Członkowie</a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Wysyłki</div>
+        <div class="topbar-actions">
+          <a href="baza-email.html" class="btn btn-primary btn-sm">+ Nowa kampania (z Bazy e-mail)</a>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="wy-info">
+          <strong>Rozgrzewka domeny.</strong> Kampania wysyła się porcjami i nigdy nie przekroczy
+          <strong>limitu dziennego</strong>. Przy nowej domenie zacznij od ~200/dobę i zwiększaj co kilka dni
+          (200 → 500 → 1000 → 2000). Nagły strzał kilku tysięcy maili z „zimnej” domeny kończy się filtrem
+          spamu — i psuje też maile transakcyjne (potwierdzenia zapisów), bo idą z tej samej domeny.
+        </div>
+
+        <div class="card"><div class="card-body">
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Kampania</th><th>Postęp</th><th>Dziś</th><th>Status</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="5" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table>
+          </div>
+        </div></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: podgląd treści -->
+  <div class="modal-overlay" id="podgladModal">
+    <div class="modal-box" style="max-width:720px;">
+      <div class="modal-header">
+        <div class="modal-title" id="podgladTytul">Podgląd</div>
+        <button class="modal-close" data-modal-close="podgladModal">×</button>
+      </div>
+      <div class="modal-body"><div id="podglad"></div></div>
+      <div class="modal-footer"><button class="btn btn-ghost" data-modal-close="podgladModal">Zamknij</button></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    const ETYK = { robocza:'robocza', w_toku:'w toku', wstrzymana:'wstrzymana', zakonczona:'zakończona' };
+    let dane = [], stop = false;
+
+    async function load() {
+      const { data, error } = await db.from('wysylki_postep').select('*').order('created_at', { ascending:false });
+      if (error) { console.error(error); toast('Błąd ładowania kampanii', 'error'); return; }
+      dane = data || [];
+      render();
+    }
+
+    function render() {
+      const tb = document.getElementById('rows');
+      if (!dane.length) {
+        tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#6b7f84;">Brak kampanii. Utwórz ją w <a href="baza-email.html">Bazie e-mail</a> — ustaw filtr i kliknij „Kampania z filtra”.</td></tr>';
+        return;
+      }
+      tb.innerHTML = dane.map(k => {
+        const proc = k.razem ? Math.round((k.wyslane / k.razem) * 100) : 0;
+        const trwa = k.status === 'w_toku' || k.status === 'robocza';
+        return `
+        <tr data-id="${k.id}">
+          <td style="max-width:280px;">
+            <div class="wy-temat">${esc(k.temat)}</div>
+            <div class="wy-sub">${esc(k.opis_filtra || '—')}</div>
+            <div class="wy-sub">${fmtDate(k.created_at)}${k.utworzyl ? ' · ' + esc(k.utworzyl) : ''}</div>
+          </td>
+          <td class="wy-post">
+            <div class="wy-bar"><i style="width:${proc}%"></i></div>
+            <div class="wy-sub"><strong>${k.wyslane}</strong> / ${k.razem} wysłanych${k.bledy ? ` · <span style="color:#cc0a2b;">${k.bledy} błędów</span>` : ''}${k.czeka ? ` · czeka ${k.czeka}` : ''}</div>
+            <div class="wy-log" id="log-${k.id}"></div>
+          </td>
+          <td style="white-space:nowrap;">
+            <strong>${k.wyslane_dzis}</strong> / ${k.limit_dzienny}
+            <div class="wy-sub"><a href="#" data-limit="${k.id}">zmień limit</a></div>
+          </td>
+          <td><span class="badge badge-${esc(k.status)}">${ETYK[k.status] || k.status}</span></td>
+          <td class="actions" style="white-space:nowrap;">
+            ${k.czeka > 0 && k.status !== 'wstrzymana' ? `<button class="btn btn-primary btn-xs" data-start="${k.id}">▶ Wyślij</button>` : ''}
+            ${k.status === 'w_toku' || k.status === 'robocza' ? `<button class="btn btn-outline btn-xs" data-pauza="${k.id}">⏸ Wstrzymaj</button>` : ''}
+            ${k.status === 'wstrzymana' ? `<button class="btn btn-outline btn-xs" data-wznow="${k.id}">▶ Wznów</button>` : ''}
+            <button class="btn btn-ghost btn-xs" data-podglad="${k.id}">👁</button>
+            <button class="btn btn-danger btn-xs" data-usun="${k.id}">🗑</button>
+          </td>
+        </tr>`;
+      }).join('');
+
+      tb.querySelectorAll('[data-start]').forEach(b => b.addEventListener('click', () => wyslij(b.dataset.start, b)));
+      tb.querySelectorAll('[data-pauza]').forEach(b => b.addEventListener('click', () => zmienStatus(b.dataset.pauza, 'wstrzymana')));
+      tb.querySelectorAll('[data-wznow]').forEach(b => b.addEventListener('click', () => zmienStatus(b.dataset.wznow, 'w_toku')));
+      tb.querySelectorAll('[data-podglad]').forEach(b => b.addEventListener('click', () => podglad(b.dataset.podglad)));
+      tb.querySelectorAll('[data-usun]').forEach(b => b.addEventListener('click', () => usun(b.dataset.usun)));
+      tb.querySelectorAll('[data-limit]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); zmienLimit(a.dataset.limit); }));
+    }
+
+    async function zmienStatus(id, status) {
+      if (status === 'wstrzymana') stop = true;
+      const { error } = await db.from('wysylki').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+      if (error) { toast('Błąd zmiany statusu', 'error'); return; }
+      toast(status === 'wstrzymana' ? 'Wstrzymano' : 'Wznowiono', 'success');
+      load();
+    }
+
+    async function zmienLimit(id) {
+      const k = dane.find(x => x.id === id); if (!k) return;
+      const v = prompt('Ile maksymalnie maili na dobę dla tej kampanii?\n\nRozgrzewka nowej domeny: 200 → 500 → 1000 → 2000 co kilka dni.', k.limit_dzienny);
+      if (v === null) return;
+      const n = parseInt(v, 10);
+      if (!n || n < 1 || n > 20000) { toast('Podaj liczbę 1–20000', 'error'); return; }
+      const { error } = await db.from('wysylki').update({ limit_dzienny: n }).eq('id', id);
+      if (error) { toast('Błąd zapisu limitu', 'error'); return; }
+      toast('Limit dzienny: ' + n, 'success'); load();
+    }
+
+    async function podglad(id) {
+      const { data, error } = await db.from('wysylki').select('temat,html').eq('id', id).maybeSingle();
+      if (error || !data) { toast('Błąd podglądu', 'error'); return; }
+      document.getElementById('podgladTytul').textContent = data.temat;
+      document.getElementById('podglad').innerHTML = data.html || '<em>pusta treść</em>';
+      openModal('podgladModal');
+    }
+
+    async function usun(id) {
+      const k = dane.find(x => x.id === id); if (!k) return;
+      if (!confirm(`Usunąć kampanię „${k.temat}”?\n\nWysłanych maili to nie cofnie — znika tylko historia i kolejka.`)) return;
+      const { error } = await db.from('wysylki').delete().eq('id', id);
+      if (error) { toast('Błąd usuwania', 'error'); return; }
+      toast('Usunięto', 'success'); load();
+    }
+
+    /* Wysyłka: wołamy funkcję w pętli, aż skończy się kolejka albo limit dzienny.
+       Każde wywołanie wysyła porcję i zapisuje statusy — przerwanie nic nie psuje. */
+    async function wyslij(id, btn) {
+      const k = dane.find(x => x.id === id); if (!k) return;
+      if (!confirm(`Wysłać kampanię „${k.temat}”?\n\nDo wysłania: ${k.czeka} adresów.\nDziś maksymalnie: ${Math.max(0, k.limit_dzienny - k.wyslane_dzis)}.`)) return;
+
+      stop = false;
+      const log = document.getElementById('log-' + id);
+      btn.disabled = true; btn.textContent = 'Wysyłanie…';
+      let razemWyslane = 0;
+      try {
+        const sesja = await getSession();
+        if (!sesja) throw new Error('sesja wygasła — zaloguj się ponownie');
+        while (!stop) {
+          const res = await fetch(SUPABASE_URL + '/functions/v1/wyslij-kampanie', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
+            body: JSON.stringify({ wysylka_id: id, porcja: 300 })
+          });
+          const w = await res.json().catch(() => ({}));
+          if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
+          razemWyslane += w.wyslane;
+          if (log) log.textContent = `wysłano ${razemWyslane}, zostało ${w.zostalo}, dziś jeszcze ${w.dzisiaj_zostalo}`;
+          if (w.zostalo === 0) { toast('Kampania zakończona', 'success'); break; }
+          if (w.dzisiaj_zostalo === 0) { toast('Limit dzienny wyczerpany — dokończ jutro', 'success', 6000); break; }
+          if (w.wyslane === 0 && w.bledy === 0) break;   // nic się nie ruszyło — nie kręć w kółko
+        }
+      } catch (e) {
+        console.error(e);
+        toast('Wysyłka przerwana: ' + e.message, 'error', 7000);
+      } finally {
+        btn.disabled = false; btn.textContent = '▶ Wyślij';
+        load();
+      }
+    }
+
+    (async () => {
+      if (!await requireAuth()) return;
+      load();
+    })();
+  </script>
+</body>
+</html>

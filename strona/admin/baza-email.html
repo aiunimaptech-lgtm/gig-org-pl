@@ -95,7 +95,8 @@
         <div class="topbar-actions">
           <button class="btn btn-ghost btn-sm" id="btnNowy">+ Dodaj adres</button>
           <button class="btn btn-outline btn-sm" id="btnCsv">↓ Eksport CSV</button>
-          <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do adresów z bieżącego filtra">✉ Wyślij e-mail</button>
+          <button class="btn btn-outline btn-sm" id="btnMail" title="Natychmiastowa wysyłka do maks. 200 adresów z bieżącego filtra">✉ Wyślij e-mail</button>
+          <button class="btn btn-primary btn-sm" id="btnKampania" title="Kampania z kolejką — bez limitu 200, wysyłka porcjami z limitem dziennym">📣 Kampania z filtra</button>
         </div>
       </header>
 
@@ -485,6 +486,43 @@
         if (msGrupa.size()) opisy.push('grupa: <strong>' + esc(msGrupa.values().join(', ')) + '</strong>');
         if (msRodzaj.size()) opisy.push('branża: <strong>' + esc(msRodzaj.values().join(', ')) + '</strong>');
         gigKreatorMaila({ odbiorcy: odb, rodzaj: 'baza', opis: opisy.join(' · ') || '<strong>bieżący filtr</strong>' });
+      });
+
+      /* Kampania: zapisuje treść i kolejkę odbiorców; wysyłka rusza w zakładce „Wysyłki”
+         — porcjami, z limitem dziennym, bez limitu 200 i bez ryzyka dubli. */
+      document.getElementById('btnKampania').addEventListener('click', () => {
+        const odb = filtruj().filter(r => !r.status || r.status === 'active').flatMap(r =>
+          [r.email, r.email2, r.email3].filter(Boolean).map(e => ({ email: e, name: r.osoba || r.firma || '', id: r.id })));
+        if (!odb.length) { toast('Brak aktywnych odbiorców w bieżącym filtrze'); return; }
+
+        const czesci = [];
+        if (msPochodzenie.size()) czesci.push('źródło: ' + msPochodzenie.values().join(', '));
+        if (msGrupa.size())       czesci.push('grupa: ' + msGrupa.values().join(', '));
+        if (msRodzaj.size())      czesci.push('branża: ' + msRodzaj.values().join(', '));
+        const szukaj = document.getElementById('szukaj').value.trim();
+        if (szukaj) czesci.push('szukaj: ' + szukaj);
+        const opisFiltra = czesci.join(' · ') || 'cała baza';
+
+        gigKreatorMaila({
+          odbiorcy: odb, rodzaj: 'baza',
+          etykietaWyslij: '📣 Utwórz kampanię',
+          opis: `<strong>${esc(opisFiltra)}</strong> — wysyłka porcjami, z limitem dziennym`,
+          zamiastWysylki: async ({ temat, html, odbiorcy }) => {
+            const sesja = await getSession();
+            const { data: kamp, error: e1 } = await db.from('wysylki').insert({
+              temat, html, opis_filtra: opisFiltra, status: 'robocza', limit_dzienny: 200,
+              utworzyl: sesja && sesja.user ? sesja.user.email : null
+            }).select('id').single();
+            if (e1) throw e1;
+            const wiersze = odbiorcy.map(o => ({ wysylka_id: kamp.id, email: o.email, baza_email_id: o.id || null }));
+            for (let i = 0; i < wiersze.length; i += 500) {
+              const { error: e2 } = await db.from('wysylki_odbiorcy').insert(wiersze.slice(i, i + 500));
+              if (e2) throw e2;
+            }
+            toast('Kampania utworzona: ' + wiersze.length + ' adresów', 'success');
+            window.location.href = 'wysylki.html';
+          }
+        });
       });
 
       load();

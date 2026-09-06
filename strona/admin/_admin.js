@@ -250,7 +250,7 @@ function gigKreatorMaila(o) {
     gigMailQuill.setSelection(0, 0);
   }
   const w = document.getElementById('gigMailWynik'); w.className = 'mail-wynik'; w.innerHTML = '';
-  const btn = document.getElementById('gigMailWyslij'); btn.disabled = false; btn.textContent = '✉ Wyślij';
+  const btn = document.getElementById('gigMailWyslij'); btn.disabled = false; btn.textContent = o.etykietaWyslij || '✉ Wyślij';
   openModal('gigMailModal');
   setTimeout(() => document.getElementById('gigMailTemat').focus(), 60);
 }
@@ -265,6 +265,23 @@ async function gigMailWyslij() {
   if (!temat) return pokaz('err', 'Podaj temat wiadomości.');
   if (!tekst) return pokaz('err', 'Wpisz treść wiadomości.');
   const n = o.odbiorcy.length;
+
+  /* Tryb kampanii: zamiast wysyłać od razu, oddajemy treść wywołującemu
+     (Baza e-mail zakłada kampanię i kolejkę — wysyłka idzie porcjami). */
+  if (typeof o.zamiastWysylki === 'function') {
+    if (!confirm(`Utworzyć kampanię „${temat}” dla ${n} adresów?\n\nWysyłka ruszy dopiero w zakładce „Wysyłki”, porcjami, z limitem dziennym.`)) return;
+    const btnK = document.getElementById('gigMailWyslij');
+    btnK.disabled = true; btnK.textContent = 'Tworzenie…';
+    try {
+      await o.zamiastWysylki({ temat, html, odbiorcy: o.odbiorcy });
+    } catch (e) {
+      console.error(e);
+      pokaz('err', 'Nie udało się utworzyć kampanii: ' + esc(e.message));
+      btnK.disabled = false; btnK.textContent = o.etykietaWyslij || '✉ Wyślij';
+    }
+    return;
+  }
+
   if (!confirm(`Wysłać wiadomość „${temat}” do ${n} ${n === 1 ? 'osoby' : 'osób'}?`)) return;
 
   const btn = document.getElementById('gigMailWyslij');

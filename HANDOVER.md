@@ -260,6 +260,20 @@ do każdego adresu, stopka wg `rodzaj` (`szkolenie` / `kontakt` / `baza`). Limit
 w mailach — wyrenderowane sharpem z `gig-logo-new-poziom-dark.svg`) i czerwoną kreską zamiast ciemnego pasa.
 `send-confirmation` ma jeszcze starszą (ciemną) szatę — do ujednolicenia kiedyś.
 
+### Kampanie mailowe (`admin/wysylki.html`, tabele `wysylki` + `wysylki_odbiorcy`)
+Do wysyłek masowych (tysiące adresów), bo `wyslij-mail` ma limit 200 i wysyła po jednym.
+Kampanię tworzy się w **Bazie e-mail** → ustaw filtr → **„📣 Kampania z filtra"** → temat + treść.
+Powstaje kampania i **kolejka** (jeden wiersz na adres, `UNIQUE(wysylka_id,email)`).
+Wysyłka: zakładka **Wysyłki** → „▶ Wyślij" — panel woła Edge Function `wyslij-kampanie`
+w pętli; każde wywołanie bierze porcję (300), wysyła **batchem Resend po 100** i zapisuje status.
+Przerwanie niczego nie psuje — wznawia od miejsca przerwania, bez dubletów.
+**`limit_dzienny` (domyślnie 200) = rozgrzewka domeny** — funkcja nigdy nie wyśle dziś więcej.
+Nowa domena: 200 → 500 → 1000 → 2000 co kilka dni; nagły strzał tysięcy maili z „zimnej" domeny
+to spam-filtr **i popsute maile transakcyjne** (idą z tej samej domeny). Schemat i przydatne
+zapytania (np. ponowna próba dla błędów): `backend/supabase_wysylki.sql`.
+**Wymaga Resend Pro** ($20/mies., 50 tys./mies., bez dziennego limitu) — na Free (100/dobę)
+kampania do 3,8 tys. adresów szłaby ponad miesiąc.
+
 **Rezygnacja z maili (unsubscribe):** wysyłki `rodzaj:'baza'` dostają w stopce link „Wypisz się" →
 Edge Function `baza-wypis?id=<uuid wiersza>` (verify_jwt=false), która ustawia `status='unsubscribed'`
 i pokazuje stronę potwierdzenia. `id` bierze się z `baza_email` (panel przekazuje je w `recipients`).
