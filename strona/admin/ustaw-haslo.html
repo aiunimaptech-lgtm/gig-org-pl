@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Ustaw hasło — panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .login-wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+      background:linear-gradient(135deg,#16202a,#cc0a2b); }
+    .login-card { background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+      width:100%; max-width:420px; padding:36px 34px; }
+    .login-logo { display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+    .login-logo .ic { width:44px; height:44px; border-radius:10px; background:#cc0a2b; color:#fff;
+      display:flex; align-items:center; justify-content:center; font-weight:800; font-size:18px; }
+    .login-card h1 { font-size:20px; color:#16202a; margin:14px 0 4px; }
+    .login-card p.sub { color:#6b7f84; font-size:13px; margin-bottom:24px; }
+    .login-card .btn-primary { width:100%; justify-content:center; padding:11px; font-size:14px; margin-top:6px; }
+    .login-err { background:#fbeaea; color:#9b2222; border:1px solid #e6b8b8; border-radius:6px;
+      padding:9px 12px; font-size:13px; margin-top:14px; display:none; }
+    .login-ok { background:#eaf6ee; color:#1c6b39; border:1px solid #bfe3cb; border-radius:6px;
+      padding:11px 13px; font-size:13px; margin-top:14px; display:none; line-height:1.6; }
+    .login-alt { text-align:center; margin:16px 0 0; font-size:13px; }
+    .login-alt a { color:#cc0a2b; text-decoration:none; font-weight:600; }
+    .wsk { font-size:12px; color:#7a8794; margin-top:6px; line-height:1.5; }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-logo">
+        <span class="ic">GIG</span>
+        <div class="logo-text" style="color:#16202a;font-weight:800;font-size:14px;">Panel zarządzania<br>
+          <span style="font-weight:400;font-size:11px;color:#6b7f84;">Geodezyjna Izba Gospodarcza</span></div>
+      </div>
+      <h1>Ustaw hasło</h1>
+      <p class="sub" id="podtytul">Sprawdzanie linku…</p>
+
+      <form id="hasloForm" hidden>
+        <div class="form-group">
+          <label for="haslo">Nowe hasło</label>
+          <input type="password" id="haslo" class="form-control" autocomplete="new-password" required>
+          <p class="wsk">Co najmniej 10 znaków. Nie używaj hasła, którego używasz gdzie indziej —
+            w panelu są dane osobowe.</p>
+        </div>
+        <div class="form-group">
+          <label for="haslo2">Powtórz hasło</label>
+          <input type="password" id="haslo2" class="form-control" autocomplete="new-password" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="btn">Zapisz hasło</button>
+      </form>
+
+      <div class="login-err" id="err"></div>
+      <div class="login-ok" id="ok"></div>
+      <p class="login-alt"><a href="/admin/">← Strona logowania</a></p>
+    </div>
+  </div>
+
+  <script src="/_assets/js/gig-config.js"></script>
+  <script>
+    const FUN = GIG_CFG.SUPABASE_URL + '/functions/v1/panel-haslo';
+    const token = new URLSearchParams(location.search).get('token') || '';
+    const form = document.getElementById('hasloForm');
+    const err = document.getElementById('err');
+    const ok = document.getElementById('ok');
+    const btn = document.getElementById('btn');
+    const podtytul = document.getElementById('podtytul');
+
+    async function wolaj(dane) {
+      const r = await fetch(FUN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': GIG_CFG.SUPABASE_ANON },
+        body: JSON.stringify(Object.assign({ token }, dane))
+      });
+      let tresc = {};
+      try { tresc = await r.json(); } catch (_) {}
+      return { ok: r.ok, tresc };
+    }
+
+    function blad(tekst) {
+      err.textContent = tekst; err.style.display = 'block';
+    }
+
+    /* Link sprawdzamy od razu — lepiej powiedzieć „wygasł" teraz niż po wpisaniu hasła. */
+    (async () => {
+      if (!/^[0-9a-f]{64}$/.test(token)) {
+        podtytul.textContent = 'Ten link jest niepełny.';
+        blad('Otwórz link dokładnie tak, jak przyszedł w mailu — bez ucinania końcówki.');
+        return;
+      }
+      const { ok: dobry, tresc } = await wolaj({ akcja: 'sprawdz' });
+      if (!dobry || !tresc.email) {
+        podtytul.textContent = 'Link nieaktywny.';
+        blad(tresc.error || 'Link jest nieprawidłowy albo został już użyty.');
+        return;
+      }
+      podtytul.innerHTML = 'Ustawiasz hasło do konta <strong>' + tresc.email + '</strong>.';
+      form.hidden = false;
+      document.getElementById('haslo').focus();
+    })();
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.style.display = 'none';
+      const haslo = document.getElementById('haslo').value;
+      const haslo2 = document.getElementById('haslo2').value;
+      if (haslo.length < 10) { blad('Hasło musi mieć co najmniej 10 znaków.'); return; }
+      if (haslo !== haslo2) { blad('Hasła nie są takie same.'); return; }
+
+      btn.disabled = true; btn.textContent = 'Zapisywanie…';
+      const { ok: dobry, tresc } = await wolaj({ akcja: 'ustaw', haslo });
+      btn.disabled = false; btn.textContent = 'Zapisz hasło';
+      if (!dobry) { blad(tresc.error || 'Nie udało się ustawić hasła.'); return; }
+
+      form.hidden = true;
+      podtytul.textContent = '';
+      ok.innerHTML = 'Hasło ustawione. Przy logowaniu podasz e-mail i hasło, a potem 6-cyfrowy kod, '
+        + 'który wyślemy na Twoją skrzynkę. Za chwilę przeniesiemy Cię na stronę logowania…';
+      ok.style.display = 'block';
+      setTimeout(() => { window.location.href = '/admin/'; }, 5000);
+    });
+  </script>
+</body>
+</html>

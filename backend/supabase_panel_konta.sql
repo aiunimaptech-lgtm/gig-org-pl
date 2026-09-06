@@ -59,3 +59,22 @@ revoke all on function public.gig_2fa_sprzataj() from public, anon, authenticate
 -- ── PRZYDATNE ─────────────────────────────────────────────────────────────
 --   select email, imie, status, created_at from panel_wnioski order by created_at desc;
 --   Reczne zalozenie konta: Supabase → Authentication → Users → Add user.
+
+-- ── Zaproszenia / reset hasla (wlasne linki, nie Supabase Auth) ───────────
+-- Linki Supabase Auth wracaja na adres z "Site URL" w dashboardzie
+-- (domyslnie localhost:3000) — dlatego panel wystawia wlasne, jednorazowe.
+create table if not exists public.panel_zaproszenia (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null,
+  token      text not null unique,
+  wygasa     timestamptz not null,
+  uzyty_at   timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists idx_panel_zapr_token on public.panel_zaproszenia (token);
+alter table public.panel_zaproszenia enable row level security;
+
+-- Reczne wystawienie linku (np. gdy komus nie dotarl mail):
+--   insert into panel_zaproszenia (email, token, wygasa)
+--   values ('ktos@gig.org.pl', encode(extensions.gen_random_bytes(32),'hex'), now() + interval '7 days')
+--   returning 'https://gig.org.pl/admin/ustaw-haslo.html?token=' || token;

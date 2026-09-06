@@ -191,12 +191,23 @@
         resetErr.textContent = 'Podaj poprawny adres e-mail.'; resetErr.style.display = 'block'; return;
       }
       resetBtn.disabled = true; resetBtn.textContent = 'Wysyłanie…';
-      const { error } = await db.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/admin/nowe-haslo.html'
-      });
+      /* Własny link zamiast resetPasswordForEmail: tamten wraca na adres z „Site URL"
+         w dashboardzie Supabase (domyślnie localhost:3000), więc przy złej konfiguracji
+         prowadzi donikąd. Nasz idzie prosto na /admin/ustaw-haslo.html. */
+      let bladResetu = null;
+      try {
+        const r = await fetch(GIG_CFG.SUPABASE_URL + '/functions/v1/panel-haslo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': GIG_CFG.SUPABASE_ANON },
+          body: JSON.stringify({ akcja: 'reset', email })
+        });
+        if (!r.ok) bladResetu = ((await r.json().catch(() => ({}))).error) || 'Nie udało się wysłać linku.';
+      } catch (_) {
+        bladResetu = 'Brak połączenia z serwerem.';
+      }
       resetBtn.disabled = false; resetBtn.textContent = 'Wyślij link';
-      if (error) {
-        resetErr.textContent = 'Nie udało się wysłać linku: ' + error.message;
+      if (bladResetu) {
+        resetErr.textContent = bladResetu;
         resetErr.style.display = 'block';
       } else {
         /* Neutralny komunikat — nie zdradzamy, czy konto istnieje. */

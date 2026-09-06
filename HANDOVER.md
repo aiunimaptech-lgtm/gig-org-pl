@@ -93,6 +93,26 @@ Domena `gig.org.pl` zweryfikowana w Resend przez **subdomenę** `send.gig.org.pl
 oraz DKIM `resend._domainkey`. Poczta firmowa (MX `poczta.gig.org.pl`) i SPF domeny głównej
 (zawiera MailerLite `_spf.mlsend.com`) **nietknięte** — i tak ma zostać.
 
+**Trzy kanały wysyłki, każdy z własnym DKIM** — tak ma zostać: `litesrv._domainkey` (MailerLite,
+CNAME), `resend._domainkey` (Resend) i `tlddkim._domainkey` (poczta tld.pl). Skan typowych
+selektorów tego ostatniego nie znajdzie — nazywa się nietypowo.
+
+**DMARC** (`_dmarc`, sesja 4): `v=DMARC1; p=none; sp=none; rua=mailto:biuro@gig.org.pl; fo=1`.
+Wcześniej były **dwa identyczne rekordy** — nieszkodliwe tylko dlatego, że co do bitu takie same;
+przy edycji jednego z nich zaczęłyby się różnić, a wtedy odbiorca **ignoruje politykę całkowicie**
+(RFC 7489). Duplikat usunięty, ma zostać **jeden**. Podniesienie do `p=quarantine` dopiero po
+3–4 tygodniach czystych raportów — patrz zakładka DMARC w panelu.
+
+**Limit SPF: 10 odwołań DNS.** Rekord ma już `_spf.mlsend.com` + `a` + `mx` + `spf.tld.pl`.
+Dokładanie kolejnych `include:` bez usunięcia MailerLite może przekroczyć limit — wtedy SPF
+przestaje działać **całkowicie i po cichu**. Resend tego nie dotyczy (własny Return-Path
+na `send.gig.org.pl`).
+
+**Wildcard `*.gig.org.pl` A → 94.152.54.167** (stary hosting) wciąż istnieje. Nic w repo od niego
+nie zależy — `www`, `poczta`, `send`, `rsend`, `archiwum` mają własne rekordy. Zanim go skasujesz:
+sprawdź w biurze, czy ktoś nie loguje się do poczty przez `webmail.gig.org.pl` — ten adres działa
+**wyłącznie** dzięki wildcardowi. Wtedy najpierw dodaj mu jawny rekord A.
+
 ---
 
 ## 2. Pułapki — przeczytaj, zanim stracisz na nie godzinę
@@ -310,6 +330,26 @@ Edge Functions w projekcie: `send-confirmation` (v3, bez bramy), `newsletter-uns
 
 Poza kodem: audyt stanu (produkcja = repo, formularz `/zapisy/` i panel działają, tabela pusta),
 odkrycie otwartej rejestracji kont (punkt F), porównanie wdrożonej funkcji z repo (punkt C).
+
+### Sesja 4 (6 września 2026)
+
+**Decyzja: zostajemy przy Resend.** Rozważane było przejście na Amazon SES (10 tys. maili ≈ 1 USD,
+czyli ~4 USD/rok przy 4 szkoleniach) zamiast MailerLite (model „płacisz za kontakty co miesiąc,
+nawet gdy nic nie wysyłasz" — przy 10 tys. adresów to 500–1500 USD/rok). Wybrano Resend, bo
+kolejka kampanii już działa, domena jest zweryfikowana, a różnica wobec SES to ~50 USD/rok —
+za mało, żeby budować drugą integrację. Gdyby baza urosła powyżej 50 tys. adresów, podmiana
+warstwy wysyłkowej na SES to jedna Edge Function.
+
+**Porządki w DNS:** naprawiony duplikat DMARC, dodane `rua=` (raporty), usunięty martwy token
+`_webflow` (jednorazowa weryfikacja Webflow, nieużywana — strona stoi na Vercelu).
+
+**Nowa zakładka `admin/dmarc.html` + `backend/supabase_dmarc.sql`** (tabele `dmarc_raporty`,
+`dmarc_wiersze`, widok `dmarc_zrodla` — migracja już zastosowana w projekcie).
+Wgrywanie załączników z maili DMARC (`.xml`, `.xml.gz`, `.zip`), agregacja po IP, ocena zgodności.
+Rozpakowywanie idzie natywnym `DecompressionStream` — **żadnej biblioteki z CDN**; ZIP czytany
+przez centralny katalog z końca pliku, bo w nagłówku lokalnym rozmiar bywa zerowy.
+Duplikat raportu (`UNIQUE(org_name, report_id)`) jest pomijany cicho, więc można bezpiecznie
+przeciągnąć cały folder z załącznikami. Parser przetestowany na próbkach gzip/ZIP (16 asercji).
 
 ### Sesja 1
 

@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>DMARC — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    /* Ocena zgodności — zielony/pomarańczowy/czerwony bez przekreślenia,
+       którego używa .badge-cancelled. */
+    .dm-ok   { background:#e6f5ec; color:#1d7a45; }
+    .dm-warn { background:#fff3e0; color:#b26a00; }
+    .dm-bad  { background:#fdecef; color:#cc0a2b; }
+    .dm-ip   { font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size:12.5px; }
+    .dm-src  { font-size:12px; color:#6b7f84; display:block; margin-top:2px; }
+    .dm-help { font-size:13px; line-height:1.65; color:#42525c; }
+    .dm-help h4 { font-size:13.5px; color:#16202a; margin:14px 0 4px; }
+    .dm-help h4:first-child { margin-top:0; }
+    .dm-help code { background:#f3f5f7; padding:1px 5px; border-radius:4px; font-size:12.5px; }
+    .dm-log { margin-top:12px; font-size:13px; line-height:1.7; }
+    .dm-log ul { margin:4px 0 0 18px; }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Zarządzanie</div>
+        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
+        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <a href="czlonkowie.html"><span class="nav-icon">⚇</span> Członkowie</a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Raporty DMARC</div>
+        <div class="topbar-actions">
+          <select class="form-control" id="okres" style="width:auto;">
+            <option value="30">Ostatnie 30 dni</option>
+            <option value="90">Ostatnie 90 dni</option>
+            <option value="365">Ostatni rok</option>
+            <option value="0">Wszystko</option>
+          </select>
+        </div>
+      </header>
+
+      <main class="admin-content">
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue">✉</div>
+            <div class="stat-body"><div class="stat-value" id="stWiad">—</div><div class="stat-label">Wiadomości w raportach</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green">✓</div>
+            <div class="stat-body"><div class="stat-value" id="stZgod">—</div><div class="stat-label">Zgodność DMARC</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon rose">⚠</div>
+            <div class="stat-body"><div class="stat-value" id="stZle">—</div><div class="stat-label">Źródła bez zgodności</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon teal">▤</div>
+            <div class="stat-body"><div class="stat-value" id="stRap">—</div><div class="stat-label">Wgrane raporty</div></div>
+          </div>
+        </div>
+
+        <!-- WGRYWANIE -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Wgraj raporty</div></div>
+          <div class="card-body">
+            <div class="gig-up" id="drop" tabindex="0" role="button" aria-label="Wgraj raporty DMARC">
+              <div class="gig-up-pusty">
+                <strong>Przeciągnij tutaj załączniki z maili DMARC</strong>
+                <span>Pliki <code>.xml</code>, <code>.xml.gz</code> i <code>.zip</code> — można kilka naraz.
+                      Albo kliknij, żeby wybrać z dysku. Powtórnie wgrany raport zostanie pominięty.</span>
+              </div>
+              <div class="gig-up-praca" hidden>Przetwarzam…</div>
+              <input type="file" accept=".xml,.gz,.zip,application/gzip,application/zip,text/xml" multiple hidden>
+            </div>
+            <div class="dm-log" id="log"></div>
+          </div>
+        </div>
+
+        <!-- ŹRÓDŁA -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">Źródła wysyłki</div>
+            <button class="btn btn-outline btn-sm" id="expZrodla">⬇ Eksport CSV</button>
+          </div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead><tr>
+                  <th>Adres IP</th><th>Wiadomości</th><th>DKIM</th><th>SPF</th>
+                  <th>Zgodność DMARC</th><th>Domeny podpisu</th>
+                </tr></thead>
+                <tbody id="zrodlaRows"><tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- RAPORTY -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Wgrane raporty</div></div>
+          <div class="card-body">
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead><tr>
+                  <th>Dostawca</th><th>Okres</th><th>Polityka</th><th>Wiadomości</th><th>Zgodne</th><th></th>
+                </tr></thead>
+                <tbody id="rapRows"><tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- POMOC -->
+        <div class="card">
+          <div class="card-header"><div class="card-title">Jak to czytać</div></div>
+          <div class="card-body dm-help">
+            <h4>Skąd brać pliki</h4>
+            Na <code>biuro@gig.org.pl</code> przychodzą codziennie maile od Google, Microsoftu i innych
+            dostawców poczty — w załączniku XML spakowany do <code>.gz</code> albo <code>.zip</code>.
+            Zapisz załącznik na dysk i przeciągnij tutaj. Raport dotyczy zwykle poprzedniej doby.
+
+            <h4>Czego szukać</h4>
+            Interesuje nas jedna liczba: <strong>zgodność DMARC</strong>. Wiadomość przechodzi, gdy
+            zaliczy DKIM <em>albo</em> SPF — i to na domenie zgodnej z adresem nadawcy. W tabeli źródeł
+            każdy wiersz to jeden serwer wysyłający w imieniu gig.org.pl.
+
+            <h4>Trzy IP, które powinny tam być</h4>
+            Serwery MailerLite (kampanie), Resend (maile z panelu i potwierdzenia) oraz poczty tld.pl
+            (maile pisane ręcznie z biura). Wszystkie trzy powinny mieć zgodność 100%.
+
+            <h4>Obce IP na liście — co to znaczy</h4>
+            Zwykle jedno z dwóch. Albo ktoś podszywa się pod domenę (wtedy zgodność będzie zerowa i
+            liczby małe — to normalne tło internetu, nie powód do paniki), albo zapomniano o jakimś
+            własnym kanale wysyłki: systemie księgowym, formularzu u wykonawcy, starym serwerze.
+            Drugi przypadek trzeba naprawić <strong>przed</strong> zaostrzeniem polityki.
+
+            <h4>Kiedy podnieść politykę do <code>p=quarantine</code></h4>
+            Gdy przez 3–4 tygodnie zgodność utrzyma się na 100% dla wszystkich Waszych źródeł.
+            Wtedy w DNS zmieniasz <code>p=none</code> na <code>p=quarantine</code> — poczta udająca
+            gig.org.pl zacznie trafiać do spamu zamiast do skrzynek odbiorców.
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+  (async () => {
+    if (!await requireAuth()) return;
+
+    let raporty = [], zrodla = [];
+
+    /* ── ROZPAKOWANIE ────────────────────────────────────────────────────
+       Dostawcy pakują XML na trzy sposoby. Gzip i deflate rozpakowuje sama
+       przeglądarka (DecompressionStream) — żadnej biblioteki z CDN. */
+    async function rozpakuj(buf, format) {
+      const s = new Blob([buf]).stream().pipeThrough(new DecompressionStream(format));
+      return await new Response(s).text();
+    }
+
+    /* ZIP: czytamy centralny katalog z końca pliku, bo w nagłówku lokalnym
+       rozmiar bywa zerowy (deskryptor danych). Bierzemy pierwszy wpis .xml. */
+    async function zZipa(buf) {
+      const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+      let eocd = -1;
+      for (let i = buf.length - 22; i >= 0 && i > buf.length - 65558; i--) {
+        if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+      }
+      if (eocd < 0) throw new Error('to nie jest poprawny plik ZIP');
+      const ile = dv.getUint16(eocd + 10, true);
+      let p = dv.getUint32(eocd + 16, true);
+      for (let n = 0; n < ile; n++) {
+        if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('uszkodzony katalog ZIP');
+        const metoda  = dv.getUint16(p + 10, true);
+        const rozmiar = dv.getUint32(p + 20, true);
+        const dlNazwy = dv.getUint16(p + 28, true);
+        const dlExtra = dv.getUint16(p + 30, true);
+        const dlKom   = dv.getUint16(p + 32, true);
+        const lokalny = dv.getUint32(p + 42, true);
+        const nazwa = new TextDecoder().decode(buf.subarray(p + 46, p + 46 + dlNazwy));
+        if (/\.xml$/i.test(nazwa)) {
+          const lfn = dv.getUint16(lokalny + 26, true);
+          const lex = dv.getUint16(lokalny + 28, true);
+          const od  = lokalny + 30 + lfn + lex;
+          const dane = buf.subarray(od, od + rozmiar);
+          if (metoda === 0) return new TextDecoder().decode(dane);
+          if (metoda === 8) return await rozpakuj(dane, 'deflate-raw');
+          throw new Error('nieobsługiwana kompresja w archiwum ZIP');
+        }
+        p += 46 + dlNazwy + dlExtra + dlKom;
+      }
+      throw new Error('w archiwum nie ma pliku XML');
+    }
+
+    async function doXml(file) {
+      const buf = new Uint8Array(await file.arrayBuffer());
+      if (buf[0] === 0x1f && buf[1] === 0x8b) return await rozpakuj(buf, 'gzip');
+      if (buf[0] === 0x50 && buf[1] === 0x4b) return await zZipa(buf);
+      return new TextDecoder().decode(buf);
+    }
+
+    /* ── PARSOWANIE XML ──────────────────────────────────────────────── */
+    const tekst = (el, sel) => { const n = el && el.querySelector(sel); return n ? n.textContent.trim() : ''; };
+    const naDate = s => { const n = parseInt(s, 10); return n ? new Date(n * 1000).toISOString() : null; };
+
+    function parsuj(xml, nazwaPliku) {
+      const doc = new DOMParser().parseFromString(xml, 'application/xml');
+      if (doc.querySelector('parsererror')) throw new Error('plik nie jest poprawnym XML-em');
+      const meta = doc.querySelector('report_metadata');
+      const pol  = doc.querySelector('policy_published');
+      if (!meta || !doc.querySelector('feedback')) throw new Error('to nie wygląda na raport DMARC');
+
+      const raport = {
+        org_name:   tekst(meta, 'org_name') || 'nieznany',
+        org_email:  tekst(meta, 'email') || null,
+        report_id:  tekst(meta, 'report_id') || nazwaPliku,
+        domena:     tekst(pol, 'domain') || null,
+        date_begin: naDate(tekst(meta, 'date_range > begin')),
+        date_end:   naDate(tekst(meta, 'date_range > end')),
+        polityka_p:   tekst(pol, 'p')  || null,
+        polityka_sp:  tekst(pol, 'sp') || null,
+        polityka_pct: parseInt(tekst(pol, 'pct'), 10) || null,
+        adkim: tekst(pol, 'adkim') || null,
+        aspf:  tekst(pol, 'aspf')  || null,
+        plik: nazwaPliku,
+        razem: 0, zgodne: 0,
+      };
+
+      const wiersze = [...doc.querySelectorAll('feedback > record')].map(rec => {
+        const row = rec.querySelector('row');
+        const oc  = rec.querySelector('policy_evaluated');
+        const au  = rec.querySelector('auth_results');
+        const dkimy = au ? [...au.querySelectorAll('dkim')] : [];
+        const spfy  = au ? [...au.querySelectorAll('spf')]  : [];
+        const liczba  = parseInt(tekst(row, 'count'), 10) || 0;
+        const dkimPol = (tekst(oc, 'dkim') || '').toLowerCase();
+        const spfPol  = (tekst(oc, 'spf')  || '').toLowerCase();
+        raport.razem += liczba;
+        if (dkimPol === 'pass' || spfPol === 'pass') raport.zgodne += liczba;
+        const zbierz = (lista, sel) => [...new Set(lista.map(n => tekst(n, sel)).filter(Boolean))].join(', ');
+        return {
+          source_ip: tekst(row, 'source_ip') || '?',
+          liczba,
+          dyspozycja:    tekst(oc, 'disposition') || null,
+          dkim_polityka: dkimPol || null,
+          spf_polityka:  spfPol  || null,
+          header_from:   tekst(rec, 'identifiers > header_from') || null,
+          dkim_domena:   zbierz(dkimy, 'domain')   || null,
+          dkim_selektor: zbierz(dkimy, 'selector') || null,
+          dkim_wynik:    zbierz(dkimy, 'result')   || null,
+          spf_domena:    zbierz(spfy, 'domain')    || null,
+          spf_wynik:     zbierz(spfy, 'result')    || null,
+        };
+      });
+      if (!wiersze.length) throw new Error('raport nie zawiera żadnych rekordów');
+      return { raport, wiersze };
+    }
+
+    /* ── ZAPIS ───────────────────────────────────────────────────────────
+       Raport najpierw, potem jego wiersze. Duplikat (ten sam org_name +
+       report_id) daje 23505 — pomijamy go cicho, żeby dało się bezpiecznie
+       przeciągnąć cały folder z załącznikami. */
+    async function zapisz(paczka) {
+      const { data, error } = await db.from('dmarc_raporty').insert(paczka.raport).select('id').single();
+      if (error) {
+        if (error.code === '23505') return 'duplikat';
+        throw error;
+      }
+      const wiersze = paczka.wiersze.map(w => ({ ...w, raport_id: data.id }));
+      const { error: e2 } = await db.from('dmarc_wiersze').insert(wiersze);
+      if (e2) { await db.from('dmarc_raporty').delete().eq('id', data.id); throw e2; }
+      return 'ok';
+    }
+
+    async function wgraj(pliki) {
+      if (!pliki || !pliki.length) return;
+      const box = document.getElementById('drop');
+      const praca = box.querySelector('.gig-up-praca');
+      praca.hidden = false; box.classList.add('is-busy');
+      let ok = 0, dup = 0; const bledy = [];
+      for (const f of pliki) {
+        try {
+          const wynik = await zapisz(parsuj(await doXml(f), f.name));
+          if (wynik === 'duplikat') dup++; else ok++;
+        } catch (e) {
+          console.error(f.name, e);
+          bledy.push(f.name + ' — ' + (e.message || 'nie udało się przetworzyć'));
+        }
+      }
+      praca.hidden = true; box.classList.remove('is-busy');
+
+      const czesci = [];
+      if (ok)  czesci.push('<strong>Wgrano ' + ok + ' ' + (ok === 1 ? 'raport' : 'raportów') + '.</strong>');
+      if (dup) czesci.push('Pominięto ' + dup + ' — ' + (dup === 1 ? 'był już wgrany' : 'były już wgrane') + '.');
+      if (bledy.length) czesci.push('Nie udało się przetworzyć ' + bledy.length + ':<ul>' +
+        bledy.map(b => '<li>' + esc(b) + '</li>').join('') + '</ul>');
+      document.getElementById('log').innerHTML = czesci.join(' ');
+
+      if (ok) toast('Wgrano ' + ok + ' ' + (ok === 1 ? 'raport' : 'raportów'), 'success');
+      else if (dup && !bledy.length) toast('Te raporty już są w bazie');
+      else if (bledy.length) toast('Nie udało się przetworzyć plików', 'error');
+      if (ok) await load();
+    }
+
+    /* ── ODCZYT I WIDOK ──────────────────────────────────────────────── */
+    function odKiedy() {
+      const d = parseInt(document.getElementById('okres').value, 10);
+      if (!d) return null;
+      return new Date(Date.now() - d * 86400000).toISOString();
+    }
+
+    /* Po domenie z podpisu poznajemy, który to nasz kanał wysyłki. */
+    function rozpoznaj(z) {
+      const s = ((z.dkim_domeny || '') + ' ' + (z.spf_domeny || '')).toLowerCase();
+      if (/mlsend|mailerlite/.test(s)) return 'MailerLite';
+      if (/resend|rmta|amazonses/.test(s)) return 'Resend';
+      if (/tld\.pl/.test(s)) return 'poczta tld.pl';
+      return '';
+    }
+
+    async function load() {
+      const od = odKiedy();
+      let qr = db.from('dmarc_raporty').select('*').order('date_begin', { ascending: false });
+      if (od) qr = qr.gte('date_begin', od);
+      const { data: rap, error } = await qr;
+      if (error) { toast('Nie udało się pobrać raportów', 'error'); console.error(error); return; }
+      raporty = rap || [];
+
+      let qw = db.from('dmarc_wiersze')
+        .select('source_ip,liczba,dkim_polityka,spf_polityka,dkim_domena,spf_domena,dmarc_raporty!inner(date_begin)')
+        .limit(20000);
+      if (od) qw = qw.gte('dmarc_raporty.date_begin', od);
+      const { data: wier, error: e2 } = await qw;
+      if (e2) { toast('Nie udało się pobrać danych źródeł', 'error'); console.error(e2); return; }
+
+      /* Agregacja po IP — różni dostawcy opisują te same serwery, więc
+         sumujemy ich raporty, zamiast pokazywać ten sam serwer kilka razy. */
+      const mapa = new Map();
+      (wier || []).forEach(w => {
+        const k = w.source_ip;
+        if (!mapa.has(k)) mapa.set(k, { source_ip: k, wiadomosci: 0, zgodne: 0, dkim_ok: 0, spf_ok: 0, dkimD: new Set(), spfD: new Set() });
+        const z = mapa.get(k), n = w.liczba || 0;
+        z.wiadomosci += n;
+        if (w.dkim_polityka === 'pass') z.dkim_ok += n;
+        if (w.spf_polityka  === 'pass') z.spf_ok  += n;
+        if (w.dkim_polityka === 'pass' || w.spf_polityka === 'pass') z.zgodne += n;
+        if (w.dkim_domena) w.dkim_domena.split(',').forEach(d => z.dkimD.add(d.trim()));
+        if (w.spf_domena)  w.spf_domena.split(',').forEach(d => z.spfD.add(d.trim()));
+      });
+      zrodla = [...mapa.values()].map(z => ({
+        ...z,
+        dkim_domeny: [...z.dkimD].join(', '),
+        spf_domeny:  [...z.spfD].join(', '),
+      })).sort((a, b) => b.wiadomosci - a.wiadomosci);
+
+      renderStaty(); renderZrodla(); renderRaporty();
+    }
+
+    function renderStaty() {
+      const razem  = raporty.reduce((s, r) => s + (r.razem  || 0), 0);
+      const zgodne = raporty.reduce((s, r) => s + (r.zgodne || 0), 0);
+      document.getElementById('stWiad').textContent = razem.toLocaleString('pl-PL');
+      document.getElementById('stZgod').textContent = razem ? (100 * zgodne / razem).toFixed(1).replace('.', ',') + '%' : '—';
+      document.getElementById('stZle').textContent  = zrodla.filter(z => z.zgodne < z.wiadomosci).length;
+      document.getElementById('stRap').textContent  = raporty.length;
+    }
+
+    function klasa(procent) { return procent >= 99.5 ? 'dm-ok' : (procent > 0 ? 'dm-warn' : 'dm-bad'); }
+
+    function renderZrodla() {
+      const tb = document.getElementById('zrodlaRows');
+      if (!zrodla.length) {
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak danych — wgraj pierwszy raport.</td></tr>';
+        return;
+      }
+      tb.innerHTML = zrodla.map(z => {
+        const p = z.wiadomosci ? 100 * z.zgodne / z.wiadomosci : 0;
+        const kto = rozpoznaj(z);
+        const domeny = [z.dkim_domeny, z.spf_domeny].filter(Boolean).join(' · ') || '—';
+        return '<tr>' +
+          '<td><span class="dm-ip">' + esc(z.source_ip) + '</span>' +
+            (kto ? '<span class="dm-src">' + esc(kto) + '</span>' : '') + '</td>' +
+          '<td>' + z.wiadomosci.toLocaleString('pl-PL') + '</td>' +
+          '<td>' + (z.wiadomosci ? Math.round(100 * z.dkim_ok / z.wiadomosci) : 0) + '%</td>' +
+          '<td>' + (z.wiadomosci ? Math.round(100 * z.spf_ok  / z.wiadomosci) : 0) + '%</td>' +
+          '<td><span class="badge ' + klasa(p) + '">' + p.toFixed(0) + '%</span></td>' +
+          '<td style="font-size:12.5px;color:#6b7f84;">' + esc(domeny) + '</td>' +
+        '</tr>';
+      }).join('');
+    }
+
+    function renderRaporty() {
+      const tb = document.getElementById('rapRows');
+      if (!raporty.length) {
+        tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak raportów w tym okresie.</td></tr>';
+        return;
+      }
+      const dzien = iso => iso ? new Date(iso).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
+      tb.innerHTML = raporty.map(r => {
+        const p = r.razem ? 100 * r.zgodne / r.razem : 0;
+        const koniec = dzien(r.date_end) !== dzien(r.date_begin) ? ' – ' + dzien(r.date_end) : '';
+        return '<tr>' +
+          '<td><strong>' + esc(r.org_name) + '</strong></td>' +
+          '<td style="white-space:nowrap;">' + dzien(r.date_begin) + koniec + '</td>' +
+          '<td><code style="font-size:12px;">p=' + esc(r.polityka_p || '?') + '</code></td>' +
+          '<td>' + (r.razem || 0).toLocaleString('pl-PL') + '</td>' +
+          '<td><span class="badge ' + klasa(p) + '">' + (r.zgodne || 0).toLocaleString('pl-PL') + '</span></td>' +
+          '<td class="actions"><button class="btn btn-danger btn-xs" data-usun="' + r.id + '" title="Usuń raport">🗑</button></td>' +
+        '</tr>';
+      }).join('');
+      tb.querySelectorAll('[data-usun]').forEach(b => b.addEventListener('click', async () => {
+        const r = raporty.find(x => x.id === b.dataset.usun); if (!r) return;
+        if (!confirm('Usunąć raport od „' + r.org_name + '”?\n\nMożna go wgrać ponownie z tego samego pliku.')) return;
+        const { error } = await db.from('dmarc_raporty').delete().eq('id', r.id);
+        if (error) { toast('Nie udało się usunąć', 'error'); return; }
+        toast('Raport usunięty', 'success'); await load();
+      }));
+    }
+
+    /* ── Zdarzenia ── */
+    const box = document.getElementById('drop');
+    const input = box.querySelector('input[type=file]');
+    box.addEventListener('click', () => input.click());
+    box.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); input.click(); } });
+    input.addEventListener('change', async () => { await wgraj([...input.files]); input.value = ''; });
+    ['dragenter', 'dragover'].forEach(t => box.addEventListener(t, e => { e.preventDefault(); box.classList.add('is-over'); }));
+    ['dragleave', 'drop'].forEach(t => box.addEventListener(t, e => { e.preventDefault(); box.classList.remove('is-over'); }));
+    box.addEventListener('drop', e => wgraj([...((e.dataTransfer && e.dataTransfer.files) || [])]));
+
+    document.getElementById('okres').addEventListener('change', load);
+    document.getElementById('expZrodla').addEventListener('click', () => exportCSV(
+      zrodla.map(z => ({ ...z, procent: z.wiadomosci ? Math.round(100 * z.zgodne / z.wiadomosci) : 0, kanal: rozpoznaj(z) })),
+      [{ key: 'source_ip', label: 'IP' }, { key: 'kanal', label: 'Kanał' }, { key: 'wiadomosci', label: 'Wiadomości' },
+       { key: 'zgodne', label: 'Zgodne' }, { key: 'procent', label: '% zgodności' },
+       { key: 'dkim_domeny', label: 'Domeny DKIM' }, { key: 'spf_domeny', label: 'Domeny SPF' }],
+      'dmarc-zrodla-gig.csv'));
+
+    if (typeof DecompressionStream === 'undefined') {
+      document.getElementById('log').innerHTML =
+        '<strong>Uwaga:</strong> ta przeglądarka nie rozpakuje plików .gz i .zip. Rozpakuj załącznik ręcznie i wgraj sam plik .xml.';
+    }
+
+    await load();
+  })();
+  </script>
+</body>
+</html>

@@ -7,12 +7,12 @@
 // dopiero po kliknieciu „Zatwierdz" w mailu.
 //
 // POST {akcja:"zloz", email, imie, uzasadnienie}  -> wniosek + mail do biura
-// GET  ?token=<64hex>&akcja=akceptuj|odrzuc       -> strona HTML z wynikiem
+// GET  ?token=<64hex>&akcja=akceptuj|odrzuc       -> 302 na /admin/wniosek.html
 //
 // Token akcji zna tylko odbiorca maila (biuro@gig.org.pl) — jest jednorazowy
 // (po rozpatrzeniu wniosek zmienia status i token przestaje dzialac).
-// Po akceptacji zakladamy konto BEZ HASLA i wysylamy wnioskodawcy link
-// „ustaw haslo" (generateLink typu recovery) — hasla nie ustala nikt inny.
+// Po akceptacji zakladamy konto BEZ HASLA i wysylamy wnioskodawcy wlasny
+// jednorazowy link „ustaw haslo" (tabela panel_zaproszenia + funkcja panel-haslo).
 //
 // Wdrozenie z verify_jwt = false: wniosek sklada osoba niezalogowana,
 // a link akceptacyjny klika sie z klienta poczty.
@@ -94,19 +94,15 @@ async function wyslij(to: string[], subject: string, html: string, replyTo?: str
   }
 }
 
-function strona(tytul: string, tresc: string, kolor = C.mid): Response {
-  return new Response(
-    `<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1"><title>${tytul} — panel GIG</title></head>
-<body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#eef1f4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#2b3a45;">
-  <div style="max-width:520px;background:#fff;border:1px solid #e6ebef;border-radius:14px;padding:34px;text-align:center;">
-    <img src="${LOGO}" width="180" alt="GIG" style="display:block;margin:0 auto 20px;height:auto;">
-    <h1 style="margin:0 0 12px;font-size:21px;color:${kolor};">${tytul}</h1>
-    <div style="font-size:15px;line-height:1.65;">${tresc}</div>
-  </div>
-</body></html>`,
-    { status: 200, headers: { "Content-Type": "text/html; charset=utf-8" } },
-  );
+/* Brama Supabase wymusza na odpowiedziach funkcji `Content-Type: text/plain`
+   i CSP `sandbox`, wiec HTML z funkcji wyswietla sie jako goly tekst.
+   Dlatego wynik pokazuje statyczna strona w serwisie, a funkcja tylko tam kieruje.
+   W adresie NIE ma e-maila wnioskodawcy — dane osobowe nie naleza do URL-a. */
+function wynik(kod: string): Response {
+  return new Response(null, {
+    status: 302,
+    headers: { ...CORS, "Location": `${STRONA}/admin/wniosek.html?wynik=${kod}` },
+  });
 }
 
 Deno.serve(async (req) => {
@@ -119,54 +115,52 @@ Deno.serve(async (req) => {
     const token = (u.searchParams.get("token") ?? "").trim();
     const akcja = (u.searchParams.get("akcja") ?? "").trim();
     if (!/^[0-9a-f]{64}$/.test(token) || !["akceptuj", "odrzuc"].includes(akcja)) {
-      return strona("Nieprawidłowy link", "<p>Ten link jest niepełny albo został już wykorzystany.</p>", "#8a99a3");
+      return wynik("brak");
     }
 
     const w = await db.from("panel_wnioski").select("*").eq("token_akcji", token).maybeSingle();
     if (w.error || !w.data) {
-      return strona("Nie znaleziono wniosku", "<p>Wniosek nie istnieje albo został usunięty.</p>", "#8a99a3");
+      return wynik("brak");
     }
-    if (w.data.status !== "oczekuje") {
-      const co = w.data.status === "zaakceptowany" ? "zatwierdzony" : "odrzucony";
-      return strona("Wniosek już rozpatrzony",
-        `<p>Wniosek dla <strong>${esc(w.data.email)}</strong> został wcześniej <strong>${co}</strong>.</p>`, "#8a99a3");
-    }
+    if (w.data.status !== "oczekuje") return wynik("juz");
 
     if (akcja === "odrzuc") {
       await db.from("panel_wnioski").update({
         status: "odrzucony", rozpatrzono: new Date().toISOString(), rozpatrzyl: BIURO,
       }).eq("id", w.data.id);
-      return strona("Wniosek odrzucony",
-        `<p>Konto dla <strong>${esc(w.data.email)}</strong> <strong>nie</strong> zostało założone.
-         Wnioskodawca nie dostaje powiadomienia.</p>`, "#8a99a3");
+      return wynik("odrzucony");
     }
 
-    // Konto zakladamy BEZ hasla — ustawi je sam wnioskodawca z linku ponizej.
+    // Konto zakladamy BEZ hasla — ustawi je sam wnioskodawca linkiem ponizej.
     const nowy = await db.auth.admin.createUser({ email: w.data.email, email_confirm: true });
     if (nowy.error && !/already/i.test(nowy.error.message)) {
       console.error("createUser:", nowy.error.message);
-      return strona("Nie udało się założyć konta", `<p>${esc(nowy.error.message)}</p>`, C.mid);
+      return wynik("blad");
     }
 
-    const link = await db.auth.admin.generateLink({
-      type: "recovery",
+    /* Wlasny link zamiast generateLink z Supabase Auth: tamten wraca na adres
+       z „Site URL" w dashboardzie (domyslnie localhost:3000), wiec przy zlej
+       konfiguracji zaproszenie prowadzi donikad. Ten dziala niezaleznie. */
+    const tokenHasla = [...crypto.getRandomValues(new Uint8Array(32))]
+      .map((b) => b.toString(16).padStart(2, "0")).join("");
+    const zapr = await db.from("panel_zaproszenia").insert({
       email: w.data.email,
-      options: { redirectTo: STRONA + "/admin/nowe-haslo.html" },
+      token: tokenHasla,
+      wygasa: new Date(Date.now() + 7 * 24 * 3600_000).toISOString(),
     });
-    if (link.error) {
-      console.error("generateLink:", link.error.message);
-      return strona("Konto założone, ale bez linku",
-        `<p>Konto <strong>${esc(w.data.email)}</strong> istnieje, ale nie udało się wysłać linku do ustawienia hasła.
-         Poproś tę osobę o użycie „Nie pamiętasz hasła?" na stronie logowania.</p>`, C.mid);
+    if (zapr.error) {
+      console.error("zaproszenie:", zapr.error.message);
+      return wynik("bez-linku");
     }
+    const linkHaslo = `${STRONA}/admin/ustaw-haslo.html?token=${tokenHasla}`;
 
     await wyslij([w.data.email], "Twoje konto w panelu GIG jest gotowe", ramka("Konto zatwierdzone ✓", `
       <p style="margin:0 0 14px;">Dzień dobry,</p>
       <p style="margin:0 0 14px;">Twój wniosek o dostęp do panelu Geodezyjnej Izby Gospodarczej został zatwierdzony.
         Ostatni krok to ustawienie własnego hasła:</p>
-      <p style="margin:0 0 18px;"><a href="${link.data.properties?.action_link}"
+      <p style="margin:0 0 18px;"><a href="${linkHaslo}"
         style="display:inline-block;background:${C.mid};color:#fff;text-decoration:none;padding:12px 22px;border-radius:8px;font-weight:700;">Ustaw hasło</a></p>
-      <p style="margin:0 0 14px;font-size:14px;">Link jest ważny 24 godziny i działa raz. Jeśli wygaśnie, użyj
+      <p style="margin:0 0 14px;font-size:14px;">Link jest ważny 7 dni i działa tylko raz. Jeśli wygaśnie, użyj
         „Nie pamiętasz hasła?" na stronie <a href="${STRONA}/admin/" style="color:${C.mid};">${STRONA}/admin/</a>.</p>
       <p style="margin:0;font-size:13px;color:#6b7c8c;">Przy każdym logowaniu wyślemy dodatkowo kod na ten adres —
         to drugi składnik logowania, chroniący dane osobowe w panelu.</p>`));
@@ -175,8 +169,7 @@ Deno.serve(async (req) => {
       status: "zaakceptowany", rozpatrzono: new Date().toISOString(), rozpatrzyl: BIURO,
     }).eq("id", w.data.id);
 
-    return strona("Konto zatwierdzone ✓",
-      `<p>Założyliśmy konto <strong>${esc(w.data.email)}</strong> i wysłaliśmy link do ustawienia hasła.</p>`);
+    return wynik("zatwierdzony");
   }
 
   if (req.method !== "POST") return json({ error: "tylko POST" }, 405);

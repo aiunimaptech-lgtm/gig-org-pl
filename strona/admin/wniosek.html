@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Wniosek o dostęp — panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+      background:linear-gradient(135deg,#16202a,#cc0a2b); }
+    .card { background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25);
+      width:100%; max-width:460px; padding:36px 34px; text-align:center; }
+    .card .ic { width:56px; height:56px; border-radius:14px; margin:0 auto 18px; display:flex;
+      align-items:center; justify-content:center; font-size:26px; color:#fff; background:#cc0a2b; }
+    .card h1 { font-size:21px; color:#16202a; margin:0 0 10px; }
+    .card p { color:#4b5b66; font-size:14px; line-height:1.7; margin:0 0 12px; }
+    .card .btn { margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="ic" id="ikona">✓</div>
+      <h1 id="tytul">Wniosek rozpatrzony</h1>
+      <div id="tresc"></div>
+      <a class="btn btn-outline btn-sm" href="/admin/">Przejdź do panelu</a>
+    </div>
+  </div>
+  <script>
+    /* Wynik przekazuje Edge Function `panel-rejestracja` w parametrze `wynik`.
+       Świadomie NIE przekazujemy tu adresu e-mail wnioskodawcy — dane osobowe
+       nie powinny lądować w adresie URL (trafiają do historii i logów). */
+    const WARIANTY = {
+      zatwierdzony: { ic:'✓', kolor:'#cc0a2b', tytul:'Konto zatwierdzone',
+        tresc:'Konto zostało założone, a wnioskodawca dostał e-mail z linkiem do ustawienia własnego hasła. '
+            + 'Przy każdym logowaniu wyślemy mu dodatkowo kod potwierdzający.' },
+      odrzucony: { ic:'✕', kolor:'#8a99a3', tytul:'Wniosek odrzucony',
+        tresc:'Konto <strong>nie</strong> zostało założone. Wnioskodawca nie dostaje powiadomienia o odmowie.' },
+      juz: { ic:'!', kolor:'#8a99a3', tytul:'Wniosek już rozpatrzony',
+        tresc:'Ktoś zatwierdził albo odrzucił ten wniosek wcześniej. Link jednorazowy jest już nieaktywny.' },
+      brak: { ic:'?', kolor:'#8a99a3', tytul:'Nie znaleziono wniosku',
+        tresc:'Link jest niepełny, wygasł albo wniosek został usunięty.' },
+      blad: { ic:'!', kolor:'#cc0a2b', tytul:'Coś poszło nie tak',
+        tresc:'Nie udało się dokończyć operacji. Sprawdź listę kont w Supabase albo spróbuj ponownie.' },
+      'bez-linku': { ic:'!', kolor:'#cc0a2b', tytul:'Konto założone, bez linku',
+        tresc:'Konto istnieje, ale nie udało się wysłać linku do ustawienia hasła. Poproś tę osobę, '
+            + 'żeby użyła „Nie pamiętasz hasła?" na stronie logowania.' }
+    };
+    const w = new URLSearchParams(location.search).get('wynik') || 'brak';
+    const v = WARIANTY[w] || WARIANTY.brak;
+    document.getElementById('ikona').textContent = v.ic;
+    document.getElementById('ikona').style.background = v.kolor;
+    document.getElementById('tytul').textContent = v.tytul;
+    document.getElementById('tytul').style.color = v.kolor;
+    document.getElementById('tresc').innerHTML = '<p>' + v.tresc + '</p>';
+  </script>
+</body>
+</html>
