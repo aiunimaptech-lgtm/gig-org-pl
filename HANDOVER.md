@@ -67,6 +67,14 @@ eksport CSV, mail do przefiltrowanych (limit 200 — masówki robić w MailerLit
 puste pola nie nadpisują. Token kasuje się po imporcie (skrypt nie — zrób to zapytaniem z pliku SQL,
 jeśli import przerwano).
 
+**Ochrona ręcznych zmian przy imporcie (kolumny `edytowany_panel`, `usuniety_panel`):** każdy
+zapis w panelu ustawia `edytowany_panel`, a „Usuń" robi **miękkie usunięcie** (`usuniety_panel`,
+wiersz-nagrobek ukryty w panelu). Import (`gig_baza_email_import`) **pomija** wiersze z którymkolwiek
+z tych znaczników — dzięki temu ręczne poprawki nie są nadpisywane, a usunięte adresy nie wracają.
+Rekordy spoza MailerLite dostały `edytowany_panel` przy migracji. W panelu: tag „✎ panel" przy
+chronionych, filtr „Edycja", kolumna w CSV. Zweryfikowane na żywej bazie (edytowany/nagrobek pominięte,
+nowy adres wchodzi).
+
 ### Sekrety w Supabase (Edge Functions → Secrets)
 `RESEND_API_KEY`, `FROM_EMAIL`, `NOTIFY_EMAILS`, `NOTIFY_NEWSLETTER_EMAILS`, `SITE_URL`.
 `SUPABASE_URL` / `ANON_KEY` / `SERVICE_ROLE_KEY` Supabase wstrzykuje **automatycznie** — nie ustawiać.

@@ -39,6 +39,8 @@
     /* komunikat błędu wewnątrz okna dodawania/edycji adresu */
     .ed-err{display:none;margin-top:14px;padding:10px 12px;border-radius:8px;background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;font-size:13px;}
     .ed-err.show{display:block;}
+    /* znacznik: wpis edytowany w panelu — chroniony przed nadpisaniem przy imporcie */
+    .be-tag.panel{background:#eaf3ff;color:#1558b0;}
   </style>
 </head>
 <body>
@@ -96,6 +98,11 @@
               <option value="">Dane firmy: dowolne</option>
               <option value="tak">tylko z danymi firmy</option>
               <option value="nie">tylko bez danych</option>
+            </select>
+            <select id="fEdyt" class="form-control" style="max-width:210px;">
+              <option value="">Edycja: dowolna</option>
+              <option value="tak">edytowane w panelu (chronione)</option>
+              <option value="nie">nietknięte w panelu</option>
             </select>
             <span class="be-licznik" id="licznik"></span>
           </div>
@@ -184,7 +191,9 @@
     async function pobierzWszystko() {
       const out = []; const KROK = 1000;
       for (let od = 0; ; od += KROK) {
-        const { data, error } = await db.from('baza_email').select('*').order('email').range(od, od + KROK - 1);
+        /* usunięte w panelu (nagrobki) są ukryte — zostają w bazie tylko po to,
+           by import ich nie dodał ponownie */
+        const { data, error } = await db.from('baza_email').select('*').is('usuniety_panel', null).order('email').range(od, od + KROK - 1);
         if (error) throw error;
         out.push(...(data || []));
         if (!data || data.length < KROK) break;
@@ -215,9 +224,12 @@
       const fg = document.getElementById('fGrupa').value;
       const fr = document.getElementById('fRodzaj').value;
       const fd = document.getElementById('fDane').value;
+      const fe = document.getElementById('fEdyt').value;
       const pasuje = (v, w) => !w || (w === '(puste)' ? !v : v === w);
       return dane.filter(r => {
         if (fg && GRUPA_OF(r) !== fg) return false;                 // pusta grupa = „Nieustalone”
+        if (fe === 'tak' && !r.edytowany_panel) return false;
+        if (fe === 'nie' && r.edytowany_panel) return false;
         if (!pasuje(r.pochodzenie, fp) || !pasuje(r.rodzaj, fr)) return false;
         if (fd === 'tak' && !maDane(r)) return false;
         if (fd === 'nie' && maDane(r)) return false;
@@ -265,7 +277,7 @@
       if (!wid.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak adresów spełniających kryteria.</td></tr>'; return; }
       tb.innerHTML = wid.map(r => `
         <tr>
-          <td class="be-email"><strong>${esc(r.email)}</strong>${r.status && r.status !== 'active' ? ` <span class="badge badge-${esc(r.status)}">${STATUS[r.status] || r.status}</span>` : ''}</td>
+          <td class="be-email"><strong>${esc(r.email)}</strong>${r.status && r.status !== 'active' ? ` <span class="badge badge-${esc(r.status)}">${STATUS[r.status] || r.status}</span>` : ''}${r.edytowany_panel ? ` <span class="be-tag panel" title="Edytowano w panelu ${esc(fmtDate(r.edytowany_panel))} — import tego wpisu nie nadpisze">✎ panel</span>` : ''}</td>
           <td class="be-firma">${esc(r.firma || '—')}${r.osoba ? `<div class="osoba">${esc(r.osoba)}${r.stanowisko ? ' · ' + esc(r.stanowisko) : ''}</div>` : ''}</td>
           <td>${tag(r.grupa)}</td>
           <td>${esc(r.rodzaj || '—')}</td>
@@ -295,7 +307,9 @@
       edOsoba.value = v('osoba'); edStanowisko.value = v('stanowisko'); edWww.value = v('www'); edUwagi.value = v('uwagi');
       edStatus.value = (r && r.status) || 'active';
       document.getElementById('edMeta').textContent = r
-        ? [r.pewnosc ? 'pewność danych: ' + r.pewnosc : '', r.zrodlo ? 'źródło: ' + r.zrodlo : '', 'dodano ' + fmtDate(r.created_at)].filter(Boolean).join(' · ')
+        ? [r.pewnosc ? 'pewność danych: ' + r.pewnosc : '', r.zrodlo ? 'źródło: ' + r.zrodlo : '',
+           'dodano ' + fmtDate(r.created_at), r.edytowany_panel ? 'edytowano w panelu ' + fmtDate(r.edytowany_panel) + ' — chroniony przed importem' : '']
+          .filter(Boolean).join(' · ')
         : '';
       document.getElementById('edUsun').style.display = r ? '' : 'none';
       document.getElementById('edErr').classList.remove('show');   // czysto przy każdym otwarciu
@@ -307,9 +321,12 @@
       const email = edEmail.value.trim().toLowerCase();
       if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { bladEd('Podaj poprawny adres e-mail.'); edEmail.focus(); return; }
       const p = (el) => (el.value || '').trim() || null;
+      const teraz = new Date().toISOString();
       const rec = { email, pochodzenie: p(edPochodzenie), grupa: p(edGrupa), rodzaj: p(edRodzaj), firma: p(edFirma), adres: p(edAdres),
                     nip: p(edNip), telefon: p(edTelefon), osoba: p(edOsoba), stanowisko: p(edStanowisko), www: p(edWww),
-                    uwagi: p(edUwagi), status: edStatus.value, updated_at: new Date().toISOString() };
+                    uwagi: p(edUwagi), status: edStatus.value, updated_at: teraz,
+                    /* każdy zapis z panelu chroni wpis przed nadpisaniem przy imporcie */
+                    edytowany_panel: teraz };
       const id = document.getElementById('edId').value;
       const btn = document.getElementById('edZapisz'); btn.disabled = true;
       const res = id ? await db.from('baza_email').update(rec).eq('id', id) : await db.from('baza_email').insert(rec);
@@ -322,12 +339,15 @@
       }
       toast('Zapisano', 'success'); closeModal('edModal'); load();
     }
+    /* Miękkie usunięcie: wpis znika z listy, ale zostaje w bazie jako nagrobek,
+       żeby kolejny import nie dodał tego adresu z powrotem. */
     async function usun() {
       const id = document.getElementById('edId').value; if (!id) return;
-      if (!confirm('Usunąć ten adres z bazy?')) return;
-      const { error } = await db.from('baza_email').delete().eq('id', id);
-      if (error) { toast('Błąd usuwania', 'error'); return; }
-      toast('Usunięto', 'success'); closeModal('edModal'); load();
+      if (!confirm('Usunąć ten adres? Zniknie z listy i NIE wróci przy kolejnym imporcie bazy.')) return;
+      const teraz = new Date().toISOString();
+      const { error } = await db.from('baza_email').update({ usuniety_panel: teraz, edytowany_panel: teraz }).eq('id', id);
+      if (error) { toast('Błąd usuwania', 'error'); console.error(error); return; }
+      toast('Usunięto — nie wróci przy imporcie', 'success'); closeModal('edModal'); load();
     }
 
     async function load() {
@@ -343,7 +363,7 @@
     (async () => {
       if (!await requireAuth()) return;
       document.getElementById('szukaj').addEventListener('input', () => { strona = 1; render(); });
-      ['fPochodzenie', 'fGrupa', 'fRodzaj', 'fDane', 'pagRozmiar'].forEach(id => document.getElementById(id).addEventListener('change', () => { strona = 1; render(); }));
+      ['fPochodzenie', 'fGrupa', 'fRodzaj', 'fDane', 'fEdyt', 'pagRozmiar'].forEach(id => document.getElementById(id).addEventListener('change', () => { strona = 1; render(); }));
       document.getElementById('pagPrev').addEventListener('click', () => { strona--; render(); });
       document.getElementById('pagNext').addEventListener('click', () => { strona++; render(); });
       document.getElementById('btnNowy').addEventListener('click', () => otworz(null));
@@ -353,12 +373,13 @@
       document.getElementById('btnCsv').addEventListener('click', () => {
         const rows = filtruj();
         if (!rows.length) { toast('Brak danych do eksportu'); return; }
-        exportCSV(rows.map(r => ({ ...r, status: STATUS[r.status] || r.status })), [
+        exportCSV(rows.map(r => ({ ...r, status: STATUS[r.status] || r.status,
+                                   edytowany_panel: r.edytowany_panel ? fmtDate(r.edytowany_panel) : '' })), [
           { key:'email', label:'E-mail' }, { key:'pochodzenie', label:'Pochodzenie' }, { key:'grupa', label:'Grupa' },
           { key:'rodzaj', label:'Rodzaj/branża' }, { key:'firma', label:'Firma / instytucja' }, { key:'adres', label:'Adres' },
           { key:'nip', label:'NIP' }, { key:'telefon', label:'Telefon' }, { key:'osoba', label:'Osoba kontaktowa' },
           { key:'stanowisko', label:'Stanowisko' }, { key:'www', label:'WWW' }, { key:'pewnosc', label:'Pewność' },
-          { key:'status', label:'Status' }, { key:'uwagi', label:'Uwagi' },
+          { key:'status', label:'Status' }, { key:'edytowany_panel', label:'Edytowano w panelu' }, { key:'uwagi', label:'Uwagi' },
         ], 'baza-email-gig.csv');
       });
 

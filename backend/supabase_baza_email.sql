@@ -28,6 +28,9 @@ create table if not exists public.baza_email (
   zrodlo      text,            -- źródło danych (np. „research online 2026-09-04")
   uwagi       text,
   status      text default 'active' check (status in ('active','unsubscribed','bounced')),
+  -- Znaczniki panelu: chronią wpis przy ponownym imporcie (patrz gig_baza_email_import).
+  edytowany_panel timestamptz,  -- ustawiane przy zapisie/usunięciu w panelu -> import go pomija
+  usuniety_panel  timestamptz,  -- miękkie usunięcie: wiersz-nagrobek, ukryty w panelu, blokuje ponowne dodanie
   created_at  timestamptz default now(),
   updated_at  timestamptz default now()
 );
@@ -45,7 +48,9 @@ values ('import_token', encode(extensions.gen_random_bytes(32), 'hex'),
         'Jednorazowy token importu do baza_email (kasowany po imporcie)')
 on conflict (klucz) do nothing;
 
--- Import/upsert po e-mailu: puste pola w pliku NIE nadpisują istniejących danych.
+-- Import/upsert po e-mailu: puste pola w pliku NIE nadpisują istniejących danych,
+-- a wiersze edytowane LUB usunięte w panelu są pomijane (znaczniki edytowany_panel /
+-- usuniety_panel), żeby ręczne poprawki i usunięcia przetrwały kolejny import.
 create or replace function public.gig_baza_email_import(p_token text, p_rows jsonb)
 returns integer
 language plpgsql
@@ -84,7 +89,9 @@ begin
     www         = coalesce(excluded.www,         baza_email.www),
     pewnosc     = coalesce(excluded.pewnosc,     baza_email.pewnosc),
     zrodlo      = coalesce(excluded.zrodlo,      baza_email.zrodlo),
-    updated_at  = now();
+    updated_at  = now()
+  where baza_email.edytowany_panel is null
+    and baza_email.usuniety_panel  is null;   -- pomiń wpisy edytowane/usunięte w panelu
   get diagnostics n = row_count;
   return n;
 end;
