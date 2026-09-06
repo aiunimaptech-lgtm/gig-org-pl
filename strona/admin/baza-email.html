@@ -156,8 +156,12 @@
       <div class="modal-body">
         <input type="hidden" id="edId">
         <div class="grid-2">
-          <div class="form-group"><label>E-mail *</label><input type="email" id="edEmail" class="form-control"></div>
-          <div class="form-group"><label>Pochodzenie</label><input type="text" id="edPochodzenie" class="form-control" list="dlPochodzenie" placeholder="MailerLite / formularz / ręcznie"><datalist id="dlPochodzenie"></datalist></div>
+          <div class="form-group"><label>E-mail główny *</label><input type="email" id="edEmail" class="form-control"></div>
+          <div class="form-group"><label>Pochodzenie</label><input type="text" id="edPochodzenie" class="form-control" list="dlPochodzenie" placeholder="MailerLite / prospecting / ręcznie"><datalist id="dlPochodzenie"></datalist></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label>E-mail 2 <span style="font-weight:400;color:#7a8794">— opcjonalny</span></label><input type="email" id="edEmail2" class="form-control"></div>
+          <div class="form-group"><label>E-mail 3 <span style="font-weight:400;color:#7a8794">— opcjonalny</span></label><input type="email" id="edEmail3" class="form-control"></div>
         </div>
         <div class="grid-2">
           <div class="form-group"><label>Grupa</label><select id="edGrupa" class="form-control"></select></div>
@@ -296,7 +300,7 @@
         if (fd === 'tak' && !maDane(r)) return false;
         if (fd === 'nie' && maDane(r)) return false;
         if (!f) return true;
-        return [r.email, r.firma, r.osoba, r.adres, r.nip, r.www, r.telefon, r.uwagi]
+        return [r.email, r.email2, r.email3, r.firma, r.osoba, r.adres, r.nip, r.www, r.telefon, r.uwagi]
           .some(v => (v || '').toString().toLowerCase().includes(f));
       });
     }
@@ -347,7 +351,7 @@
       if (!wid.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak adresów spełniających kryteria.</td></tr>'; return; }
       tb.innerHTML = wid.map(r => `
         <tr>
-          <td class="be-email"><strong>${esc(r.email)}</strong>${r.status && r.status !== 'active' ? ` <span class="badge badge-${esc(r.status)}">${STATUS[r.status] || r.status}</span>` : ''}${r.edytowany_panel ? ` <span class="be-tag panel" title="Edytowano w panelu ${esc(fmtDate(r.edytowany_panel))} — import tego wpisu nie nadpisze">✎ panel</span>` : ''}</td>
+          <td class="be-email"><strong>${esc(r.email)}</strong>${r.status && r.status !== 'active' ? ` <span class="badge badge-${esc(r.status)}">${STATUS[r.status] || r.status}</span>` : ''}${r.edytowany_panel ? ` <span class="be-tag panel" title="Edytowano w panelu ${esc(fmtDate(r.edytowany_panel))} — import tego wpisu nie nadpisze">✎ panel</span>` : ''}${(r.email2 || r.email3) ? `<div class="be-sub">+ ${[r.email2, r.email3].filter(Boolean).map(esc).join(', ')}</div>` : ''}</td>
           <td class="be-firma">${esc(r.firma || '—')}${r.osoba ? `<div class="osoba">${esc(r.osoba)}${r.stanowisko ? ' · ' + esc(r.stanowisko) : ''}</div>` : ''}</td>
           <td>${tag(r.grupa)}</td>
           <td>${esc(r.rodzaj || '—')}</td>
@@ -371,7 +375,8 @@
       document.getElementById('edTytul').textContent = r ? r.email : 'Nowy adres';
       document.getElementById('edId').value = r ? r.id : '';
       const v = (k) => (r && r[k]) || '';
-      edEmail.value = v('email'); edPochodzenie.value = r ? v('pochodzenie') : 'ręcznie';
+      edEmail.value = v('email'); edEmail2.value = v('email2'); edEmail3.value = v('email3');
+      edPochodzenie.value = r ? v('pochodzenie') : 'ręcznie';
       wypelnijSelect(edGrupa, GRUPY, v('grupa')); wypelnijSelect(edRodzaj, RODZAJE, v('rodzaj'));
       edFirma.value = v('firma'); edAdres.value = v('adres'); edNip.value = v('nip'); edTelefon.value = v('telefon');
       edOsoba.value = v('osoba'); edStanowisko.value = v('stanowisko'); edWww.value = v('www'); edUwagi.value = v('uwagi');
@@ -388,11 +393,16 @@
     function bladEd(msg){ const e = document.getElementById('edErr'); e.textContent = msg; e.classList.add('show'); }
     async function zapisz() {
       document.getElementById('edErr').classList.remove('show');
+      const mail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
       const email = edEmail.value.trim().toLowerCase();
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { bladEd('Podaj poprawny adres e-mail.'); edEmail.focus(); return; }
+      const email2 = edEmail2.value.trim().toLowerCase();
+      const email3 = edEmail3.value.trim().toLowerCase();
+      if (!mail.test(email)) { bladEd('Podaj poprawny adres e-mail główny.'); edEmail.focus(); return; }
+      if (email2 && !mail.test(email2)) { bladEd('Drugi adres e-mail jest niepoprawny.'); edEmail2.focus(); return; }
+      if (email3 && !mail.test(email3)) { bladEd('Trzeci adres e-mail jest niepoprawny.'); edEmail3.focus(); return; }
       const p = (el) => (el.value || '').trim() || null;
       const teraz = new Date().toISOString();
-      const rec = { email, pochodzenie: p(edPochodzenie), grupa: p(edGrupa), rodzaj: p(edRodzaj), firma: p(edFirma), adres: p(edAdres),
+      const rec = { email, email2: email2 || null, email3: email3 || null, pochodzenie: p(edPochodzenie), grupa: p(edGrupa), rodzaj: p(edRodzaj), firma: p(edFirma), adres: p(edAdres),
                     nip: p(edNip), telefon: p(edTelefon), osoba: p(edOsoba), stanowisko: p(edStanowisko), www: p(edWww),
                     uwagi: p(edUwagi), status: edStatus.value, updated_at: teraz,
                     /* każdy zapis z panelu chroni wpis przed nadpisaniem przy imporcie */
@@ -454,7 +464,7 @@
         if (!rows.length) { toast('Brak danych do eksportu'); return; }
         exportCSV(rows.map(r => ({ ...r, status: STATUS[r.status] || r.status,
                                    edytowany_panel: r.edytowany_panel ? fmtDate(r.edytowany_panel) : '' })), [
-          { key:'email', label:'E-mail' }, { key:'pochodzenie', label:'Pochodzenie' }, { key:'grupa', label:'Grupa' },
+          { key:'email', label:'E-mail' }, { key:'email2', label:'E-mail 2' }, { key:'email3', label:'E-mail 3' }, { key:'pochodzenie', label:'Pochodzenie' }, { key:'grupa', label:'Grupa' },
           { key:'rodzaj', label:'Rodzaj/branża' }, { key:'firma', label:'Firma / instytucja' }, { key:'adres', label:'Adres' },
           { key:'nip', label:'NIP' }, { key:'telefon', label:'Telefon' }, { key:'osoba', label:'Osoba kontaktowa' },
           { key:'stanowisko', label:'Stanowisko' }, { key:'www', label:'WWW' }, { key:'pewnosc', label:'Pewność' },
@@ -465,7 +475,9 @@
       /* Mail do przefiltrowanych (bez wypisanych i odbitych). Funkcja wysyłkowa ma limit 200
          adresów — do masowej wysyłki służy MailerLite, tu wysyłamy do wąskich grup. */
       document.getElementById('btnMail').addEventListener('click', () => {
-        const odb = filtruj().filter(r => !r.status || r.status === 'active').map(r => ({ email: r.email, name: r.osoba || r.firma || '', id: r.id }));
+        // każda firma może mieć do 3 adresów — wysyłamy do wszystkich (dedup po stronie funkcji)
+        const odb = filtruj().filter(r => !r.status || r.status === 'active').flatMap(r =>
+          [r.email, r.email2, r.email3].filter(Boolean).map(e => ({ email: e, name: r.osoba || r.firma || '', id: r.id })));
         if (!odb.length) { toast('Brak aktywnych odbiorców w bieżącym filtrze'); return; }
         if (odb.length > 200) { toast(`Za dużo odbiorców (${odb.length}). Zawęź filtr do maks. 200 adresów — masowe wysyłki rób w MailerLite.`, 'error', 7000); return; }
         const opisy = [];

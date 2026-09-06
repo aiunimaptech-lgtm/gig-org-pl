@@ -13,8 +13,10 @@
 
 create table if not exists public.baza_email (
   id          uuid primary key default gen_random_uuid(),
-  email       text not null unique,
-  pochodzenie text,            -- skąd adres: MailerLite / formularz / ręcznie …
+  email       text not null unique,   -- adres główny (klucz dopasowania przy imporcie)
+  email2      text,            -- dodatkowy adres firmy/instytucji (opcjonalny)
+  email3      text,            -- trzeci adres (opcjonalny)
+  pochodzenie text,            -- skąd adres: MailerLite / prospecting / formularz / ręcznie …
   grupa       text,            -- JST / Firma / Spółki komunalne / Administracja rządowa / Nauka / Nieustalone
   rodzaj      text,            -- rodzaj/branża: geodezja / PODGiK / WINGiK / uczelnia wyższa …
   firma       text,
@@ -66,17 +68,20 @@ begin
     raise exception 'nieprawidlowy token' using errcode = '28000';
   end if;
 
-  insert into public.baza_email (email, pochodzenie, grupa, rodzaj, firma, adres, nip, telefon, osoba, stanowisko, www, pewnosc, zrodlo)
+  insert into public.baza_email (email, email2, email3, pochodzenie, grupa, rodzaj, firma, adres, nip, telefon, osoba, stanowisko, www, pewnosc, zrodlo)
   select lower(trim(r.email)),
+         nullif(lower(trim(r.email2)), ''), nullif(lower(trim(r.email3)), ''),
          nullif(trim(r.pochodzenie), ''), nullif(trim(r.grupa), ''), nullif(trim(r.rodzaj), ''),
          nullif(trim(r.firma), ''), nullif(trim(r.adres), ''), nullif(trim(r.nip), ''),
          nullif(trim(r.telefon), ''), nullif(trim(r.osoba), ''), nullif(trim(r.stanowisko), ''),
          nullif(trim(r.www), ''), nullif(trim(r.pewnosc), ''), nullif(trim(r.zrodlo), '')
   from jsonb_to_recordset(p_rows) as r(
-         email text, pochodzenie text, grupa text, rodzaj text, firma text, adres text, nip text,
+         email text, email2 text, email3 text, pochodzenie text, grupa text, rodzaj text, firma text, adres text, nip text,
          telefon text, osoba text, stanowisko text, www text, pewnosc text, zrodlo text)
   where r.email is not null and trim(r.email) <> ''
   on conflict (email) do update set
+    email2      = coalesce(excluded.email2,      baza_email.email2),
+    email3      = coalesce(excluded.email3,      baza_email.email3),
     pochodzenie = coalesce(excluded.pochodzenie, baza_email.pochodzenie),
     grupa       = coalesce(excluded.grupa,       baza_email.grupa),
     rodzaj      = coalesce(excluded.rodzaj,      baza_email.rodzaj),

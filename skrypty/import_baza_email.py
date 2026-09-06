@@ -21,7 +21,8 @@ ANON = "sb_publishable_1KPF4mdln3C-cZHMIqAOFw_ZM8Go2Ji"   # klucz publiczny (jak
 PACZKA = 400
 
 KOLUMNY = {
-    "E-mail": "email", "Pochodzenie": "pochodzenie", "Grupa": "grupa", "rodzaj/branża": "rodzaj",
+    "E-mail": "email", "E-mail 2": "email2", "E-mail 3": "email3",
+    "Pochodzenie": "pochodzenie", "Grupa": "grupa", "rodzaj/branża": "rodzaj",
     "Firma / instytucja": "firma", "Adres": "adres", "NIP": "nip", "Telefon": "telefon",
     "Osoba kontaktowa": "osoba", "Stanowisko osoby kontaktowej": "stanowisko", "WWW": "www",
     "Pewność": "pewnosc", "Źródło danych": "zrodlo",

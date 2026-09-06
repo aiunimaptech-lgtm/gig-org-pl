@@ -70,6 +70,12 @@ Kafelki nad tabelą ustawiają filtr grupy. Bieżący, złożony filtr jest zara
 puste pola nie nadpisują. Token kasuje się po imporcie (skrypt nie — zrób to zapytaniem z pliku SQL,
 jeśli import przerwano).
 
+**Do 3 adresów na firmę:** `baza_email` ma `email` (główny, unikalny — klucz dopasowania importu)
+plus `email2`, `email3` (opcjonalne). Panel: trzy pola w edycji, dodatkowe adresy widać w tabeli pod
+głównym („+ …"), wyszukiwarka i CSV je obejmują, a **wysyłka rozwija każdą firmę na wszystkie jej
+adresy** (ten sam `id`, więc wypis dotyczy całej firmy). Import (RPC + `skrypty/import_baza_email.py`)
+czyta też kolumny „E-mail 2"/„E-mail 3", jeśli plik je ma.
+
 **Ochrona ręcznych zmian przy imporcie (kolumny `edytowany_panel`, `usuniety_panel`):** każdy
 zapis w panelu ustawia `edytowany_panel`, a „Usuń" robi **miękkie usunięcie** (`usuniety_panel`,
 wiersz-nagrobek ukryty w panelu). Import (`gig_baza_email_import`) **pomija** wiersze z którymkolwiek
