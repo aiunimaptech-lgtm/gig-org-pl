@@ -121,6 +121,14 @@
       '<span class="menu-item-helper mfn-menu-item-helper"></span>' +
       '<span class="label-wrapper mfn-menu-label-wrapper"><span class="menu-label">' + label + '</span></span></a></li>';
   }
+  // wariant dla odnośnika zewnętrznego (otwiera w nowej karcie)
+  function subLiExt(href, label) {
+    return '<li class="menu-item menu-item-type-custom menu-item-object-custom mfn-menu-li">' +
+      '<a class="mfn-menu-link" href="' + href + '" target="_blank" rel="noopener">' +
+      '<span class="menu-item-helper mfn-menu-item-helper"></span>' +
+      '<span class="label-wrapper mfn-menu-label-wrapper"><span class="menu-label">' + label + '</span></span></a></li>';
+  }
+  function makeSubLiExt(href, label) { var d = document.createElement("div"); d.innerHTML = subLiExt(href, label); return d.firstChild; }
   // Zamień „O nas" w natywne menu rozwijane motywu (klasy mfn → strzałka + hover jak „Baza wiedzy")
   function enhanceMenu() {
     var links = document.querySelectorAll('a.mfn-menu-link[href$="/o-nas/"], a.mfn-menu-link[href$="/index.php/o-nas/"]');
@@ -191,6 +199,17 @@
         if (liArt && liBiul && (liArt.compareDocumentPosition(liBiul) & Node.DOCUMENT_POSITION_PRECEDING)) {
           bSub.insertBefore(liArt, liBiul);
         }
+        // zewnętrzne serwisy GUGiK w „Baza wiedzy": po „Artykuły”, przed „Biuletyn” (idempotentne)
+        var gugik = [["https://sluzbageodezyjna.gugik.gov.pl/", "Służba geodezyjna"],
+                     ["https://znajdzgeodete.gugik.gov.pl/", "Znajdź geodetę"]];
+        var poEl = topByHref(bSub, "/artykuly");
+        gugik.forEach(function (g) {
+          var ist = bSub.querySelector('a[href="' + g[0] + '"]');
+          if (ist) { poEl = ist.closest("li"); return; }
+          var el = makeSubLiExt(g[0], g[1]);
+          if (poEl) poEl.insertAdjacentElement("afterend", el); else bSub.appendChild(el);
+          poEl = el;
+        });
       }
     }
     // (B) „Dołącz do nas” → rozwijane „Kontakt”
