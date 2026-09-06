@@ -69,7 +69,7 @@
           <option value="nie">Nie</option>
           <option value="tak">Tak</option>
         </select>
-        <p class="hint">W samorządzie nabywcą jest zwykle gmina lub powiat, a odbiorcą urząd albo jednostka podległa — wtedy odznacz pole poniżej.</p>
+        <p class="hint">W samorządzie nabywcą jest zwykle gmina lub powiat, a odbiorcą urząd albo jednostka podległa — po wybraniu „Tak" otworzymy pola odbiorcy.</p>
       </div>
     </div>
   </fieldset>
@@ -90,7 +90,7 @@
         <input type="text" id="odbiorca_adres" name="odbiorca_adres">
       </div>
       <div class="pole" style="max-width:320px">
-        <label for="odbiorca_nip">NIP / ID-wewn.</label>
+        <label for="odbiorca_nip">NIP / ID-wewn. <span class="wym">*</span></label>
         <input type="text" id="odbiorca_nip" name="odbiorca_nip">
       </div>
     </div>
@@ -164,8 +164,20 @@
      to częsty przypadek, ale dla firm byłoby to zbędne dublowanie pól. */
   var taki   = document.getElementById("odbiorca_taki_sam");
   var boxOdb = document.getElementById("zOdbiorca");
+  var jst    = document.getElementById("nabywca_jst");
   function przelaczOdbiorce() { boxOdb.hidden = taki.checked; }
   taki.addEventListener("change", przelaczOdbiorce);
+
+  /* W samorządzie nabywcą jest gmina/powiat, a odbiorcą urząd lub jednostka podległa,
+     więc po wybraniu „Tak" sami odznaczamy „taki sam" i pokazujemy pola odbiorcy.
+     Powrót na „Nie" nie zaznacza z powrotem — użytkownik mógł już coś wpisać. */
+  jst.addEventListener("change", function () {
+    if (jst.value === "tak" && taki.checked) {
+      taki.checked = false;
+      przelaczOdbiorce();
+      document.getElementById("odbiorca_nazwa").focus();
+    }
+  });
   przelaczOdbiorce();
 
   function pokaz(tekst, ok) {
@@ -194,6 +206,10 @@
     if (!val("nabywca_nip"))   return pokaz("Podaj NIP nabywcy.", false);
     if (!taki.checked && !val("odbiorca_nazwa"))
       return pokaz("Podaj nazwę odbiorcy albo zaznacz, że jest taki sam jak nabywca.", false);
+    /* Osobny odbiorca bez identyfikatora blokuje wystawienie faktury (w JST zwykle
+       ID-wewnętrzny z systemu urzędu), więc wymagamy go razem z nazwą. */
+    if (!taki.checked && !val("odbiorca_nip"))
+      return pokaz("Podaj NIP lub ID-wewnętrzny odbiorcy.", false);
     var email = val("email");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return pokaz("Podaj poprawny adres e-mail.", false);
     if (!val("telefon"))       return pokaz("Podaj numer telefonu.", false);
