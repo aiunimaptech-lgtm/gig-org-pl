@@ -145,13 +145,29 @@ Deno.serve(async (req) => {
 
   for (let i = 0; i < odbiorcy.length; i += BATCH) {
     const paczka = odbiorcy.slice(i, i + BATCH);
-    const payload = paczka.map((r) => ({
-      from: FROM_EMAIL,
-      to: [r.email as string],
-      subject: temat,
-      reply_to: REPLY_TO,
-      html: layout(temat, tresc, r.baza_email_id ? `${FUNCTIONS_BASE}/baza-wypis?id=${encodeURIComponent(String(r.baza_email_id))}` : ""),
-    }));
+    const payload = paczka.map((r) => {
+      const wypis = r.baza_email_id
+        ? `${FUNCTIONS_BASE}/baza-wypis?id=${encodeURIComponent(String(r.baza_email_id))}`
+        : "";
+      /* List-Unsubscribe: filtry (m.in. rspamd u polskich hostingow) traktuja
+         masowa poczte BEZ tego naglowka jako podejrzana, a Gmail/Yahoo wymagaja
+         go od nadawcow masowych. `List-Unsubscribe-Post` wlacza przycisk
+         „Wypisz sie" w interfejsie poczty — dlatego oba naraz. */
+      const naglowki: Record<string, string> = wypis
+        ? {
+          "List-Unsubscribe": `<${wypis}>`,
+          "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+        }
+        : {};
+      return {
+        from: FROM_EMAIL,
+        to: [r.email as string],
+        subject: temat,
+        reply_to: REPLY_TO,
+        headers: naglowki,
+        html: layout(temat, tresc, wypis),
+      };
+    });
 
     let ok = false, komunikat = "";
     try {
