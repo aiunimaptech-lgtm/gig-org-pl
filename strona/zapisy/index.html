@@ -124,6 +124,11 @@
   </fieldset>
 
   <div class="chk">
+    <input type="checkbox" id="newsletter" name="newsletter" checked>
+    <label for="newsletter">Chcę otrzymywać newsletter GIG — informacje o szkoleniach i wydarzeniach Izby.
+      Zgodę możesz w każdej chwili wycofać jednym kliknięciem w stopce dowolnej wiadomości.</label>
+  </div>
+  <div class="chk">
     <input type="checkbox" id="rodo" name="rodo" required>
     <label for="rodo">Zapoznałem/-am się z <a href="/polityka-prywatnosci-rodo/" target="_blank" rel="noopener">Polityką prywatności</a> i wyrażam zgodę na przetwarzanie danych osobowych w celu obsługi zgłoszenia. <span class="wym">*</span></label>
   </div>
@@ -262,6 +267,18 @@
       var db  = window.supabase.createClient(window.GIG_CFG.SUPABASE_URL, window.GIG_CFG.SUPABASE_ANON);
       var res = await db.from("zapisy_szkolenia").insert(dane);
       if (res.error) throw res.error;
+
+      /* Newsletter dopisujemy PO udanym zgloszeniu i celowo nie przerywamy
+         na bledzie: gdy adres juz jest na liscie (albo zapis sie nie uda),
+         zgloszenie na szkolenie i tak jest przyjete — to ono jest wazniejsze. */
+      if (document.getElementById("newsletter").checked) {
+        try {
+          var nl = await db.from("submissions_newsletter").insert({ email: dane.email, status: "new" });
+          /* 23505 = adres juz jest na liscie; to nie blad, tylko powtorny zapis. */
+          if (nl.error && nl.error.code !== "23505") console.warn("newsletter:", nl.error.message);
+        } catch (e2) { console.warn("newsletter:", e2); }
+      }
+
       form.style.display = "none";
       document.getElementById("zOk").style.display = "block";
       window.scrollTo({ top: 0, behavior: "smooth" });
