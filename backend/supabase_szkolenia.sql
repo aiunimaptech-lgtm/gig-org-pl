@@ -27,3 +27,8 @@ CREATE POLICY "szk public read" ON szkolenia FOR SELECT USING (status = 'publish
 -- pełen dostęp tylko dla zalogowanego admina (panel)
 DROP POLICY IF EXISTS "szk admin all" ON szkolenia;
 CREATE POLICY "szk admin all" ON szkolenia FOR ALL USING (auth.role() = 'authenticated');
+
+-- ── Wrzesien 2026: platnosc i termin zgloszen (szablon dla kazdego szkolenia) ──
+alter table public.szkolenia add column if not exists platnosc text;
+alter table public.szkolenia add column if not exists zgloszenia_do text;
+-- Panel podstawia oba teksty automatycznie: termin = 10 dni przed data szkolenia.

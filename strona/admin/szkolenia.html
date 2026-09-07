@@ -94,6 +94,10 @@
           <div class="form-group"><label>Cena</label><input type="text" id="sPrice" class="form-control" placeholder="400 zł"></div>
           <div class="form-group"><label>Cena dla członków GIG</label><input type="text" id="sPriceM" class="form-control" placeholder="250 zł"></div>
         </div>
+        <div class="form-group"><label>Zgłoszenia przyjmujemy do <span style="font-weight:400;color:#7a8794">— pokaże się nad przyciskiem „Zapisz się”. Może być opisowo, np. „do wyczerpania miejsc”.</span></label>
+          <input type="text" id="sZglDo" class="form-control" placeholder="Prosimy o przesłanie formularza zgłoszeniowego do dnia 28.09.2026 r."></div>
+        <div class="form-group"><label>Płatność <span style="font-weight:400;color:#7a8794">— dane do przelewu i termin wpłaty; pokaże się na stronie pod cenami. Zostaw puste, jeśli szkolenie jest bezpłatne.</span></label>
+          <textarea id="sPlatnosc" class="form-control" rows="6" placeholder="Wpłaty należy dokonać na konto:&#10;Geodezyjna Izba Gospodarcza,&#10;ul. Czackiego 3/5, 00-043 Warszawa&#10;Bank PEKAO SA Oddział Warszawa&#10;nr r-k: 61 1240 6175 1111 0000 4574 9045&#10;w terminie do 28-09-2026 r."></textarea></div>
         <div class="form-group"><label>Wykładowca</label><input type="text" id="sLect" class="form-control" placeholder="dr hab. inż. Jan Kowalski, prof. AGH"></div>
         <div class="form-group"><label>O wykładowcy <span style="font-weight:400;color:#7a8794">— kilka zdań</span></label><textarea id="sLectBio" class="form-control" rows="3"></textarea></div>
         <div class="form-group"><label>Link do profilu wykładowcy</label><input type="text" id="sLectUrl" class="form-control" placeholder="https://…"></div>
@@ -110,6 +114,38 @@
 <script src="/admin/_admin.js"></script>
   <script>
     let data = [], zapisy = {};
+
+    /* SZABLON dla kazdego szkolenia: dane rachunku i termin zgloszen.
+       Numer konta jest staly, zmienia sie tylko data — liczymy ja jako 10 dni
+       przed szkoleniem (tak wychodzi w dotychczasowych ogloszeniach Izby).
+       Szablon podstawia sie przy nowym szkoleniu i odswieza po zmianie daty,
+       ale TYLKO dopoki tekst jest nietkniety — recznej zmiany nie nadpisujemy. */
+    const dziesiecDniPrzed = iso => {
+      if (!iso) return null;
+      const d = new Date(iso + 'T00:00:00');
+      d.setDate(d.getDate() - 10);
+      return d;
+    };
+    const kropki = d => String(d.getDate()).padStart(2, '0') + '.' +
+      String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+
+    function szablonPlatnosci(dataOd) {
+      const d = dziesiecDniPrzed(dataOd);
+      return [
+        'Wpłaty należy dokonać na konto:',
+        'Geodezyjna Izba Gospodarcza,',
+        'ul. Czackiego 3/5, 00-043 Warszawa',
+        'Bank PEKAO SA Oddział Warszawa',
+        'nr r-k: 61 1240 6175 1111 0000 4574 9045',
+        d ? 'w terminie do ' + kropki(d).replace(/[.]/g, '-') + ' r.' : 'w terminie do …'
+      ].join('\n');
+    }
+    function szablonZgloszen(dataOd) {
+      const d = dziesiecDniPrzed(dataOd);
+      return 'Prosimy o przesłanie formularza zgłoszeniowego do dnia '
+        + (d ? kropki(d) : '…') + ' r.';
+    }
+
     const fmtDay = iso => iso ? new Date(iso+'T00:00:00').toLocaleDateString('pl-PL',{day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
 
     /* Zgłoszenia łączą się ze szkoleniem po tytule (formularz /zapisy/ dostaje go w ?szkolenie=),
@@ -178,8 +214,23 @@
       modalTitle.textContent=s?'Edytuj szkolenie':'Nowe szkolenie';
       sId.value=s?s.id:''; sTitle.value=s?s.title||'':''; sStart.value=s?s.date_start||'':''; sEnd.value=s?s.date_end||'':'';
       sLocation.value=s?s.location||'':''; sStatus.value=s?s.status||'published':'published'; sOnline.checked=s?!!s.is_online:false; sDesc.value=s?s.description||'':''; sTime.value = s ? (s.time_range || '') : ''; sDateLabel.value = s ? (s.date_label || '') : ''; sAgenda.value = s ? (s.agenda || '') : ''; sPrice.value = s ? (s.price || '') : ''; sPriceM.value = s ? (s.price_member || '') : ''; sLect.value = s ? (s.lecturer || '') : ''; sLectBio.value = s ? (s.lecturer_bio || '') : ''; sLectUrl.value = s ? (s.lecturer_url || '') : '';
+      /* Nowe szkolenie dostaje gotowy blok z numerem konta — zmienia sie w nim
+         tylko termin wplaty, wiec przepisywanie go recznie za kazdym razem
+         to proszenie sie o literowke w numerze rachunku. */
+      const dataOd = s ? (s.date_start || '') : '';
+      sPlatnosc.value = s ? (s.platnosc || szablonPlatnosci(dataOd)) : szablonPlatnosci('');
+      sZglDo.value    = s ? (s.zgloszenia_do || szablonZgloszen(dataOd)) : szablonZgloszen('');
       openModal('editModal');
     }
+    /* Zmiana daty przelicza termin w obu polach — ale tylko wtedy, gdy stoi tam
+       niezmieniony szablon (albo pusto). Tekst dopisany recznie zostaje nietkniety. */
+    sStart.addEventListener('change', () => {
+      const wszystkieDaty = [sStart.value, ''].concat(data.map(x => x.date_start).filter(Boolean));
+      const czyszablon = (val, gen) => !val.trim() || wszystkieDaty.some(d => val === gen(d));
+      if (czyszablon(sPlatnosc.value, szablonPlatnosci)) sPlatnosc.value = szablonPlatnosci(sStart.value);
+      if (czyszablon(sZglDo.value, szablonZgloszen))     sZglDo.value    = szablonZgloszen(sStart.value);
+    });
+
     async function save(){
       const title=sTitle.value.trim();
       if(!title){ toast('Podaj tytuł','error'); return; }
@@ -189,6 +240,7 @@
         description:sDesc.value.trim(), status:sStatus.value,
         time_range:pusteNaNull(sTime.value), date_label:pusteNaNull(sDateLabel.value), agenda:pusteNaNull(sAgenda.value),
         price:pusteNaNull(sPrice.value), price_member:pusteNaNull(sPriceM.value),
+        platnosc:pusteNaNull(sPlatnosc.value), zgloszenia_do:pusteNaNull(sZglDo.value),
         lecturer:pusteNaNull(sLect.value), lecturer_bio:pusteNaNull(sLectBio.value),
         lecturer_url:pusteNaNull(sLectUrl.value),
         updated_at:new Date().toISOString() };

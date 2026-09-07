@@ -56,6 +56,8 @@
     ".gig-szk-cena b{color:#16202a;font-size:16px;}" +
     ".gig-szk-cena.czlonek{background:#fff5f6;border-color:#f3ccd4;}" +
     ".gig-szk-cena.czlonek b{color:" + RED + ";}" +
+    ".gig-szk-platnosc{margin:12px 0 4px;padding:12px 15px;background:#f7f9fb;border:1px dashed #d8e0e7;border-radius:10px;font-size:13.5px;color:#46535f;line-height:1.65;}" +
+    ".gig-szk-zgldo{margin:14px 0 2px;font-size:14px;font-weight:700;color:" + RED + ";line-height:1.5;}" +
     ".gig-szk-wyk{margin:16px 0 4px;padding:14px 16px;background:#f7f9fb;border-left:3px solid " + RED + ";border-radius:0 10px 10px 0;}" +
     ".gig-szk-wyk .kto{font-size:15px;font-weight:700;color:#16202a;}" +
     ".gig-szk-wyk .bio{font-size:14px;color:#5b6b78;margin-top:5px;line-height:1.55;}" +
@@ -115,6 +117,19 @@
         "</div>";
     }
 
+    /* Dane do przelewu — jedna linia tekstu na wiersz, jak wpisano w panelu. */
+    var platnosc = "";
+    if (r.platnosc && String(r.platnosc).trim()) {
+      platnosc = '<div class="gig-szk-platnosc">' +
+        String(r.platnosc).split(/\\n/).map(function (x) { return esc(x.trim()); })
+          .filter(Boolean).join("<br>") + "</div>";
+    }
+
+    /* Termin zgloszen — nad przyciskiem, zeby dalo sie go przeoczyc dopiero po zapisie. */
+    var zglDo = r.zgloszenia_do && String(r.zgloszenia_do).trim()
+      ? '<p class="gig-szk-zgldo">' + esc(String(r.zgloszenia_do).trim()) + "</p>"
+      : "";
+
     var wyk = "";
     if (r.lecturer) {
       wyk = '<div class="gig-szk-wyk"><div class="kto">' + esc(r.lecturer) + "</div>" +
@@ -133,7 +148,7 @@
     return '<article class="gig-szk-card">' + dayBadge(r.date_start, r.date_label) +
       '<div class="gig-szk-body"><h3>' + esc(r.title) + "</h3>" +
       (meta ? '<p class="gig-szk-meta">' + esc(meta) + "</p>" : "") +
-      godziny + desc + program + ceny + wyk + przycisk +
+      godziny + desc + program + ceny + platnosc + wyk + zglDo + przycisk +
       "</div></article>";
   }
 
