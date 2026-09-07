@@ -63,8 +63,7 @@
       <header class="admin-topbar">
         <div class="topbar-title">Zapisy na szkolenia</div>
         <div class="topbar-actions">
-          <button class="btn btn-outline btn-sm" id="expUcz">↓ Uczestnicy (CSV)</button>
-          <button class="btn btn-outline btn-sm" id="expFakt">↓ Dane do faktur (CSV)</button>
+          <button class="btn btn-outline btn-sm" id="expRaport" title="Jeden wiersz na uczestnika — układ jak w arkuszu „Opłaty / Faktury / Zaświadczenia”">↓ Raport szkolenia (CSV)</button>
           <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do zgłaszających z bieżącego filtra">✉ Wyślij e-mail</button>
         </div>
       </header>
@@ -123,6 +122,15 @@
     const ETYK = { new:'nowe', read:'przeczytane', confirmed:'potwierdzone', cancelled:'anulowane' };
 
     const osoby = gigLiczbaOsob;   // wspólne z pulpitem i listą szkoleń (_admin.js)
+
+    /* Termin i ceny do raportu bierzemy z tabeli `szkolenia`. Dopasowanie po tytule
+       (tak jak w reszcie panelu — zgłoszenie nie ma klucza obcego), więc porównujemy
+       bez wielkości liter i spacji na brzegach. */
+    const SZKOLENIA = {};
+    const kluczSzk = t => (t || '').trim().toLowerCase();
+    const fmtDay = iso => iso
+      ? new Date(iso + 'T00:00:00').toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' })
+      : '';
 
     /* Odbiorca faktury: własny albo taki sam jak nabywca */
     function odbiorca(r){
@@ -322,6 +330,11 @@
       if (error) { toast('Błąd ładowania zgłoszeń', 'error'); console.error(error); return; }
       dane = data || [];
 
+      /* Ceny i terminy — tylko do raportu; brak tabeli nie może psuć widoku zapisów. */
+      const szk = await db.from('szkolenia').select('title,date_start,price,price_member');
+      if (szk.error) console.error(szk.error);
+      (szk.data || []).forEach(x => { SZKOLENIA[kluczSzk(x.title)] = x; });
+
       const sel = document.getElementById('fSzkolenie');
       const biezaceSzk = sel.value || szkolenieZUrl;
       szkolenieZUrl = '';   // tylko przy pierwszym ładowaniu; potem rządzi wybór użytkownika
@@ -359,49 +372,84 @@
         });
       });
 
-      /* Eksport 1: lista uczestników — po jednym wierszu na osobę */
-      document.getElementById('expUcz').addEventListener('click', () => {
+      /* ── RAPORT SZKOLENIA (CSV) ────────────────────────────────────────
+         Jeden wiersz na UCZESTNIKA, w układzie arkusza, którym biuro rozlicza
+         szkolenia (Opłaty / Faktury / Zaświadczenia). Pierwsze dziesięć kolumn
+         to dokładnie tamten układ — dzięki temu plik można wkleić do istniejącego
+         arkusza. „Opłata", „Data", „Faktura" i „Zaświadczenie" zostawiamy PUSTE:
+         to pola, które biuro wypełnia po wpłacie, a zgadywanie kwoty (350 czy 250
+         dla członka) wpisywałoby błędy do rozliczeń. Ceny szkolenia dokładamy
+         osobno, dalej, jako informację.
+         Rezygnacje zostają w pliku ze słowem REZYGNACJA w kolumnie „Data" —
+         tak samo jak w arkuszu wzorcowym. */
+      document.getElementById('expRaport').addEventListener('click', () => {
         const wiersze = [];
-        filtruj().filter(r => r.status !== 'cancelled').forEach(r => {
-          const ucz = (r.uczestnicy||'').split(/\n/).map(x=>x.trim()).filter(Boolean);
+        filtruj().forEach(r => {
+          const odb = odbiorca(r);
+          const szk = SZKOLENIA[kluczSzk(r.szkolenie)] || {};
+          const anulowane = r.status === 'cancelled';
+          const ucz = (r.uczestnicy || '').split(/\n/).map(x => x.trim()).filter(Boolean);
           (ucz.length ? ucz : ['(nie podano)']).forEach(osoba => wiersze.push({
-            szkolenie: r.szkolenie||'', uczestnik: osoba, firma: r.nabywca_nazwa||'',
-            email: r.email||'', telefon: r.telefon||'', status: ETYK[r.status||'new'], zgloszono: fmtDate(r.created_at)
+            email: r.email || '',
+            osoba,
+            oplata: '',
+            data: anulowane ? 'REZYGNACJA' : '',
+            faktura_nr: '',
+            zaswiadczenie: '',
+            firma: r.nabywca_nazwa || '',
+            firma_adres: r.nabywca_adres || '',
+            firma_nip: r.nabywca_nip || '',
+            telefon: r.telefon || '',
+            szkolenie: r.szkolenie || '',
+            termin: szk.date_start ? fmtDay(szk.date_start) : '',
+            cena: szk.price || '',
+            cena_czlonek: szk.price_member || '',
+            jst: r.nabywca_jst ? 'tak' : 'nie',
+            faktura_kiedy: r.faktura_kiedy === 'po' ? 'po szkoleniu'
+              : (r.faktura_kiedy === 'przed' ? 'przed szkoleniem' : ''),   // starsze zgloszenia nie mialy tego pola
+            odb_nazwa: odb.wlasny ? (odb.nazwa || '') : '(taki sam jak nabywca)',
+            odb_adres: odb.wlasny ? (odb.adres || '') : '',
+            odb_nip: odb.wlasny ? (odb.nip || '') : '',
+            status: ETYK[r.status || 'new'],
+            zgloszono: fmtDate(r.created_at),
+            uwagi: (r.uwagi || '').replace(/\s*\n\s*/g, ' | '),
           }));
         });
         if (!wiersze.length) { toast('Brak danych do eksportu'); return; }
-        exportCSV(wiersze, [
-          { key:'szkolenie', label:'Szkolenie' }, { key:'uczestnik', label:'Uczestnik' },
-          { key:'firma', label:'Firma/instytucja' }, { key:'email', label:'E-mail' },
-          { key:'telefon', label:'Telefon' }, { key:'status', label:'Status' }, { key:'zgloszono', label:'Zgłoszono' },
-        ], 'uczestnicy-szkolen.csv');
-      });
 
-      /* Eksport 2: dane do faktur — po jednym wierszu na zgłoszenie */
-      document.getElementById('expFakt').addEventListener('click', () => {
-        const wiersze = filtruj().filter(r => r.status !== 'cancelled').map(r => {
-          const odb = odbiorca(r);
-          return {
-            szkolenie: r.szkolenie||'', osob: osoby(r),
-            nabywca: r.nabywca_nazwa||'', nabywca_adres: r.nabywca_adres||'', nabywca_nip: r.nabywca_nip||'',
-            jst: r.nabywca_jst ? 'tak' : 'nie',
-            faktura: r.faktura_kiedy === 'po' ? 'po szkoleniu' : 'przed szkoleniem',
-            odbiorca: odb.wlasny ? (odb.nazwa||'') : '(taki sam)',
-            odbiorca_adres: odb.wlasny ? (odb.adres||'') : '',
-            odbiorca_nip: odb.wlasny ? (odb.nip||'') : '',
-            email: r.email||'', telefon: r.telefon||'', zgloszono: fmtDate(r.created_at),
-          };
-        });
-        if (!wiersze.length) { toast('Brak danych do eksportu'); return; }
+        const wybrane = document.getElementById('fSzkolenie').value;
+        const nazwa = wybrane
+          ? 'raport-' + wybrane.toLowerCase()
+              .replace(/[ąćęłńóśźż]/g, c => 'acelnoszz'['ąćęłńóśźż'.indexOf(c)])
+              .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) + '.csv'
+          : 'raport-szkolenia.csv';
+
         exportCSV(wiersze, [
-          { key:'szkolenie', label:'Szkolenie' }, { key:'osob', label:'Liczba osób' },
-          { key:'nabywca', label:'Nabywca' }, { key:'nabywca_adres', label:'Adres nabywcy' },
-          { key:'nabywca_nip', label:'NIP nabywcy' }, { key:'jst', label:'JST' },
-          { key:'faktura', label:'Faktura' },
-          { key:'odbiorca', label:'Odbiorca' }, { key:'odbiorca_adres', label:'Adres odbiorcy' },
-          { key:'odbiorca_nip', label:'NIP/ID odbiorcy' },
-          { key:'email', label:'E-mail' }, { key:'telefon', label:'Telefon' }, { key:'zgloszono', label:'Zgłoszono' },
-        ], 'zapisy-dane-do-faktur.csv');
+          /* układ arkusza biura — kolejność i nazwy bez zmian */
+          { key:'email',          label:'Adres e-mail' },
+          { key:'osoba',          label:'Imię i Nazwisko' },
+          { key:'oplata',         label:'Opłata' },
+          { key:'data',           label:'Data' },
+          { key:'faktura_nr',     label:'Faktura' },
+          { key:'zaswiadczenie',  label:'Zaświadczenie' },
+          { key:'firma',          label:'Nazwa firmy' },
+          { key:'firma_adres',    label:'Adres firmy' },
+          { key:'firma_nip',      label:'NIP firmy' },
+          { key:'telefon',        label:'Tel. kontaktowy' },
+          /* dalej to, czego arkusz nie miał, a panel wie */
+          { key:'szkolenie',      label:'Szkolenie' },
+          { key:'termin',         label:'Termin' },
+          { key:'cena',           label:'Cena' },
+          { key:'cena_czlonek',   label:'Cena dla członków' },
+          { key:'jst',            label:'JST' },
+          { key:'faktura_kiedy',  label:'Faktura — kiedy' },
+          { key:'odb_nazwa',      label:'Odbiorca' },
+          { key:'odb_adres',      label:'Adres odbiorcy' },
+          { key:'odb_nip',        label:'NIP/ID odbiorcy' },
+          { key:'status',         label:'Status zgłoszenia' },
+          { key:'zgloszono',      label:'Zgłoszono' },
+          { key:'uwagi',          label:'Uwagi' },
+        ], nazwa);
       });
 
       load();

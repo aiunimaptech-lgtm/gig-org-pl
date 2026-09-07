@@ -284,6 +284,25 @@ strona musi ładować Quill. Backend `wyslij-mail` (v4) sprawdza sesję admina (
 do każdego adresu, stopka wg `rodzaj` (`szkolenie` / `kontakt` / `baza`). Limit 200 adresów.
 **Szata maila:** jasna, z logo `strona/_assets/img/gig-logo-email.png` (PNG, bo SVG nie renderuje się
 w mailach — wyrenderowane sharpem z `gig-logo-new-poziom-dark.svg`) i czerwoną kreską zamiast ciemnego pasa.
+### Raport szkolenia (CSV) — jeden zamiast dwoch eksportow
+
+`admin/zapisy.html` ma **jeden** eksport: „Raport szkolenia (CSV)" (dawne „Uczestnicy"
+i „Dane do faktur" skasowane). Uklad pierwszych 10 kolumn jest **1:1 z arkuszem biura**
+`Szkolenie_..._Oplaty_Faktury_Zaswiadczenia.xlsx` (Adres e-mail, Imie i Nazwisko, Oplata,
+Data, Faktura, Zaswiadczenie, Nazwa firmy, Adres firmy, NIP firmy, Tel. kontaktowy),
+wiec plik wkleja sie wprost do istniejacego arkusza. Dalej ida kolumny, ktorych arkusz
+nie mial: Szkolenie, Termin, Cena, Cena dla czlonkow, JST, Faktura-kiedy, Odbiorca
+(nazwa/adres/NIP), Status, Zgloszono, Uwagi.
+
+**Swiadome decyzje:**
+- `Oplata`, `Data`, `Faktura`, `Zaswiadczenie` zostaja **puste** — biuro wypelnia je po
+  wplacie. Wpisywanie ceny automatem myliloby sie przy czlonkach (400 vs 250 zl), a to
+  trafialoby do rozliczen. Ceny sa osobno, w kolumnach informacyjnych.
+- **Rezygnacje zostaja w pliku** ze slowem `REZYGNACJA` w kolumnie „Data" — tak jak w arkuszu.
+- Jeden wiersz **na uczestnika** (rozbicie pola `uczestnicy` po liniach).
+- Termin i ceny z tabeli `szkolenia`, dopasowane **po tytule** (jak reszta panelu).
+- Puste `faktura_kiedy` (zgloszenia sprzed wrzesnia 2026) daje pusta komorke, nie „przed".
+
 ### Sesja 3 (6 września 2026)
 
 | commit | co |
