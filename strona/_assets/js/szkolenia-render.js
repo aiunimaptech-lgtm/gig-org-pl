@@ -56,7 +56,7 @@
     ".gig-szk-cena b{color:#16202a;font-size:16px;}" +
     ".gig-szk-cena.czlonek{background:#fff5f6;border-color:#f3ccd4;}" +
     ".gig-szk-cena.czlonek b{color:" + RED + ";}" +
-    ".gig-szk-info{margin:8px 0 0;font-size:12.5px;color:#8a99a3;line-height:1.5;}" +
+    ".gig-szk-info{margin:9px 0 0;font-size:13.5px;color:#16202a;line-height:1.5;font-weight:600;}" +
     ".gig-szk-info.ukryta{display:none;}" +
     ".gig-szk-platnosc{margin:12px 0 4px;padding:12px 15px;background:#f7f9fb;border:1px dashed #d8e0e7;border-radius:10px;font-size:13.5px;color:#16202a;line-height:1.65;font-weight:700;}" +
     ".gig-szk-zgldo{margin:14px 0 2px;font-size:14px;font-weight:700;color:" + RED + ";line-height:1.5;}" +
