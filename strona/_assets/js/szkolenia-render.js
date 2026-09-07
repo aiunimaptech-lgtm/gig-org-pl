@@ -83,6 +83,10 @@
     return String(txt).split(/\n\s*\n/).map(function (a) {
       var t = esc(a.trim()).replace(/\n/g, "<br>");
       t = t.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+      /* **pogrubienie** — jedyny dopuszczony znacznik w opisie. Tekst jest juz
+         przepuszczony przez esc(), wiec z panelu nie da sie wstrzyknac HTML-a;
+         biuro moze wyroznic zdanie, nie znajac HTML-a. */
+      t = t.replace(/[*][*]([^*]+)[*][*]/g, "<strong>$1</strong>");
       return t ? '<p class="gig-szk-desc">' + t + "</p>" : "";
     }).join("");
   }
