@@ -56,6 +56,8 @@
     ".gig-szk-cena b{color:#16202a;font-size:16px;}" +
     ".gig-szk-cena.czlonek{background:#fff5f6;border-color:#f3ccd4;}" +
     ".gig-szk-cena.czlonek b{color:" + RED + ";}" +
+    ".gig-szk-info{margin:8px 0 0;font-size:12.5px;color:#8a99a3;line-height:1.5;}" +
+    ".gig-szk-info.ukryta{display:none;}" +
     ".gig-szk-platnosc{margin:12px 0 4px;padding:12px 15px;background:#f7f9fb;border:1px dashed #d8e0e7;border-radius:10px;font-size:13.5px;color:#16202a;line-height:1.65;font-weight:700;}" +
     ".gig-szk-zgldo{margin:14px 0 2px;font-size:14px;font-weight:700;color:" + RED + ";line-height:1.5;}" +
     ".gig-szk-wyk{margin:16px 0 4px;padding:14px 16px;background:#f7f9fb;border-left:3px solid " + RED + ";border-radius:0 10px 10px 0;}" +
@@ -147,7 +149,8 @@
       '<label class="gig-szk-zgoda"><input type="checkbox" class="gig-szk-chk">' +
       '<span>Zapoznałem/-am się z <a href="/polityka-prywatnosci-rodo/" target="_blank" rel="noopener">Polityką prywatności</a> ' +
       'i wyrażam zgodę na przetwarzanie danych osobowych w celu obsługi zgłoszenia.</span></label>' +
-      '<a class="gig-szk-btn wylaczony" href="' + link + '" aria-disabled="true" tabindex="-1">Zapisz się →</a>';
+      '<a class="gig-szk-btn wylaczony" href="' + link + '" aria-disabled="true" tabindex="-1">Zapisz się →</a>' +
+      '<p class="gig-szk-info">Aby aktywować przycisk „Zapisz się", zaznacz akceptację Polityki prywatności.</p>';
 
     return '<article class="gig-szk-card">' + dayBadge(r.date_start, r.date_label) +
       '<div class="gig-szk-body"><h3>' + esc(r.title) + "</h3>" +
@@ -229,6 +232,8 @@
     btn.classList.toggle("wylaczony", !chk.checked);
     btn.setAttribute("aria-disabled", chk.checked ? "false" : "true");
     btn.tabIndex = chk.checked ? 0 : -1;
+    var info = body.querySelector(".gig-szk-info");
+    if (info) info.classList.toggle("ukryta", chk.checked);
   });
   document.addEventListener("click", function (e) {
     var a = e.target.closest && e.target.closest(".gig-szk-btn.wylaczony");
