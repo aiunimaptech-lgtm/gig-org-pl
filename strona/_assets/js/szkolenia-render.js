@@ -58,6 +58,8 @@
     ".gig-szk-cena.czlonek b{color:" + RED + ";}" +
     ".gig-szk-info{margin:9px 0 0;font-size:13.5px;color:#16202a;line-height:1.5;font-weight:600;}" +
     ".gig-szk-info.ukryta{display:none;}" +
+    ".gig-szk-cert{display:inline-flex;align-items:center;gap:7px;margin:10px 0 0;padding:7px 13px;background:#fff5f6;border:1px solid #f3ccd4;border-radius:20px;font-size:13px;font-weight:600;color:#16202a;}" +
+    ".gig-szk-cert span{color:" + RED + ";font-weight:800;}" +
     ".gig-szk-platnosc{margin:12px 0 4px;padding:12px 15px;background:#f7f9fb;border:1px dashed #d8e0e7;border-radius:10px;font-size:13.5px;color:#16202a;line-height:1.65;font-weight:700;}" +
     ".gig-szk-zgldo{margin:14px 0 2px;font-size:14px;font-weight:700;color:" + RED + ";line-height:1.5;}" +
     ".gig-szk-wyk{margin:16px 0 4px;padding:14px 16px;background:#f7f9fb;border-left:3px solid " + RED + ";border-radius:0 10px 10px 0;}" +
@@ -136,6 +138,10 @@
       ? '<p class="gig-szk-zgldo">' + esc(String(r.zgloszenia_do).trim()) + "</p>"
       : "";
 
+    /* Certyfikat jest standardem Izby przy kazdym szkoleniu, wiec zamiast
+       polegac na tym, ze ktos wpisze to w opisie, dokladamy adnotacje zawsze. */
+    var cert = '<p class="gig-szk-cert"><span>✓</span> Uczestnicy otrzymują certyfikat GIG</p>';
+
     var wyk = "";
     if (r.lecturer) {
       wyk = '<div class="gig-szk-wyk"><div class="kto">' + esc(r.lecturer) + "</div>" +
@@ -155,7 +161,7 @@
     return '<article class="gig-szk-card">' + dayBadge(r.date_start, r.date_label) +
       '<div class="gig-szk-body"><h3>' + esc(r.title) + "</h3>" +
       (meta ? '<p class="gig-szk-meta">' + esc(meta) + "</p>" : "") +
-      godziny + desc + program + ceny + platnosc + wyk + zglDo + przycisk +
+      godziny + desc + program + ceny + cert + platnosc + wyk + zglDo + przycisk +
       "</div></article>";
   }
 
