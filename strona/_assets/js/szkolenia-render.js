@@ -212,7 +212,7 @@
 
       if (past.length) {
         document.getElementById("gigSzkArchWrap").innerHTML =
-          '<details class="gig-szk-arch"><summary>Szkolenia, które już się odbyły (' + past.length + ")</summary>" +
+          '<details class="gig-szk-arch" open><summary>Szkolenia, które już się odbyły (' + past.length + ")</summary>" +
           '<div class="gig-szk-grid" style="margin-top:16px">' + past.map(function (x) { return card(x, true); }).join("") + "</div></details>";
       }
     } catch (e) {
