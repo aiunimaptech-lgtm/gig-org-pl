@@ -110,7 +110,63 @@ function initTabs(containerSelector) {
 }
 
 /* ── Modale ── */
-function openModal(id) { const m = document.getElementById(id); if (m) m.classList.add('open'); }
+/* ── Okna modalne: rozmiar zmienny (uchwyt w rogu z CSS), zapamietywany na
+   przegladarke, plus przycisk ⤢ / dwuklik na naglowku = na caly ekran.
+   Rozmiar odtwarzamy tylko, jesli miesci sie w biezacym oknie przegladarki —
+   inaczej okno otwarte na duzym monitorze wylazloby poza ekran laptopa. */
+const GIG_MODAL_KLUCZ = id => 'gig-modal:' + id;
+
+function gigModalPrzygotuj(m) {
+  if (m.dataset.gigModalGotowy) return;
+  m.dataset.gigModalGotowy = '1';
+  const box = m.querySelector('.modal-box');
+  const head = m.querySelector('.modal-header');
+  if (!box || !head) return;
+
+  const przelacz = () => {
+    box.classList.toggle('modal-max');
+    btn.textContent = box.classList.contains('modal-max') ? '⤓' : '⤢';
+    btn.title = box.classList.contains('modal-max') ? 'Przywróć rozmiar' : 'Na cały ekran';
+  };
+  const btn = document.createElement('button');
+  btn.type = 'button'; btn.className = 'modal-max-btn'; btn.textContent = '⤢'; btn.title = 'Na cały ekran';
+  btn.addEventListener('click', przelacz);
+  const zamknij = head.querySelector('.modal-close');
+  zamknij ? head.insertBefore(btn, zamknij) : head.appendChild(btn);
+  head.addEventListener('dblclick', e => { if (!e.target.closest('button')) przelacz(); });
+
+  /* Rozmiar po przeciagnieciu uchwytu trafia do localStorage; nie zapisujemy
+     stanu "na caly ekran" ani zmian wynikajacych z przeplywu tresci. */
+  let t = null;
+  try {
+    new ResizeObserver(() => {
+      if (!m.classList.contains('open') || box.classList.contains('modal-max')) return;
+      if (!box.style.width && !box.style.height) return;   // nikt nie ciagnal uchwytu
+      clearTimeout(t);
+      t = setTimeout(() => {
+        try { localStorage.setItem(GIG_MODAL_KLUCZ(m.id), JSON.stringify({ w: box.offsetWidth, h: box.offsetHeight })); } catch (_) {}
+      }, 250);
+    }).observe(box);
+  } catch (_) {}
+}
+
+function gigModalOdtworzRozmiar(m) {
+  const box = m.querySelector('.modal-box'); if (!box) return;
+  box.classList.remove('modal-max');
+  let z = null;
+  try { z = JSON.parse(localStorage.getItem(GIG_MODAL_KLUCZ(m.id)) || 'null'); } catch (_) {}
+  if (!z || !z.w || !z.h) return;
+  const maxW = window.innerWidth - 40, maxH = window.innerHeight - 40;
+  box.style.width  = Math.min(z.w, maxW) + 'px';
+  box.style.height = Math.min(z.h, maxH) + 'px';
+}
+
+function openModal(id) {
+  const m = document.getElementById(id); if (!m) return;
+  gigModalPrzygotuj(m);
+  gigModalOdtworzRozmiar(m);
+  m.classList.add('open');
+}
 function closeModal(id) { const m = document.getElementById(id); if (m) m.classList.remove('open'); }
 function initModals() {
   document.querySelectorAll('[data-modal-open]').forEach(btn =>

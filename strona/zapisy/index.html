@@ -95,14 +95,6 @@
         <input type="text" id="odbiorca_nip" name="odbiorca_nip">
       </div>
     </div>
-    <div class="pole" id="zFaktura" style="max-width:420px" hidden>
-      <label for="faktura_kiedy">Kiedy wystawić fakturę? <span class="wym">*</span></label>
-      <select id="faktura_kiedy" name="faktura_kiedy">
-        <option value="przed">Przed szkoleniem</option>
-        <option value="po">Po szkoleniu</option>
-      </select>
-      <p class="hint">Jeśli jesteś JST, wybierz moment wystawienia faktury, który pasuje Waszej księgowości.</p>
-    </div>
   </fieldset>
 
   <fieldset>
@@ -185,11 +177,7 @@
   /* W samorządzie nabywcą jest gmina/powiat, a odbiorcą urząd lub jednostka podległa,
      więc po wybraniu „Tak" sami odznaczamy „taki sam" i pokazujemy pola odbiorcy.
      Powrót na „Nie" nie zaznacza z powrotem — użytkownik mógł już coś wpisać. */
-  /* Wybór momentu faktury dotyczy tylko samorządu — firmy dostają ją standardowo
-     przed szkoleniem, więc dla nich pole jest ukryte i wysyłamy „przed". */
-  var boxFak = document.getElementById("zFaktura");
   jst.addEventListener("change", function () {
-    boxFak.hidden = jst.value !== "tak";
     if (jst.value === "tak" && taki.checked) {
       taki.checked = false;
       przelaczOdbiorce();
@@ -251,7 +239,9 @@
       nabywca_adres:     val("nabywca_adres"),
       nabywca_nip:       val("nabywca_nip"),
       nabywca_jst:       document.getElementById("nabywca_jst").value === "tak",
-      faktura_kiedy:     boxFak.hidden ? "przed" : (val("faktura_kiedy") || "przed"),
+      /* Moment faktury nie jest juz wyborem w formularzu: firmy i osoby prywatne
+         placa przed szkoleniem, jednostki rzadowe i samorzadowe po, wg faktury. */
+      faktura_kiedy:     document.getElementById("nabywca_jst").value === "tak" ? "po" : "przed",
       odbiorca_taki_sam: taki.checked,
       odbiorca_nazwa:    taki.checked ? null : val("odbiorca_nazwa"),
       odbiorca_adres:    taki.checked ? null : val("odbiorca_adres"),

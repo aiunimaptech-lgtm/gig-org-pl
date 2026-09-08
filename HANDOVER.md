@@ -320,6 +320,21 @@ do newslettera") i link wypisu do `newsletter-unsubscribe` zamiast `baza-wypis`.
 Szybka wiadomość do jednej osoby z newslettera nie istnieje celowo — każdy mail do listy
 ma przejść przez kolejkę (limit dzienny, nagłówki wypisu, brak dubli).
 
+### Szkolenia: pole "Informacje organizacyjne" (kolumna `szkolenia.informacje`)
+
+Harmonogram dnia, materiały, platforma itp. **nie są programem** - mają osobne pole w panelu
+(pod Programem, jeden punkt w linii) i osobną listę "Informacje organizacyjne" na karcie,
+renderowaną tą samą szatą co program. Przy dodawaniu kolumny przeniesiono dwie takie linie
+z programu szkolenia "Procedury geodezyjno-prawne".
+
+### Okna modalne w panelu: zmienny rozmiar
+
+`.modal-box` ma `resize: both` (uchwyt w prawym dolnym rogu, widoczny "grip"), granice to
+zawsze okno przeglądarki minus 20 px, przycisk ⤢ w nagłówku i dwuklik na nagłówku = na cały
+ekran. Rozmiar po przeciągnięciu zapamiętywany w `localStorage` (`gig-modal:<id>`) i odtwarzany
+tylko, jeśli mieści się w bieżącym oknie. Klasa `modal-szeroki` = szersze domyślne okno
+(edycja szkolenia). Obsługa w `_admin.js` (`gigModalPrzygotuj`, `gigModalOdtworzRozmiar`).
+
 ### Sesja 3 (6 września 2026)
 
 | commit | co |
