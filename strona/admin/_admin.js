@@ -19,6 +19,17 @@ async function getSession() {
 async function requireAuth() {
   const session = await getSession();
   if (!session) { window.location.href = 'index.html'; return null; }
+  /* Polityki RLS wymagaja sesji, ktora przeszla kod z maila (panel_sesje_ok).
+     Sesja bez tego (np. wygasly wpis po 14 dniach) widzialaby pusty panel;
+     zamiast tego wylogowujemy i prosimy o ponowne logowanie. */
+  try {
+    const { data, error } = await db.rpc('gig_sesja_2fa');
+    if (!error && data === false) {
+      await db.auth.signOut();
+      window.location.href = 'index.html?kod=1';
+      return null;
+    }
+  } catch (_) {}
   return session;
 }
 async function logout() {

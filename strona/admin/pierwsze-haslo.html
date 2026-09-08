@@ -53,7 +53,7 @@
           <label for="pass2">Powtórz hasło</label>
           <input type="password" id="pass2" class="form-control" autocomplete="new-password" required>
         </div>
-        <button type="submit" class="btn btn-primary" id="setupBtn">Zapisz hasło i zaloguj</button>
+        <button type="submit" class="btn btn-primary" id="setupBtn">Zapisz hasło</button>
         <div class="login-err" id="setupErr"></div>
         <div class="login-ok" id="setupOk"></div>
       </form>
@@ -105,14 +105,15 @@
         const wynik = await res.json().catch(() => ({}));
         if (!res.ok || !wynik.ok) throw new Error(wynik.error || ('HTTP ' + res.status));
 
-        ok.textContent = (wynik.utworzono ? 'Konto założone. ' : 'Hasło zapisane. ') + 'Logowanie…';
+        /* Logowanie idzie wylacznie przez index.html (haslo + kod z maila):
+           sesja z samego hasla nie ma dostepu do danych (polityki RLS). */
+        ok.textContent = (wynik.utworzono ? 'Konto założone. ' : 'Hasło zapisane. ')
+          + 'Za chwilę przeniesiemy Cię do logowania. Po haśle przyjdzie kod na e-mail.';
         ok.style.display = 'block';
-        const { error } = await db.auth.signInWithPassword({ email, password: p1 });
-        if (error) throw new Error('Hasło zapisane, ale logowanie nie powiodło się: ' + error.message);
         history.replaceState(null, '', location.pathname);
-        window.location.href = 'dashboard.html';
+        setTimeout(() => { window.location.href = 'index.html'; }, 3000);
       } catch (ex) {
-        btn.disabled = false; btn.textContent = 'Zapisz hasło i zaloguj';
+        btn.disabled = false; btn.textContent = 'Zapisz hasło';
         pokazBlad(ex.message === 'brak uprawnien'
           ? 'Token jest nieprawidłowy albo został już użyty.'
           : 'Nie udało się: ' + ex.message);

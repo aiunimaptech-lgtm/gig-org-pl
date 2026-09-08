@@ -15,7 +15,8 @@
 // „wypisz się" -> Edge Function baza-wypis, która oznacza status=unsubscribed.
 // Reply-To = biuro@gig.org.pl.
 //
-// Sekrety: RESEND_API_KEY, FROM_EMAIL; SUPABASE_URL i SUPABASE_ANON_KEY wstrzykiwane.
+// Sekrety: RESEND_API_KEY, FROM_EMAIL; SUPABASE_URL, SUPABASE_ANON_KEY,
+// SUPABASE_SERVICE_ROLE_KEY wstrzykiwane. v6: wymaga sesji z listy panel_sesje_ok.
 // ============================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -39,6 +40,27 @@ function json(body: unknown, status = 200): Response {
 }
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/* Ladunek JWT bez weryfikacji podpisu (podpis sprawdzil juz auth.getUser). */
+function jwtClaims(token: string): Record<string, unknown> {
+  try {
+    const p = token.split(".")[1] ?? "";
+    return JSON.parse(atob(p.replace(/-/g, "+").replace(/_/g, "/"))) as Record<string, unknown>;
+  } catch { return {}; }
+}
+
+/* Audyt 8.09.2026: sam poprawny JWT to za malo, bo publiczny grant haslem
+   (POST /auth/v1/token) daje go kazdemu, kto zna haslo. Sesja musi byc na
+   liscie panel_sesje_ok, czyli przejsc kod z maila (backend/supabase_2fa_sesje.sql). */
+async function sesjaPoKodzie(jwt: string): Promise<boolean> {
+  const sid = String(jwtClaims(jwt).session_id ?? "");
+  if (!/^[0-9a-f-]{36}$/i.test(sid)) return false;
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false, autoRefreshToken: false } });
+  const r = await admin.from("panel_sesje_ok").select("session_id")
+    .eq("session_id", sid).gt("wygasa", new Date().toISOString()).maybeSingle();
+  return !r.error && !!r.data;
 }
 
 /* Lekka, jasna szata: białe tło, logo GIG w nagłówku, czerwona kreska zamiast
@@ -116,6 +138,7 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false, autoRefreshToken: false } });
   const { data: u, error: uErr } = await sb.auth.getUser(jwt);
   if (uErr || !u?.user?.email) return json({ error: "brak uprawnien" }, 401);
+  if (!await sesjaPoKodzie(jwt)) return json({ error: "sesja bez potwierdzenia kodem z e-maila - zaloguj sie ponownie" }, 401);
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "nieprawidlowe dane" }, 400); }

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Wniosek o dostęp — panel GIG</title>
+  <title>Wniosek o dostęp - panel GIG</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/admin/_admin.css">
@@ -12,27 +12,37 @@
     .wrap { min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
       background:linear-gradient(135deg,#16202a,#cc0a2b); }
     .card { background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.25);
-      width:100%; max-width:460px; padding:36px 34px; text-align:center; }
+      width:100%; max-width:480px; padding:36px 34px; text-align:center; }
     .card .ic { width:56px; height:56px; border-radius:14px; margin:0 auto 18px; display:flex;
       align-items:center; justify-content:center; font-size:26px; color:#fff; background:#cc0a2b; }
     .card h1 { font-size:21px; color:#16202a; margin:0 0 10px; }
     .card p { color:#4b5b66; font-size:14px; line-height:1.7; margin:0 0 12px; }
-    .card .btn { margin-top:10px; }
+    .dane { text-align:left; background:#f7f9fb; border-radius:10px; padding:14px 16px; margin:16px 0 20px; }
+    .dane dt { font-size:11px; color:#6b7f84; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-top:10px; }
+    .dane dt:first-child { margin-top:0; }
+    .dane dd { margin:2px 0 0; font-size:15px; color:#16202a; word-break:break-word; }
+    .przyciski { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+    .uwaga { font-size:12.5px; color:#8a99a3; margin-top:14px; }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="card">
-      <div class="ic" id="ikona">✓</div>
-      <h1 id="tytul">Wniosek rozpatrzony</h1>
+      <div class="ic" id="ikona">…</div>
+      <h1 id="tytul">Sprawdzanie linku</h1>
       <div id="tresc"></div>
-      <a class="btn btn-outline btn-sm" href="/admin/">Przejdź do panelu</a>
+      <a class="btn btn-outline btn-sm" href="/admin/" id="doPanelu" hidden>Przejdź do panelu</a>
     </div>
   </div>
+  <script src="/_assets/js/gig-config.js"></script>
   <script>
-    /* Wynik przekazuje Edge Function `panel-rejestracja` w parametrze `wynik`.
-       Świadomie NIE przekazujemy tu adresu e-mail wnioskodawcy — dane osobowe
-       nie powinny lądować w adresie URL (trafiają do historii i logów). */
+    /* Dwa tryby:
+       1) ?akcja=akceptuj|odrzuc + #t=<token>  - link z maila do biura. Pokazujemy wniosek
+          i pytamy o decyzje; dopiero klikniecie robi POST do funkcji. Sam link (GET)
+          nie ma skutkow, wiec skaner linkow w poczcie niczego nie zatwierdzi.
+          Token jest we fragmencie adresu: nie trafia do logow serwera www.
+       2) ?wynik=...  - ekran wyniku (uzywany tez po decyzji).
+       Adresu e-mail wnioskodawcy nie ma w URL - dane osobowe nie naleza do adresu. */
     const WARIANTY = {
       zatwierdzony: { ic:'✓', kolor:'#cc0a2b', tytul:'Konto zatwierdzone',
         tresc:'Konto zostało założone, a wnioskodawca dostał e-mail z linkiem do ustawienia własnego hasła. '
@@ -49,13 +59,67 @@
         tresc:'Konto istnieje, ale nie udało się wysłać linku do ustawienia hasła. Poproś tę osobę, '
             + 'żeby użyła „Nie pamiętasz hasła?" na stronie logowania.' }
     };
-    const w = new URLSearchParams(location.search).get('wynik') || 'brak';
-    const v = WARIANTY[w] || WARIANTY.brak;
-    document.getElementById('ikona').textContent = v.ic;
-    document.getElementById('ikona').style.background = v.kolor;
-    document.getElementById('tytul').textContent = v.tytul;
-    document.getElementById('tytul').style.color = v.kolor;
-    document.getElementById('tresc').innerHTML = '<p>' + v.tresc + '</p>';
+    const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const el = id => document.getElementById(id);
+    const FUN = GIG_CFG.SUPABASE_URL + '/functions/v1/panel-rejestracja';
+
+    function pokazWynik(w) {
+      const v = WARIANTY[w] || WARIANTY.brak;
+      el('ikona').textContent = v.ic; el('ikona').style.background = v.kolor;
+      el('tytul').textContent = v.tytul; el('tytul').style.color = v.kolor;
+      el('tresc').innerHTML = '<p>' + v.tresc + '</p>';
+      el('doPanelu').hidden = false;
+    }
+
+    async function wolaj(dane) {
+      const r = await fetch(FUN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': GIG_CFG.SUPABASE_ANON },
+        body: JSON.stringify(dane)
+      });
+      let tresc = {};
+      try { tresc = await r.json(); } catch (_) {}
+      return tresc;
+    }
+
+    (async () => {
+      const q = new URLSearchParams(location.search);
+      const akcja = q.get('akcja');
+      const m = /(?:^|[#&])t=([0-9a-f]{64})/.exec(location.hash);
+      if (!akcja || !m) { pokazWynik(q.get('wynik') || 'brak'); return; }
+      const token = m[1];
+
+      const p = await wolaj({ akcja: 'podglad', token });
+      if (!p.ok) { pokazWynik(p.wynik || 'brak'); return; }
+
+      el('ikona').textContent = '?'; el('ikona').style.background = '#16202a';
+      el('tytul').textContent = 'Wniosek o dostęp do panelu';
+      const kiedy = p.created_at ? new Date(p.created_at).toLocaleString('pl-PL') : '';
+      el('tresc').innerHTML =
+        '<p>Ta osoba prosi o konto w panelu administracyjnym gig.org.pl. Zatwierdź tylko, jeśli ją znasz i wiesz, że ma prawo widzieć dane osobowe zgromadzone w panelu.</p>'
+        + '<dl class="dane">'
+        + '<dt>Imię i nazwisko</dt><dd>' + esc(p.imie) + '</dd>'
+        + '<dt>E-mail</dt><dd>' + esc(p.email) + '</dd>'
+        + (p.uzasadnienie ? '<dt>Po co dostęp</dt><dd>' + esc(p.uzasadnienie) + '</dd>' : '')
+        + (kiedy ? '<dt>Złożony</dt><dd>' + esc(kiedy) + '</dd>' : '')
+        + '</dl>'
+        + '<div class="przyciski">'
+        + '<button type="button" class="btn ' + (akcja === 'akceptuj' ? 'btn-primary' : 'btn-outline') + '" id="btnTak">Zatwierdź konto</button>'
+        + '<button type="button" class="btn ' + (akcja === 'odrzuc' ? 'btn-danger' : 'btn-outline') + '" id="btnNie">Odrzuć</button>'
+        + '</div>'
+        + '<p class="uwaga">Decyzja jest jednorazowa i nie da się jej cofnąć z tej strony.</p>';
+
+      const decyduj = async (decyzja) => {
+        el('btnTak').disabled = true; el('btnNie').disabled = true;
+        const r = await wolaj({ akcja: 'rozpatrz', token, decyzja });
+        history.replaceState(null, '', location.pathname + '?wynik=' + encodeURIComponent(r.wynik || 'blad'));
+        pokazWynik(r.wynik || 'blad');
+      };
+      el('btnTak').addEventListener('click', () => decyduj('akceptuj'));
+      el('btnNie').addEventListener('click', () => {
+        if (confirm('Odrzucić wniosek o konto dla ' + p.email + '?')) decyduj('odrzuc');
+      });
+    })();
   </script>
 </body>
 </html>

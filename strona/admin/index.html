@@ -95,6 +95,10 @@
     })();
     const form = document.getElementById('loginForm');
     const errBox = document.getElementById('loginErr');
+    if (new URLSearchParams(location.search).get('kod') === '1') {
+      errBox.textContent = 'Sesja wymaga ponownego logowania z kodem z e-maila.';
+      errBox.style.display = 'block';
+    }
     const btn = document.getElementById('loginBtn');
     /* ── Logowanie dwuskładnikowe ──
        Hasła NIE sprawdzamy w przeglądarce: gdyby tak było, sesja powstawałaby

@@ -1,19 +1,28 @@
 // ============================================================
-// GIG — Edge Function: panel-logowanie (2FA kodem z e-maila)
+// GIG - Edge Function: panel-logowanie (2FA kodem z e-maila)  v2
 //
 // Dlaczego przez funkcje, a nie w przegladarce:
 // gdyby panel logowal sie sam (signInWithPassword), przegladarka dostawalaby
-// wazna sesje JUZ po samym hasle, a kod z maila bylby tylko zaslona w UI —
-// kto zna haslo, moglby wolac API Supabase z pominieciem panelu.
-// Dlatego haslo sprawdzamy TUTAJ, a tokeny sesji trzymamy w bazie
-// (tabela panel_2fa, niedostepna z zewnatrz) i wydajemy dopiero po podaniu kodu.
+// sesje juz po samym hasle, a kod z maila bylby tylko zaslona w UI.
+//
+// Dlaczego v2 (audyt bezpieczenstwa, 8 wrzesnia 2026):
+// samo trzymanie tokenow w funkcji nie wystarczalo, bo publiczny grant
+// POST /auth/v1/token?grant_type=password dziala dla kazdego z kluczem
+// publishable - sesja z samego hasla przechodzila kazda polityke RLS.
+// Teraz po poprawnym kodzie session_id z JWT trafia do tabeli panel_sesje_ok
+// (tylko service_role), a KAZDA polityka administratora i funkcje wysylkowe
+// sprawdzaja public.gig_sesja_2fa(). Sesja z samego hasla ma inny session_id
+// i nigdy nie trafia na liste. refreshSession zachowuje session_id, wiec
+// odswiezanie tokenu w panelu nie wybija z listy. Sesja GoTrue zaparkowana
+// na czas wyzwania jest uniewazniana przy zlym/przeterminowanym kodzie.
 //
 // POST {akcja:"start", email, haslo}    -> {ok, id}            (mail z kodem)
 // POST {akcja:"potwierdz", id, kod}     -> {ok, session}       (tokeny sesji)
 //
-// Sekrety: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (wstrzykuje Supabase),
-//          SUPABASE_ANON_KEY (do sprawdzenia hasla), RESEND_API_KEY, FROM_EMAIL.
-// Wdrozenie z verify_jwt = false — to jest wlasnie endpoint logowania.
+// Sekrety: SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY (wstrzykuje
+//          Supabase), RESEND_API_KEY, FROM_EMAIL.
+// Wdrozenie z verify_jwt = false - to jest wlasnie endpoint logowania.
+// SQL: backend/supabase_panel_konta.sql, backend/supabase_2fa_sesje.sql
 // ============================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -24,9 +33,10 @@ const CORS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const WAZNOSC_MIN = 10;   // ile minut zyje kod
-const MAX_PROB = 5;       // ile razy mozna sie pomylic, zanim wyzwanie przepada
-const MAX_START_15MIN = 5; // ile razy mozna wolac "start" na jeden adres
+const WAZNOSC_MIN = 10;      // ile minut zyje kod
+const MAX_PROB = 5;          // ile razy mozna sie pomylic, zanim wyzwanie przepada
+const MAX_START_15MIN = 5;   // ile razy mozna wolac "start" na jeden adres
+const SESJA_DNI = 14;        // jak dlugo sesja po kodzie zostaje na liscie panel_sesje_ok
 
 function json(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -38,6 +48,14 @@ function admin() {
   return createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false, autoRefreshToken: false } },
+  );
+}
+
+function anonKlient() {
+  return createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_ANON_KEY")!,
     { auth: { persistSession: false, autoRefreshToken: false } },
   );
 }
@@ -61,6 +79,16 @@ function kod6(): string {
   return String(t[0] % 1000000).padStart(6, "0");
 }
 
+/* Ladunek JWT bez weryfikacji podpisu: token wlasnie dostalismy z GoTrue,
+   potrzebujemy tylko session_id, zeby wpisac sesje na liste. */
+function jwtClaims(token: string): Record<string, unknown> {
+  try {
+    const p = token.split(".")[1] ?? "";
+    const s = atob(p.replace(/-/g, "+").replace(/_/g, "/"));
+    return JSON.parse(s) as Record<string, unknown>;
+  } catch { return {}; }
+}
+
 const C = { dark: "#16202a", mid: "#cc0a2b", bg: "#fdecef" };
 const LOGO = "https://gig.org.pl/_assets/img/gig-logo-email.png";
 
@@ -79,7 +107,7 @@ function mailKod(kod: string): string {
         </div>
         <p style="margin:0 0 10px;font-size:14px;">Kod jest ważny <strong>${WAZNOSC_MIN} minut</strong> i działa tylko raz.</p>
         <p style="margin:0;font-size:13px;color:#6b7c8c;">
-          Jeśli to nie Ty próbowałeś się zalogować, ktoś zna Twoje hasło — <strong>zmień je natychmiast</strong>
+          Jeśli to nie Ty próbowałeś się zalogować, ktoś zna Twoje hasło. <strong>Zmień je natychmiast</strong>
           i powiadom biuro@gig.org.pl. Bez tego kodu nikt do panelu nie wejdzie.</p>
       </td></tr>
       <tr><td style="background:#f5f8fa;padding:20px 34px;border-top:1px solid #e6ebef;">
@@ -124,7 +152,7 @@ Deno.serve(async (req) => {
   const db = admin();
   await db.rpc("gig_2fa_sprzataj");
 
-  // ── KROK 1: e-mail + haslo → kod na skrzynke ───────────────────────────
+  // ── KROK 1: e-mail + haslo -> kod na skrzynke ──────────────────────────
   if (body.akcja === "start") {
     const email = String(body.email ?? "").trim().toLowerCase();
     const haslo = String(body.haslo ?? "");
@@ -140,13 +168,8 @@ Deno.serve(async (req) => {
       return json({ error: "Zbyt wiele prób logowania. Spróbuj za kilkanaście minut." }, 429);
     }
 
-    // Hasla nie sprawdzamy sami — robi to Supabase Auth, kluczem publicznym.
-    const anon = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { auth: { persistSession: false, autoRefreshToken: false } },
-    );
-    const logow = await anon.auth.signInWithPassword({ email, password: haslo });
+    // Hasla nie sprawdzamy sami - robi to Supabase Auth, kluczem publicznym.
+    const logow = await anonKlient().auth.signInWithPassword({ email, password: haslo });
     if (logow.error || !logow.data.session) {
       return json({ error: "Błędny e-mail lub hasło." }, 401);
     }
@@ -161,17 +184,19 @@ Deno.serve(async (req) => {
 
     if (wpis.error || !wpis.data) {
       console.error("insert 2fa:", wpis.error?.message);
+      await db.rpc("gig_2fa_uniewaznij", { p_refresh: logow.data.session.refresh_token });
       return json({ error: "Nie udało się rozpocząć logowania." }, 500);
     }
 
     if (!await wyslijKod(email, kod)) {
       await db.from("panel_2fa").delete().eq("id", wpis.data.id);
+      await db.rpc("gig_2fa_uniewaznij", { p_refresh: logow.data.session.refresh_token });
       return json({ error: "Nie udało się wysłać kodu. Spróbuj ponownie." }, 502);
     }
     return json({ ok: true, id: wpis.data.id, waznosc_min: WAZNOSC_MIN });
   }
 
-  // ── KROK 2: kod → sesja ────────────────────────────────────────────────
+  // ── KROK 2: kod -> sesja ───────────────────────────────────────────────
   if (body.akcja === "potwierdz") {
     const id  = String(body.id ?? "").trim();
     const kod = String(body.kod ?? "").replace(/\s/g, "");
@@ -182,6 +207,7 @@ Deno.serve(async (req) => {
     const w = await db.from("panel_2fa").select("*").eq("id", id).maybeSingle();
     if (w.error || !w.data) return json({ error: "Kod wygasł. Zaloguj się jeszcze raz." }, 401);
     if (new Date(w.data.wygasa).getTime() < Date.now()) {
+      await db.rpc("gig_2fa_uniewaznij", { p_refresh: w.data.refresh_token });
       await db.from("panel_2fa").delete().eq("id", id);
       return json({ error: "Kod wygasł. Zaloguj się jeszcze raz." }, 401);
     }
@@ -189,6 +215,7 @@ Deno.serve(async (req) => {
     if (!rowneStalyCzas(await sha256(kod + "|" + w.data.email), w.data.kod_hash)) {
       const proby = (w.data.proby ?? 0) + 1;
       if (proby >= MAX_PROB) {
+        await db.rpc("gig_2fa_uniewaznij", { p_refresh: w.data.refresh_token });
         await db.from("panel_2fa").delete().eq("id", id);
         return json({ error: "Za dużo błędnych prób. Zaloguj się jeszcze raz." }, 401);
       }
@@ -196,18 +223,29 @@ Deno.serve(async (req) => {
       return json({ error: `Nieprawidłowy kod. Pozostało prób: ${MAX_PROB - proby}.` }, 401);
     }
 
-    // Kod dobry — dopiero teraz zamieniamy przechowany refresh token na sesje.
-    const anon = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { auth: { persistSession: false, autoRefreshToken: false } },
-    );
-    const sesja = await anon.auth.refreshSession({ refresh_token: w.data.refresh_token });
+    // Kod dobry - zamieniamy przechowany refresh token na sesje.
+    const sesja = await anonKlient().auth.refreshSession({ refresh_token: w.data.refresh_token });
     await db.from("panel_2fa").delete().eq("id", id);
-
     if (sesja.error || !sesja.data.session) {
       return json({ error: "Sesja wygasła. Zaloguj się jeszcze raz." }, 401);
     }
+
+    /* Dopiero teraz sesja dostaje prawo do danych: wpis na liste panel_sesje_ok,
+       ktora sprawdzaja polityki RLS i funkcje wysylkowe. */
+    const claims = jwtClaims(sesja.data.session.access_token);
+    const sid = String(claims.session_id ?? "");
+    const wpisS = /^[0-9a-f-]{36}$/i.test(sid)
+      ? await db.from("panel_sesje_ok").upsert({
+          session_id: sid, email: w.data.email,
+          wygasa: new Date(Date.now() + SESJA_DNI * 86_400_000).toISOString(),
+        })
+      : { error: { message: "brak session_id w JWT" } };
+    if (wpisS.error) {
+      console.error("panel_sesje_ok:", wpisS.error.message);
+      await db.rpc("gig_2fa_uniewaznij", { p_refresh: sesja.data.session.refresh_token });
+      return json({ error: "Nie udało się otworzyć sesji. Spróbuj jeszcze raz." }, 500);
+    }
+
     return json({
       ok: true,
       session: {

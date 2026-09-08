@@ -39,6 +39,13 @@ function json(body: unknown, status = 200): Response {
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
+/* Ladunek JWT bez weryfikacji podpisu (podpis sprawdzil juz auth.getUser). */
+function jwtClaims(token: string): Record<string, unknown> {
+  try {
+    const p = token.split(".")[1] ?? "";
+    return JSON.parse(atob(p.replace(/-/g, "+").replace(/_/g, "/"))) as Record<string, unknown>;
+  } catch { return {}; }
+}
 
 /* Ta sama szata co w wyslij-mail: logo GIG, czerwona kreska, stopka z wypisem. */
 function layout(title: string, body: string, unsubUrl: string, rodzaj = "baza"): string {
@@ -103,14 +110,22 @@ Deno.serve(async (req) => {
   const { data: u, error: uErr } = await sb.auth.getUser(jwt);
   if (uErr || !u?.user?.email) return json({ error: "brak uprawnien" }, 401);
 
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false, autoRefreshToken: false } });
+
+  /* Audyt 8.09.2026: sesja musi byc na liscie panel_sesje_ok (przeszla kod z maila);
+     sam poprawny JWT z publicznego grantu haslem to za malo. */
+  const sid = String(jwtClaims(jwt).session_id ?? "");
+  const s2 = /^[0-9a-f-]{36}$/i.test(sid)
+    ? await admin.from("panel_sesje_ok").select("session_id").eq("session_id", sid).gt("wygasa", new Date().toISOString()).maybeSingle()
+    : { data: null, error: null };
+  if (s2.error || !s2.data) return json({ error: "sesja bez potwierdzenia kodem z e-maila - zaloguj sie ponownie" }, 401);
+
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "nieprawidlowe dane" }, 400); }
   const wysylkaId = String(body.wysylka_id ?? "").trim();
   if (!/^[0-9a-f-]{36}$/i.test(wysylkaId)) return json({ error: "brak wysylka_id" }, 400);
   const porcja = Math.min(PORCJA_MAX, Math.max(1, Number(body.porcja) || 300));
-
-  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-    { auth: { persistSession: false, autoRefreshToken: false } });
 
   const { data: kampania, error: kErr } = await admin.from("wysylki").select("*").eq("id", wysylkaId).maybeSingle();
   if (kErr || !kampania) return json({ error: "nie znaleziono kampanii" }, 404);

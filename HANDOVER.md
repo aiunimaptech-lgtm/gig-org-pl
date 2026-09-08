@@ -335,6 +335,32 @@ ekran. Rozmiar po przeciągnięciu zapamiętywany w `localStorage` (`gig-modal:<
 tylko, jeśli mieści się w bieżącym oknie. Klasa `modal-szeroki` = szersze domyślne okno
 (edycja szkolenia). Obsługa w `_admin.js` (`gigModalPrzygotuj`, `gigModalOdtworzRozmiar`).
 
+### Audyt bezpieczeństwa (8 września 2026): dwie podatności naprawione
+
+**1. Kod z e-maila był tylko w UI (High).** Publiczny grant `POST /auth/v1/token?grant_type=password`
+z kluczem publishable dawał każdemu, kto zna hasło, sesję przechodzącą wszystkie polityki
+`auth.role() = 'authenticated'` i funkcje wysyłkowe. Naprawa (`backend/supabase_2fa_sesje.sql`):
+tabela `panel_sesje_ok` (tylko service_role), do której `panel-logowanie` (v2) wpisuje `session_id`
+z JWT po poprawnym kodzie; **każda polityka administratora** ma teraz warunek
+`and public.gig_sesja_2fa()`, a `wyslij-mail` (v6) i `wyslij-kampanie` (v5) sprawdzają listę
+kluczem service_role. Sesja z samego hasła ma inny `session_id` i nigdy nie trafia na listę.
+`refreshSession` zachowuje `session_id`, więc odświeżanie w panelu działa. Wpis żyje 14 dni;
+`_admin.js requireAuth()` wylogowuje sesję spoza listy (RPC `gig_sesja_2fa`). Sesja GoTrue
+zaparkowana na czas wyzwania jest unieważniana przy złym/przeterminowanym kodzie
+(`gig_2fa_uniewaznij`). `pierwsze-haslo.html` nie loguje już w przeglądarce.
+**Nowa tabela dla panelu = ten sam warunek w polityce.**
+
+**2. Token akceptacji wniosku czytelny z każdej sesji (Medium).** Polityka SELECT na
+`panel_wnioski` wystawiała `token_akcji`; sesja panelu mogła złożyć wniosek na obcy adres
+i sama go zatwierdzić (trwałe drugie konto, kody 2FA do atakującego). Naprawa: zero grantów
+na tabelę dla anon/authenticated, token w bazie tylko jako sha256, GET z maila bez skutków
+(302 na `wniosek.html#t=...`), decyzja przez POST z przyciskiem na stronie (skanery linków
+w poczcie niczego nie zatwierdzą), zapis `rozpatrzono_ip`. `panel-rejestracja` v3.
+
+Sprawdzone i bez zastrzeżeń: RLS na wszystkich tabelach, `esc()` w panelu i mailach, brak
+otwartych przekierowań, wypisy na UUID. Do rozważenia: lista dozwolonych adresów w politykach
+(`auth.jwt()->>'email'`) jako trzecia warstwa; ochrona przed wyciekłymi hasłami w Auth.
+
 ### Sesja 3 (6 września 2026)
 
 | commit | co |

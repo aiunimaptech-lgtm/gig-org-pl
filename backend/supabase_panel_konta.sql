@@ -29,9 +29,10 @@ create table if not exists public.panel_wnioski (
   uzasadnienie text,
   status       text not null default 'oczekuje'
                check (status in ('oczekuje','zaakceptowany','odrzucony')),
-  token_akcji  text not null,
+  token_akcji  text not null,          -- sha256(token z linku), nigdy surowy token
   rozpatrzono  timestamptz,
-  rozpatrzyl   text,
+  rozpatrzyl   text,                   -- skad decyzja (link z maila do biura)
+  rozpatrzono_ip text,
   created_at   timestamptz not null default now()
 );
 -- Jeden OCZEKUJACY wniosek na adres — ponowne wyslanie formularza nie zasypie biura.
@@ -41,14 +42,19 @@ create unique index if not exists idx_panel_wnioski_oczekuje
 alter table public.panel_2fa     enable row level security;
 alter table public.panel_wnioski enable row level security;
 
+-- Audyt 8.09.2026: ZADNEGO dostepu do panel_wnioski z przegladarki. Wczesniejsza
+-- polityka SELECT dla authenticated wystawiala token_akcji kazdej sesji panelu,
+-- ktora mogla sama sobie zatwierdzic konto. Token lezy w bazie tylko jako sha256.
 drop policy if exists "wnioski admin odczyt" on public.panel_wnioski;
-create policy "wnioski admin odczyt" on public.panel_wnioski
-  for select using (auth.role() = 'authenticated');
+revoke all on public.panel_wnioski from anon, authenticated;
+alter table public.panel_wnioski add column if not exists rozpatrzono_ip text;
 
--- Widok bez token_akcji — do ewentualnej listy wnioskow w panelu.
+-- Widok bez token_akcji: gdyby lista wnioskow miala trafic do panelu, wystaw
+-- TYLKO ten widok (jako security_invoker = false z grantem na widok), nie tabele.
 create or replace view public.panel_wnioski_lista with (security_invoker = true) as
 select id, email, imie, uzasadnienie, status, rozpatrzono, rozpatrzyl, created_at
 from public.panel_wnioski;
+revoke all on public.panel_wnioski_lista from anon, authenticated;
 
 create or replace function public.gig_2fa_sprzataj()
 returns void language sql security definer set search_path = public as $$
