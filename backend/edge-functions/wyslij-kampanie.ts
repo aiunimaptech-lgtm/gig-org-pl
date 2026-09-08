@@ -41,9 +41,15 @@ function esc(s: string): string {
 }
 
 /* Ta sama szata co w wyslij-mail: logo GIG, czerwona kreska, stopka z wypisem. */
-function layout(title: string, body: string, unsubUrl: string): string {
+function layout(title: string, body: string, unsubUrl: string, rodzaj = "baza"): string {
+  const newsletter = rodzaj === "newsletter";
+  /* Odbiorca ma wiedziec, SKAD mamy jego adres - inna odpowiedz dla kogos,
+     kto sam zapisal sie na newsletter, inna dla adresu z bazy kontaktow. */
+  const skad = newsletter
+    ? "Otrzymujesz tę wiadomość, ponieważ zapisałeś/-aś się do newslettera Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby."
+    : "Otrzymujesz tę wiadomość, ponieważ Twój adres jest w bazie kontaktów Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.";
   const wypis = unsubUrl
-    ? `<p style="margin:14px 0 0;font-size:12px;color:#9aa7b2;line-height:1.6;">Nie chcesz otrzymywać wiadomości od Izby? <a href="${unsubUrl}" style="color:#9aa7b2;text-decoration:underline;">Wypisz się z listy</a>.</p>`
+    ? `<p style="margin:14px 0 0;font-size:12px;color:#9aa7b2;line-height:1.6;">${newsletter ? "Nie chcesz otrzymywać newslettera?" : "Nie chcesz otrzymywać wiadomości od Izby?"} <a href="${unsubUrl}" style="color:#9aa7b2;text-decoration:underline;">${newsletter ? "Wypisz się z newslettera" : "Wypisz się z listy"}</a>.</p>`
     : "";
   return `<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#eef1f4;font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:#2b3a45;">
@@ -56,7 +62,7 @@ function layout(title: string, body: string, unsubUrl: string): string {
       <tr><td style="padding:30px 34px 26px;">
         <h1 style="margin:0 0 14px;font-size:21px;line-height:1.3;color:#16202a;font-weight:800;">${esc(title)}</h1>
         <div style="font-size:15px;line-height:1.65;color:#38444e;">${body}</div>
-        <div style="margin:22px 0 0;padding-top:16px;border-top:1px solid #edf1f4;font-size:12.5px;color:#9aa7b2;line-height:1.6;">Otrzymujesz tę wiadomość, ponieważ Twój adres jest w bazie kontaktów Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.</div>
+        <div style="margin:22px 0 0;padding-top:16px;border-top:1px solid #edf1f4;font-size:12.5px;color:#9aa7b2;line-height:1.6;">${skad}</div>
       </td></tr>
       <tr><td style="background:#f5f8fa;padding:20px 34px;border-top:1px solid #e6ebef;">
         <p style="margin:0;font-size:12px;color:#7a8b97;line-height:1.7;">
@@ -127,7 +133,7 @@ Deno.serve(async (req) => {
 
   const ile = Math.min(porcja, dzisiajZostalo);
   const { data: odbiorcy, error: oErr } = await admin.from("wysylki_odbiorcy")
-    .select("id,email,baza_email_id").eq("wysylka_id", wysylkaId).eq("status", "czeka").limit(ile);
+    .select("id,email,baza_email_id,newsletter_id").eq("wysylka_id", wysylkaId).eq("status", "czeka").limit(ile);
   if (oErr) return json({ error: "blad odczytu kolejki: " + oErr.message }, 500);
 
   if (!odbiorcy || odbiorcy.length === 0) {
@@ -141,14 +147,19 @@ Deno.serve(async (req) => {
 
   const tresc = oczyscHtml(String(kampania.html ?? ""));
   const temat = String(kampania.temat ?? "").trim();
+  const rodzaj = kampania.rodzaj === "newsletter" ? "newsletter" : "baza";
   let wyslane = 0, bledy = 0;
 
   for (let i = 0; i < odbiorcy.length; i += BATCH) {
     const paczka = odbiorcy.slice(i, i + BATCH);
     const payload = paczka.map((r) => {
+      /* Link wypisu zalezy od tego, skad jest adres: Baza e-mail ma swoj
+         (baza-wypis), zapis z newslettera swoj (newsletter-unsubscribe). */
       const wypis = r.baza_email_id
         ? `${FUNCTIONS_BASE}/baza-wypis?id=${encodeURIComponent(String(r.baza_email_id))}`
-        : "";
+        : r.newsletter_id
+          ? `${FUNCTIONS_BASE}/newsletter-unsubscribe?id=${encodeURIComponent(String(r.newsletter_id))}`
+          : "";
       /* List-Unsubscribe: filtry (m.in. rspamd u polskich hostingow) traktuja
          masowa poczte BEZ tego naglowka jako podejrzana, a Gmail/Yahoo wymagaja
          go od nadawcow masowych. `List-Unsubscribe-Post` wlacza przycisk
@@ -165,7 +176,7 @@ Deno.serve(async (req) => {
         subject: temat,
         reply_to: REPLY_TO,
         headers: naglowki,
-        html: layout(temat, tresc, wypis),
+        html: layout(temat, tresc, wypis, rodzaj),
       };
     });
 

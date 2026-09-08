@@ -55,10 +55,17 @@
 
             <!-- NEWSLETTER -->
             <div class="tab-pane" data-tab="newsletter">
-              <div class="toolbar">
+              <div id="nlSum" style="display:flex;gap:18px;flex-wrap:wrap;margin:0 0 14px;font-size:13px;color:#6b7f84;"></div>
+              <div class="toolbar" style="gap:12px;flex-wrap:wrap;">
                 <div class="search-box"><span class="search-icon">⌕</span>
                   <input type="text" class="form-control" id="nlSearch" placeholder="Szukaj po e-mailu…"></div>
+                <select id="nlStatus" class="form-control" style="max-width:170px;" title="Kogo pokazać">
+                  <option value="aktywni">Aktywni</option>
+                  <option value="unsubscribed">Wypisani</option>
+                  <option value="">Wszyscy</option>
+                </select>
                 <button class="btn btn-outline btn-sm" id="nlExport">⬇ Eksport CSV</button>
+                <button class="btn btn-primary btn-sm" id="nlKampania" title="Wiadomość do wszystkich aktywnych adresów — kolejką, porcjami, z limitem dziennym">📣 Wyślij newsletter</button>
               </div>
               <div class="table-wrap">
                 <table class="admin-table">
@@ -116,21 +123,43 @@
       return true;
     }
 
+    /* Newsletter ma trzy stany: nowy (nikt nie widział), przeczytany, wypisany.
+       Wypisany zostaje w tabeli — to dowód, że osoba zrezygnowała, i zapora przed
+       ponownym dopisaniem — ale nie wchodzi do żadnej wysyłki. */
+    const aktywny = r => r.status !== 'unsubscribed';
+    const ETYK_NL = { new: ['new','nowy'], read: ['read','przeczytany'], unsubscribed: ['cancelled','wypisany'] };
+
+    function podsumujNl() {
+      const akt = nlData.filter(aktywny).length;
+      const wyp = nlData.length - akt;
+      const od = new Date(); od.setDate(1); od.setHours(0,0,0,0);
+      const mies = nlData.filter(r => aktywny(r) && new Date(r.created_at) >= od).length;
+      document.getElementById('nlSum').innerHTML =
+        `<span>Aktywnych: <strong style="color:#16202a;font-size:15px;">${akt}</strong></span>` +
+        `<span>Wypisanych: <strong style="color:#16202a;font-size:15px;">${wyp}</strong></span>` +
+        `<span>Nowych w tym miesiącu: <strong style="color:#16202a;font-size:15px;">${mies}</strong></span>`;
+    }
+
     function renderNl(filter='') {
       const f = filter.toLowerCase();
-      const rows = nlData.filter(r => (r.email||'').toLowerCase().includes(f));
+      const st = document.getElementById('nlStatus').value;
+      const rows = nlData.filter(r => (r.email||'').toLowerCase().includes(f))
+        .filter(r => st === '' ? true : (st === 'aktywni' ? aktywny(r) : r.status === st));
+      podsumujNl();
       const tb = document.getElementById('nlRows');
       if (!rows.length) { tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:24px;color:#6b7f84;">Brak zapisów.</td></tr>'; return; }
-      tb.innerHTML = rows.map(r => `
+      tb.innerHTML = rows.map(r => {
+        const [kl, et] = ETYK_NL[r.status] || ['read', r.status || '—'];
+        return `
         <tr>
           <td><strong>${esc(r.email)}</strong></td>
           <td style="white-space:nowrap;">${fmtDate(r.created_at)}</td>
-          <td><span class="badge badge-${r.status==='new'?'new':'read'}">${r.status==='new'?'nowy':'przeczytany'}</span></td>
+          <td><span class="badge badge-${kl}">${et}</span></td>
           <td class="actions" style="white-space:nowrap;">
             ${r.status==='new'?`<button class="btn btn-ghost btn-xs" data-mark="${r.id}">✓ przeczytane</button>`:''}
             <button class="btn btn-danger btn-xs" data-usun-nl="${r.id}" title="Usuń adres z listy newslettera">🗑</button>
           </td>
-        </tr>`).join('');
+        </tr>`; }).join('');
       tb.querySelectorAll('[data-mark]').forEach(b => b.addEventListener('click', async () => {
         if (await markRead('submissions_newsletter', b.dataset.mark)) load();
       }));
@@ -208,9 +237,41 @@
       if (!await requireAuth()) return;
       initTabs('#tabsRoot');
       document.getElementById('nlSearch').addEventListener('input', e => renderNl(e.target.value));
+      document.getElementById('nlStatus').addEventListener('change', () => renderNl(document.getElementById('nlSearch').value));
       document.getElementById('ktSearch').addEventListener('input', e => renderKt(e.target.value));
       document.getElementById('nlExport').addEventListener('click', () =>
-        exportCSV(nlData, [{key:'email',label:'E-mail'},{key:'status',label:'Status'},{key:'created_at',label:'Data'}], 'newsletter-gig.csv'));
+        exportCSV(nlData.map(r => ({ email: r.email, status: (ETYK_NL[r.status] || [0, r.status])[1], data: fmtDate(r.created_at) })),
+          [{key:'email',label:'E-mail'},{key:'status',label:'Status'},{key:'data',label:'Data zapisu'}], 'newsletter-gig.csv'));
+
+      /* Wysyłka newslettera = kampania w tej samej kolejce co Baza e-mail (porcje,
+         limit dzienny, bez dubli), tylko z własną stopką i linkiem wypisu z newslettera.
+         Do kolejki idą WYŁĄCZNIE aktywne adresy — wypisani nigdy. */
+      document.getElementById('nlKampania').addEventListener('click', () => {
+        const odb = nlData.filter(aktywny).map(r => ({ email: r.email, name: '', id: r.id }));
+        if (!odb.length) { toast('Brak aktywnych adresów w newsletterze'); return; }
+        gigKreatorMaila({
+          odbiorcy: odb, rodzaj: 'newsletter', tytul: 'Newsletter GIG',
+          etykietaWyslij: '📣 Utwórz kampanię',
+          opis: `<strong>newsletter</strong> — wysyłka porcjami, z limitem dziennym`,
+          zamiastWysylki: async ({ temat, html, odbiorcy }) => {
+            const sesja = await getSession();
+            const { data: kamp, error: e1 } = await db.from('wysylki').insert({
+              temat, html, rodzaj: 'newsletter',
+              opis_filtra: 'newsletter — ' + odbiorcy.length + ' adresów',
+              status: 'robocza', limit_dzienny: 100,
+              utworzyl: sesja && sesja.user ? sesja.user.email : null
+            }).select('id').single();
+            if (e1) throw e1;
+            const wiersze = odbiorcy.map(o => ({ wysylka_id: kamp.id, email: o.email, newsletter_id: o.id || null }));
+            for (let i = 0; i < wiersze.length; i += 500) {
+              const { error: e2 } = await db.from('wysylki_odbiorcy').insert(wiersze.slice(i, i + 500));
+              if (e2) throw e2;
+            }
+            toast('Kampania newslettera utworzona: ' + wiersze.length + ' adresów', 'success');
+            window.location.href = 'wysylki.html';
+          }
+        });
+      });
       document.getElementById('ktExport').addEventListener('click', () =>
         exportCSV(ktData, [{key:'name',label:'Imię'},{key:'email',label:'E-mail'},{key:'subject',label:'Temat'},{key:'message',label:'Wiadomość'},{key:'created_at',label:'Data'}], 'kontakt-gig.csv'));
       /* Zakładka ↔ hash w adresie. Menu boczne linkuje do #newsletter / #kontakt;

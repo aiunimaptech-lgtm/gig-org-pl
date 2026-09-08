@@ -123,7 +123,7 @@
         <tr data-id="${k.id}">
           <td style="max-width:280px;">
             <div class="wy-temat">${esc(k.temat)}</div>
-            <div class="wy-sub">${esc(k.opis_filtra || '—')}</div>
+            <div class="wy-sub">${k.rodzaj === 'newsletter' ? '<span class="badge badge-read" style="margin-right:6px;">newsletter</span>' : ''}${esc(k.opis_filtra || '—')}</div>
             <div class="wy-sub">${fmtDate(k.created_at)}${k.utworzyl ? ' · ' + esc(k.utworzyl) : ''}</div>
           </td>
           <td class="wy-post">

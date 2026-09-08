@@ -303,6 +303,23 @@ nie mial: Szkolenie, Termin, Cena, Cena dla czlonkow, JST, Faktura-kiedy, Odbior
 - Termin i ceny z tabeli `szkolenia`, dopasowane **po tytule** (jak reszta panelu).
 - Puste `faktura_kiedy` (zgloszenia sprzed wrzesnia 2026) daje pusta komorke, nie „przed".
 
+### Newsletter — zarządzanie i wysyłka (`admin/formularze.html#newsletter`)
+
+Zakładka pokazuje trzy stany adresu: **nowy** (nikt nie widział), **przeczytany**, **wypisany**
+(`status = unsubscribed`, plakietka czerwona). Filtr Aktywni / Wypisani / Wszyscy, nad tabelą
+liczniki (aktywnych, wypisanych, nowych w tym miesiącu). Wypisany **zostaje** w tabeli — to dowód
+rezygnacji i zapora przed ponownym dopisaniem — ale nie wchodzi do żadnej wysyłki.
+
+**„📣 Wyślij newsletter"** zakłada kampanię w tej samej kolejce, co Baza e-mail (`wysylki` +
+`wysylki_odbiorcy`; wysyłka w zakładce **Wysyłki**, porcjami, z limitem dziennym, bez dubli).
+Różnice względem kampanii z Bazy: `wysylki.rodzaj = 'newsletter'`, odbiorca ma `newsletter_id`
+(nie `baza_email_id`), a funkcja `wyslij-kampanie` (v4) daje wtedy inną stopkę („zapisałeś się
+do newslettera") i link wypisu do `newsletter-unsubscribe` zamiast `baza-wypis`. Nagłówki
+`List-Unsubscribe` idą w obu rodzajach. Do kolejki trafiają **wyłącznie aktywne** adresy.
+
+Szybka wiadomość do jednej osoby z newslettera nie istnieje celowo — każdy mail do listy
+ma przejść przez kolejkę (limit dzienny, nagłówki wypisu, brak dubli).
+
 ### Sesja 3 (6 września 2026)
 
 | commit | co |

@@ -21,6 +21,7 @@ create table if not exists public.wysylki (
   opis_filtra   text,                         -- z jakiego segmentu Bazy e-mail powstała
   status        text default 'robocza' check (status in ('robocza','w_toku','wstrzymana','zakonczona')),
   limit_dzienny integer default 100 check (limit_dzienny between 1 and 20000),
+  rodzaj        text not null default 'baza' check (rodzaj in ('baza','newsletter')),
   utworzyl      text,
   created_at    timestamptz default now(),
   updated_at    timestamptz default now()
@@ -31,7 +32,8 @@ create table if not exists public.wysylki (
 create table if not exists public.wysylki_odbiorcy (
   id            uuid primary key default gen_random_uuid(),
   wysylka_id    uuid not null references public.wysylki(id) on delete cascade,
-  baza_email_id uuid,                         -- do indywidualnego linku wypisu (baza-wypis)
+  baza_email_id uuid,                         -- adres z Bazy e-mail  -> link wypisu baza-wypis
+  newsletter_id uuid,                         -- adres z newslettera  -> link newsletter-unsubscribe
   email         text not null,
   status        text default 'czeka' check (status in ('czeka','wyslany','blad')),
   blad          text,
@@ -53,6 +55,7 @@ create policy "wys odb admin all" on public.wysylki_odbiorcy
 -- Postęp kampanii jednym zapytaniem (security_invoker: RLS jak dla pytającego).
 create or replace view public.wysylki_postep with (security_invoker = true) as
 select w.id, w.temat, w.opis_filtra, w.status, w.limit_dzienny, w.utworzyl, w.created_at, w.updated_at,
+       w.rodzaj,
        count(o.*)                                                              as razem,
        count(o.*) filter (where o.status = 'wyslany')                          as wyslane,
        count(o.*) filter (where o.status = 'blad')                             as bledy,

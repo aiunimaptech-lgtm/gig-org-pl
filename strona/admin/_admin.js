@@ -221,8 +221,8 @@ function gigKreatorMaila(o) {
   gigMailZbuduj();
   gigMailOpcje = { ...o, odbiorcy };
 
-  document.getElementById('gigMailTytul').textContent =
-    odbiorcy.length === 1 ? 'Wiadomość do: ' + (odbiorcy[0].name || odbiorcy[0].email) : 'Wiadomość do uczestników';
+  document.getElementById('gigMailTytul').textContent = o.tytul ||
+    (odbiorcy.length === 1 ? 'Wiadomość do: ' + (odbiorcy[0].name || odbiorcy[0].email) : 'Wiadomość do uczestników');
   const box = document.getElementById('gigMailOdbiorcy');
   if (odbiorcy.length === 1) {
     box.innerHTML = `Do: <strong>${esc(odbiorcy[0].email)}</strong>${odbiorcy[0].name ? ' — ' + esc(odbiorcy[0].name) : ''}`
