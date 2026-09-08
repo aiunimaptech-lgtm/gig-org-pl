@@ -374,9 +374,8 @@ pusty). Powiadomienie do biura ma wiersz „Członek GIG". Istniejące zgłoszen
 
 ### Członkowie: NIP i REGON uzupełnione (8 września 2026)
 
-Stan: **63 z 64** członków ma NIP (było 13), 62 mają REGON, 17 KRS. Brakuje tylko
-**Geodezja mgr inż. Marcin Tlałka s.c.** (Kraków) — spółka cywilna, jej NIP nie jest publiczny
-(w CEIDG jest tylko JDG właściciela w Milówce: 5532485093, to NIE numer spółki).
+Stan: **64 z 64** członków ma NIP (było 13), 63 mają REGON, 17 KRS. Wszystkie NIP-y przeszły
+kontrolę sumy kontrolnej. Bez REGON-u jest tylko Piotr Wiśniewski GEOBUD.
 
 Jak szukać NIP-u kolejnych firm, w tej kolejności:
 1. **CEIDG API v3** (token: `C:\Claude-projekty\!Anthropic_api_key\ceidg-token.txt`, odstęp 3,6 s):
@@ -394,6 +393,9 @@ Jak szukać NIP-u kolejnych firm, w tej kolejności:
 - **Adres w CEIDG bywa inny niż korespondencyjny** (Szczepański: baza GIG Białobrzegi, CEIDG Łańcut).
 - **Osoba kontaktowa ≠ właściciel** (GROTECH: kontakt Marcin Jamrozy, właściciel Krzysztof Grochowina).
 - Kaznocha: najpierw wpisany NIP spółki rodzinnej, biuro podało właściwy dla działalności Michała.
+- Tlałka s.c.: NIP spółki 9452298273 (od biura); JDG właściciela w Milówce ma 5532485093 — inny podmiot.
+- Warto sprawdzać sumę kontrolną NIP (10 cyfr, wagi 6,5,7,2,3,4,5,6,7, modulo 11) — zapytanie
+  kontrolne jest w historii sesji, wyłapuje literówki przy ręcznym wpisywaniu w panelu.
 
 ### Sesja 3 (6 września 2026)
 
