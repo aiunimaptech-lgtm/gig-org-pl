@@ -17,6 +17,8 @@
 // (NOTIFY_NEWSLETTER_EMAILS) - zapisow bywa duzo i nie musza trafiac do biura.
 // ============================================================
 
+import { createClient } from "npm:@supabase/supabase-js@2";
+
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY")!;
 const FROM_EMAIL = Deno.env.get("FROM_EMAIL") ?? "Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>";
 const FUNCTIONS_BASE = (Deno.env.get("SUPABASE_URL") ?? "") + "/functions/v1";
@@ -121,7 +123,7 @@ function kontaktMail(rec: Record<string, unknown>) {
     ${msg ? `<div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
       <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Twoja wiadomość:</p>
       <p style="margin:0;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(msg)}</p></div>` : ""}`;
-  return { subject: "Otrzymaliśmy Twoją wiadomość — GIG", html: layout("Wiadomość przyjęta ✓", body) };
+  return { subject: "Otrzymaliśmy Twoją wiadomość - GIG", html: layout("Wiadomość przyjęta ✓", body) };
 }
 
 /* Rodzaj zgloszenia rozpoznajemy po prefiksie tematu, ktory ustawia
@@ -137,8 +139,8 @@ function rodzaj(subject: string): string {
 function notifyMail(rec: Record<string, unknown>) {
   const subject = (rec.subject as string) || "";
   const typ = rodzaj(subject);
-  const name = (rec.name as string) || "—";
-  const from = (rec.email as string) || "—";
+  const name = (rec.name as string) || "-";
+  const from = (rec.email as string) || "-";
   const msg = (rec.message as string) || "";
   const kiedy = new Date().toLocaleString("pl-PL", { timeZone: "Europe/Warsaw" });
 
@@ -166,7 +168,7 @@ function notifyMail(rec: Record<string, unknown>) {
     </p>`;
 
   return {
-    subject: `[GIG] ${typ}${name && name !== "—" ? " — " + name : ""}`,
+    subject: `[GIG] ${typ}${name && name !== "-" ? ": " + name : ""}`,
     html: layout("Nowe zgłoszenie", body, false),
   };
 }
@@ -174,7 +176,7 @@ function notifyMail(rec: Record<string, unknown>) {
 /* Powiadomienie o nowym zapisie do newslettera. Krotkie - liczy sie sam fakt
    i adres; Reply-To ustawiamy na zapisujacego sie, zeby dalo sie odpisac wprost. */
 function notifyNewsletterMail(rec: Record<string, unknown>) {
-  const adres = (rec.email as string) || "—";
+  const adres = (rec.email as string) || "-";
   const kiedy = new Date().toLocaleString("pl-PL", { timeZone: "Europe/Warsaw" });
   const body = `
     <p style="margin:0 0 18px;font-size:15px;line-height:1.65;">Nowy zapis do newslettera <strong>gig.org.pl</strong>.</p>
@@ -191,7 +193,7 @@ function notifyNewsletterMail(rec: Record<string, unknown>) {
     <p style="margin:0;font-size:13px;color:#6b7c8c;">
       Pełna lista zapisów jest w <a href="https://gig.org.pl/admin/" style="color:${C.mid};">panelu GIG</a>.
     </p>`;
-  return { subject: `[GIG] Nowy zapis do newslettera — ${adres}`, html: layout("Nowy zapis do newslettera", body, false) };
+  return { subject: `[GIG] Nowy zapis do newslettera: ${adres}`, html: layout("Nowy zapis do newslettera", body, false) };
 }
 
 /* --- ZAPISY NA SZKOLENIA (tabela zapisy_szkolenia) --------------------- */
@@ -252,20 +254,88 @@ function zapisNotifyMail(rec: Record<string, unknown>) {
     </p>`;
 
   return {
-    subject: `[GIG] Zapis na szkolenie — ${s("nabywca_nazwa") || s("email")}`,
+    subject: `[GIG] Zapis na szkolenie: ${s("nabywca_nazwa") || s("email")}`,
     html: layout("Nowy zapis na szkolenie", body, false),
   };
 }
 
-/* Potwierdzenie dla zglaszajacego. Powtarza KOMPLET podanych danych — zglaszajacy ma szanse wychwycic
-   literowke w NIP-ie czy nazwisku, zanim wystawimy fakture. */
-function zapisPotwierdzenieMail(rec: Record<string, unknown>) {
+/* "7 października 2026 r." — miesiac w dopelniaczu, bo tak pisze sie daty po polsku. */
+const MIESIACE = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
+  "lipca", "sierpnia", "września", "października", "listopada", "grudnia"];
+function dataPL(d: Date): string {
+  return `${d.getUTCDate()} ${MIESIACE[d.getUTCMonth()]} ${d.getUTCFullYear()} r.`;
+}
+/* date_start to sam dzien (YYYY-MM-DD); liczymy w UTC, zeby strefa nie przesunela doby. */
+function dzienPrzed(dateStart: string): Date | null {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStart)) return null;
+  const d = new Date(dateStart + "T12:00:00Z");
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d;
+}
+
+type Szkolenie = { date_start: string | null; time_range: string | null; is_online: boolean | null; platnosc: string | null };
+
+/* Zgloszenie nie ma klucza do szkolenia — laczymy po tytule, jak w panelu
+   (bez wielkosci liter i spacji na brzegach). Brak dopasowania = mail bez
+   terminu i bez bloku platnosci, ale nadal wychodzi. */
+async function pobierzSzkolenie(tytul: string): Promise<Szkolenie | null> {
+  const t = tytul.trim();
+  if (!t) return null;
+  try {
+    const db = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { persistSession: false, autoRefreshToken: false } },
+    );
+    const r = await db.from("szkolenia")
+      .select("date_start,time_range,is_online,platnosc")
+      .ilike("title", t.replace(/[%_]/g, (m) => "\\" + m))
+      .limit(1).maybeSingle();
+    if (r.error) { console.error("szkolenia:", r.error.message); return null; }
+    return (r.data as Szkolenie | null) ?? null;
+  } catch (err) {
+    console.error("szkolenia (wyjatek):", err);
+    return null;
+  }
+}
+
+/* Potwierdzenie dla zglaszajacego. Trzy rzeczy, ktore ma zalatwic:
+   1) kiedy przyjdzie link do logowania (dzien przed szkoleniem — liczony z daty),
+   2) jak platnosc: firmy i osoby prywatne PRZED szkoleniem (z numerem konta),
+      jednostki rzadowe/samorzadowe PO, wg terminu z faktury; faktura idzie do KSeF,
+   3) komplet podanych danych — zglaszajacy ma szanse wychwycic literowke
+      w NIP-ie czy nazwisku, zanim wystawimy fakture. */
+function zapisPotwierdzenieMail(rec: Record<string, unknown>, szk: Szkolenie | null) {
   const s = (k: string) => String(rec[k] ?? "").trim();
   const szkolenie = s("szkolenie");
   const takiSam = rec.odbiorca_taki_sam !== false;
   const jst = rec.nabywca_jst === true;
   const faktura = rec.faktura_kiedy === "po" ? "po szkoleniu"
     : (rec.faktura_kiedy === "przed" ? "przed szkoleniem" : "");
+
+  // termin szkolenia + dzien wysylki linku
+  const start = szk?.date_start ? dzienPrzed(szk.date_start) : null;
+  const dataSzk = szk?.date_start ? dataPL(new Date(szk.date_start + "T12:00:00Z")) : "";
+  const termin = dataSzk ? ` w dniu ${dataSzk}${szk?.time_range ? `, godz. ${esc(szk.time_range)}` : ""}` : "";
+  const online = szk?.is_online !== false;
+  const linkInfo = online
+    ? (start
+        ? `Link do logowania na szkolenie prześlemy <strong>${dataPL(start)}</strong>, czyli dzień przed terminem.`
+        : `Link do logowania na szkolenie prześlemy dzień przed jego terminem.`)
+    : (start
+        ? `Szczegóły organizacyjne prześlemy <strong>${dataPL(start)}</strong>, czyli dzień przed terminem.`
+        : `Szczegóły organizacyjne prześlemy dzień przed terminem szkolenia.`);
+
+  // platnosc — inna dla firm/osob, inna dla jednostek rzadowych i samorzadowych
+  const przelew = szk?.platnosc
+    ? `<p style="margin:10px 0 0;font-size:14px;line-height:1.7;">${esc(szk.platnosc).replace(/\n/g, "<br>")}</p>`
+    : "";
+  const platnosc = jst
+    ? `<p style="margin:0;font-size:14px;line-height:1.7;">Jednostki rządowe i samorządowe: <strong>płatność po szkoleniu</strong>, zgodnie z terminem określonym na fakturze.</p>`
+      + (rec.faktura_kiedy === "przed"
+          ? `<p style="margin:8px 0 0;font-size:14px;line-height:1.7;">Zgodnie z Państwa wyborem fakturę wystawimy <strong>przed szkoleniem</strong>.</p>` + przelew
+          : "")
+    : `<p style="margin:0;font-size:14px;line-height:1.7;">Firmy geodezyjne oraz indywidualnych uczestników szkolenia prosimy o dokonanie <strong>opłaty przed szkoleniem</strong>.</p>` + przelew;
 
   const blok = (tytul: string, tresc: string) => tresc ? `
     <div style="margin:0 0 14px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
@@ -276,9 +346,13 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>) {
   const body = `
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">Dzień dobry,</p>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">
-      potwierdzamy przyjęcie zgłoszenia${szkolenie ? ` na szkolenie <strong>${esc(szkolenie)}</strong>` : ""}.
-      Skontaktujemy się w sprawie szczegółów organizacyjnych i faktury.</p>
-    <p style="margin:0 0 16px;font-size:14px;line-height:1.6;">Poniżej dane, które otrzymaliśmy — prosimy o ich sprawdzenie:</p>
+      potwierdzamy przyjęcie zgłoszenia${szkolenie ? ` na szkolenie <strong>${esc(szkolenie)}</strong>${termin}` : ""}.</p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.65;">${linkInfo}</p>
+
+    ${blok("Płatność", `<tr><td colspan="2" style="padding:2px 0;color:${C.dark};">${platnosc}
+      <p style="margin:10px 0 0;font-size:14px;line-height:1.7;">Faktura zostanie wysłana do <strong>KSeF</strong>.</p></td></tr>`)}
+
+    <p style="margin:0 0 16px;font-size:14px;line-height:1.6;">Poniżej dane, które otrzymaliśmy. Prosimy o ich sprawdzenie:</p>
 
     ${blok("Uczestnicy",
       wierszTabeli("Liczba osób", esc(s("liczba_osob"))) +
@@ -304,8 +378,8 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>) {
       wierszTabeli("Uwagi", esc(s("uwagi")).replace(/\n/g, "<br>")))}
 
     <p style="margin:18px 0 0;font-size:13px;color:#6b7c8c;line-height:1.6;">
-      Jeśli któraś dana jest niepoprawna, odpisz na tę wiadomość — poprawimy ją przed wystawieniem faktury.</p>`;
-  return { subject: "Potwierdzenie zgłoszenia na szkolenie — GIG", html: layout("Zgłoszenie przyjęte ✓", body) };
+      Jeśli któraś dana jest niepoprawna, odpisz na tę wiadomość, a poprawimy ją przed wystawieniem faktury.</p>`;
+  return { subject: "Potwierdzenie zgłoszenia na szkolenie - GIG", html: layout("Zgłoszenie przyjęte ✓", body) };
 }
 
 /* Jedno wywolanie Resend. Zwraca blad zamiast rzucac, zeby niepowodzenie
@@ -374,8 +448,9 @@ Deno.serve(async (req) => {
         const r = await wyslij(NOTIFY_EMAILS, zapisNotifyMail(rec), nadawca);
         wyniki.powiadomienie = r.ok ? "wyslane" : r.info;
       }
-      // 2) potwierdzenie dla zglaszajacego
-      const p = await wyslij([nadawca], zapisPotwierdzenieMail(rec));
+      // 2) potwierdzenie dla zglaszajacego — z terminem linku i platnoscia ze szkolenia
+      const szk = await pobierzSzkolenie(String(rec.szkolenie ?? ""));
+      const p = await wyslij([nadawca], zapisPotwierdzenieMail(rec, szk));
       wyniki.potwierdzenie = p.ok ? "wyslane" : p.info;
 
     } else if (table === "submissions_newsletter") {
