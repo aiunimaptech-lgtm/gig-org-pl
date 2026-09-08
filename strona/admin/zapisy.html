@@ -213,20 +213,29 @@
           <td><span class="badge badge-${st==='new'?'new':st}">${ETYK[st]||st}</span></td>
           <td class="actions" style="white-space:nowrap;">
             <button class="btn btn-ghost btn-xs" data-podglad="${r.id}">Szczegóły</button>
-            ${st!=='confirmed'?`<button class="btn btn-outline btn-xs" data-potw="${r.id}" title="Potwierdź udział">✓</button>`:''}
-            ${st!=='cancelled'?`<button class="btn btn-outline btn-xs" data-anul="${r.id}" title="Anuluj zgłoszenie (zostaje na liście)">✕ anuluj</button>`:''}
+            ${st==='confirmed'
+              ? `<button class="btn btn-outline btn-xs" data-potw="${r.id}" data-cofnij="1" title="Cofnij potwierdzenie — wróci do „przeczytane”">↩ cofnij ✓</button>`
+              : `<button class="btn btn-outline btn-xs" data-potw="${r.id}" title="Potwierdź udział">✓</button>`}
+            ${st==='cancelled'
+              ? `<button class="btn btn-outline btn-xs" data-anul="${r.id}" data-cofnij="1" title="Przywróć zgłoszenie — wróci do „przeczytane”">↩ przywróć</button>`
+              : `<button class="btn btn-outline btn-xs" data-anul="${r.id}" title="Anuluj zgłoszenie (zostaje na liście)">✕ anuluj</button>`}
             <button class="btn btn-danger btn-xs" data-usun="${r.id}" title="Usuń zgłoszenie na trwałe">🗑</button>
           </td>
         </tr>`;
       }).join('');
 
       tb.querySelectorAll('[data-podglad]').forEach(b => b.addEventListener('click', () => pokaz(b.dataset.podglad)));
+      /* Potwierdzenie i anulowanie sa PRZELACZNIKAMI — pomylkowe klikniecie
+         musi dac sie cofnac. Powrot idzie do „przeczytane”, bo zgloszenie bylo
+         juz ogladane; ustawienie z powrotem „nowe” podniosloby licznik w menu. */
       tb.querySelectorAll('[data-potw]').forEach(b => b.addEventListener('click', async () => {
-        if (await ustawStatus(b.dataset.potw, 'confirmed')) load();
+        const cofamy = b.dataset.cofnij === '1';
+        if (await ustawStatus(b.dataset.potw, cofamy ? 'read' : 'confirmed')) load();
       }));
       tb.querySelectorAll('[data-anul]').forEach(b => b.addEventListener('click', async () => {
-        if (!confirm('Anulować to zgłoszenie? Pozostanie na liście ze statusem „anulowane”.')) return;
-        if (await ustawStatus(b.dataset.anul, 'cancelled')) load();
+        const cofamy = b.dataset.cofnij === '1';
+        if (!cofamy && !confirm('Anulować to zgłoszenie? Pozostanie na liście ze statusem „anulowane”.')) return;
+        if (await ustawStatus(b.dataset.anul, cofamy ? 'read' : 'cancelled')) load();
       }));
       tb.querySelectorAll('[data-usun]').forEach(b => b.addEventListener('click', async () => {
         if (await usunZgloszenie(b.dataset.usun)) load();
