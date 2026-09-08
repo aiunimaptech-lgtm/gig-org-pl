@@ -48,9 +48,12 @@
     ".gig-szk-time{font-size:13px;color:#5b6b78;margin:0 0 10px;}" +
     ".gig-szk-time b{color:#16202a;}" +
     ".gig-szk-prog-t{font-size:14px;font-weight:700;color:#16202a;margin:14px 0 7px;}" +
-    ".gig-szk-prog{margin:0 0 12px;padding-left:0;list-style:none;}" +
-    ".gig-szk-prog li{position:relative;padding-left:20px;margin:0 0 6px;font-size:14.5px;color:#46535f;line-height:1.5;}" +
-    ".gig-szk-prog li::before{content:'';position:absolute;left:5px;top:9px;width:6px;height:6px;border-radius:50%;background:" + RED + ";}" +
+    /* !important i ::marker, bo arkusz motywu (BeTheme) dodaje wlasne kropki do kazdego ul li
+       i przebija zwykle list-style:none - stad wczesniej dwa znaczniki przy kazdym punkcie */
+    ".gig-szk-prog{margin:0 0 14px;padding:0 !important;list-style:none !important;}" +
+    ".gig-szk-prog li{list-style:none !important;position:relative;padding:0 0 0 22px !important;margin:0 0 7px !important;font-size:14.5px;color:#46535f;line-height:1.55;background:none !important;}" +
+    ".gig-szk-prog li::marker{content:'';}" +
+    ".gig-szk-prog li::before{content:'';position:absolute;left:4px;top:.62em;width:7px;height:7px;border-radius:50%;background:" + RED + ";box-shadow:0 0 0 2px #fbe3e8;}" +
     ".gig-szk-ceny{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px;}" +
     ".gig-szk-cena{background:#f4f6f8;border:1px solid #e3e9ee;border-radius:9px;padding:8px 14px;font-size:14px;color:#46535f;}" +
     ".gig-szk-cena b{color:#16202a;font-size:16px;}" +
