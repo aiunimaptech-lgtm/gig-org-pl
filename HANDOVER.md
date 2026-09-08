@@ -377,6 +377,10 @@ pusty). Powiadomienie do biura ma wiersz „Członek GIG". Istniejące zgłoszen
 Stan: **64 z 64** członków ma NIP (było 13), 63 mają REGON, 17 KRS. Wszystkie NIP-y przeszły
 kontrolę sumy kontrolnej. Bez REGON-u jest tylko Piotr Wiśniewski GEOBUD.
 
+**Lista członków w panelu**: nazwa firmy jest linkiem do jej strony (nowa karta, `rel="noopener
+noreferrer"`), a kolumna WWW pokazuje samą domenę zamiast „✓". Firmy bez strony (21 z 64) zostają
+zwykłym tekstem, więc od razu widać, komu brakuje adresu.
+
 **Eksport listy członków**: panel → Członkowie → „⬇ Eksport CSV" (`czlonkowie-gig.csv`, 17 kolumn:
 firma, osoba, e-mail, telefon, adres, województwo, NIP, REGON, KRS, WWW, Facebook, LinkedIn, opis,
 współrzędne, status, dodano, zmieniono). Eksportuje **to, co widać** — z wpisaną frazą w wyszukiwarce

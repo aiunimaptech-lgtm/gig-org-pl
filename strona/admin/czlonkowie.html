@@ -117,6 +117,10 @@
   <script>
     let data=[];
     /* Ten sam filtr dla listy i dla eksportu: co widać na ekranie, to wychodzi w pliku. */
+    /* Sama domena do wyswietlenia: pelny adres z protokolem jest w href i w dymku. */
+    function domena(url){
+      return String(url||'').replace(/^https?:\/\//i,'').replace(/^www\./i,'').replace(/\/.*$/,'');
+    }
     function filtruj(filter=''){
       const f=(filter||'').toLowerCase();
       return data.filter(r=>((r.name||'')+' '+(r.person||'')+' '+(r.region||'')).toLowerCase().includes(f));
@@ -128,12 +132,16 @@
       if(!rows.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak. Uruchom supabase_czlonkowie.sql albo dodaj firmę.</td></tr>';return;}
       tb.innerHTML=rows.map(r=>`
         <tr>
-          <td><strong>${esc(r.name)}</strong></td>
+          <td>${r.website
+            ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer" title="${esc(r.website)}" style="color:#16202a;text-decoration:none;border-bottom:1px solid #d8e0e7;"><strong>${esc(r.name)}</strong> <span style="color:#9aa7b2;font-size:11px;">↗</span></a>`
+            : `<strong>${esc(r.name)}</strong>`}</td>
           <td>${esc(r.region||'—')}</td>
           <td>${esc(r.person||'—')}</td>
           <td>${r.email?`<a href="mailto:${esc(r.email)}" style="color:#cc0a2b;text-decoration:none;">${esc(r.email)}</a>`:'<span style="color:#c0392b">—</span>'}</td>
           <td style="white-space:nowrap;">${r.nip?esc(r.nip):'<span style="color:#c0392b">—</span>'}</td>
-          <td>${r.website?'<span style="color:#2e7d32">✓</span>':'<span style="color:#c0392b">—</span>'}</td>
+          <td>${r.website
+            ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer" style="color:#cc0a2b;text-decoration:none;">${esc(domena(r.website))}</a>`
+            : '<span style="color:#c0392b">—</span>'}</td>
           <td><span class="badge badge-${r.status==='published'?'published':'draft'}">${r.status==='published'?'widoczny':'ukryty'}</span></td>
           <td class="actions">
             <button class="btn btn-ghost btn-xs" data-edit="${r.id}">✎</button>
