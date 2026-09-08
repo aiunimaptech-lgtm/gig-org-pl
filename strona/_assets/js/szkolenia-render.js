@@ -140,7 +140,7 @@
 
     /* Certyfikat jest standardem Izby przy kazdym szkoleniu, wiec zamiast
        polegac na tym, ze ktos wpisze to w opisie, dokladamy adnotacje zawsze. */
-    var cert = '<p class="gig-szk-cert"><span>✓</span> Uczestnicy otrzymują certyfikat GIG</p>';
+    var cert = '<p class="gig-szk-cert"><span>✓</span> Uczestnicy otrzymują zaświadczenie o uczestnictwie w szkoleniu</p>';
 
     var wyk = "";
     if (r.lecturer) {
