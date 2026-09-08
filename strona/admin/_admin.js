@@ -137,16 +137,17 @@ function gigModalPrzygotuj(m) {
 
   /* Rozmiar po przeciagnieciu uchwytu trafia do localStorage; nie zapisujemy
      stanu "na caly ekran" ani zmian wynikajacych z przeplywu tresci. */
+  const zapisz = () => {
+    if (!m.classList.contains('open') || box.classList.contains('modal-max')) return;
+    if (!box.style.width && !box.style.height) return;   // nikt nie ciagnal uchwytu
+    try { localStorage.setItem(GIG_MODAL_KLUCZ(m.id), JSON.stringify({ w: box.offsetWidth, h: box.offsetHeight })); } catch (_) {}
+  };
+  /* Przeciaganie uchwytu konczy sie puszczeniem myszy - to pewny moment zapisu.
+     ResizeObserver zostaje jako uzupelnienie (np. zmiana rozmiaru z klawiatury). */
+  document.addEventListener('pointerup', zapisz);
   let t = null;
   try {
-    new ResizeObserver(() => {
-      if (!m.classList.contains('open') || box.classList.contains('modal-max')) return;
-      if (!box.style.width && !box.style.height) return;   // nikt nie ciagnal uchwytu
-      clearTimeout(t);
-      t = setTimeout(() => {
-        try { localStorage.setItem(GIG_MODAL_KLUCZ(m.id), JSON.stringify({ w: box.offsetWidth, h: box.offsetHeight })); } catch (_) {}
-      }, 250);
-    }).observe(box);
+    new ResizeObserver(() => { clearTimeout(t); t = setTimeout(zapisz, 250); }).observe(box);
   } catch (_) {}
 }
 
