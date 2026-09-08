@@ -374,22 +374,26 @@ pusty). Powiadomienie do biura ma wiersz „Członek GIG". Istniejące zgłoszen
 
 ### Członkowie: NIP i REGON uzupełnione (8 września 2026)
 
-Stan: **48 z 64** członków ma NIP i REGON (było 13), 17 ma KRS. Źródła i metoda:
-lokalna baza CEIDG z `ProspectingGIG/data/ceidg_list.json` (właściciel + kod pocztowy albo e-mail),
-CEIDG API v3 (token w `C:\Claude-projekty\!Anthropic_api_key\ceidg-token.txt`, limit 3,6 s/zapytanie),
-rejestry KRS/REGON przez wyszukiwarkę dla spółek. Skrypty robocze zostały w scratchpadzie sesji,
-nie w repo. Panel: lista członków ma kolumny E-mail i NIP.
+Stan: **63 z 64** członków ma NIP (było 13), 62 mają REGON, 17 KRS. Brakuje tylko
+**Geodezja mgr inż. Marcin Tlałka s.c.** (Kraków) — spółka cywilna, jej NIP nie jest publiczny
+(w CEIDG jest tylko JDG właściciela w Milówce: 5532485093, to NIE numer spółki).
 
-**16 bez NIP** (nie ma ich w CEIDG pod tymi danymi: inne nazwisko właściciela, działalność zamknięta
-lub zawieszona; wyszukiwarka nie zwraca NIP małych JDG): Firma Geodezyjna T. Szczepański (Białobrzegi),
-GEO-S s.c. (Miechów; NIP wspólniczki 6591458537 to NIE NIP spółki), GEODAR-BUD Ratyński, J. Strzelecki
-(Gorzów), M. Schumacher (Opole), Geodezja Tlałka s.c. (Kraków; JDG właściciela w Milówce ma NIP
-5532485093, spółka osobny), M. Kaznocha (Gryfino), GROTECH Grochowina, K. Sołtysiak (Warszawa),
-P. Wiśniewski GEOBUD (Legionowo; kandydat 7761653400 „LADIDA CLINIC", niepewny), GIPART Dyba,
-MIERNIK Stanisławek, PUGiK Królik, J. Żelazowski (Radom), K. Płonka (Palowice), R. Jarek (Gorlice).
-Najprościej: biuro dopyta te firmy mailem, NIP wpisuje się w panelu (Członkowie → ✎).
+Jak szukać NIP-u kolejnych firm, w tej kolejności:
+1. **CEIDG API v3** (token: `C:\Claude-projekty\!Anthropic_api_key\ceidg-token.txt`, odstęp 3,6 s):
+   `GET /firmy?nazwisko=X&miasto=Y` działa najlepiej. Samo `imie+nazwisko` bez miasta zwraca setki
+   trafień i gubi właściwe (Piotr Wiśniewski: 200 kandydatów). Szukanie po `nazwa=` łapie przypadkowe
+   firmy z tym samym imieniem — nie używać samodzielnie.
+2. **Lokalna migawka CEIDG** `ProspectingGIG/data/ceidg_list.json` (8292 firmy z PKD 7112A):
+   dopasowanie właściciel + kod pocztowy albo e-mail.
+3. **Rejestry przez wyszukiwarkę** (rejestr.io, aleo, krs-online, gowork) dla spółek z KRS.
 
-Uwaga przy spółkach cywilnych: CEIDG podaje NIP wspólnika (osoby), a faktura idzie na NIP spółki.
+**Pułapki, na które trzeba uważać:**
+- **Spółka cywilna ma własny NIP**, inny niż wspólnicy. CEIDG pokazuje wtedy przy wspólniku status
+  `WYLACZNIE_W_FORMIE_SPOLKI` i **to jest NIP spółki** (tak ustalono GEO-S: 6591000465).
+  Nie wpisywać NIP-u wspólnika (kiedyś wpisany i cofnięty).
+- **Adres w CEIDG bywa inny niż korespondencyjny** (Szczepański: baza GIG Białobrzegi, CEIDG Łańcut).
+- **Osoba kontaktowa ≠ właściciel** (GROTECH: kontakt Marcin Jamrozy, właściciel Krzysztof Grochowina).
+- Kaznocha: najpierw wpisany NIP spółki rodzinnej, biuro podało właściwy dla działalności Michała.
 
 ### Sesja 3 (6 września 2026)
 
