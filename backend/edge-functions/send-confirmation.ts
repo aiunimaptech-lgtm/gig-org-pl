@@ -234,6 +234,9 @@ function zapisNotifyMail(rec: Record<string, unknown>) {
       wierszTabeli("Adres", esc(s("nabywca_adres"))) +
       wierszTabeli("NIP", esc(s("nabywca_nip"))) +
       wierszTabeli("Jednostka samorządu", jst ? "<strong>TAK</strong>" : "nie") +
+      wierszTabeli("Członek GIG", rec.czlonek_gig === true
+        ? `<strong>TAK</strong> (dopasowanie: ${esc(s("czlonek_sposob"))})`
+        : (rec.czlonek_gig === false ? "nie" : "")) +
       wierszTabeli("Faktura", faktura))}
 
     ${takiSam

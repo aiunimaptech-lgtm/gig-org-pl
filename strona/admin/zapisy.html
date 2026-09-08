@@ -83,11 +83,16 @@
               <option value="confirmed">Potwierdzone</option>
               <option value="cancelled">Anulowane</option>
             </select>
+            <select id="fCzlonek" class="form-control" style="max-width:190px;" title="Członkostwo w GIG">
+              <option value="">Członkowie i pozostali</option>
+              <option value="tak">Tylko członkowie GIG</option>
+              <option value="nie">Tylko pozostali</option>
+            </select>
           </div>
           <div class="table-wrap">
             <table class="admin-table">
-              <thead><tr><th>Szkolenie</th><th>Zgłaszający</th><th>Osób</th><th>Nabywca</th><th>Data</th><th>Status</th><th></th></tr></thead>
-              <tbody id="rows"><tr><td colspan="7" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+              <thead><tr><th>Szkolenie</th><th>Zgłaszający</th><th>Osób</th><th>Nabywca</th><th>Członek GIG</th><th>Data</th><th>Status</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
             </table>
           </div>
         </div></div>
@@ -139,6 +144,21 @@
       return { nazwa:r.nabywca_nazwa, adres:r.nabywca_adres, nip:r.nabywca_nip, wlasny:false };
     }
 
+    /* Czlonkostwo ustala trigger w bazie przy zapisie (NIP, e-mail, domena, nazwa);
+       biuro moze je recznie poprawic w szczegolach - wtedy sposob = "ręcznie". */
+    function czlonekBadge(r){
+      if (r.czlonek_gig === true)  return `<span class="badge badge-confirmed" title="dopasowanie: ${esc(r.czlonek_sposob||'')}">członek</span>`;
+      if (r.czlonek_gig === false) return `<span class="badge badge-read" title="brak na liście członków GIG">nie</span>`;
+      return '<span style="color:#9aa7b2;">?</span>';
+    }
+    async function ustawCzlonka(id, tak){
+      const { error } = await db.from('zapisy_szkolenia')
+        .update({ czlonek_gig: tak, czlonek_sposob: 'ręcznie', czlonek_id: null }).eq('id', id);
+      if (error) { toast('Nie udało się zapisać', 'error'); return false; }
+      toast(tak ? 'Oznaczono jako członka GIG' : 'Oznaczono: nie członek', 'success');
+      return true;
+    }
+
     async function ustawStatus(id, status){
       const { error } = await db.from('zapisy_szkolenia').update({ status }).eq('id', id);
       if (error) { toast('Nie udało się zmienić statusu', 'error'); return false; }
@@ -179,9 +199,12 @@
       const f = document.getElementById('szukaj').value.toLowerCase().trim();
       const szk = document.getElementById('fSzkolenie').value;
       const st = document.getElementById('fStatus').value;
+      const cz = document.getElementById('fCzlonek').value;
       return dane.filter(r => {
         if (szk && (r.szkolenie||'') !== szk) return false;
         if (st && (r.status||'new') !== st) return false;
+        if (cz === 'tak' && r.czlonek_gig !== true) return false;
+        if (cz === 'nie' && r.czlonek_gig === true) return false;
         if (!f) return true;
         return [r.uczestnicy, r.email, r.telefon, r.nabywca_nazwa, r.nabywca_nip,
                 r.odbiorca_nazwa, r.odbiorca_nip, r.szkolenie, r.uwagi]
@@ -192,7 +215,7 @@
     function render(){
       const rows = filtruj();
       const tb = document.getElementById('rows');
-      if (!rows.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#6b7f84;">Brak zgłoszeń spełniających kryteria.</td></tr>'; return; }
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak zgłoszeń spełniających kryteria.</td></tr>'; return; }
       tb.innerHTML = rows.map(r => {
         const st = r.status || 'new';
         const ucz = (r.uczestnicy||'').split(/\n/).map(x=>x.trim()).filter(Boolean);
@@ -209,6 +232,7 @@
             ${esc(r.nabywca_nazwa||'—')}
             <div class="zap-osoby">${r.nabywca_nip?'NIP '+esc(r.nabywca_nip):''}${r.nabywca_jst?' · JST':''}${odb.wlasny?' · inny odbiorca':''}</div>
           </td>
+          <td style="text-align:center;">${czlonekBadge(r)}</td>
           <td style="white-space:nowrap;">${fmtDate(r.created_at)}</td>
           <td><span class="badge badge-${st==='new'?'new':st}">${ETYK[st]||st}</span></td>
           <td class="actions" style="white-space:nowrap;">
@@ -266,6 +290,9 @@
       document.getElementById('zapTresc').innerHTML = `
         <dl class="zap-dane" style="margin:0;">
           ${wiersz('Zgłoszono', fmtDate(r.created_at))}
+          <dt>Członek GIG</dt>
+          <dd>${czlonekBadge(r)} <span style="font-size:12.5px;color:#6b7f84;">${r.czlonek_gig===true ? '(dopasowanie: ' + esc(r.czlonek_sposob||'') + ')' : (r.czlonek_gig===false ? '(nie znaleziono na liście członków)' : '')}</span>
+            <button type="button" class="btn btn-ghost btn-xs" id="zapCzlonek" style="margin-left:8px;">${r.czlonek_gig===true ? 'Zmień na: nie członek' : 'Zmień na: członek GIG'}</button></dd>
           ${wiersz('Liczba osób', String(osoby(r)))}
           <dt>Uczestnicy</dt>
           <dd class="${ucz.length?'':'pusto'}">${ucz.length?ucz.map(x=>esc(x)).join('<br>'):'nie podano'}</dd>
@@ -296,6 +323,9 @@
           <button type="button" class="btn btn-danger btn-sm" id="zapUsun" style="margin-left:auto;">🗑 Usuń zgłoszenie</button>
         </div>`;
       /* Usuń z okna szczegółów — po usunięciu zamykamy modal i odświeżamy listę */
+      document.getElementById('zapCzlonek').addEventListener('click', async () => {
+        if (await ustawCzlonka(r.id, r.czlonek_gig !== true)) { closeModal('zapModal'); load(); }
+      });
       document.getElementById('zapUsun').addEventListener('click', async () => {
         if (await usunZgloszenie(r.id)) { closeModal('zapModal'); load(); }
       });
@@ -361,7 +391,7 @@
     (async () => {
       if (!await requireAuth()) return;
       ['szukaj'].forEach(id => document.getElementById(id).addEventListener('input', render));
-      ['fSzkolenie','fStatus'].forEach(id => document.getElementById(id).addEventListener('change', render));
+      ['fSzkolenie','fStatus','fCzlonek'].forEach(id => document.getElementById(id).addEventListener('change', render));
 
       document.getElementById('zapKopiuj').addEventListener('click', async () => {
         if (!biezacy) return;
@@ -414,6 +444,7 @@
             cena: szk.price || '',
             cena_czlonek: szk.price_member || '',
             jst: r.nabywca_jst ? 'tak' : 'nie',
+            czlonek: r.czlonek_gig === true ? 'tak' : (r.czlonek_gig === false ? 'nie' : ''),
             faktura_kiedy: r.faktura_kiedy === 'po' ? 'po szkoleniu'
               : (r.faktura_kiedy === 'przed' ? 'przed szkoleniem' : ''),   // starsze zgloszenia nie mialy tego pola
             odb_nazwa: odb.wlasny ? (odb.nazwa || '') : '(taki sam jak nabywca)',
@@ -451,6 +482,7 @@
           { key:'cena',           label:'Cena' },
           { key:'cena_czlonek',   label:'Cena dla członków' },
           { key:'jst',            label:'JST' },
+          { key:'czlonek',        label:'Członek GIG' },
           { key:'faktura_kiedy',  label:'Faktura — kiedy' },
           { key:'odb_nazwa',      label:'Odbiorca' },
           { key:'odb_adres',      label:'Adres odbiorcy' },

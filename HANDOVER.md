@@ -361,6 +361,17 @@ Sprawdzone i bez zastrzeżeń: RLS na wszystkich tabelach, `esc()` w panelu i ma
 otwartych przekierowań, wypisy na UUID. Do rozważenia: lista dozwolonych adresów w politykach
 (`auth.jwt()->>'email'`) jako trzecia warstwa; ochrona przed wyciekłymi hasłami w Auth.
 
+### Zapisy: automatyczne oznaczenie członka GIG
+
+Trigger `trg_zapis_czlonek` (before insert na `zapisy_szkolenia`) woła `gig_dopasuj_czlonka()`
+i ustawia `czlonek_gig`, `czlonek_sposob`, `czlonek_id`. Kolejność dopasowań: **NIP** (nabywcy
+lub odbiorcy), **e-mail** zgłaszającego, **domena firmowa** e-maila (publiczne skrzynki jak
+gmail/wp/o2 pominięte), **nazwa firmy** po normalizacji (`gig_norm_nazwa`, bez form prawnych,
+min. 6 znaków). Tylko członkowie ze statusem `published`. Tylko 13 z 64 członków ma NIP, stąd
+e-mail i nazwa jako zapasowe ścieżki. Panel: kolumna „Członek GIG", filtr, kolumna w raporcie
+CSV, w szczegółach przycisk ręcznej korekty (wtedy `czlonek_sposob = 'ręcznie'`, `czlonek_id`
+pusty). Powiadomienie do biura ma wiersz „Członek GIG". Istniejące zgłoszenia dopasowane wstecz.
+
 ### Sesja 3 (6 września 2026)
 
 | commit | co |
