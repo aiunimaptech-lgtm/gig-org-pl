@@ -164,7 +164,7 @@
 
     async function zmienLimit(id) {
       const k = dane.find(x => x.id === id); if (!k) return;
-      const v = prompt('Ile maksymalnie maili na dobę dla tej kampanii?\n\nRozgrzewka nowej domeny: 200 → 500 → 1000 → 2000 co kilka dni.', k.limit_dzienny);
+      const v = prompt('Ile maksymalnie maili na dobę dla tej kampanii?\n\nDarmowy plan Resend to 100 maili na dobę — wyżej wysyłka i tak zacznie zwracać błędy.\nPo wykupieniu Resend Pro rozgrzewaj domenę stopniowo: 100 → 250 → 500 → 1000 → 2000 co kilka dni.', k.limit_dzienny);
       if (v === null) return;
       const n = parseInt(v, 10);
       if (!n || n < 1 || n > 20000) { toast('Podaj liczbę 1–20000', 'error'); return; }

@@ -8,7 +8,8 @@
 -- i zapisuje wynik — panel woła ją w pętli, aż zostanie 0.
 --
 -- `limit_dzienny` = rozgrzewka domeny. Funkcja nigdy nie wyśle dziś więcej.
--- Nowa domena: 200 → 500 → 1000 → 2000 co kilka dni.
+-- Domyślnie 100/dobę — tyle daje darmowy plan Resend. Po wykupieniu Pro
+-- rozgrzewaj stopniowo: 100 → 250 → 500 → 1000 → 2000 co kilka dni.
 --
 -- Uruchom w: Supabase → SQL Editor → Run (albo apply_migration z MCP). Idempotentne.
 -- ============================================================
@@ -19,7 +20,7 @@ create table if not exists public.wysylki (
   html          text not null,                -- treść z edytora (ramkę GIG dokłada funkcja)
   opis_filtra   text,                         -- z jakiego segmentu Bazy e-mail powstała
   status        text default 'robocza' check (status in ('robocza','w_toku','wstrzymana','zakonczona')),
-  limit_dzienny integer default 200 check (limit_dzienny between 1 and 20000),
+  limit_dzienny integer default 100 check (limit_dzienny between 1 and 20000),
   utworzyl      text,
   created_at    timestamptz default now(),
   updated_at    timestamptz default now()

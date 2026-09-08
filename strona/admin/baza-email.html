@@ -510,7 +510,7 @@
           zamiastWysylki: async ({ temat, html, odbiorcy }) => {
             const sesja = await getSession();
             const { data: kamp, error: e1 } = await db.from('wysylki').insert({
-              temat, html, opis_filtra: opisFiltra, status: 'robocza', limit_dzienny: 200,
+              temat, html, opis_filtra: opisFiltra, status: 'robocza', limit_dzienny: 100,
               utworzyl: sesja && sesja.user ? sesja.user.email : null
             }).select('id').single();
             if (e1) throw e1;

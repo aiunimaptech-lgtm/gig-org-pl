@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
   const poczatekDnia = new Date(); poczatekDnia.setHours(0, 0, 0, 0);
   const { count: dzisWyslane } = await admin.from("wysylki_odbiorcy").select("id", { count: "exact", head: true })
     .eq("wysylka_id", wysylkaId).eq("status", "wyslany").gte("wyslano_at", poczatekDnia.toISOString());
-  const dzisiajZostalo = Math.max(0, (kampania.limit_dzienny ?? 200) - (dzisWyslane ?? 0));
+  const dzisiajZostalo = Math.max(0, (kampania.limit_dzienny ?? 100) - (dzisWyslane ?? 0));
   if (dzisiajZostalo === 0) {
     return json({ ok: true, wyslane: 0, bledy: 0, zostalo: await zostaloCzeka(), dzisiaj_zostalo: 0, status: kampania.status, info: "limit dzienny wyczerpany" });
   }
