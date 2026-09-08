@@ -377,6 +377,12 @@ pusty). Powiadomienie do biura ma wiersz „Członek GIG". Istniejące zgłoszen
 Stan: **64 z 64** członków ma NIP (było 13), 63 mają REGON, 17 KRS. Wszystkie NIP-y przeszły
 kontrolę sumy kontrolnej. Bez REGON-u jest tylko Piotr Wiśniewski GEOBUD.
 
+**Eksport listy członków**: panel → Członkowie → „⬇ Eksport CSV" (`czlonkowie-gig.csv`, 17 kolumn:
+firma, osoba, e-mail, telefon, adres, województwo, NIP, REGON, KRS, WWW, Facebook, LinkedIn, opis,
+współrzędne, status, dodano, zmieniono). Eksportuje **to, co widać** — z wpisaną frazą w wyszukiwarce
+wychodzi tylko przefiltrowana lista. Opis jest spłaszczony do jednej linii (`|` zamiast złamań),
+`id` pominięte (przydatne tylko wewnątrz panelu).
+
 Jak szukać NIP-u kolejnych firm, w tej kolejności:
 1. **CEIDG API v3** (token: `C:\Claude-projekty\!Anthropic_api_key\ceidg-token.txt`, odstęp 3,6 s):
    `GET /firmy?nazwisko=X&miasto=Y` działa najlepiej. Samo `imie+nazwisko` bez miasta zwraca setki

@@ -45,7 +45,10 @@
     <div class="admin-main">
       <header class="admin-topbar">
         <div class="topbar-title">Członkowie</div>
-        <div class="topbar-actions"><button class="btn btn-primary btn-sm" id="newBtn">+ Nowy członek</button></div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" id="expCsv" title="Wszystkie dane członków; jeśli działa wyszukiwarka, eksportuje to, co widać">⬇ Eksport CSV</button>
+          <button class="btn btn-primary btn-sm" id="newBtn">+ Nowy członek</button>
+        </div>
       </header>
       <main class="admin-content">
         <div class="card"><div class="card-body">
@@ -113,9 +116,13 @@
 <script src="/admin/_admin.js"></script>
   <script>
     let data=[];
+    /* Ten sam filtr dla listy i dla eksportu: co widać na ekranie, to wychodzi w pliku. */
+    function filtruj(filter=''){
+      const f=(filter||'').toLowerCase();
+      return data.filter(r=>((r.name||'')+' '+(r.person||'')+' '+(r.region||'')).toLowerCase().includes(f));
+    }
     function render(filter=''){
-      const f=filter.toLowerCase();
-      const rows=data.filter(r=>((r.name||'')+' '+(r.person||'')+' '+(r.region||'')).toLowerCase().includes(f));
+      const rows=filtruj(filter);
       const tb=document.getElementById('rows');
       document.getElementById('cnt').textContent=data.length+' firm';
       if(!rows.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak. Uruchom supabase_czlonkowie.sql albo dodaj firmę.</td></tr>';return;}
@@ -178,6 +185,44 @@
       document.getElementById('newBtn').addEventListener('click',()=>openEditor(null));
       document.getElementById('saveBtn').addEventListener('click',save);
       document.getElementById('search').addEventListener('input',e=>render(e.target.value));
+
+      /* Eksport: KOMPLET danych z tabeli `czlonkowie` (bez id — do niczego nie służy
+         poza panelem). Współrzędne i status też, bo plik bywa punktem wyjścia do
+         mapy i do korekt zbiorczych. Separator „;" i BOM ustawia exportCSV w _admin.js,
+         więc Excel otwiera plik po polsku bez kreatora importu. */
+      document.getElementById('expCsv').addEventListener('click',()=>{
+        const rows=filtruj(document.getElementById('search').value);
+        if(!rows.length){toast('Brak danych do eksportu');return;}
+        const dane=rows.map(r=>({
+          ...r,
+          status_pl: r.status==='published' ? 'widoczny' : 'ukryty',
+          wspolrzedne: (r.lat!=null&&r.lng!=null) ? `${r.lat}, ${r.lng}` : '',
+          opis: (r.description||'').replace(/\s*\n\s*/g,' | '),
+          dodano: fmtDate(r.created_at),
+          zmieniono: fmtDate(r.updated_at),
+        }));
+        exportCSV(dane,[
+          {key:'name',label:'Firma'},
+          {key:'person',label:'Osoba kontaktowa'},
+          {key:'email',label:'E-mail'},
+          {key:'phone',label:'Telefon'},
+          {key:'address',label:'Adres'},
+          {key:'region',label:'Województwo'},
+          {key:'nip',label:'NIP'},
+          {key:'regon',label:'REGON'},
+          {key:'krs',label:'KRS'},
+          {key:'website',label:'WWW'},
+          {key:'facebook',label:'Facebook'},
+          {key:'linkedin',label:'LinkedIn'},
+          {key:'opis',label:'Opis'},
+          {key:'wspolrzedne',label:'Współrzędne'},
+          {key:'status_pl',label:'Status'},
+          {key:'dodano',label:'Dodano'},
+          {key:'zmieniono',label:'Zmieniono'},
+        ],'czlonkowie-gig.csv');
+        toast(`Wyeksportowano ${rows.length} firm`,'success');
+      });
+
       load();
     })();
   </script>
