@@ -95,8 +95,8 @@
           </div>
           <div class="table-wrap">
             <table class="admin-table">
-              <thead><tr><th>Szkolenie</th><th>Zgłaszający</th><th>Osób</th><th>Nabywca</th><th>Członek GIG</th><th>Data</th><th>Status</th><th></th></tr></thead>
-              <tbody id="rows"><tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+              <thead><tr><th>Szkolenie</th><th>Zgłaszający</th><th>Osób</th><th>Nabywca</th><th>Firma / JST</th><th>Członek GIG</th><th>Data</th><th>Status</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="9" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
             </table>
           </div>
         </div></div>
@@ -166,6 +166,14 @@
       if (r.czlonek_gig === true)  return `<span class="badge badge-confirmed" title="dopasowanie: ${esc(r.czlonek_sposob||'')}">członek</span>`;
       if (r.czlonek_gig === false) return `<span class="badge badge-read" title="brak na liście członków GIG">nie</span>`;
       return '<span style="color:#9aa7b2;">?</span>';
+    }
+    /* Firma czy jednostka samorządu — zgłaszający zaznacza to sam przy danych do faktury.
+       Od tego zależy moment wystawienia faktury i to, czy odbiorca bywa inny niż nabywca,
+       więc ma własną kolumnę zaraz przy nabywcy. */
+    function jstBadge(r){
+      if (r.nabywca_jst === true)  return '<span class="badge badge-new" title="jednostka samorządu terytorialnego">JST</span>';
+      if (r.nabywca_jst === false) return '<span class="badge badge-read">firma</span>';
+      return '<span style="color:#9aa7b2;">—</span>';   // starsze zgłoszenia nie miały tego pola
     }
     async function ustawCzlonka(id, tak){
       const { error } = await db.from('zapisy_szkolenia')
@@ -303,7 +311,7 @@
       const rows = filtruj();
       podsumuj(rows);
       const tb = document.getElementById('rows');
-      if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak zgłoszeń spełniających kryteria.</td></tr>'; return; }
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#6b7f84;">Brak zgłoszeń spełniających kryteria.</td></tr>'; return; }
       tb.innerHTML = rows.map(r => {
         const st = r.status || 'new';
         const ucz = (r.uczestnicy||'').split(/\n/).map(x=>x.trim()).filter(Boolean);
@@ -318,8 +326,9 @@
           <td style="text-align:center;"><strong>${osoby(r)}</strong></td>
           <td style="max-width:220px;">
             ${esc(r.nabywca_nazwa||'—')}
-            <div class="zap-osoby">${r.nabywca_nip?'NIP '+esc(r.nabywca_nip):''}${r.nabywca_jst?' · JST':''}${odb.wlasny?' · inny odbiorca':''}</div>
+            <div class="zap-osoby">${r.nabywca_nip?'NIP '+esc(r.nabywca_nip):''}${odb.wlasny?' · inny odbiorca':''}</div>
           </td>
+          <td style="text-align:center;">${jstBadge(r)}</td>
           <td style="text-align:center;">${czlonekBadge(r)}</td>
           <td style="white-space:nowrap;">${fmtDate(r.created_at)}</td>
           <td><span class="badge badge-${st==='new'?'new':st}">${ETYK[st]||st}</span></td>

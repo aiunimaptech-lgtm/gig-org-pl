@@ -71,8 +71,11 @@ Konta: `biuro@gig.org.pl`, `jerzy.bryk@gmail.com` (Supabase → Authentication �
 Nowe konto powstaje przez wniosek na `/admin/rejestracja.html` zatwierdzany mailem przez biuro.
 Widoki związane ze szkoleniami: **Pulpit** (karta „Zapisów na szkolenia" + zapisy w „Ostatnich
 zgłoszeniach"), **Szkolenia** (CRUD + kolumna „Zgłoszeń" z linkiem do przefiltrowanych zapisów),
-**Zapisy na szkolenia** (`zapisy.html` — podsumowanie, filtry, modal, statusy, kolumna „Członek GIG",
-jeden raport CSV; otwarcie szczegółów zdejmuje status „nowe"; ✓ i „anuluj" są przełącznikami).
+**Zapisy na szkolenia** (`zapisy.html` — podsumowanie, filtry, modal, statusy, kolumny „Firma / JST"
+i „Członek GIG", jeden raport CSV; otwarcie szczegółów zdejmuje status „nowe"; ✓ i „anuluj" są
+przełącznikami). Kolumna „Firma / JST" czyta `nabywca_jst` (zaznacza je zgłaszający przy danych
+do faktury): `JST`, `firma`, a `—` dla wpisów sprzed tego pola. Wcześniej znacznik JST wisiał
+drobnym drukiem pod nazwą nabywcy — teraz jest tylko w swojej kolumnie, żeby się nie dublował.
 
 Zgłoszenia łączą się ze szkoleniem **po tytule** (tekst z `?szkolenie=`), nie po kluczu obcym.
 Dlatego panel porównuje je **kluczem znormalizowanym** (`kluczSzk`): bez wielkości liter, każdy
