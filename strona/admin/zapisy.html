@@ -22,6 +22,9 @@
     .zap-dane dd.pusto{color:#9aa7b2;font-style:italic;}
     .zap-blok{background:#f7f9fb;border-radius:10px;padding:14px 16px;margin-top:12px;}
     .zap-blok h4{margin:0 0 4px;font-size:14px;color:#16202a;}
+    .zap-sum .k.kwota{border-color:#cfe1d4;background:#f6fbf7;}
+    .zap-uwaga{margin:-6px 0 18px;padding:9px 13px;font-size:12.5px;line-height:1.6;color:#7a5c14;
+      background:#fff8e6;border:1px solid #f0e2b6;border-radius:10px;}
     /* długie tytuły szkoleń: dwie linie w tabeli, całość w dymku */
     .zap-tytul{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4;}
   </style>
@@ -70,6 +73,7 @@
 
       <main class="admin-content">
         <div class="zap-sum" id="podsumowanie"></div>
+        <p class="zap-uwaga" id="podsumowanieUwaga" hidden></p>
 
         <div class="card"><div class="card-body">
           <div class="toolbar" style="gap:12px;flex-wrap:wrap;">
@@ -132,7 +136,19 @@
        (tak jak w reszcie panelu — zgłoszenie nie ma klucza obcego), więc porównujemy
        bez wielkości liter i spacji na brzegach. */
     const SZKOLENIA = {};
-    const kluczSzk = t => (t || '').trim().toLowerCase();
+    /* Tytuł w zgłoszeniu to zwykły tekst przepisany z adresu „/zapisy/?szkolenie=…",
+       więc po korekcie tytułu w panelu (albo gdy ktoś klika stary link z maila) w bazie
+       robią się dwa warianty tego samego szkolenia, różniące się np. rodzajem myślnika.
+       Klucz sprowadza je do jednej postaci, żeby nie rozjeżdżały się na dwie pozycje. */
+    const kluczSzk = t => (t || '').toLowerCase()
+      .replace(/[\u2010-\u2015\u2212]/g, '-').replace(/\s+/g, ' ').trim();
+    const NAZWY = {};                          // klucz -> tytuł pokazywany w panelu
+    const nazwaSzk = k => NAZWY[k] || k;
+    /* „pewna" = tytuł prosto z tabeli szkoleń; on wygrywa z wariantem ze zgłoszenia */
+    function zapamietajNazwe(t, pewna){
+      const k = kluczSzk(t);
+      if (k && (pewna || !NAZWY[k])) NAZWY[k] = String(t).trim();
+    }
     const fmtDay = iso => iso
       ? new Date(iso + 'T00:00:00').toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' })
       : '';
@@ -178,21 +194,92 @@
       return true;
     }
 
+    /* Cennik trzyma tekst („400 zł", „0 zł (bezpłatne)", „bezpłatnie"), więc bierzemy
+       z niego pierwszą liczbę, a samo słowo „bezpłatnie" znaczy zero. Brak ceny daje null
+       i wtedy wolimy o tym napisać niż po cichu zaniżyć sumę. */
+    function cenaLiczba(txt){
+      const t = String(txt == null ? '' : txt).replace(/\u00a0/g, ' ').toLowerCase();
+      const m = t.match(/\d[\d ]*(?:[.,]\d+)?/);
+      if (m) return parseFloat(m[0].replace(/ /g, '').replace(',', '.'));
+      return /bezp[\u0142l]at|gratis|nieodp[\u0142l]at/.test(t) ? 0 : null;
+    }
+    /* Cena za osobę: członek GIG płaci wg ceny członkowskiej, a gdy szkolenie jej nie ma
+       - wg podstawowej. Nieustalone członkostwo (znak zapytania) liczymy jak spoza GIG. */
+    function cenaOsoby(r){
+      const szk = SZKOLENIA[kluczSzk(r.szkolenie)];
+      if (!szk) return null;
+      const pods = cenaLiczba(szk.price);
+      if (r.czlonek_gig !== true) return pods;
+      const czl = cenaLiczba(szk.price_member);
+      return czl === null ? pods : czl;
+    }
+    const zl = n => n.toLocaleString('pl-PL', { maximumFractionDigits:2 }) + ' zł';
+    const slowoOsob = n => {
+      const d = n % 10, s = n % 100;
+      if (n === 1) return 'osoba';
+      return (d >= 2 && d <= 4 && (s < 12 || s > 14)) ? 'osoby' : 'osób';
+    };
+
+    /* Podsumowanie liczy to, co widać po filtrach - zawężenie do jednego szkolenia
+       daje więc kwotę należną za to szkolenie. Anulowane zgłoszenia zawsze odpadają. */
     function podsumuj(rows){
       const aktywne = rows.filter(r => r.status !== 'cancelled');
+      const nowe = rows.filter(r => r.status === 'new').length;
+
+      const kasa = { razem:0, czlonkowie:0, pozostali:0 };
+      const ludzie = { razem:0, czlonkowie:0, pozostali:0 };
+      let bezCeny = 0, bezCzlonkostwa = 0;
       const wgSzkolen = {};
       aktywne.forEach(r => {
-        const k = r.szkolenie || '(bez nazwy)';
-        wgSzkolen[k] = (wgSzkolen[k] || 0) + osoby(r);
+        const kl = kluczSzk(r.szkolenie);
+        const n = osoby(r), c = cenaOsoby(r), kwota = c === null ? 0 : c * n;
+        const czlonek = r.czlonek_gig === true;
+        if (c === null) bezCeny += n;
+        if (r.czlonek_gig !== true && r.czlonek_gig !== false) bezCzlonkostwa += n;
+        ludzie.razem += n;
+        kasa.razem += kwota;
+        if (czlonek) { ludzie.czlonkowie += n; kasa.czlonkowie += kwota; }
+        else         { ludzie.pozostali  += n; kasa.pozostali  += kwota; }
+        const w = wgSzkolen[kl] || (wgSzkolen[kl] = { klucz:kl, nazwa: kl ? nazwaSzk(kl) : '(bez nazwy)', osob:0, kwota:0, bezCeny:false });
+        w.osob += n; w.kwota += kwota; if (c === null) w.bezCeny = true;
       });
-      const nowe = rows.filter(r => r.status === 'new').length;
+
+      /* Ceny jednostkowe w opisie kafelka mają sens tylko przy jednym szkoleniu */
+      const jedno = Object.keys(wgSzkolen).length === 1 ? Object.values(wgSzkolen)[0] : null;
+      const cennik = jedno ? SZKOLENIA[jedno.klucz] : null;
+      const cenaPods = cennik ? cenaLiczba(cennik.price) : null;
+      const cenaCzlRaw = cennik ? cenaLiczba(cennik.price_member) : null;
+      const cenaCzl = cenaCzlRaw === null ? cenaPods : cenaCzlRaw;
+      const opis = (n, cena) => `${n} ${slowoOsob(n)}` + (n && cena !== null ? ' \u00d7 ' + zl(cena) : '');
+
       let html = `<div class="k"><div class="t">Zgłoszenia</div><div class="v">${aktywne.length} <small>aktywnych</small></div></div>`;
-      html += `<div class="k"><div class="t">Uczestnicy łącznie</div><div class="v">${aktywne.reduce((s,r)=>s+osoby(r),0)} <small>osób</small></div></div>`;
+      html += `<div class="k"><div class="t">Uczestnicy łącznie</div><div class="v">${ludzie.razem} <small>osób</small></div></div>`;
       if (nowe) html += `<div class="k" style="border-color:#f3ccd4;background:#fff5f6;"><div class="t">Nieobsłużone</div><div class="v" style="color:#cc0a2b;">${nowe}</div></div>`;
-      Object.entries(wgSzkolen).sort((a,b)=>b[1]-a[1]).forEach(([nazwa,n]) => {
-        html += `<div class="k"><div class="t" title="${esc(nazwa)}">${esc(nazwa)}</div><div class="v">${n} <small>osób</small></div></div>`;
+
+      if (ludzie.razem > bezCeny) {
+        html += `<div class="k kwota"><div class="t">Kwota łącznie</div><div class="v">${zl(kasa.razem)}</div>
+          <div class="zap-osoby">wg cennika, bez anulowanych</div></div>`;
+        html += `<div class="k kwota"><div class="t">W tym członkowie GIG</div><div class="v">${zl(kasa.czlonkowie)}</div>
+          <div class="zap-osoby">${opis(ludzie.czlonkowie, cenaCzl)}</div></div>`;
+        html += `<div class="k kwota"><div class="t">W tym spoza GIG</div><div class="v">${zl(kasa.pozostali)}</div>
+          <div class="zap-osoby">${opis(ludzie.pozostali, cenaPods)}</div></div>`;
+      }
+
+      /* Rozbicie na szkolenia tylko wtedy, gdy jest ich więcej niż jedno - przy filtrze
+         na konkretne szkolenie ta sama liczba jest już wyżej. */
+      if (!jedno) Object.values(wgSzkolen).sort((a,b)=>b.osob-a.osob).forEach(w => {
+        html += `<div class="k"><div class="t" title="${esc(w.nazwa)}">${esc(w.nazwa)}</div>
+          <div class="v">${w.osob} <small>${slowoOsob(w.osob)}</small></div>
+          <div class="zap-osoby">${w.bezCeny && !w.kwota ? 'brak ceny w cenniku' : zl(w.kwota) + (w.bezCeny ? ' (część bez ceny)' : '')}</div></div>`;
       });
       document.getElementById('podsumowanie').innerHTML = html;
+
+      const uwagi = [];
+      if (bezCeny) uwagi.push(`Kwota pomija ${bezCeny} ${slowoOsob(bezCeny)}: szkolenie nie ma ceny w cenniku albo tytuł zgłoszenia nie pasuje do żadnego szkolenia.`);
+      if (bezCzlonkostwa) uwagi.push(`${bezCzlonkostwa} ${slowoOsob(bezCzlonkostwa)} bez ustalonego członkostwa - policzone jak spoza GIG.`);
+      const box = document.getElementById('podsumowanieUwaga');
+      box.innerHTML = uwagi.map(esc).join('<br>');
+      box.hidden = !uwagi.length;
     }
 
     function filtruj(){
@@ -201,7 +288,7 @@
       const st = document.getElementById('fStatus').value;
       const cz = document.getElementById('fCzlonek').value;
       return dane.filter(r => {
-        if (szk && (r.szkolenie||'') !== szk) return false;
+        if (szk && kluczSzk(r.szkolenie) !== szk) return false;
         if (st && (r.status||'new') !== st) return false;
         if (cz === 'tak' && r.czlonek_gig !== true) return false;
         if (cz === 'nie' && r.czlonek_gig === true) return false;
@@ -214,6 +301,7 @@
 
     function render(){
       const rows = filtruj();
+      podsumuj(rows);
       const tb = document.getElementById('rows');
       if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak zgłoszeń spełniających kryteria.</td></tr>'; return; }
       tb.innerHTML = rows.map(r => {
@@ -276,7 +364,7 @@
       const { error } = await db.from('zapisy_szkolenia').update({ status:'read' }).eq('id', r.id);
       if (error) { console.error(error); return; }
       r.status = 'read';
-      podsumuj(dane); render(); loadSidebarBadges();
+      render(); loadSidebarBadges();
     }
 
     function pokaz(id){
@@ -372,18 +460,21 @@
       /* Ceny i terminy — tylko do raportu; brak tabeli nie może psuć widoku zapisów. */
       const szk = await db.from('szkolenia').select('title,date_start,price,price_member');
       if (szk.error) console.error(szk.error);
-      (szk.data || []).forEach(x => { SZKOLENIA[kluczSzk(x.title)] = x; });
+      (szk.data || []).forEach(x => { SZKOLENIA[kluczSzk(x.title)] = x; zapamietajNazwe(x.title, true); });
+      dane.forEach(r => zapamietajNazwe(r.szkolenie, false));
 
       const sel = document.getElementById('fSzkolenie');
-      const biezaceSzk = sel.value || szkolenieZUrl;
+      const biezacyKlucz = sel.value || kluczSzk(szkolenieZUrl);
+      zapamietajNazwe(szkolenieZUrl, false);
       szkolenieZUrl = '';   // tylko przy pierwszym ładowaniu; potem rządzi wybór użytkownika
       /* szkolenie z adresu dokładamy do listy nawet bez zgłoszeń — filtr ma wtedy pokazać „brak zgłoszeń” */
-      const nazwy = [...new Set([...dane.map(r => r.szkolenie), biezaceSzk].filter(Boolean))].sort();
+      const klucze = [...new Set([...dane.map(r => kluczSzk(r.szkolenie)), biezacyKlucz].filter(Boolean))]
+        .sort((a, b) => nazwaSzk(a).localeCompare(nazwaSzk(b), 'pl'));
       sel.innerHTML = '<option value="">Wszystkie szkolenia</option>' +
-        nazwy.map(n => `<option value="${esc(n)}">${esc(n.length>52?n.slice(0,52)+'…':n)}</option>`).join('');
-      sel.value = biezaceSzk;
+        klucze.map(k => { const n = nazwaSzk(k);
+          return `<option value="${esc(k)}">${esc(n.length>52?n.slice(0,52)+'…':n)}</option>`; }).join('');
+      sel.value = biezacyKlucz;
 
-      podsumuj(dane);
       render();
       loadSidebarBadges();
     }
@@ -401,7 +492,7 @@
 
       /* Wiadomość do wszystkich zgłaszających z bieżącego filtra (bez anulowanych) — kreator w _admin.js */
       document.getElementById('btnMail').addEventListener('click', () => {
-        const szk = document.getElementById('fSzkolenie').value;
+        const szk = nazwaSzk(document.getElementById('fSzkolenie').value);
         const odbiorcy = filtruj().filter(r => r.status !== 'cancelled')
           .map(r => ({ email: r.email, name: ((r.uczestnicy||'').split(/\n/)[0] || r.nabywca_nazwa || '').trim() }));
         if (!odbiorcy.length) { toast('Brak odbiorców — zmień filtr albo poczekaj na zgłoszenia'); return; }
@@ -457,7 +548,7 @@
         });
         if (!wiersze.length) { toast('Brak danych do eksportu'); return; }
 
-        const wybrane = document.getElementById('fSzkolenie').value;
+        const wybrane = nazwaSzk(document.getElementById('fSzkolenie').value);
         const nazwa = wybrane
           ? 'raport-' + wybrane.toLowerCase()
               .replace(/[ąćęłńóśźż]/g, c => 'acelnoszz'['ąćęłńóśźż'.indexOf(c)])

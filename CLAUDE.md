@@ -62,6 +62,9 @@ Naprawa: Supabase Dashboard → *Restore project* (dane po uśpieniu są zachowa
 ## Znane do dokończenia
 - **Duże biuletyny PDF (>25 MB)** — pominięte przy mirrorze, linki zostały absolutne (`gig.org.pl/biuletyn/...`).
   Po migracji domeny trzeba je dograć ręcznie do `strona/biuletyn/` albo wrzucić do Supabase Storage.
-- **Panel `/admin/` nie ma widoku zapisów na szkolenia** (`zapisy_szkolenia`) — powiadomienia
-  mailowe działają, ale nie ma listy ani eksportu uczestników. Wzór: `strona/admin/formularze.html`.
+- **Zapisy na szkolenia wiąże z kalendarzem sam tytuł** (`zapisy_szkolenia.szkolenie` ↔
+  `szkolenia.title`), bo zgłoszenie przepisuje go z `?szkolenie=`. Panel porównuje tytuły
+  znormalizowane (`kluczSzk` w `admin/zapisy.html`: bez wielkości liter, jeden rodzaj myślnika,
+  pojedyncze spacje), więc korekta tytułu nie rozbija już zgłoszeń — ale przeredagowanie tytułu
+  na inny wciąż odetnie starsze wpisy od cennika i kwot. Wtedy trzeba je przepisać UPDATE-em.
 - Mirror to snapshot — dynamiczne listy WP są „zamrożone".

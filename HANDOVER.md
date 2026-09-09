@@ -72,9 +72,25 @@ Nowe konto powstaje przez wniosek na `/admin/rejestracja.html` zatwierdzany mail
 Widoki związane ze szkoleniami: **Pulpit** (karta „Zapisów na szkolenia" + zapisy w „Ostatnich
 zgłoszeniach"), **Szkolenia** (CRUD + kolumna „Zgłoszeń" z linkiem do przefiltrowanych zapisów),
 **Zapisy na szkolenia** (`zapisy.html` — podsumowanie, filtry, modal, statusy, kolumna „Członek GIG",
-jeden raport CSV; otwarcie szczegółów zdejmuje status „nowe"; ✓ i „anuluj" są przełącznikami). Zgłoszenia łączą się ze szkoleniem **po tytule**
-(tekst z `?szkolenie=`), nie po kluczu — zmiana tytułu szkolenia w panelu „odłącza" wcześniejsze
-zgłoszenia (porównanie ignoruje wielkość liter i spacje na końcach, ale nie więcej).
+jeden raport CSV; otwarcie szczegółów zdejmuje status „nowe"; ✓ i „anuluj" są przełącznikami).
+
+Zgłoszenia łączą się ze szkoleniem **po tytule** (tekst z `?szkolenie=`), nie po kluczu obcym.
+Dlatego panel porównuje je **kluczem znormalizowanym** (`kluczSzk`): bez wielkości liter, każdy
+myślnik sprowadzony do dywizu, wielokrotne spacje sklejone. Bez tego wystarczyła korekta tytułu
+w panelu albo stary link z maila, żeby to samo szkolenie rozpadło się na dwie pozycje w filtrze
+i w kafelkach — tak było 9.09 z „Procedury geodezyjno-prawne… — warsztaty" (10 zgłoszeń ze starym
+myślnikiem) i „…- warsztaty" (1 zgłoszenie). Historyczne wpisy zostały wtedy przepisane na tytuł
+z tabeli `szkolenia` jednorazowym UPDATE-em (join po tym samym znormalizowanym tytule); filtr,
+lista wyboru, kreator maila i nazwa pliku CSV chodzą już po kluczu, a pokazują tytuł z cennika.
+
+**Podsumowanie liczy kwoty** wg cennika szkolenia (`szkolenia.price` / `price_member`) razy liczba
+osób, bez anulowanych: „Kwota łącznie", „W tym członkowie GIG", „W tym spoza GIG" (przy jednym
+szkoleniu w kafelku widać też cenę jednostkową). Kafelki idą z **aktualnych filtrów** — zawężenie
+do jednego szkolenia daje kwotę należną za to szkolenie. Ceny w bazie to tekst („400 zł",
+„0 zł (bezpłatne)", „bezpłatnie"), więc `cenaLiczba()` bierze pierwszą liczbę, a samo słowo
+„bezpłatnie" czyta jako zero. Czego nie da się wycenić (brak ceny, tytuł spoza cennika), tego
+kwota **nie zgaduje** — te osoby są wyłączone z sumy i wypisane w żółtym pasku pod kafelkami;
+tam też ląduje informacja, że osoby z nieustalonym członkostwem policzono jak spoza GIG.
 
 **Skąd „puste" zapisy:** do 3 września przycisk „Zapisz się" prowadził na formularz kontaktowy,
 więc 4 zgłoszenia z 2–3.09 (wszystkie testowe: Agnieszka H. z biura i J. Bryk) siedzą w
