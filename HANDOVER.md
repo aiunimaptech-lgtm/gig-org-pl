@@ -1,11 +1,39 @@
 # Przekazanie sesji — gig.org.pl
 
-**Stan na:** 4 września 2026 (sesja 2) · ostatni commit `67706fb` · wszystko wypchnięte na `origin/main`
+**Stan na:** 9 września 2026 (sesja 5) · ostatni commit `fb6929d` · wszystko wypchnięte na `origin/main`
 **Repo:** https://github.com/aiunimaptech-lgtm/gig-org-pl · **Deploy:** Vercel, Root Directory = `strona/`
 **Supabase:** projekt `zlepwzeyjwpmhyxfnime` (org `jbryk's Org`, plan Free)
 
 > Ten plik czytaj razem z `CLAUDE.md` (architektura) i `README-WDROZENIE.md` (kroki wdrożeniowe).
 > Tutaj jest **stan bieżący, pułapki i co dalej** — rzeczy, których nie widać z samego kodu.
+
+---
+
+## 0. START TUTAJ (nowa sesja)
+
+**Co stoi i działa:** statyczny mirror WP na Vercelu + Supabase + Resend. Panel `/admin/`
+ma 10 zakładek: Pulpit, Newsletter, Baza e-mail, Wysyłki, DMARC, Kontakt, Zapisy na szkolenia,
+Artykuły, Szkolenia, Członkowie. Formularze (kontakt, newsletter, zapis na szkolenie) piszą do
+bazy i wyzwalają maile. Kampanie mailowe idą kolejką z limitem dziennym.
+
+**Logowanie do panelu wymaga DWÓCH składników** (od 8.09): hasło sprawdza Edge Function
+`panel-logowanie`, potem 6-cyfrowy kod z e-maila. Sesja bez kodu **nie ma dostępu do danych** —
+tak stanowią polityki RLS. Konta: `biuro@gig.org.pl`, `jerzy.bryk@gmail.com`.
+
+**Zanim zaczniesz kodzić, przeczytaj sekcję 2 (pułapki).** Trzy najczęstsze zabójcy czasu:
+cache przeglądarki przy testach panelu, Vercel Security Checkpoint blokujący `curl`,
+i to, że brama Supabase wymusza `text/plain` na odpowiedziach Edge Functions.
+
+**Wersje Edge Functions na 9.09.2026** (repo = wdrożone, poza komentarzami):
+`send-confirmation` v10 (verify_jwt=true), `wyslij-mail` v6, `wyslij-kampanie` v5,
+`panel-logowanie` v2, `panel-rejestracja` v3, `panel-haslo` v2, `baza-wypis` v1,
+`newsletter-unsubscribe` v1, `pierwsze-haslo` v1.
+
+**Otwarte zadania** (szczegóły w sekcji 3):
+1. `GIG_HOOK_TOKEN` w sekretach Supabase — brama `send-confirmation` czeka bezczynnie (punkt C).
+2. Resend Pro przed pierwszą masową kampanią (Free = 100 maili/dobę).
+3. Biuletyn nr 8 PDF — pliku nie ma nigdzie, musi dostarczyć GIG (punkt E).
+4. Opcjonalnie: RLS zawężone do listy adresów e-mail jako trzecia warstwa (punkt F).
 
 ---
 
@@ -38,12 +66,13 @@ Pola: liczba osób, imiona i nazwiska, nabywca (nazwa/adres/NIP + znacznik JST),
 odbiorca (nazwa/adres/**NIP / ID-wewn.**, domyślnie ukryty), e-mail, telefon, uwagi, RODO.
 Przycisk „Zapisz się" w kalendarzu szkoleń prowadzi tu z `?szkolenie=<tytuł>`.
 
-### Panel `/admin/` — szkolenia i zapisy (stan po sesji 2)
-Jedno konto administratora: `biuro@gig.org.pl` (Supabase → Authentication → Users).
+### Panel `/admin/` — szkolenia i zapisy
+Konta: `biuro@gig.org.pl`, `jerzy.bryk@gmail.com` (Supabase → Authentication → Users).
+Nowe konto powstaje przez wniosek na `/admin/rejestracja.html` zatwierdzany mailem przez biuro.
 Widoki związane ze szkoleniami: **Pulpit** (karta „Zapisów na szkolenia" + zapisy w „Ostatnich
 zgłoszeniach"), **Szkolenia** (CRUD + kolumna „Zgłoszeń" z linkiem do przefiltrowanych zapisów),
-**Zapisy na szkolenia** (`zapisy.html` — podsumowanie, filtry, modal, statusy, dwa eksporty CSV;
-otwarcie szczegółów zdejmuje status „nowe"). Zgłoszenia łączą się ze szkoleniem **po tytule**
+**Zapisy na szkolenia** (`zapisy.html` — podsumowanie, filtry, modal, statusy, kolumna „Członek GIG",
+jeden raport CSV; otwarcie szczegółów zdejmuje status „nowe"; ✓ i „anuluj" są przełącznikami). Zgłoszenia łączą się ze szkoleniem **po tytule**
 (tekst z `?szkolenie=`), nie po kluczu — zmiana tytułu szkolenia w panelu „odłącza" wcześniejsze
 zgłoszenia (porównanie ignoruje wielkość liter i spacje na końcach, ale nie więcej).
 
@@ -206,7 +235,8 @@ każdy może wywołać `/auth/v1/signup`, potwierdzić własny e-mail i **czyta�
 `admin/zapisy.html` + pulpit + kolumna „Zgłoszeń" na liście szkoleń (szczegóły w sekcji 1).
 Przetestowane na atrapie danych (7 zgłoszeń, wszystkie statusy, odbiorca ≠ nabywca, wstrzyknięty
 HTML w polach): podsumowania, filtry, modal, zmiana statusu, oba CSV, escapowanie — bez błędów.
-**Nadal nie testowane na żywych danych — `zapisy_szkolenia` wciąż pusta.** Test bez maili:
+**Zweryfikowane na żywych danych** — od 8.09 w `zapisy_szkolenia` są prawdziwe zgłoszenia.
+Test bez maili:
 `ALTER TABLE zapisy_szkolenia DISABLE TRIGGER on_zapis_insert; INSERT …; ALTER TABLE … ENABLE
 TRIGGER on_zapis_insert;` w jednej transakcji (inaczej trigger wyśle maile do biura).
 
@@ -227,7 +257,8 @@ Zapasowa droga wdrożenia (schowkiem) nadal działa:
    Set-Clipboard -Value (Get-Content -LiteralPath 'backend\edge-functions\send-confirmation.ts' -Raw -Encoding UTF8)
    ```
 
-**Został krok 2:** **dodać sekret** `GIG_HOOK_TOKEN` w Supabase → Edge Functions → Secrets. Wartość:
+**Został krok 2 (nadal otwarty na 9.09.2026):** **dodać sekret** `GIG_HOOK_TOKEN`
+w Supabase → Edge Functions → Secrets. Wartość:
    ```sql
    select wartosc from private.gig_sekrety where klucz = 'hook_token';
    ```
@@ -266,24 +297,23 @@ zamienił na względne również `canonical` i `og:url`. `og:url` **musi** być 
 
 ## 4. Historia zmian
 
-### Sesja 2 (4 września 2026)
+Od najnowszej. Szczegóły techniczne są w sekcjach tematycznych pod każdą sesją.
+
+### Sesja 5 (7-9 września 2026)
 
 | commit | co |
 |---|---|
-| `67706fb` | panel: zapisy na pulpicie, kolumna „Zgłoszeń" na liście szkoleń, filtr z `?szkolenie=`, auto-„przeczytane" |
-| `4cb90a5` | logowanie: „Nie pamiętasz hasła?" (mail z linkiem) + `nowe-haslo.html`; wymaga Redirect URL w Supabase Auth |
-| `ce798c7` | `pierwsze-haslo.html?token=…` + Edge Function `pierwsze-haslo` + `backend/supabase_pierwsze_haslo.sql` — hasło bez maila, token jednorazowy |
-| `513bb43` | kreator e-maili do uczestników (Edge Function `wyslij-mail`, Resend, tylko z sesją admina), paleta czerwona GIG, ikona 🎓 |
-| `a21d784` | kreator wspólny w `_admin.js` (`gigKreatorMaila`), „Odpowiedz" do jednej osoby w zapisach i kontakcie (status `replied`), liczniki znikają po wejściu do zakładki, siatka kafelków, checkbox RODO w kalendarzu `/szkolenia/`, maile w czerwieni (`send-confirmation` v4 z bramą, `wyslij-mail` v2) |
+| `bb9fcd9` | jeden raport CSV zamiast dwóch eksportów (układ arkusza biura) |
+| `3713fe0` | wszystkie pola formularza zapisu wymagane poza uwagami; moment faktury |
+| `c172255` | potwierdzenie zapisu: termin linku i zasady płatności (`send-confirmation` v9) |
+| `42a3ff0` | sekcja „Informacje organizacyjne", elastyczne okno modalne, bez pola momentu faktury |
+| `cb0c61e` | newsletter: zarządzanie listą i wysyłka kampanią z panelu |
+| `41545e0` | **audyt bezpieczeństwa: 2FA egzekwowane w bazie, token wniosku jako skrót** |
+| `88076d1` | automatyczne oznaczenie członka GIG przy zgłoszeniu |
+| `feec318`, `5e3d651`, `fb6929d` | lista członków: kolumny E-mail/NIP, eksport CSV, nazwy jako linki |
 
-| `7f64ee2` | linki Newsletter/Kontakt w menu przełączają zakładkę (hashchange) |
-| `3fcd9f2` | zakładka **Baza e-mail**: tabela `baza_email`, import 3791 adresów przez RPC z tokenem, filtry/edycja/CSV/mail; `wyslij-mail` v3 (stopka `baza`) |
+Poniżej szczegóły tematami (nie chronologicznie — łatwiej szukać).
 
-**Kreator e-maili:** `gigKreatorMaila({odbiorcy, temat, rodzaj, szkolenie, opis, cytat, poWyslaniu})` w `_admin.js`;
-strona musi ładować Quill. Backend `wyslij-mail` (v4) sprawdza sesję admina (`auth.getUser`), wysyła osobno
-do każdego adresu, stopka wg `rodzaj` (`szkolenie` / `kontakt` / `baza`). Limit 200 adresów.
-**Szata maila:** jasna, z logo `strona/_assets/img/gig-logo-email.png` (PNG, bo SVG nie renderuje się
-w mailach — wyrenderowane sharpem z `gig-logo-new-poziom-dark.svg`) i czerwoną kreską zamiast ciemnego pasa.
 ### Raport szkolenia (CSV) — jeden zamiast dwoch eksportow
 
 `admin/zapisy.html` ma **jeden** eksport: „Raport szkolenia (CSV)" (dawne „Uczestnicy"
@@ -407,6 +437,26 @@ Jak szukać NIP-u kolejnych firm, w tej kolejności:
 - Warto sprawdzać sumę kontrolną NIP (10 cyfr, wagi 6,5,7,2,3,4,5,6,7, modulo 11) — zapytanie
   kontrolne jest w historii sesji, wyłapuje literówki przy ręcznym wpisywaniu w panelu.
 
+### Sesja 4 (6 września 2026)
+
+**Decyzja: zostajemy przy Resend.** Rozważane było przejście na Amazon SES (10 tys. maili ≈ 1 USD,
+czyli ~4 USD/rok przy 4 szkoleniach) zamiast MailerLite (model „płacisz za kontakty co miesiąc,
+nawet gdy nic nie wysyłasz" — przy 10 tys. adresów to 500–1500 USD/rok). Wybrano Resend, bo
+kolejka kampanii już działa, domena jest zweryfikowana, a różnica wobec SES to ~50 USD/rok —
+za mało, żeby budować drugą integrację. Gdyby baza urosła powyżej 50 tys. adresów, podmiana
+warstwy wysyłkowej na SES to jedna Edge Function.
+
+**Porządki w DNS:** naprawiony duplikat DMARC, dodane `rua=` (raporty), usunięty martwy token
+`_webflow` (jednorazowa weryfikacja Webflow, nieużywana — strona stoi na Vercelu).
+
+**Nowa zakładka `admin/dmarc.html` + `backend/supabase_dmarc.sql`** (tabele `dmarc_raporty`,
+`dmarc_wiersze`, widok `dmarc_zrodla` — migracja już zastosowana w projekcie).
+Wgrywanie załączników z maili DMARC (`.xml`, `.xml.gz`, `.zip`), agregacja po IP, ocena zgodności.
+Rozpakowywanie idzie natywnym `DecompressionStream` — **żadnej biblioteki z CDN**; ZIP czytany
+przez centralny katalog z końca pliku, bo w nagłówku lokalnym rozmiar bywa zerowy.
+Duplikat raportu (`UNIQUE(org_name, report_id)`) jest pomijany cicho, więc można bezpiecznie
+przeciągnąć cały folder z załącznikami. Parser przetestowany na próbkach gzip/ZIP (16 asercji).
+
 ### Sesja 3 (6 września 2026)
 
 | commit | co |
@@ -433,8 +483,8 @@ Powstaje kampania i **kolejka** (jeden wiersz na adres, `UNIQUE(wysylka_id,email
 Wysyłka: zakładka **Wysyłki** → „▶ Wyślij" — panel woła Edge Function `wyslij-kampanie`
 w pętli; każde wywołanie bierze porcję (300), wysyła **batchem Resend po 100** i zapisuje status.
 Przerwanie niczego nie psuje — wznawia od miejsca przerwania, bez dubletów.
-**`limit_dzienny` (domyślnie 200) = rozgrzewka domeny** — funkcja nigdy nie wyśle dziś więcej.
-Nowa domena: 200 → 500 → 1000 → 2000 co kilka dni; nagły strzał tysięcy maili z „zimnej" domeny
+**`limit_dzienny` (domyślnie 100) = rozgrzewka domeny** — funkcja nigdy nie wyśle dziś więcej.
+100 to zarazem limit darmowego Resend. Po wykupieniu Pro: 100 → 250 → 500 → 1000 → 2000 co kilka dni; nagły strzał tysięcy maili z „zimnej" domeny
 to spam-filtr **i popsute maile transakcyjne** (idą z tej samej domeny). Schemat i przydatne
 zapytania (np. ponowna próba dla błędów): `backend/supabase_wysylki.sql`.
 **Wymaga Resend Pro** ($20/mies., 50 tys./mies., bez dziennego limitu) — na Free (100/dobę)
@@ -446,33 +496,28 @@ i pokazuje stronę potwierdzenia. `id` bierze się z `baza_email` (panel przekaz
 Wypisani wypadają z wysyłek (filtr `status==='active'`); w panelu widać ich filtrem **Status → wypisane**
 i po przekreślonym badge'u. Import nie rusza `status`, więc wypis jest trwały. Sprawdzone end-to-end.
 
-Konta: użytkownik ustawił hasło przez `pierwsze-haslo` i jest zalogowany. Token setup zużyty —
-nowy: ponownie `backend/supabase_pierwsze_haslo.sql` (insert) i zapytanie z końca pliku.
-Edge Functions w projekcie: `send-confirmation` (v3, bez bramy), `newsletter-unsubscribe`,
-`pierwsze-haslo`, `wyslij-mail` — dwie ostatnie z `verify_jwt=false` (autoryzacja w kodzie).
-
-Poza kodem: audyt stanu (produkcja = repo, formularz `/zapisy/` i panel działają, tabela pusta),
+Poza kodem: audyt stanu (produkcja = repo, formularz `/zapisy/` i panel działają),
 odkrycie otwartej rejestracji kont (punkt F), porównanie wdrożonej funkcji z repo (punkt C).
+(Aktualna lista Edge Functions i ich wersji — w sekcji 0.)
 
-### Sesja 4 (6 września 2026)
+### Sesja 2 (4 września 2026)
 
-**Decyzja: zostajemy przy Resend.** Rozważane było przejście na Amazon SES (10 tys. maili ≈ 1 USD,
-czyli ~4 USD/rok przy 4 szkoleniach) zamiast MailerLite (model „płacisz za kontakty co miesiąc,
-nawet gdy nic nie wysyłasz" — przy 10 tys. adresów to 500–1500 USD/rok). Wybrano Resend, bo
-kolejka kampanii już działa, domena jest zweryfikowana, a różnica wobec SES to ~50 USD/rok —
-za mało, żeby budować drugą integrację. Gdyby baza urosła powyżej 50 tys. adresów, podmiana
-warstwy wysyłkowej na SES to jedna Edge Function.
+| commit | co |
+|---|---|
+| `67706fb` | panel: zapisy na pulpicie, kolumna „Zgłoszeń" na liście szkoleń, filtr z `?szkolenie=`, auto-„przeczytane" |
+| `4cb90a5` | logowanie: „Nie pamiętasz hasła?" (mail z linkiem) + `nowe-haslo.html`; wymaga Redirect URL w Supabase Auth |
+| `ce798c7` | `pierwsze-haslo.html?token=…` + Edge Function `pierwsze-haslo` + `backend/supabase_pierwsze_haslo.sql` — hasło bez maila, token jednorazowy |
+| `513bb43` | kreator e-maili do uczestników (Edge Function `wyslij-mail`, Resend, tylko z sesją admina), paleta czerwona GIG, ikona 🎓 |
+| `a21d784` | kreator wspólny w `_admin.js` (`gigKreatorMaila`), „Odpowiedz" do jednej osoby w zapisach i kontakcie (status `replied`), liczniki znikają po wejściu do zakładki, siatka kafelków, checkbox RODO w kalendarzu `/szkolenia/`, maile w czerwieni (`send-confirmation` v4 z bramą, `wyslij-mail` v2) |
 
-**Porządki w DNS:** naprawiony duplikat DMARC, dodane `rua=` (raporty), usunięty martwy token
-`_webflow` (jednorazowa weryfikacja Webflow, nieużywana — strona stoi na Vercelu).
+| `7f64ee2` | linki Newsletter/Kontakt w menu przełączają zakładkę (hashchange) |
+| `3fcd9f2` | zakładka **Baza e-mail**: tabela `baza_email`, import 3791 adresów przez RPC z tokenem, filtry/edycja/CSV/mail; `wyslij-mail` v3 (stopka `baza`) |
 
-**Nowa zakładka `admin/dmarc.html` + `backend/supabase_dmarc.sql`** (tabele `dmarc_raporty`,
-`dmarc_wiersze`, widok `dmarc_zrodla` — migracja już zastosowana w projekcie).
-Wgrywanie załączników z maili DMARC (`.xml`, `.xml.gz`, `.zip`), agregacja po IP, ocena zgodności.
-Rozpakowywanie idzie natywnym `DecompressionStream` — **żadnej biblioteki z CDN**; ZIP czytany
-przez centralny katalog z końca pliku, bo w nagłówku lokalnym rozmiar bywa zerowy.
-Duplikat raportu (`UNIQUE(org_name, report_id)`) jest pomijany cicho, więc można bezpiecznie
-przeciągnąć cały folder z załącznikami. Parser przetestowany na próbkach gzip/ZIP (16 asercji).
+**Kreator e-maili:** `gigKreatorMaila({odbiorcy, temat, rodzaj, szkolenie, opis, cytat, poWyslaniu})` w `_admin.js`;
+strona musi ładować Quill. Backend `wyslij-mail` (v4) sprawdza sesję admina (`auth.getUser`), wysyła osobno
+do każdego adresu, stopka wg `rodzaj` (`szkolenie` / `kontakt` / `baza`). Limit 200 adresów.
+**Szata maila:** jasna, z logo `strona/_assets/img/gig-logo-email.png` (PNG, bo SVG nie renderuje się
+w mailach — wyrenderowane sharpem z `gig-logo-new-poziom-dark.svg`) i czerwoną kreską zamiast ciemnego pasa.
 
 ### Sesja 1
 
@@ -498,3 +543,26 @@ brak obsługi pola `links` na stronie głównej, CF7 kasujący podstawione pola)
 - **Klucz Resend `re_...`** — tylko w sekretach Supabase.
 - Klucz publiczny `anon` jest w `strona/_assets/js/gig-config.js` i **to jest w porządku** —
   dostępu pilnuje RLS.
+
+---
+
+## 6. Jak wznowić pracę w nowym czacie
+
+1. Przeczytaj **sekcję 0** (stan) i **sekcję 2** (pułapki). Reszta to materiał do wyszukiwania,
+   nie do czytania w całości.
+2. Sprawdź, czy nic się nie rozjechało od ostatniej sesji:
+   ```bash
+   git -C "C:/#GPZROD/Analizy Claude/strony www/gig.org.pl" log --oneline -5
+   git -C "C:/#GPZROD/Analizy Claude/strony www/gig.org.pl" status --short
+   ```
+3. Konektory MCP: **Supabase** (`execute_sql`, `apply_migration`, `deploy_edge_function`,
+   `list_edge_functions`) i **Vercel** (`list_deployments`, projekt `prj_S8elWsI7MkgSH2cK35yFZfCdXv88`).
+   Wdrożenie Edge Function idzie przez MCP — treść pliku wkleja się w wywołanie, nie ma
+   `supabase` CLI w tym środowisku.
+4. Testy panelu: lokalny serwer `python -m http.server <NOWY_PORT>` w katalogu `strona/`
+   plus przeglądarka. **Za każdym razem inny port** — inaczej cache pokaże starą wersję JS.
+5. Zmiany w bazie rób migracją (`apply_migration`), a nie `execute_sql`, jeśli mają zostać
+   w historii projektu. Plik SQL w `backend/` aktualizuj równolegle — to jedyna dokumentacja schematu.
+
+**Preferencje użytkownika:** bez długich myślników w żadnym tekście (czat, maile, opisy, UI).
+Odpowiedzi po polsku. Commity po polsku, bez polskich znaków w treści komunikatu.
