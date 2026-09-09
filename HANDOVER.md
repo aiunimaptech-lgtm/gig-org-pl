@@ -1,6 +1,6 @@
 # Przekazanie sesji — gig.org.pl
 
-**Stan na:** 9 września 2026 (sesja 5) · ostatni commit `fb6929d` · wszystko wypchnięte na `origin/main`
+**Stan na:** 9 września 2026 (sesja 5) · ostatni commit `50dd837` · wszystko wypchnięte na `origin/main`
 **Repo:** https://github.com/aiunimaptech-lgtm/gig-org-pl · **Deploy:** Vercel, Root Directory = `strona/`
 **Supabase:** projekt `zlepwzeyjwpmhyxfnime` (org `jbryk's Org`, plan Free)
 
