@@ -66,6 +66,20 @@ Pola: liczba osób, imiona i nazwiska, nabywca (nazwa/adres/NIP + znacznik JST),
 odbiorca (nazwa/adres/**NIP / ID-wewn.**, domyślnie ukryty), e-mail, telefon, uwagi, RODO.
 Przycisk „Zapisz się" w kalendarzu szkoleń prowadzi tu z `?szkolenie=<tytuł>`.
 
+### Panel `/admin/` na telefonie
+Do 900 px szerokości pasek boczny chowa się za lewą krawędź, a `_admin.js` (`initMobileMenu`)
+dokłada na początku górnego paska przycisk ☰ i ciemne tło pod wysuniętym menu; zamyka je tapnięcie
+w tło, w link nawigacji, Escape i powrót do szerokości pulpitu. Strony nie mają własnego kodu
+menu — wszystko siedzi w `_admin.js` + bloku „RESPONSIVE" w `_admin.css`. Najważniejsza reguła to
+`min-width:0` na `.admin-main`/`.admin-content`: bez niej szeroka tabela rozpychała całą stronę
+i wszystko na prawo od tytułu wypadało poza ekran (tak było do 10.09). Tabele przewijają się
+w poziomie wewnątrz karty, filtry stają jeden pod drugim, przyciski akcji schodzą pod tytuł,
+pola mają 16 px (iOS nie przybliża strony), modale i toasty biorą całą szerokość.
+**Jak sprawdzić bez logowania:** serwer podglądu z atrapą Supabase (skrypt `serve_podglad.py`
++ `_fake_supabase.js` + ramka `_podglad.html` żyły w scratchpadzie sesji z 10.09; do odtworzenia
+w 10 minut: podmiana CDN supabase-js na atrapę z kilkoma wierszami na tabelę, `?bezsesji=1`
+udaje niezalogowanego). Prawdziwy panel na telefonie wymaga kodu z maila, więc atrapa oszczędza czas.
+
 ### Panel `/admin/` — szkolenia i zapisy
 Konta: `biuro@gig.org.pl`, `jerzy.bryk@gmail.com` (Supabase → Authentication → Users).
 Nowe konto powstaje przez wniosek na `/admin/rejestracja.html` zatwierdzany mailem przez biuro.

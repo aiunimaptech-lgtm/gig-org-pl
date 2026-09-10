@@ -641,14 +641,82 @@ select.form-control { cursor: pointer; }
 .ql-container { border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important; border-color: var(--border) !important; min-height: 300px; font-size: 14px; }
 .ql-editor { min-height: 300px; }
 
-/* ── RESPONSIVE ── */
+/* ── RESPONSIVE ──
+   Do 900px pasek boczny chowa się za lewą krawędź i wysuwa przyciskiem ☰
+   (initMobileMenu w _admin.js). Kluczowe jest min-width:0 na kolumnie treści:
+   bez tego szeroka tabela rozpychała całą stronę zamiast przewijać się we
+   własnej karcie, a wszystko na prawo od tytułu wypadało poza ekran. */
+.btn-menu {
+  display: none;
+  width: 40px; height: 40px;
+  margin-left: -8px;
+  border: 0; background: none;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-direction: column; justify-content: center; align-items: center;
+  gap: 5px; flex-shrink: 0;
+}
+.btn-menu span { display: block; width: 20px; height: 2px; background: var(--brand-dark); border-radius: 2px; }
+.btn-menu:hover { background: #f2f4f6; }
+.sidebar-backdrop {
+  position: fixed; inset: 0;
+  background: rgba(22,32,42,.45);
+  z-index: 95;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.sidebar-backdrop.open { opacity: 1; pointer-events: auto; }
+.admin-main, .admin-content { min-width: 0; }
+
 @media (max-width: 900px) {
-  .admin-sidebar { transform: translateX(-100%); }
-  .admin-sidebar.mobile-open { transform: translateX(0); }
-  .admin-main { margin-left: 0; }
+  .btn-menu { display: flex; }
+  .admin-sidebar { transform: translateX(-100%); height: 100dvh; }
+  .admin-sidebar.mobile-open { transform: translateX(0); box-shadow: 0 0 40px rgba(0,0,0,.35); }
+  body.menu-open { overflow: hidden; }
+  .admin-main { margin-left: 0; overflow-x: clip; }
+  .admin-topbar { padding: 0 14px; gap: 10px; }
+  .topbar-title { font-size: 16px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .topbar-actions { gap: 6px; }
+  .topbar-actions .btn { padding: 6px 10px; font-size: 12px; }
   .admin-content { padding: 16px; }
   .stats-grid { grid-template-columns: 1fr 1fr; }
   .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  /* iOS przybliża stronę po wejściu w pole z czcionką mniejszą niż 16px */
+  .form-control { font-size: 16px; }
+}
+
+@media (max-width: 640px) {
+  /* przyciski akcji schodzą pod tytuł, w osobny wiersz paska */
+  .admin-topbar { height: auto; min-height: var(--topbar-h); flex-wrap: wrap; padding: 8px 12px; row-gap: 6px; }
+  .topbar-actions { width: 100%; flex-wrap: wrap; }
+  .topbar-actions:not(:has(*)) { display: none; }
+  .admin-content { padding: 12px; }
+  .card-header { padding: 14px 14px 10px; }
+  .card-body { padding: 14px; }
+  .stats-grid { gap: 10px; margin-bottom: 18px; }
+  .stat-card { padding: 14px; gap: 10px; }
+  .stat-icon { width: 38px; height: 38px; font-size: 18px; border-radius: 10px; }
+  .stat-value { font-size: 22px; }
+  .stat-body { min-width: 0; }
+  .stat-label { overflow-wrap: anywhere; }
+  /* filtry jeden pod drugim, na całą szerokość */
+  .toolbar { gap: 8px; }
+  .toolbar > * { flex: 1 1 100%; }
+  .toolbar .form-control { max-width: none !important; width: 100%; }
+  .toolbar .btn { justify-content: center; }
+  .tabs { overflow-x: auto; }
+  .tab-btn { padding: 10px 14px; white-space: nowrap; }
+  table.admin-table th, table.admin-table td { padding: 9px 10px; }
+  .modal-overlay { padding: 8px; }
+  .modal-box { resize: none; background-image: none; border-radius: 12px; }
+  .modal-header { padding: 14px 16px 12px; }
+  .modal-body { padding: 16px; }
+  .modal-footer { padding: 12px 16px; flex-wrap: wrap; }
+  .toast-container { left: 12px; right: 12px; bottom: 12px; }
+  .toast { max-width: none; }
+}
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Pole „przeciągnij zdjęcie" (gigPodepnijUpload) ── */

@@ -381,10 +381,43 @@ async function gigMailWyslij() {
   }
 }
 
+/* ── Menu na telefonie ──
+   Poniżej 900px pasek boczny jest schowany (CSS: translateX(-100%)), a żadna
+   strona nie ma własnego przycisku, więc dokładamy go tu — jeden dla całego
+   panelu, na początku górnego paska. Zamyka się po tapnięciu w tło, w link
+   nawigacji, po Escape i po powrocie do szerokości pulpitu. */
+function initMobileMenu() {
+  const topbar  = document.querySelector('.admin-topbar');
+  const sidebar = document.querySelector('.admin-sidebar');
+  if (!topbar || !sidebar) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn-menu';
+  btn.setAttribute('aria-label', 'Menu panelu');
+  btn.setAttribute('aria-expanded', 'false');
+  btn.innerHTML = '<span></span><span></span><span></span>';
+  topbar.prepend(btn);
+  const tlo = document.createElement('div');
+  tlo.className = 'sidebar-backdrop';
+  document.body.appendChild(tlo);
+  const ustaw = otwarte => {
+    sidebar.classList.toggle('mobile-open', otwarte);
+    tlo.classList.toggle('open', otwarte);
+    document.body.classList.toggle('menu-open', otwarte);
+    btn.setAttribute('aria-expanded', String(otwarte));
+  };
+  btn.addEventListener('click', () => ustaw(!sidebar.classList.contains('mobile-open')));
+  tlo.addEventListener('click', () => ustaw(false));
+  sidebar.querySelectorAll('a').forEach(a => a.addEventListener('click', () => ustaw(false)));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') ustaw(false); });
+  window.matchMedia('(min-width: 901px)').addEventListener('change', e => { if (e.matches) ustaw(false); });
+}
+
 /* ── Init ── */
 document.addEventListener('DOMContentLoaded', () => {
   initToasts();
   initModals();
+  initMobileMenu();
   highlightNav();
   fillUserInfo();
   loadSidebarBadges();

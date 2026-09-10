@@ -20,6 +20,11 @@
     .be-filtry{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;}
     .be-filtry select{max-width:230px;}
     .be-filtry .search-box{flex:1 1 260px;}
+    @media (max-width:640px){
+      .be-filtry>*{flex:1 1 100%;}
+      .be-filtry select,.ms-btn{max-width:none!important;width:100%;}   /* !important: selecty maja szerokosc w atrybucie style */
+      .ms-menu{min-width:0;width:100%;}
+    }
     .be-licznik{font-size:13px;color:#6b7f84;margin-left:auto;white-space:nowrap;}
     .be-sub{font-size:12px;color:#6b7f84;}
     .be-pag{display:flex;gap:8px;align-items:center;justify-content:flex-end;padding:12px 0 0;font-size:13px;color:#6b7f84;flex-wrap:wrap;}
