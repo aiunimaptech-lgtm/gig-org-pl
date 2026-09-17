@@ -352,7 +352,7 @@
 
       document.getElementById('btnMail').addEventListener('click', () => {
         const odbiorcy = filtruj().map(a => ({ email: a.email, name: a.osoba || a.firma }));
-        if (!odbiorcy.length) { toast('Brak odbiorców — zmień filtr'); return; }
+        if (!odbiorcy.length) { toast('Brak odbiorców, zmień filtr'); return; }
         gigKreatorMaila({ odbiorcy, rodzaj: 'kontakt',
           opis: 'firmy z ankiety <strong>Węzeł Jakości</strong>' + (okresFiltr() ? ' (' + esc(okresFiltr()) + ')' : '') });
       });

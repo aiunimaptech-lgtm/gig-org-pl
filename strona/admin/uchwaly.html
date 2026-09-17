@@ -222,7 +222,7 @@
     /* Edge Functions panelu: token zalogowanego admina, jak w kreatorze maila (_admin.js) */
     async function wolaj(nazwa, body){
       const sesja = await getSession();
-      if (!sesja) throw new Error('sesja wygasła — zaloguj się ponownie');
+      if (!sesja) throw new Error('sesja wygasła, zaloguj się ponownie');
       const res = await fetch(SUPABASE_URL + '/functions/v1/' + nazwa, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },

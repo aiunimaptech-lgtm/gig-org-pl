@@ -111,7 +111,7 @@
           <div class="form-group"><label>Szer. geogr. (lat)</label><input type="text" id="cLat" class="form-control" placeholder="np. 52.23"></div>
           <div class="form-group"><label>Dł. geogr. (lng)</label><input type="text" id="cLng" class="form-control" placeholder="np. 21.01"></div>
         </div>
-        <div class="form-group"><label>Opis (profil działalności — pokaże się w szczegółach i dymku mapy)</label><textarea id="cDesc" class="form-control" rows="4"></textarea></div>
+        <div class="form-group"><label>Opis (profil działalności, pokaże się w szczegółach i dymku mapy)</label><textarea id="cDesc" class="form-control" rows="4"></textarea></div>
       </div>
       <div class="modal-footer">
         <button class="btn btn-ghost" data-modal-close="editModal">Anuluj</button>
@@ -219,13 +219,13 @@
       if(!confirm(`Zatwierdzić firmę „${r.name}"?\n\nOd tej chwili będzie widoczna w katalogu Członków na stronie.`)) return;
       const {error}=await db.from('czlonkowie').update({status:'published',updated_at:new Date().toISOString()}).eq('id',id);
       if(error){console.error(error);toast('Nie udało się zatwierdzić','error');return;}
-      toast('Zatwierdzono — firma jest już w katalogu na stronie','success',5000);
+      toast('Zatwierdzono. Firma jest już w katalogu na stronie','success',5000);
       await load();
       toast('Pamiętaj o odświeżeniu kopii offline katalogu (gen_czlonkowie_fallback.js)','default',6000);
     }
     async function odrzuc(id){
       const r=data.find(x=>x.id===id); if(!r) return;
-      if(!confirm(`Odrzucić zgłoszenie firmy „${r.name}"?\n\nWpis zostanie w panelu jako ukryty — nie pojawi się na stronie, ale danych nie tracisz.`)) return;
+      if(!confirm(`Odrzucić zgłoszenie firmy „${r.name}"?\n\nWpis zostanie w panelu jako ukryty: nie pojawi się na stronie, ale danych nie tracisz.`)) return;
       const {error}=await db.from('czlonkowie').update({status:'draft',updated_at:new Date().toISOString()}).eq('id',id);
       if(error){console.error(error);toast('Nie udało się zapisać','error');return;}
       toast('Zgłoszenie odrzucone (wpis ukryty)','success');load();
