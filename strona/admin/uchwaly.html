@@ -661,8 +661,18 @@
       }));
       const zle = wiersze.find(w => !w.imie_nazwisko || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(w.email));
       if (zle) { toast('Każdy wiersz musi mieć imię i nazwisko oraz poprawny e-mail', 'error'); return; }
-      const { error } = await db.from('rada_izby').upsert(wiersze.map(w => w.id ? w : (({ id, ...r }) => r)(w)), { onConflict: 'email' });
-      if (error) { toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
+      /* Istniejące wiersze idą po kluczu id (zmiana e-maila to zwykła aktualizacja),
+         nowe osobno jako insert. Upsert po e-mailu przy zmianie adresu próbował
+         wstawić drugi wiersz z tym samym id i wywalał się na kluczu głównym. */
+      const istniejace = wiersze.filter(w => w.id);
+      const nowe = wiersze.filter(w => !w.id).map(({ id, ...r }) => r);
+      let error = null;
+      if (istniejace.length) ({ error } = await db.from('rada_izby').upsert(istniejace, { onConflict: 'id' }));
+      if (!error && nowe.length) ({ error } = await db.from('rada_izby').insert(nowe));
+      if (error) {
+        toast(error.code === '23505' ? 'Ten adres e-mail jest już na liście Rady' : 'Nie udało się zapisać: ' + error.message, 'error', 6000);
+        return;
+      }
       toast('Skład Rady zapisany', 'success');
       await load();
       renderRada();
