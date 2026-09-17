@@ -66,6 +66,7 @@
         <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
         <a href="czlonkowie.html"><span class="nav-icon">⚇</span> Członkowie</a>
         <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
+        <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
         <div class="nav-section">Strona</div>
         <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
       </nav>
@@ -382,7 +383,7 @@
       } else {
         html += `<div class="u-akcje">
           ${glosowanie ? '<button class="btn btn-ghost btn-sm" id="uchAnuluj">Anuluj uchwałę (bez rozstrzygnięcia)</button>' : ''}
-          ${u.status === 'anulowana' ? '<button class="btn btn-danger btn-sm" id="uchUsun">🗑 Usuń</button>' : ''}
+          <button class="btn btn-danger btn-sm prawo" id="uchUsun">🗑 Usuń uchwałę</button>
         </div>`;
       }
 
@@ -500,8 +501,18 @@
       toast('Uchwała anulowana'); closeModal('uchModal'); load();
     }
 
+    /* Usunięcie kasuje też oddane głosy (klucz obcy z ON DELETE CASCADE), więc przy
+       uchwale po głosowaniu mówimy wprost, co przepada — raport PDF trzeba pobrać wcześniej. */
     async function usun(u){
-      if (!confirm(`Usunąć uchwałę ${etykieta(u)} (${kogo(u)}) na trwałe? Tej operacji nie można cofnąć.`)) return;
+      const g = glosyWg[u.id] || [];
+      const oddane = g.filter(x => x.glos).length;
+      let pytanie = `Usunąć uchwałę ${etykieta(u)} (${kogo(u)}) na trwałe? Tej operacji nie można cofnąć.`;
+      if (u.status !== 'projekt') {
+        pytanie += `\n\nRazem z uchwałą znikną: lista ${g.length} osób z Rady i ${oddane} oddanych głosów`
+          + (u.status === 'przyjeta' || u.status === 'odrzucona' ? ', a także zapis wyniku głosowania' : '')
+          + '.\nJeśli raport z głosowania ma zostać w dokumentach, pobierz PDF przed usunięciem.';
+      }
+      if (!confirm(pytanie)) return;
       const { error } = await db.from('uchwaly').delete().eq('id', u.id);
       if (error) { toast('Nie udało się usunąć: ' + error.message, 'error'); return; }
       toast('Usunięto'); closeModal('uchModal'); load();

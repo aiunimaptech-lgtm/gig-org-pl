@@ -77,6 +77,7 @@ async function loadSidebarBadges() {
     { table: 'submissions_kontakt',    id: 'navBadgeKontakt' },
     { table: 'zapisy_szkolenia',       id: 'navBadgeZapisy' },
     { table: 'uchwaly',                id: 'navBadgeUchwaly', status: 'projekt' },   // projekty uchwal do sprawdzenia
+    { table: 'wezel_ankiety',          id: 'navBadgeWezel' },                        // nowe ankiety cenowe
   ];
   for (const m of map) {
     const el = document.getElementById(m.id);

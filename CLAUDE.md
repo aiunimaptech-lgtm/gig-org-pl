@@ -20,6 +20,10 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   → panel `/admin/uchwaly.html` (sprawdzenie, wysyłka przez Edge Function `uchwala-wyslij`,
   przypomnienia, raport PDF) → członkowie Rady głosują z osobistego linku na `/glosowanie/`
   (Edge Function `glosuj`). Szczegóły w HANDOVER.md.
+- **Węzeł Jakości**: ankieta cenowa `/wezel-jakosci/` (katalog pozycji SEKOCENBUD w
+  `_assets/js/wezel-katalog.js`, generowany `skrypty/gen_wezel_katalog.py`) → tabele
+  `wezel_ankiety` / `wezel_ceny` → panel `/admin/wezel.html` (zestawienie min/max/średnia,
+  eksport CSV). Kafelek na stronie głównej obok „Nadchodzące wydarzenia".
 - **Maile**: każdy wpis do `submissions_kontakt` / `submissions_newsletter` / `zapisy_szkolenia`
   wyzwala trigger `pg_net` → Edge Function `send-confirmation` → Resend. Idą dwa maile:
   powiadomienie do GIG (`Reply-To` = zgłaszający) i potwierdzenie do zgłaszającego.

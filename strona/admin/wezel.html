@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Węzeł Jakości — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .wz-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:18px;}
+    .wz-sum .k{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:12px 16px;min-width:0;}
+    .wz-sum .k .t{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .wz-sum .k .v{font-size:22px;font-weight:800;color:#16202a;margin-top:3px;}
+    .wz-sum .k .v small{font-size:13px;font-weight:600;color:#6b7f84;}
+    .wz-mini{font-size:12px;color:#6b7f84;line-height:1.5;margin-top:3px;}
+    .wz-kod{font-size:11.5px;color:#9aa7b2;display:block;}
+    .wz-liczba{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+    .wz-sr{font-weight:800;}
+    .wz-zmiana{font-size:12px;font-weight:700;}
+    .wz-zmiana.gora{color:#1d7a45;}.wz-zmiana.dol{color:#cc0a2b;}
+    .wz-malo{color:#9aa7b2;font-style:italic;}
+    .wz-dane dt{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:14px;}
+    .wz-dane dd{margin:3px 0 0;font-size:15px;color:#16202a;}
+    .wz-blok{background:#f7f9fb;border-radius:10px;padding:14px 16px;margin-top:12px;}
+    .wz-blok h4{margin:0 0 8px;font-size:14px;color:#16202a;}
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Zarządzanie</div>
+        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
+        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <a href="czlonkowie.html"><span class="nav-icon">⚇</span> Członkowie</a>
+        <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
+        <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Węzeł Jakości — ankiety cenowe</div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" id="expZest" title="Zestawienie zbiorcze: jeden wiersz na pozycję cennika">↓ Zestawienie (CSV)</button>
+          <button class="btn btn-outline btn-sm" id="expSurowe" title="Jeden wiersz na cenę podaną przez firmę">↓ Dane surowe (CSV)</button>
+          <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do firm z bieżącego filtra">✉ Wyślij e-mail</button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="wz-sum" id="podsumowanie"></div>
+
+        <div class="card" style="margin-bottom:18px;"><div class="card-header">
+          <div class="card-title">Zestawienie zbiorcze</div>
+          <select id="fOkres" class="form-control" style="max-width:190px;"></select>
+        </div><div class="card-body">
+          <p class="wz-mini" style="margin:0 0 12px;">Pozycje, w których ktoś podał cenę. Kolumna „vs SEKOCENBUD" porównuje naszą średnią
+            ze wskaźnikiem średnim z katalogu (<span id="zrodloRef">—</span>). Pozycje z mniej niż 3 firmami oznaczamy jako niepewne:
+            przy takiej liczbie odpowiedzi średnia jeszcze niewiele mówi.</p>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Pozycja</th><th>Jm.</th><th class="wz-liczba">Firm</th><th class="wz-liczba">Min</th><th class="wz-liczba">Średnia</th><th class="wz-liczba">Mediana</th><th class="wz-liczba">Max</th><th class="wz-liczba">vs SEKOCENBUD</th></tr></thead>
+              <tbody id="zest"><tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table>
+          </div>
+        </div></div>
+
+        <div class="card"><div class="card-body">
+          <div class="toolbar">
+            <div class="search-box"><span class="search-icon">⌕</span>
+              <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: firma, NIP, e-mail, województwo…"></div>
+            <select id="fStatus" class="form-control" style="max-width:190px;">
+              <option value="">Wszystkie statusy</option>
+              <option value="new">Nowe</option>
+              <option value="read">Przeczytane</option>
+              <option value="zweryfikowana">Zweryfikowane</option>
+              <option value="odrzucona">Odrzucone</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Firma</th><th>Województwo</th><th class="wz-liczba">Pozycji</th><th>Członek GIG</th><th>Okres</th><th>Data</th><th>Status</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table>
+          </div>
+        </div></div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="wzModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title" id="wzTytul">Ankieta</div>
+        <button class="modal-close" data-modal-close="wzModal">×</button>
+      </div>
+      <div class="modal-body" id="wzTresc"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/_assets/js/wezel-katalog.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    /* Węzeł Jakości: ankiety cenowe z /wezel-jakosci/ (tabele wezel_ankiety + wezel_ceny).
+       Zestawienie liczymy tu, z surowych cen — widok `wezel_zestawienie` w bazie robi to samo,
+       ale licząc po stronie panelu możemy od razu zestawić wynik z filtrem okresu i katalogiem. */
+    let ankiety = [], ceny = [], refWg = {};
+    const ETYK = { new:'nowe', read:'przeczytane', zweryfikowana:'zweryfikowana', odrzucona:'odrzucona' };
+    const BADGE = { new:'badge-new', read:'badge-read', zweryfikowana:'badge-confirmed', odrzucona:'badge-cancelled' };
+    const zl = n => Number(n).toLocaleString('pl-PL', { maximumFractionDigits:2 }) + ' zł';
+
+    (window.GIG_WEZEL_KATALOG || []).forEach(g => g.pozycje.forEach(p => { refWg[p.kod] = p; }));
+    document.getElementById('zrodloRef').textContent = window.GIG_WEZEL_ZRODLO || 'katalog';
+
+    const okresFiltr = () => document.getElementById('fOkres').value;
+    const aktywne = () => ankiety.filter(a => a.status !== 'odrzucona' && (!okresFiltr() || a.okres === okresFiltr()));
+
+    function podsumuj(){
+      const akt = aktywne();
+      const ids = new Set(akt.map(a => a.id));
+      const c = ceny.filter(x => ids.has(x.ankieta_id));
+      const firmy = new Set(akt.map(a => (a.nip || a.firma || '').trim())).size;
+      const pozycje = new Set(c.map(x => x.kod)).size;
+      const nowe = ankiety.filter(a => a.status === 'new').length;
+      const k = (t, v, s, wyr) => `<div class="k" ${wyr ? 'style="border-color:#f3ccd4;background:#fff5f6;"' : ''}><div class="t">${t}</div><div class="v" ${wyr ? 'style="color:#cc0a2b;"' : ''}>${v}${s ? ` <small>${s}</small>` : ''}</div></div>`;
+      document.getElementById('podsumowanie').innerHTML =
+        k('Ankiety', akt.length, 'w okresie') +
+        k('Firm', firmy, firmy === 1 ? 'firma' : '') +
+        k('Wypełnionych pozycji', pozycje, 'z ' + Object.keys(refWg).length) +
+        k('Podanych cen', c.length, '') +
+        k('Członkowie GIG', akt.filter(a => a.czlonek_gig === true).length, 'ankiet') +
+        (nowe ? k('Nieobsłużone', nowe, '', true) : '');
+    }
+
+    function zestawienie(){
+      const ids = new Set(aktywne().map(a => a.id));
+      const wg = {};
+      ceny.filter(x => ids.has(x.ankieta_id)).forEach(x => {
+        (wg[x.kod] = wg[x.kod] || { kod:x.kod, nazwa:x.nazwa, jm:x.jm, ceny:[] }).ceny.push(Number(x.cena));
+      });
+      const wiersze = Object.values(wg).sort((a, b) => a.kod.localeCompare(b.kod));
+      const tb = document.getElementById('zest');
+      if (!wiersze.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak cen w tym okresie.</td></tr>'; return; }
+      tb.innerHTML = wiersze.map(w => {
+        const s = [...w.ceny].sort((a, b) => a - b);
+        const sr = s.reduce((x, y) => x + y, 0) / s.length;
+        const med = s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+        const ref = (refWg[w.kod] || {}).ref;
+        let vs = '<span class="wz-malo">brak odniesienia</span>';
+        if (ref && ref.sr) {
+          const proc = Math.round((sr / ref.sr - 1) * 100);
+          vs = `<span class="wz-zmiana ${proc >= 0 ? 'gora' : 'dol'}">${proc >= 0 ? '+' : ''}${proc}%</span>
+                <div class="wz-mini">kat. ${zl(ref.sr)}</div>`;
+        }
+        return `<tr>
+          <td style="max-width:320px;">${esc(w.nazwa || w.kod)}<span class="wz-kod">${esc(w.kod)}</span></td>
+          <td>${esc(w.jm || '')}</td>
+          <td class="wz-liczba">${s.length}${s.length < 3 ? '<div class="wz-mini wz-malo">niepewne</div>' : ''}</td>
+          <td class="wz-liczba">${zl(s[0])}</td>
+          <td class="wz-liczba wz-sr">${zl(sr)}</td>
+          <td class="wz-liczba">${zl(med)}</td>
+          <td class="wz-liczba">${zl(s[s.length - 1])}</td>
+          <td class="wz-liczba">${vs}</td>
+        </tr>`;
+      }).join('');
+    }
+
+    function filtruj(){
+      const f = document.getElementById('szukaj').value.toLowerCase().trim();
+      const st = document.getElementById('fStatus').value;
+      const ok = okresFiltr();
+      return ankiety.filter(a => {
+        if (ok && a.okres !== ok) return false;
+        if (st && a.status !== st) return false;
+        if (!f) return true;
+        return [a.firma, a.nip, a.email, a.wojewodztwo, a.osoba].some(v => (v || '').toLowerCase().includes(f));
+      });
+    }
+
+    function render(){
+      const rows = filtruj();
+      const tb = document.getElementById('rows');
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak ankiet spełniających kryteria.</td></tr>'; return; }
+      tb.innerHTML = rows.map(a => {
+        const ile = ceny.filter(c => c.ankieta_id === a.id).length;
+        return `<tr>
+          <td style="max-width:260px;"><strong>${esc(a.firma)}</strong>
+            <div class="wz-mini">${a.nip ? 'NIP ' + esc(a.nip) : ''}${a.email ? ' · ' + esc(a.email) : ''}</div></td>
+          <td>${esc(a.wojewodztwo || '—')}<div class="wz-mini">${esc(a.zasieg || '')}${a.wielkosc ? ' · ' + esc(a.wielkosc) + ' os.' : ''}</div></td>
+          <td class="wz-liczba"><strong>${ile}</strong></td>
+          <td style="text-align:center;">${a.czlonek_gig === true ? '<span class="badge badge-confirmed">członek</span>' : (a.czlonek_gig === false ? '<span class="badge badge-read">nie</span>' : '<span style="color:#9aa7b2;">?</span>')}</td>
+          <td style="white-space:nowrap;">${esc(a.okres)}</td>
+          <td style="white-space:nowrap;">${fmtDate(a.created_at)}</td>
+          <td><span class="badge ${BADGE[a.status] || 'badge-read'}">${ETYK[a.status] || a.status}</span></td>
+          <td class="actions"><button class="btn btn-ghost btn-xs" data-podglad="${a.id}">Szczegóły</button></td>
+        </tr>`;
+      }).join('');
+      tb.querySelectorAll('[data-podglad]').forEach(b => b.addEventListener('click', () => pokaz(b.dataset.podglad)));
+    }
+
+    async function ustawStatus(id, status){
+      const { error } = await db.from('wezel_ankiety').update({ status }).eq('id', id);
+      if (error) { toast('Nie udało się zmienić statusu', 'error'); return false; }
+      const a = ankiety.find(x => x.id === id); if (a) a.status = status;
+      toast('Zapisano: ' + ETYK[status], 'success');
+      return true;
+    }
+
+    function pokaz(id){
+      const a = ankiety.find(x => x.id === id);
+      if (!a) return;
+      if (a.status === 'new') ustawStatus(id, 'read').then(() => { podsumuj(); render(); });
+      const moje = ceny.filter(c => c.ankieta_id === id).sort((x, y) => x.kod.localeCompare(y.kod));
+      document.getElementById('wzTytul').textContent = a.firma + ' · ' + a.okres;
+      const w = (etykieta, wartosc) => `<dt>${esc(etykieta)}</dt><dd>${wartosc ? esc(wartosc) : '—'}</dd>`;
+      document.getElementById('wzTresc').innerHTML = `
+        <dl class="wz-dane" style="margin:0;">
+          ${w('Firma', a.firma)}${w('NIP', a.nip)}${w('REGON', a.regon)}
+          ${w('Województwo', a.wojewodztwo)}${w('Obszar działania', a.zasieg)}${w('Wielkość', a.wielkosc)}
+          ${w('Osoba', a.osoba)}${w('E-mail', a.email)}${w('Telefon', a.telefon)}
+          ${w('Zgłoszono', fmtDate(a.created_at))}
+          <dt>Zgody</dt><dd>${a.newsletter ? 'newsletter' : ''}${a.newsletter && a.szkolenia ? ' · ' : ''}${a.szkolenia ? 'informacje o szkoleniach' : ''}${!a.newsletter && !a.szkolenia ? '—' : ''}</dd>
+          ${a.uwagi ? `<dt>Uwagi firmy</dt><dd style="white-space:pre-wrap;">${esc(a.uwagi)}</dd>` : ''}
+        </dl>
+        <div class="wz-blok">
+          <h4>Podane ceny (${moje.length})</h4>
+          <div class="table-wrap"><table class="admin-table">
+            <thead><tr><th>Pozycja</th><th>Jm.</th><th class="wz-liczba">Cena</th><th class="wz-liczba">Katalog (śr.)</th></tr></thead>
+            <tbody>${moje.map(c => {
+              const ref = (refWg[c.kod] || {}).ref;
+              return `<tr><td>${esc(c.nazwa || '')}<span class="wz-kod">${esc(c.kod)}</span></td>
+                <td>${esc(c.jm || '')}</td>
+                <td class="wz-liczba"><strong>${zl(c.cena)}</strong></td>
+                <td class="wz-liczba">${ref && ref.sr ? zl(ref.sr) : '—'}</td></tr>`;
+            }).join('')}</tbody>
+          </table></div>
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" id="wzZweryfikuj">✓ Oznacz jako zweryfikowaną</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="wzOdrzuc" title="Ankieta zniknie z zestawienia (np. dane oczywiście błędne)">✕ Odrzuć</button>
+          <button type="button" class="btn btn-ghost btn-sm" id="wzOdpowiedz">↩ Napisz do firmy</button>
+        </div>`;
+      document.getElementById('wzZweryfikuj').addEventListener('click', async () => {
+        if (await ustawStatus(id, 'zweryfikowana')) { closeModal('wzModal'); podsumuj(); zestawienie(); render(); }
+      });
+      document.getElementById('wzOdrzuc').addEventListener('click', async () => {
+        if (!confirm('Odrzucić ankietę? Jej ceny znikną z zestawienia zbiorczego.')) return;
+        if (await ustawStatus(id, 'odrzucona')) { closeModal('wzModal'); podsumuj(); zestawienie(); render(); }
+      });
+      document.getElementById('wzOdpowiedz').addEventListener('click', () => {
+        closeModal('wzModal');
+        gigKreatorMaila({ odbiorcy: [{ email: a.email, name: a.osoba || a.firma }],
+          temat: 'Węzeł Jakości GIG: ' + a.firma, rodzaj: 'kontakt', opis: esc(a.firma) });
+      });
+      openModal('wzModal');
+    }
+
+    async function load(){
+      const [a, c] = await Promise.all([
+        db.from('wezel_ankiety').select('*').order('created_at', { ascending:false }),
+        db.from('wezel_ceny').select('*'),
+      ]);
+      if (a.error) { toast('Błąd ładowania ankiet', 'error'); console.error(a.error); return; }
+      ankiety = a.data || [];
+      ceny = c.data || [];
+
+      const sel = document.getElementById('fOkres');
+      const biezacy = sel.value;
+      const okresy = [...new Set(ankiety.map(x => x.okres).filter(Boolean))].sort().reverse();
+      sel.innerHTML = '<option value="">Wszystkie okresy</option>' + okresy.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+      sel.value = okresy.includes(biezacy) ? biezacy : (okresy[0] || '');
+
+      podsumuj(); zestawienie(); render(); loadSidebarBadges();
+    }
+
+    (async () => {
+      if (!await requireAuth()) return;
+      document.getElementById('szukaj').addEventListener('input', render);
+      document.getElementById('fStatus').addEventListener('change', render);
+      document.getElementById('fOkres').addEventListener('change', () => { podsumuj(); zestawienie(); render(); });
+
+      document.getElementById('expZest').addEventListener('click', () => {
+        const ids = new Set(aktywne().map(x => x.id));
+        const wg = {};
+        ceny.filter(x => ids.has(x.ankieta_id)).forEach(x => {
+          (wg[x.kod] = wg[x.kod] || { kod:x.kod, nazwa:x.nazwa, jm:x.jm, ceny:[] }).ceny.push(Number(x.cena));
+        });
+        const rows = Object.values(wg).sort((a, b) => a.kod.localeCompare(b.kod)).map(w => {
+          const s = [...w.ceny].sort((a, b) => a - b);
+          const sr = s.reduce((x, y) => x + y, 0) / s.length;
+          const med = s.length % 2 ? s[(s.length - 1) / 2] : (s[s.length / 2 - 1] + s[s.length / 2]) / 2;
+          const ref = (refWg[w.kod] || {}).ref || {};
+          return { kod:w.kod, nazwa:w.nazwa, jm:w.jm, firm:s.length,
+            min:s[0], sr:Math.round(sr * 100) / 100, mediana:med, max:s[s.length - 1],
+            kat_min:ref.min ?? '', kat_sr:ref.sr ?? '', kat_max:ref.max ?? '' };
+        });
+        if (!rows.length) { toast('Brak danych do eksportu'); return; }
+        exportCSV(rows, [
+          { key:'kod', label:'Kod WKI' }, { key:'nazwa', label:'Pozycja' }, { key:'jm', label:'Jednostka' },
+          { key:'firm', label:'Liczba firm' }, { key:'min', label:'Min' }, { key:'sr', label:'Średnia' },
+          { key:'mediana', label:'Mediana' }, { key:'max', label:'Max' },
+          { key:'kat_min', label:'Katalog min' }, { key:'kat_sr', label:'Katalog średnia' }, { key:'kat_max', label:'Katalog max' },
+        ], 'wezel-zestawienie-' + (okresFiltr() || 'wszystkie').replace(/[^\w]+/g, '-') + '.csv');
+      });
+
+      document.getElementById('expSurowe').addEventListener('click', () => {
+        const wg = {}; ankiety.forEach(a => { wg[a.id] = a; });
+        const rows = ceny.filter(c => wg[c.ankieta_id] && (!okresFiltr() || wg[c.ankieta_id].okres === okresFiltr()))
+          .map(c => { const a = wg[c.ankieta_id]; return {
+            firma:a.firma, nip:a.nip || '', wojewodztwo:a.wojewodztwo || '', wielkosc:a.wielkosc || '',
+            czlonek:a.czlonek_gig === true ? 'tak' : (a.czlonek_gig === false ? 'nie' : ''),
+            okres:a.okres, status:ETYK[a.status] || a.status,
+            kod:c.kod, pozycja:c.nazwa || '', jm:c.jm || '', cena:c.cena, zgloszono:fmtDate(a.created_at) }; });
+        if (!rows.length) { toast('Brak danych do eksportu'); return; }
+        exportCSV(rows, [
+          { key:'firma', label:'Firma' }, { key:'nip', label:'NIP' }, { key:'wojewodztwo', label:'Województwo' },
+          { key:'wielkosc', label:'Wielkość firmy' }, { key:'czlonek', label:'Członek GIG' },
+          { key:'okres', label:'Okres' }, { key:'status', label:'Status ankiety' },
+          { key:'kod', label:'Kod WKI' }, { key:'pozycja', label:'Pozycja' }, { key:'jm', label:'Jednostka' },
+          { key:'cena', label:'Cena netto' }, { key:'zgloszono', label:'Zgłoszono' },
+        ], 'wezel-dane-surowe-' + (okresFiltr() || 'wszystkie').replace(/[^\w]+/g, '-') + '.csv');
+      });
+
+      document.getElementById('btnMail').addEventListener('click', () => {
+        const odbiorcy = filtruj().map(a => ({ email: a.email, name: a.osoba || a.firma }));
+        if (!odbiorcy.length) { toast('Brak odbiorców — zmień filtr'); return; }
+        gigKreatorMaila({ odbiorcy, rodzaj: 'kontakt',
+          opis: 'firmy z ankiety <strong>Węzeł Jakości</strong>' + (okresFiltr() ? ' (' + esc(okresFiltr()) + ')' : '') });
+      });
+
+      load();
+    })();
+  </script>
+</body>
+</html>

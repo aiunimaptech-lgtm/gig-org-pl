@@ -137,9 +137,12 @@ function czlonkostwoMail(rec: Record<string, unknown>) {
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">dziękujemy za złożenie wniosku o członkostwo w Geodezyjnej Izbie Gospodarczej. Wniosek trafił do biura Izby.</p>
     <div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
       <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Prośba o dokument</p>
-      <p style="margin:0;font-size:14px;line-height:1.6;">Do rozpatrzenia wniosku potrzebujemy dokumentu potwierdzającego status prawny firmy:
+      <p style="margin:0 0 10px;font-size:14px;line-height:1.6;">Do rozpatrzenia wniosku potrzebujemy dokumentu potwierdzającego status prawny firmy:
       <strong>wydruku z CEIDG lub odpisu z KRS</strong>. Prosimy o przesłanie go w odpowiedzi na tę wiadomość albo na adres
       <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};">biuro@gig.org.pl</a>. Po otrzymaniu dokumentu skontaktujemy się w sprawie dalszych kroków.</p>
+      <p style="margin:0;font-size:14px;line-height:1.6;">Dokument pobiorą Państwo bezpłatnie ze strony
+      <a href="https://wyszukiwarka-krs.ms.gov.pl/" style="color:${C.mid};">wyszukiwarka-krs.ms.gov.pl</a> (spółki wpisane do KRS) lub
+      <a href="https://aplikacja.ceidg.gov.pl/CEIDG/Index.aspx" style="color:${C.mid};">ceidg.gov.pl</a> (jednoosobowa działalność gospodarcza).</p>
     </div>
     ${msg ? `<div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-radius:6px;">
       <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Dane z wniosku:</p>
@@ -168,7 +171,9 @@ function zainteresowanieMail(rec: Record<string, unknown>) {
     </div>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">Jeśli chcą Państwo od razu złożyć wniosek, formularz jest na stronie
       <a href="https://gig.org.pl/dolacz-do-nas/" style="color:${C.mid};">gig.org.pl/dolacz-do-nas</a>. Do rozpatrzenia wniosku potrzebny jest
-      <strong>wydruk z CEIDG lub odpis z KRS</strong>, który prosimy przesłać na <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};">biuro@gig.org.pl</a>.</p>
+      <strong>wydruk z CEIDG lub odpis z KRS</strong>, który prosimy przesłać na <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};">biuro@gig.org.pl</a>.
+      Dokument pobiorą Państwo bezpłatnie ze strony <a href="https://wyszukiwarka-krs.ms.gov.pl/" style="color:${C.mid};">wyszukiwarka-krs.ms.gov.pl</a>
+      lub <a href="https://aplikacja.ceidg.gov.pl/CEIDG/Index.aspx" style="color:${C.mid};">ceidg.gov.pl</a>.</p>
     <p style="margin:0;font-size:13px;color:#6b7c8c;line-height:1.6;">Silni wiedzą, zjednoczeni działaniem.</p>`;
   return { subject: "Członkostwo w GIG: dziękujemy za zainteresowanie", html: layout("Dziękujemy za zainteresowanie", body) };
 }

@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Węzeł Jakości — ankieta cenowa — Geodezyjna Izba Gospodarcza</title>
+  <meta name="description" content="Ankieta cenowa Węzła Jakości GIG: firmy geodezyjne podają swoje stawki w układzie wskaźników SEKOCENBUD, a Izba publikuje zbiorcze zestawienie.">
+  <link rel="canonical" href="https://gig.org.pl/wezel-jakosci/">
+  <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root{--red:#cc0a2b;--ink:#16202a;--muted:#6b7884;--line:#e6ebef;--bg:#f4f6f8;}
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.65;}
+    a{color:var(--red);text-decoration:none;}a:hover{text-decoration:underline;}
+    .wrap{max-width:1140px;margin:0 auto;padding:0 22px;}
+    /* hero */
+    .w-hero{background:linear-gradient(180deg,#fff,var(--bg));padding:34px 0 28px;border-bottom:1px solid var(--line);}
+    .w-hero h1{font-size:clamp(26px,4vw,38px);margin:9px 0 10px;line-height:1.2;}
+    .w-hero .lead{color:var(--muted);max-width:74ch;margin:0 0 6px;}
+    .w-kicker{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:4px 12px;border-radius:20px;}
+    .w-korzysci{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:20px 0 0;}
+    .w-korzysci div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 16px;font-size:14px;}
+    .w-korzysci b{display:block;color:var(--red);font-size:12px;letter-spacing:.6px;text-transform:uppercase;margin-bottom:3px;}
+    /* formularz */
+    form.w-form{max-width:980px;margin:0 auto;padding:30px 22px 60px;}
+    fieldset{border:1px solid var(--line);border-radius:14px;padding:22px;margin:0 0 20px;}
+    legend{font-weight:800;font-size:16px;padding:0 10px;}
+    legend .opis{display:block;font-weight:400;font-size:13px;color:var(--muted);padding-top:2px;}
+    .row{display:grid;gap:16px;grid-template-columns:1fr 1fr;}
+    .row-3{grid-template-columns:1fr 1fr 1fr;}
+    @media(max-width:720px){.row,.row-3{grid-template-columns:1fr;}}
+    label{display:block;font-size:13.5px;font-weight:600;margin:0 0 6px;}
+    label .wym{color:var(--red);}
+    .pole{margin:0 0 16px;}
+    input[type=text],input[type=email],input[type=tel],input[type=number],textarea,select{
+      width:100%;padding:11px 13px;border:1px solid #d6dde3;border-radius:9px;font:inherit;font-size:15px;background:#fff;color:var(--ink);}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(204,10,43,.10);}
+    textarea{min-height:92px;resize:vertical;}
+    .hint{font-size:12.5px;color:var(--muted);margin:5px 0 0;line-height:1.5;}
+    .w-gus{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;}
+    .w-gus .pole{flex:1 1 240px;margin:0;}
+    .w-gus button{margin-top:26px;background:#fff;border:2px solid var(--red);color:var(--red);border-radius:30px;padding:11px 22px;font:inherit;font-weight:700;cursor:pointer;}
+    .w-gus button:hover{background:var(--red);color:#fff;}
+    .w-gus button:disabled{opacity:.6;cursor:default;background:#fff;color:var(--red);}
+    .w-gus-msg{margin:10px 0 0;padding:9px 13px;border-radius:10px;font-size:13.5px;display:none;}
+    .w-gus-msg.ok{display:block;background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .w-gus-msg.err{display:block;background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    /* katalog cen */
+    .w-pasek{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 16px;font-size:13.5px;color:var(--muted);}
+    .w-pasek .licznik{font-weight:700;color:var(--ink);}
+    .w-pasek label{display:flex;align-items:center;gap:7px;margin:0;font-weight:500;}
+    .w-pasek input[type=checkbox]{width:16px;height:16px;accent-color:var(--red);}
+    .w-sekcja{margin:0 0 14px;border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+    .w-sekcja > summary{cursor:pointer;padding:14px 18px;background:#fbfcfd;font-weight:700;font-size:15px;list-style:none;display:flex;justify-content:space-between;gap:12px;align-items:center;}
+    .w-sekcja > summary::-webkit-details-marker{display:none;}
+    .w-sekcja > summary::after{content:'▾';color:var(--muted);font-size:13px;}
+    .w-sekcja[open] > summary{border-bottom:1px solid var(--line);}
+    .w-sekcja[open] > summary::after{content:'▴';}
+    .w-sekcja .ile{font-weight:600;font-size:12.5px;color:var(--muted);}
+    .w-grupa{padding:4px 18px 10px;}
+    .w-grupa h3{font-size:13px;letter-spacing:.5px;text-transform:uppercase;color:var(--red);margin:16px 0 8px;}
+    table.w-tab{width:100%;border-collapse:collapse;font-size:14px;}
+    table.w-tab th{text-align:left;font-size:11.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);font-weight:700;padding:6px 8px;border-bottom:1px solid var(--line);}
+    table.w-tab td{padding:7px 8px;border-bottom:1px solid #f1f4f7;vertical-align:middle;}
+    table.w-tab tr:last-child td{border-bottom:none;}
+    .w-poz{font-weight:600;}
+    .w-kod{display:block;font-size:11.5px;color:#9aa7b2;font-weight:500;}
+    .w-jm{white-space:nowrap;color:var(--muted);font-size:13px;}
+    .w-cena{width:150px;}
+    .w-cena input{padding:8px 10px;font-size:14.5px;text-align:right;}
+    .w-ref{white-space:nowrap;font-size:12.5px;color:var(--muted);}
+    .w-ref.ukryty{display:none;}
+    @media(max-width:720px){
+      table.w-tab thead{display:none;}
+      table.w-tab tr{display:grid;grid-template-columns:1fr 150px;gap:0 10px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f4f7;}
+      table.w-tab td{border:none;padding:2px 0;}
+      .w-cena{width:auto;grid-row:span 2;}
+      .w-ref{grid-column:1 / -1;}
+    }
+    .chk{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;margin:0 0 14px;}
+    .chk input{margin-top:3px;flex:none;width:17px;height:17px;accent-color:var(--red);}
+    .chk label{font-weight:500;margin:0;}
+    .w-send{background:var(--red);color:#fff;border:0;border-radius:30px;padding:14px 34px;font:inherit;font-weight:700;font-size:16px;cursor:pointer;}
+    .w-send:hover{filter:brightness(.93);}.w-send:disabled{opacity:.55;cursor:not-allowed;filter:none;}
+    .w-msg{margin:16px 0 0;padding:13px 16px;border-radius:10px;font-size:14.5px;display:none;}
+    .w-msg.ok{display:block;background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .w-msg.err{display:block;background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .w-ok-box{display:none;max-width:820px;margin:0 auto;padding:52px 22px 70px;text-align:center;}
+    .w-ok-box h2{font-size:26px;margin:0 0 12px;}
+    .w-ok-box p{color:var(--muted);max-width:62ch;margin:0 auto 8px;}
+    .site-foot{background:var(--ink);color:rgba(255,255,255,.75);padding:40px 0 26px;}
+    .foot-in{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;}
+    .site-foot strong{color:#fff;}.site-foot a{color:#fff;}.foot-soc a{display:inline-block;margin-left:14px;}
+  </style>
+  <link rel="stylesheet" href="/_assets/css/gig-subhead.css">
+</head>
+<body>
+
+<header class="site-head"><div class="wrap head-in"><a class="logo" href="/"><img src="/wp-content/uploads/2026/04/gig-logo-new-poziom-dark.svg" alt="Geodezyjna Izba Gospodarcza"></a><nav class="nav"><a href="/">Home</a><span class="nav-item"><a href="/o-nas/">O nas</a><span class="nav-sub"><a href="/czlonkowie/">Członkowie</a></span></span><span class="nav-item"><a href="/baza-wiedzy/aktualnosci-gig/">Aktualności</a><span class="nav-sub"><a href="/nadchodzace-wydarzenia/">Nadchodzące wydarzenia</a></span></span><span class="nav-item"><a href="/baza-wiedzy/">Baza wiedzy</a><span class="nav-sub"><a href="/baza-wiedzy/artykuly/">Artykuły</a><a href="/biuletyn-gig/">Biuletyn</a></span></span><a href="/szkolenia/">Szkolenia</a><span class="nav-item"><a href="/kontakt/">Kontakt</a><span class="nav-sub"><a href="/dolacz-do-nas/">Dołącz do nas</a></span></span></nav><a class="head-phone" href="tel:+48228273843"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z"/></svg> +48 22 / 827 38 43</a></div></header>
+
+<section class="w-hero">
+  <div class="wrap">
+    <span class="w-kicker">Węzeł Jakości</span>
+    <h1>Ankieta cenowa prac geodezyjnych</h1>
+    <p class="lead">Zbieramy stawki od firm geodezyjnych w układzie wskaźników cenowych <strong>SEKOCENBUD</strong>
+      (pozycje WKI 7.5, opracowanie ZOPI). Im więcej firm poda swoje ceny, tym mocniejszy argument w rozmowach
+      z zamawiającymi: publikowane wskaźniki przestają być uznaniowe, a stają się obrazem rynku.</p>
+    <p class="lead">Wypełnij tylko te pozycje, które realnie wykonujesz. Puste zostawiasz bez konsekwencji.</p>
+    <div class="w-korzysci">
+      <div><b>Dane zbiorcze</b>Publikujemy wyłącznie zestawienia: minimum, maksimum, średnią i medianę. Ceny pojedynczej firmy nie są nigdzie pokazywane.</div>
+      <div><b>Zwrotnie do Ciebie</b>Po zamknięciu zbierania wyślemy uczestnikom zestawienie, żeby każdy mógł porównać się z rynkiem.</div>
+      <div><b>Kilka minut</b>73 pozycje w czterech sekcjach, rozwijane. Większość firm wypełnia jedną sekcję.</div>
+    </div>
+  </div>
+</section>
+
+<form class="w-form" id="wForm" novalidate>
+  <fieldset>
+    <legend>Firma<span class="opis">Kto podaje ceny. Danych firmy nie publikujemy.</span></legend>
+    <div class="w-gus">
+      <div class="pole">
+        <label for="nip">NIP <span class="wym">*</span></label>
+        <input type="text" id="nip" name="nip" inputmode="numeric" placeholder="0000000000" autocomplete="off">
+      </div>
+      <button type="button" id="gusBtn">Wczytaj dane firmy z GUS</button>
+    </div>
+    <div class="w-gus-msg" id="gusMsg"></div>
+    <div class="pole" style="margin-top:16px;">
+      <label for="firma">Nazwa firmy <span class="wym">*</span></label>
+      <input type="text" id="firma" name="firma" required>
+    </div>
+    <div class="row row-3">
+      <div class="pole">
+        <label for="wojewodztwo">Województwo <span class="wym">*</span></label>
+        <select id="wojewodztwo" name="wojewodztwo" required>
+          <option value="">— wybierz —</option>
+          <option>dolnośląskie</option><option>kujawsko-pomorskie</option><option>lubelskie</option><option>lubuskie</option>
+          <option>łódzkie</option><option>małopolskie</option><option>mazowieckie</option><option>opolskie</option>
+          <option>podkarpackie</option><option>podlaskie</option><option>pomorskie</option><option>śląskie</option>
+          <option>świętokrzyskie</option><option>warmińsko-mazurskie</option><option>wielkopolskie</option><option>zachodniopomorskie</option>
+        </select>
+      </div>
+      <div class="pole">
+        <label for="zasieg">Obszar działania</label>
+        <select id="zasieg" name="zasieg">
+          <option value="">— wybierz —</option>
+          <option value="lokalny">powiat / okolica</option>
+          <option value="wojewodztwo">województwo</option>
+          <option value="kraj">cała Polska</option>
+        </select>
+      </div>
+      <div class="pole">
+        <label for="wielkosc">Wielkość firmy</label>
+        <select id="wielkosc" name="wielkosc">
+          <option value="">— wybierz —</option>
+          <option value="1">1 osoba</option>
+          <option value="2-5">2-5 osób</option>
+          <option value="6-20">6-20 osób</option>
+          <option value="21+">powyżej 20 osób</option>
+        </select>
+      </div>
+    </div>
+    <div class="row row-3">
+      <div class="pole"><label for="osoba">Osoba wypełniająca</label><input type="text" id="osoba" name="osoba"></div>
+      <div class="pole"><label for="email">Adres e-mail <span class="wym">*</span></label><input type="email" id="email" name="email" required></div>
+      <div class="pole"><label for="telefon">Telefon</label><input type="tel" id="telefon" name="telefon"></div>
+    </div>
+    <div class="pole" style="margin:0;">
+      <label for="okres">Ceny dotyczą okresu <span class="wym">*</span></label>
+      <select id="okres" name="okres" required></select>
+      <p class="hint">Podaj stawki, które stosujesz w tym kwartale. Ankietę można wypełnić ponownie w kolejnym kwartale.</p>
+    </div>
+  </fieldset>
+
+  <fieldset>
+    <legend>Ceny netto za pozycję<span class="opis">Stawki w złotych, bez VAT. Wypełnij tylko to, co wykonujesz.</span></legend>
+    <div class="w-pasek">
+      <span>Wypełnione pozycje: <span class="licznik" id="licznik">0</span> z 73</span>
+      <label><input type="checkbox" id="pokazRef"> Pokaż wskaźniki SEKOCENBUD z <span id="zrodloOkres">poprzedniego badania</span></label>
+      <span class="hint" style="margin:0;">Domyślnie ukryte, żeby nie sugerowały odpowiedzi.</span>
+    </div>
+    <div id="katalog"></div>
+    <div class="pole" style="margin:18px 0 0;">
+      <label for="uwagi">Uwagi do cen (opcjonalnie)</label>
+      <textarea id="uwagi" name="uwagi" placeholder="Np. czego nie obejmują podane stawki, jakie są typowe dopłaty, co najmocniej wpływa na cenę."></textarea>
+    </div>
+  </fieldset>
+
+  <div class="chk">
+    <input type="checkbox" id="szkolenia" checked>
+    <label for="szkolenia">Chcę dostawać informacje o <strong>szkoleniach GIG</strong> (m.in. wycena prac geodezyjnych, umowy, przetargi). Członkowie Izby płacą za nie mniej.</label>
+  </div>
+  <div class="chk">
+    <input type="checkbox" id="newsletter" checked>
+    <label for="newsletter">Chcę otrzymywać newsletter GIG: aktualności Izby i zaproszenia na wydarzenia. Zgodę można wycofać jednym kliknięciem w stopce dowolnej wiadomości.</label>
+  </div>
+  <div class="chk">
+    <input type="checkbox" id="rodo" required>
+    <label for="rodo">Zapoznałem/-am się z <a href="/polityka-prywatnosci-rodo/" target="_blank" rel="noopener">Polityką prywatności</a> i wyrażam zgodę na przetwarzanie danych w celu obsługi ankiety. <span class="wym">*</span></label>
+  </div>
+
+  <button type="submit" class="w-send" id="wSend">Wyślij ankietę</button>
+  <div class="w-msg" id="wMsg"></div>
+</form>
+
+<div class="w-ok-box" id="wOk">
+  <h2>Dziękujemy ✓</h2>
+  <p>Ceny trafiły do Węzła Jakości. Publikujemy wyłącznie dane zbiorcze, nigdy stawek pojedynczej firmy.</p>
+  <p id="wOkZapisy"></p>
+  <p style="margin-top:24px"><a href="/szkolenia/">Zobacz najbliższe szkolenia GIG →</a></p>
+  <p><a href="/dolacz-do-nas/">Dołącz do Izby →</a></p>
+</div>
+
+<footer class="site-foot"><div class="wrap foot-in">
+    <div>
+      <strong>Geodezyjna Izba Gospodarcza</strong><br>
+      ul. Czackiego 3/5, 00-043 Warszawa<br>
+      tel. 22 827 38 43 · <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>
+    </div>
+    <div class="foot-soc">
+      <a href="https://www.facebook.com/gigorgpl" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://www.linkedin.com/company/gig-geodezyjna-izba-gospodarcza" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div></footer>
+
+<script src="/_assets/js/gig-config.js"></script>
+<script src="/_assets/js/wezel-katalog.js"></script>
+<script>
+(function () {
+  "use strict";
+  var K = window.GIG_WEZEL_KATALOG || [];
+  var form = document.getElementById("wForm");
+  var msg = document.getElementById("wMsg");
+  var $ = function (id) { return document.getElementById(id); };
+  var db = null;
+
+  function sdk() {
+    if (window.supabase) return Promise.resolve();
+    return new Promise(function (res, rej) {
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js";
+      s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+  function esc(t) { return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); }
+  var zl = function (n) { return Number(n).toLocaleString("pl-PL") + " zł"; };
+
+  /* ── kwartały: bieżący i trzy wstecz (ceny podaje się „za okres") ── */
+  (function okresy() {
+    var sel = $("okres"), d = new Date();
+    for (var i = 0; i < 4; i++) {
+      var m = d.getMonth() - 3 * i, rok = d.getFullYear() + Math.floor(m / 12);
+      var kw = Math.floor(((m % 12) + 12) % 12 / 3) + 1;
+      var tekst = kw + " kw. " + rok;
+      sel.insertAdjacentHTML("beforeend", '<option value="' + tekst + '">' + tekst + "</option>");
+    }
+    sel.selectedIndex = 0;
+  })();
+  $("zrodloOkres").textContent = window.GIG_WEZEL_ZRODLO || "poprzedniego badania";
+
+  /* ── katalog: sekcje (rozwijane) → grupy → pozycje ── */
+  (function render() {
+    var sekcje = [];
+    K.forEach(function (g) {
+      var s = sekcje.filter(function (x) { return x.nazwa === g.sekcja; })[0];
+      if (!s) { s = { nazwa: g.sekcja, grupy: [] }; sekcje.push(s); }
+      s.grupy.push(g);
+    });
+    var html = sekcje.map(function (s, i) {
+      var ile = s.grupy.reduce(function (n, g) { return n + g.pozycje.length; }, 0);
+      var grupy = s.grupy.map(function (g) {
+        var wiersze = g.pozycje.map(function (p) {
+          var ref = p.ref && p.ref.sr
+            ? "od " + zl(p.ref.min) + " do " + zl(p.ref.max) + ", śr. " + zl(p.ref.sr)
+            : "brak danych";
+          return '<tr>' +
+            '<td><span class="w-poz">' + esc(p.krotka) + '</span><span class="w-kod">' + esc(p.kod) + "</span></td>" +
+            '<td class="w-jm">' + esc(p.jm) + "</td>" +
+            '<td class="w-ref ukryty">' + ref + "</td>" +
+            '<td class="w-cena"><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="zł" ' +
+              'data-kod="' + esc(p.kod) + '" data-nazwa="' + esc(p.nazwa) + '" data-jm="' + esc(p.jm) + '" aria-label="' + esc(p.nazwa) + '"></td>' +
+            "</tr>";
+        }).join("");
+        return '<div class="w-grupa"><h3>' + esc(g.tytul) + "</h3>" +
+          '<table class="w-tab"><thead><tr><th>Pozycja</th><th>Jednostka</th><th class="w-ref ukryty">SEKOCENBUD</th><th>Twoja cena netto</th></tr></thead>' +
+          "<tbody>" + wiersze + "</tbody></table></div>";
+      }).join("");
+      return '<details class="w-sekcja"' + (i === 0 ? " open" : "") + "><summary><span>" + esc(s.nazwa) +
+        ' <span class="ile">(' + ile + " poz.)</span></span></summary>" + grupy + "</details>";
+    }).join("");
+    $("katalog").innerHTML = html;
+  })();
+
+  /* licznik wypełnionych pozycji — od razu widać, ile już zrobione */
+  var pola = function () { return Array.prototype.slice.call(document.querySelectorAll("#katalog input[data-kod]")); };
+  form.addEventListener("input", function (e) {
+    if (!e.target.dataset || !e.target.dataset.kod) return;
+    $("licznik").textContent = pola().filter(function (i) { return i.value.trim() !== ""; }).length;
+  });
+  $("pokazRef").addEventListener("change", function () {
+    document.querySelectorAll(".w-ref").forEach(function (el) { el.classList.toggle("ukryty", !$("pokazRef").checked); });
+  });
+
+  /* ── dane firmy z GUS (ta sama funkcja, co w „Dołącz do nas") ── */
+  $("gusBtn").addEventListener("click", async function () {
+    var btn = this, m = $("gusMsg");
+    var nip = ($("nip").value || "").replace(/[\s-]/g, "");
+    function pokazG(t, ok) { m.textContent = t; m.className = "w-gus-msg " + (ok ? "ok" : "err"); }
+    if (!/^\d{10}$/.test(nip)) { pokazG("Najpierw wpisz NIP (10 cyfr).", false); $("nip").focus(); return; }
+    btn.disabled = true; btn.textContent = "Wczytuję…";
+    try {
+      var r = await fetch(window.GIG_CFG.SUPABASE_URL + "/functions/v1/firma-gus?nip=" + nip, { headers: { apikey: window.GIG_CFG.SUPABASE_ANON } });
+      var d = await r.json();
+      if (!r.ok || !d.ok) throw new Error(d.error || "Nie udało się pobrać danych.");
+      if (d.nazwa && !$("firma").value.trim()) $("firma").value = d.nazwa;
+      if (d.wojewodztwo && !$("wojewodztwo").value) $("wojewodztwo").value = d.wojewodztwo;
+      $("firma").dataset.regon = d.regon || "";
+      pokazG("Wczytano: " + (d.nazwa || "") + (d.wojewodztwo ? "" : " (województwo uzupełnij proszę ręcznie)"), true);
+    } catch (e) {
+      pokazG(e.message || "Nie udało się pobrać danych. Wpisz je ręcznie.", false);
+    } finally {
+      btn.disabled = false; btn.textContent = "Wczytaj dane firmy z GUS";
+    }
+  });
+
+  function pokaz(t, ok) { msg.textContent = t; msg.className = "w-msg " + (ok ? "ok" : "err"); }
+  var val = function (id) { return ($(id).value || "").trim(); };
+
+  form.addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    var btn = $("wSend");
+    var ceny = pola().filter(function (i) { return i.value.trim() !== ""; })
+      .map(function (i) { return { kod: i.dataset.kod, nazwa: i.dataset.nazwa, jm: i.dataset.jm, cena: Number(i.value) }; })
+      .filter(function (c) { return isFinite(c.cena) && c.cena >= 0; });
+
+    if (!val("firma")) return pokaz("Podaj nazwę firmy.", false);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val("email"))) return pokaz("Podaj poprawny adres e-mail.", false);
+    if (!val("wojewodztwo")) return pokaz("Wybierz województwo.", false);
+    var nip = val("nip").replace(/[\s-]/g, "");
+    if (!/^\d{10}$/.test(nip)) return pokaz("Podaj NIP firmy (10 cyfr). Po NIP-ie rozpoznajemy członków Izby i pilnujemy, żeby jedna firma nie liczyła się dwa razy.", false);
+    if (!ceny.length) return pokaz("Uzupełnij cenę przynajmniej w jednej pozycji.", false);
+    if (!$("rodo").checked) return pokaz("Zaznacz zgodę na przetwarzanie danych osobowych.", false);
+
+    btn.disabled = true; pokaz("Wysyłanie…", true);
+    try {
+      await sdk();
+      db = db || window.supabase.createClient(window.GIG_CFG.SUPABASE_URL, window.GIG_CFG.SUPABASE_ANON);
+      /* Id nadajemy tutaj: tabela ma tylko politykę INSERT, więc `insert().select()`
+         (czyli RETURNING) odbiłoby się od RLS. Bez odczytu wiemy, do czego dopiąć ceny. */
+      var ankietaId = (crypto.randomUUID ? crypto.randomUUID()
+        : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+            var r = Math.random() * 16 | 0; return (c === "x" ? r : (r & 3 | 8)).toString(16); }));
+      var ank = await db.from("wezel_ankiety").insert({
+        id: ankietaId,
+        firma: val("firma"), nip: nip, regon: $("firma").dataset.regon || null,
+        osoba: val("osoba") || null, email: val("email"), telefon: val("telefon") || null,
+        wojewodztwo: val("wojewodztwo"), zasieg: val("zasieg") || null, wielkosc: val("wielkosc") || null,
+        okres: val("okres"), uwagi: val("uwagi") || null,
+        newsletter: $("newsletter").checked, szkolenia: $("szkolenia").checked, status: "new"
+      });
+      if (ank.error) throw ank.error;
+
+      var wiersze = ceny.map(function (c) { return { ankieta_id: ankietaId, kod: c.kod, nazwa: c.nazwa, jm: c.jm, cena: c.cena }; });
+      var cen = await db.from("wezel_ceny").insert(wiersze);
+      if (cen.error) throw cen.error;
+
+      /* Newsletter i chęć szkoleń dopisujemy PO udanej ankiecie i nie przerywamy
+         na błędzie: 23505 = adres już jest na liście, a ankieta i tak jest przyjęta. */
+      var zapisy = [];
+      if ($("newsletter").checked) {
+        try {
+          var nl = await db.from("submissions_newsletter").insert({ email: val("email"), status: "new" });
+          if (!nl.error || nl.error.code === "23505") zapisy.push("newslettera");
+        } catch (e2) { console.warn("newsletter:", e2); }
+      }
+      if ($("szkolenia").checked) {
+        try {
+          var kt = await db.from("submissions_kontakt").insert({
+            name: val("osoba") || val("firma"), email: val("email"),
+            subject: "Zainteresowanie szkoleniami: " + val("firma"),
+            message: "ZAINTERESOWANIE SZKOLENIAMI (z ankiety Węzeł Jakości)\n" +
+              "Firma: " + val("firma") + "\nNIP: " + nip + "\nWojewództwo: " + val("wojewodztwo") +
+              "\nE-mail: " + val("email") + "\nTelefon: " + (val("telefon") || "—") +
+              "\n\nFirma prosi o informacje o szkoleniach GIG.",
+            status: "new"
+          });
+          if (!kt.error) zapisy.push("informacji o szkoleniach");
+        } catch (e3) { console.warn("szkolenia:", e3); }
+      }
+
+      form.style.display = "none";
+      $("wOk").style.display = "block";
+      $("wOkZapisy").textContent = "Podałeś ceny w " + ceny.length + (ceny.length === 1 ? " pozycji." : " pozycjach.") +
+        (zapisy.length ? " Zapisaliśmy Cię także do " + zapisy.join(" i ") + "." : "");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      console.error(err);
+      btn.disabled = false;
+      pokaz("Nie udało się wysłać ankiety. Spróbuj ponownie lub napisz na biuro@gig.org.pl.", false);
+    }
+  });
+})();
+</script>
+<script defer src="/_assets/js/gig-site.js"></script>
+</body>
+</html>

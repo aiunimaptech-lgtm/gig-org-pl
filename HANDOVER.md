@@ -68,6 +68,29 @@ Pola: liczba osób, imiona i nazwiska, nabywca (nazwa/adres/NIP + znacznik JST),
 odbiorca (nazwa/adres/**NIP / ID-wewn.**, domyślnie ukryty), e-mail, telefon, uwagi, RODO.
 Przycisk „Zapisz się" w kalendarzu szkoleń prowadzi tu z `?szkolenie=<tytuł>`.
 
+### Węzeł Jakości — ankieta cenowa (`/wezel-jakosci/` + `admin/wezel.html`, od 17.09.2026)
+Firmy podają swoje stawki w układzie wskaźników **SEKOCENBUD** (pozycje WKI 7.5, opracowanie ZOPI,
+plik od D. Tomaszewskiego). Kafelek na stronie głównej stoi zaraz za „Nadchodzące wydarzenia".
+
+* **Katalog**: `strona/_assets/js/wezel-katalog.js` — 73 pozycje w 22 grupach i 4 sekcjach
+  (prace bieżące 7.51x, drogi 7.52x/7.53x, koleje 7.54x). Generowany z arkusza:
+  `python skrypty/gen_wezel_katalog.py "<plik.xlsx>" [--kwartal "2 kw. 2025"]`. Wskaźniki z arkusza
+  siedzą w polu `ref` i na stronie są **domyślnie ukryte** (przełącznik „Pokaż wskaźniki"), żeby nie
+  sugerowały odpowiedzi; w panelu służą jako punkt odniesienia („vs SEKOCENBUD").
+* **Strona**: sekcje rozwijane, licznik wypełnionych pozycji, przycisk „Wczytaj dane firmy z GUS"
+  (ta sama funkcja `firma-gus`), wybór kwartału, uwagi. **Wymagany NIP** — po nim rozpoznajemy
+  członka Izby (trigger `gig_wezel_czlonek`) i widać, gdy jedna firma wypełnia dwa razy.
+  Pod formularzem **domyślnie zaznaczone** zgody: informacje o szkoleniach i newsletter — pierwsza
+  tworzy wpis w `submissions_kontakt` („Zainteresowanie szkoleniami: …"), druga zapis do newslettera.
+* **Baza**: `wezel_ankiety` + `wezel_ceny` (jedna cena = jeden wiersz, unikat na ankietę i kod),
+  widok `wezel_zestawienie` (min/max/średnia/mediana per pozycja i okres). RLS: publiczny INSERT jak
+  w formularzach, odczyt tylko dla panelu po kodzie. **Uwaga:** strona wpisuje id ankiety sama
+  (`crypto.randomUUID`) — `insert().select()` odbiłoby się od RLS, bo anon nie ma prawa odczytu.
+* **Panel** (`admin/wezel.html`): kafelki, zestawienie zbiorcze z porównaniem do katalogu i flagą
+  „niepewne" przy mniej niż 3 firmach, lista ankiet ze szczegółami, statusy (nowa → przeczytana →
+  zweryfikowana / odrzucona; odrzucona wypada z zestawienia), dwa eksporty CSV (zbiorczy i surowy)
+  oraz wysyłka maila do firm z bieżącego filtra.
+
 ### Dane firmy po NIP-ie (Edge Function `firma-gus`, przycisk w „Dołącz do nas")
 Na górze formularza jest NIP i przycisk **„Wczytaj dane firmy z GUS"**. Funkcja `firma-gus`
 (v1, verify_jwt=false, bez logowania — dane są z rejestrów publicznych; jedyna bramka to suma
