@@ -76,6 +76,7 @@ async function loadSidebarBadges() {
     { table: 'submissions_newsletter', id: 'navBadgeNewsletter' },
     { table: 'submissions_kontakt',    id: 'navBadgeKontakt' },
     { table: 'zapisy_szkolenia',       id: 'navBadgeZapisy' },
+    { table: 'uchwaly',                id: 'navBadgeUchwaly', status: 'projekt' },   // projekty uchwal do sprawdzenia
   ];
   for (const m of map) {
     const el = document.getElementById(m.id);
@@ -83,7 +84,7 @@ async function loadSidebarBadges() {
     try {
       const { count } = await db.from(m.table)
         .select('id', { count: 'exact', head: true })
-        .eq('status', 'new');
+        .eq('status', m.status || 'new');
       if (count && count > 0) { el.textContent = count; el.style.display = ''; }
       else { el.style.display = 'none'; }
     } catch (_) { el.style.display = 'none'; }

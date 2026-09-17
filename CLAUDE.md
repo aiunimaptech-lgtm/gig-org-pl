@@ -15,6 +15,11 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
 - **Zapisy na szkolenia**: osobna strona `/zapisy/` (ręczna, nie mirror) → tabela `zapisy_szkolenia`.
   Zbiera uczestników i dane do faktury (nabywca + odbiorca, znacznik JST). Przycisk „Zapisz się”
   w kalendarzu prowadzi tam z `?szkolenie=<tytuł>`.
+- **Uchwały Rady o przyjęciu członka**: zgłoszenie „Dołącz do nas" → trigger zakłada projekt
+  uchwały i maila (`backend/supabase_uchwaly.sql`, tabele `uchwaly`, `uchwaly_glosy`, `rada_izby`)
+  → panel `/admin/uchwaly.html` (sprawdzenie, wysyłka przez Edge Function `uchwala-wyslij`,
+  przypomnienia, raport PDF) → członkowie Rady głosują z osobistego linku na `/glosowanie/`
+  (Edge Function `glosuj`). Szczegóły w HANDOVER.md.
 - **Maile**: każdy wpis do `submissions_kontakt` / `submissions_newsletter` / `zapisy_szkolenia`
   wyzwala trigger `pg_net` → Edge Function `send-confirmation` → Resend. Idą dwa maile:
   powiadomienie do GIG (`Reply-To` = zgłaszający) i potwierdzenie do zgłaszającego.

@@ -68,6 +68,51 @@ Pola: liczba osób, imiona i nazwiska, nabywca (nazwa/adres/NIP + znacznik JST),
 odbiorca (nazwa/adres/**NIP / ID-wewn.**, domyślnie ukryty), e-mail, telefon, uwagi, RODO.
 Przycisk „Zapisz się" w kalendarzu szkoleń prowadzi tu z `?szkolenie=<tytuł>`.
 
+### Uchwały Rady o przyjęciu członka (`admin/uchwaly.html`, od 17.09.2026)
+Procedura biura: wpływa zgłoszenie z „Dołącz do nas", sekretariat (Agnieszka Horbaczewska) pisze
+projekt uchwały Rady i rozsyła go mailem członkom Rady, Rada głosuje mailowo. Panel prowadzi to
+od początku do końca:
+
+1. **Trigger `on_kontakt_uchwala`** (`backend/supabase_uchwaly.sql`): każdy wpis do
+   `submissions_kontakt` z tematem „Zgłoszenie członkowskie: …" zakłada wiersz w `uchwaly`
+   (status `projekt`) i woła `gig_uchwala_generuj(uid)`, który z danych kandydata buduje treść
+   uchwały (wzór: uchwała z 17.09.2026, art. 21 pkt 2 Statutu i § 4 Regulaminu Pracy Rady) oraz
+   temat i treść maila do Rady (wzór: mail sekretariatu z 17.09.2026). Odmiana nazwiska przez
+   przypadki to heurystyka (`gig_dopelniacz`, `gig_biernik`, `gig_plec`): Piotr Urbański → Pana
+   Piotra Urbańskiego, Agnieszka Kowalska → Panią Agnieszkę Kowalską; spółki dostają formę
+   „przedsiębiorcy FIRMA z siedzibą …, reprezentowanego przez …". Nietypowe nazwiska sekretariat
+   poprawia ręcznie, bo treść jest edytowalna. Numer uchwały to samo liczba (np. `12`), pełny
+   zapis `12/IX/2026` składa się z miesiąca rzymskiego i roku daty wejścia w życie.
+2. **Panel**: projekt widać w zakładce **Uchwały Rady** (plakietka w menu = liczba projektów).
+   Sekretariat poprawia numer, datę, dane kandydata, treść uchwały i maila, wybiera odbiorców ze
+   składu Rady (tabela `rada_izby`, edytowalna przyciskiem „Skład Rady"; wpisany skład z maila
+   z 17.09: 10 osób, dwa nazwiska do uzupełnienia), ogląda podgląd maila i klika „Wyślij do Rady".
+3. **Edge Function `uchwala-wyslij`** (v1, verify_jwt=false, autoryzacja jak `wyslij-mail`: JWT
+   admina + sesja po kodzie): tryb `start` zakłada w `uchwaly_glosy` po jednym wierszu na
+   odbiorcę z losowym tokenem (32 znaki base64url), wysyła każdemu osobny mail z projektem
+   uchwały w ramce i dwoma przyciskami (ZA / PRZECIW → `/glosowanie/?t=<token>&g=za|przeciw`),
+   ustawia status `glosowanie`. Tryb `przypomnienie` pisze tylko do osób bez głosu (licznik
+   `przypomnien`). Tryb `podglad` zwraca HTML maila bez wysyłki. Po wysłaniu treść jest
+   zamrożona (Rada głosuje nad tym, co dostała).
+4. **Strona `/glosowanie/`** + **Edge Function `glosuj`** (v1, verify_jwt=false, token zamiast
+   logowania, pisze kluczem service_role): GET pokazuje uchwałę i kto głosuje, POST zapisuje
+   głos (za/przeciw + uzasadnienie do 2000 znaków, czas, IP). Głos jest jeden i ostateczny
+   (warunek `is('glos', null)` w UPDATE chroni przed podwójnym kliknięciem). Przycisk w mailu
+   tylko zaznacza wybór; głos pada po „Oddaj głos" na stronie, więc skanery linków w poczcie nie
+   głosują za nikogo. Gdy oddany zostanie ostatni brakujący głos, biuro dostaje mail
+   „[GIG] Głosowanie zakończone: …" (NOTIFY_EMAILS).
+5. **Zakończenie**: panel liczy ZA/PRZECIW/bez głosu; „Zakończ głosowanie" nadaje status
+   `przyjeta` (więcej ZA niż PRZECIW spośród oddanych) albo `odrzucona` (remis też). Nie trzeba
+   kompletu głosów. „Anuluj" zamyka bez rozstrzygnięcia. **Raport PDF** (pdfmake z jsDelivr,
+   czcionka Roboto z polskimi znakami): dane kandydata, wynik, tabela kto/jak/kiedy/uzasadnienie,
+   pełna treść uchwały, w stopce data i godzina pobrania oraz e-mail osoby pobierającej.
+
+RLS: trzy nowe tabele tylko dla admina po kodzie (jak reszta panelu), anon nie ma żadnych praw.
+Testowane 17.09 na wierszach `*@example.invalid` (usunięte): generator (trigger + spółka + kobieta),
+`glosuj` GET/POST/409, raport PDF (25 KB), panel na atrapie bazy. **Nie testowałem wysyłki
+`uchwala-wyslij` na żywo** (wymaga sesji panelu z kodem z maila): pierwszą uchwałę wyślij do siebie,
+wybierając w odbiorcach tylko jedną osobę.
+
 ### Panel `/admin/` na telefonie
 Do 900 px szerokości pasek boczny chowa się za lewą krawędź, a `_admin.js` (`initMobileMenu`)
 dokłada na początku górnego paska przycisk ☰ i ciemne tło pod wysuniętym menu; zamyka je tapnięcie

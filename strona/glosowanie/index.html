@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Głosowanie Rady Izby — Geodezyjna Izba Gospodarcza</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root{--red:#cc0a2b;--green:#1d7a45;--ink:#16202a;--muted:#6b7884;--line:#e6ebef;--bg:#f4f6f8;}
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.65;}
+    a{color:var(--red);text-decoration:none;}a:hover{text-decoration:underline;}
+    .wrap{max-width:1140px;margin:0 auto;padding:0 22px;}
+    .z-hero{background:linear-gradient(180deg,#fff,var(--bg));padding:34px 0 26px;border-bottom:1px solid var(--line);}
+    .z-hero h1{font-size:clamp(25px,4vw,36px);margin:9px 0 10px;line-height:1.2;}
+    .z-hero .lead{color:var(--muted);max-width:70ch;margin:0;}
+    .z-kicker{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:4px 12px;border-radius:20px;}
+    /* glosowanie */
+    .g-main{max-width:760px;margin:0 auto;padding:30px 22px 60px;}
+    .g-box{padding:16px 20px;border-radius:12px;font-size:15px;line-height:1.6;margin:0 0 18px;}
+    .g-box.err{background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .g-box.ok{background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .g-box.info{background:#fff8e6;border:1px solid #f0e2b6;color:#7a5c14;}
+    .g-kto{color:var(--muted);margin:0 0 16px;font-size:14px;}
+    .g-kandydat{background:#fff;border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;padding:14px 18px;margin:0 0 18px;}
+    .g-kandydat small,.g-uchwala small{display:block;font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
+    .g-kandydat b{display:block;font-size:17px;}
+    .g-kandydat span{display:block;color:var(--muted);font-size:14px;}
+    .g-uchwala{background:#fdf5f6;border-radius:12px;padding:18px 22px;margin:0 0 24px;}
+    .g-uchwala pre{margin:0;white-space:pre-wrap;font-family:Georgia,'Times New Roman',serif;font-size:15.5px;line-height:1.7;color:var(--ink);}
+    .g-wybor{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 18px;}
+    @media(max-width:560px){.g-wybor{grid-template-columns:1fr;}}
+    .g-opt{display:flex;align-items:center;gap:12px;padding:16px 18px;border:2px solid var(--line);border-radius:12px;cursor:pointer;font-weight:700;font-size:16px;transition:border-color .15s,background .15s;}
+    .g-opt input{width:20px;height:20px;margin:0;accent-color:var(--red);flex:none;}
+    .g-opt.za:has(input:checked){border-color:var(--green);background:#eaf6ee;color:var(--green);}
+    .g-opt.przeciw:has(input:checked){border-color:var(--red);background:#fdecef;color:var(--red);}
+    .g-opt.za input{accent-color:var(--green);}
+    label.g-lab{display:block;font-size:13.5px;font-weight:600;margin:0 0 6px;}
+    textarea{width:100%;min-height:110px;padding:11px 13px;border:1px solid #d6dde3;border-radius:9px;font:inherit;font-size:15px;resize:vertical;}
+    textarea:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(204,10,43,.10);}
+    .hint{font-size:12.5px;color:var(--muted);margin:5px 0 16px;}
+    .z-send{background:var(--red);color:#fff;border:0;border-radius:30px;padding:14px 34px;font:inherit;font-weight:700;font-size:16px;cursor:pointer;}
+    .z-send:hover{filter:brightness(.93);}.z-send:disabled{opacity:.55;cursor:not-allowed;filter:none;}
+    .z-msg{margin:16px 0 0;padding:13px 16px;border-radius:10px;font-size:14.5px;display:none;}
+    .z-msg.ok{display:block;background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .z-msg.err{display:block;background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .g-oddany{text-align:center;padding:30px 20px;}
+    .g-oddany .duzy{display:inline-block;padding:12px 26px;border-radius:30px;font-weight:800;font-size:18px;margin:8px 0 14px;}
+    .g-oddany .duzy.za{background:#eaf6ee;color:var(--green);}
+    .g-oddany .duzy.przeciw{background:#fdecef;color:var(--red);}
+    .g-oddany p{color:var(--muted);margin:0 0 6px;}
+    .site-foot{background:var(--ink);color:rgba(255,255,255,.75);padding:40px 0 26px;}
+    .foot-in{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;}
+    .site-foot strong{color:#fff;}.site-foot a{color:#fff;}.foot-soc a{display:inline-block;margin-left:14px;}
+  </style>
+  <link rel="stylesheet" href="/_assets/css/gig-subhead.css">
+</head>
+<body>
+
+<header class="site-head"><div class="wrap head-in"><a class="logo" href="/"><img src="/wp-content/uploads/2026/04/gig-logo-new-poziom-dark.svg" alt="Geodezyjna Izba Gospodarcza"></a><nav class="nav"><a href="/">Home</a><span class="nav-item"><a href="/o-nas/">O nas</a><span class="nav-sub"><a href="/czlonkowie/">Członkowie</a></span></span><span class="nav-item"><a href="/baza-wiedzy/aktualnosci-gig/">Aktualności</a><span class="nav-sub"><a href="/nadchodzace-wydarzenia/">Nadchodzące wydarzenia</a></span></span><span class="nav-item"><a href="/baza-wiedzy/">Baza wiedzy</a><span class="nav-sub"><a href="/baza-wiedzy/artykuly/">Artykuły</a><a href="/biuletyn-gig/">Biuletyn</a></span></span><a href="/szkolenia/">Szkolenia</a><span class="nav-item"><a href="/kontakt/">Kontakt</a><span class="nav-sub"><a href="/dolacz-do-nas/">Dołącz do nas</a></span></span></nav><a class="head-phone" href="tel:+48228273843"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z"/></svg> +48 22 / 827 38 43</a></div></header>
+
+<section class="z-hero">
+  <div class="wrap">
+    <span class="z-kicker">Rada Izby</span>
+    <h1>Głosowanie nad uchwałą</h1>
+    <p class="lead" id="gLead">Wczytujemy treść uchwały…</p>
+  </div>
+</section>
+
+<main class="g-main">
+  <div class="g-box err" id="gBlad" hidden></div>
+
+  <div id="gTresc" hidden>
+    <p class="g-kto">Głosuje: <strong id="gKto"></strong></p>
+
+    <div class="g-kandydat">
+      <small>Przyjęcie do Izby</small>
+      <b id="gFirma"></b>
+      <span id="gOsoba"></span>
+      <span id="gAdres"></span>
+    </div>
+
+    <div class="g-uchwala">
+      <small>Projekt uchwały</small>
+      <pre id="gUchwala"></pre>
+    </div>
+
+    <form id="gForm" novalidate>
+      <div class="g-wybor">
+        <label class="g-opt za"><input type="radio" name="glos" value="za"> <span>✓ Głosuję ZA</span></label>
+        <label class="g-opt przeciw"><input type="radio" name="glos" value="przeciw"> <span>✕ Głosuję PRZECIW</span></label>
+      </div>
+      <label class="g-lab" for="gUz">Uzasadnienie (opcjonalnie)</label>
+      <textarea id="gUz" maxlength="2000" placeholder="Możesz dopisać uzasadnienie swojej decyzji; zobaczy je biuro Izby w raporcie z głosowania."></textarea>
+      <p class="hint">Głos jest ostateczny: po zapisaniu nie da się go zmienić. Link jest osobisty, prosimy nie przekazywać go dalej.</p>
+      <button type="submit" class="z-send" id="gSend">Oddaj głos</button>
+      <div class="z-msg" id="gMsg"></div>
+    </form>
+
+    <div class="g-box info" id="gZamkniete" hidden>Głosowanie nad tą uchwałą jest już zamknięte. Dziękujemy.</div>
+
+    <div class="g-oddany" id="gOddany" hidden>
+      <p>Twój głos w tej sprawie:</p>
+      <span class="duzy" id="gOddanyJak"></span>
+      <p id="gOddanyKiedy"></p>
+      <p id="gOddanyUz"></p>
+      <p style="margin-top:14px">Dziękujemy. Wynik głosowania biuro Izby przekaże członkom Rady.</p>
+    </div>
+  </div>
+</main>
+
+<footer class="site-foot"><div class="wrap foot-in">
+    <div>
+      <strong>Geodezyjna Izba Gospodarcza</strong><br>
+      ul. Czackiego 3/5, 00-043 Warszawa<br>
+      tel. 22 827 38 43 · <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>
+    </div>
+    <div class="foot-soc">
+      <a href="https://www.facebook.com/gigorgpl" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://www.linkedin.com/company/gig-geodezyjna-izba-gospodarcza" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div></footer>
+
+<script src="/_assets/js/gig-config.js"></script>
+<script>
+(function () {
+  "use strict";
+  /* Token z maila (?t=) daje prawo do głosu; ?g=za|przeciw zaznacza wybór z przycisku
+     w mailu, ale głos pada dopiero po kliknięciu „Oddaj głos" na tej stronie. */
+  var q = new URLSearchParams(location.search);
+  var token = q.get("t") || "";
+  var wstepnie = q.get("g") || "";
+  var URL_F = window.GIG_CFG.SUPABASE_URL + "/functions/v1/glosuj";
+  var $ = function (id) { return document.getElementById(id); };
+
+  function blad(t) { $("gBlad").textContent = t; $("gBlad").hidden = false; $("gLead").textContent = "Nie możemy wyświetlić tej uchwały."; }
+  function kiedy(iso) {
+    return iso ? new Date(iso).toLocaleString("pl-PL", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+  }
+  function pokazOddany(g) {
+    $("gForm").hidden = true;
+    $("gOddany").hidden = false;
+    var el = $("gOddanyJak");
+    el.textContent = g.glos === "za" ? "✓ ZA" : "✕ PRZECIW";
+    el.className = "duzy " + g.glos;
+    $("gOddanyKiedy").textContent = "Oddany " + kiedy(g.glosowano_at);
+    $("gOddanyUz").textContent = g.uzasadnienie ? "Uzasadnienie: " + g.uzasadnienie : "";
+  }
+  function pokaz(d) {
+    var u = d.uchwala;
+    $("gLead").textContent = "Uchwała " + (u.numer ? "nr " + u.numer : "(numer nada Rada)") + " w sprawie przyjęcia nowego członka Geodezyjnej Izby Gospodarczej.";
+    $("gKto").textContent = d.glosujacy.imie_nazwisko;
+    $("gFirma").textContent = u.kandydat_firma || u.kandydat_osoba || "";
+    $("gOsoba").textContent = u.kandydat_firma && u.kandydat_osoba ? u.kandydat_osoba : "";
+    $("gAdres").textContent = u.kandydat_adres || "";
+    $("gUchwala").textContent = u.tresc;
+    $("gTresc").hidden = false;
+    if (d.glos) { pokazOddany(d.glos); return; }
+    if (!d.otwarte) { $("gForm").hidden = true; $("gZamkniete").hidden = false; return; }
+    if (wstepnie === "za" || wstepnie === "przeciw") {
+      var r = document.querySelector('input[name="glos"][value="' + wstepnie + '"]');
+      if (r) r.checked = true;
+    }
+  }
+
+  if (!token) { blad("W adresie brakuje tokenu głosowania. Otwórz stronę z linku w wiadomości od biura Izby."); return; }
+
+  fetch(URL_F + "?t=" + encodeURIComponent(token), { headers: { "apikey": window.GIG_CFG.SUPABASE_ANON } })
+    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+    .then(function (x) { if (!x.ok || !x.d.ok) throw new Error(x.d.error || "Błąd " ); pokaz(x.d); })
+    .catch(function (e) { blad(e.message || "Nie udało się pobrać uchwały. Spróbuj ponownie za chwilę."); });
+
+  $("gForm").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var wyb = document.querySelector('input[name="glos"]:checked');
+    var msg = $("gMsg");
+    if (!wyb) { msg.textContent = "Zaznacz: ZA albo PRZECIW."; msg.className = "z-msg err"; return; }
+    var btn = $("gSend");
+    btn.disabled = true; msg.textContent = "Zapisujemy głos…"; msg.className = "z-msg ok";
+    fetch(URL_F, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "apikey": window.GIG_CFG.SUPABASE_ANON },
+      body: JSON.stringify({ t: token, glos: wyb.value, uzasadnienie: $("gUz").value.trim() })
+    })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (x) {
+        if (x.d && x.d.glos) { pokazOddany(x.d.glos); return; }   // zapisano albo już wcześniej oddany
+        throw new Error((x.d && x.d.error) || "Nie udało się zapisać głosu.");
+      })
+      .catch(function (e) { btn.disabled = false; msg.textContent = e.message; msg.className = "z-msg err"; });
+  });
+})();
+</script>
+</body>
+</html>

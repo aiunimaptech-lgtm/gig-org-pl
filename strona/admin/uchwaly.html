@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Uchwały Rady — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .u-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:18px;}
+    .u-sum .k{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:12px 16px;min-width:0;cursor:pointer;}
+    .u-sum .k:hover{border-color:#cc0a2b;}
+    .u-sum .k .t{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .u-sum .k .v{font-size:22px;font-weight:800;color:#16202a;margin-top:3px;}
+    .u-sum .k .v small{font-size:13px;font-weight:600;color:#6b7f84;}
+    .u-mini{font-size:12px;color:#6b7f84;line-height:1.5;margin-top:3px;}
+    .u-glosy b{font-weight:800;}
+    .u-glosy .za{color:#1d7a45;}.u-glosy .przeciw{color:#cc0a2b;}.u-glosy .brak{color:#9aa7b2;}
+    /* okno uchwały */
+    .u-sekcja{margin:0 0 18px;padding:16px 18px;background:#f7f9fb;border-radius:10px;}
+    .u-sekcja h4{margin:0 0 10px;font-size:13px;color:#16202a;text-transform:uppercase;letter-spacing:.5px;}
+    .u-sekcja h4 small{text-transform:none;letter-spacing:0;font-weight:500;color:#6b7f84;margin-left:6px;}
+    .u-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .u-grid .form-group{margin-bottom:0;}
+    .u-grid .szeroki{grid-column:1 / -1;}
+    @media(max-width:640px){.u-grid{grid-template-columns:1fr;}}
+    textarea.u-tresc{min-height:300px;font-family:Georgia,'Times New Roman',serif;font-size:14.5px;line-height:1.6;resize:vertical;}
+    textarea.u-mail{min-height:180px;line-height:1.55;resize:vertical;}
+    .u-akcje{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;}
+    .u-akcje .prawo{margin-left:auto;}
+    .u-odb{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:6px 14px;}
+    .u-odb label{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:5px 0;}
+    .u-odb input{width:16px;height:16px;accent-color:#cc0a2b;}
+    .u-odb .mail{color:#6b7f84;font-size:12px;}
+    .u-wynik{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px;}
+    .u-wynik span{padding:8px 14px;border-radius:20px;font-weight:800;font-size:14px;}
+    .u-wynik .za{background:#e6f5ec;color:#1d7a45;}.u-wynik .przeciw{background:#fdecef;color:#cc0a2b;}.u-wynik .brak{background:#f3f4f5;color:#6b7f84;}
+    .u-uz{font-size:12.5px;color:#6b7f84;white-space:pre-wrap;}
+    .u-rada td .form-control{padding:6px 9px;font-size:13px;}
+    .u-rada td{vertical-align:middle;}
+    #uchPodgladRamka{width:100%;height:70vh;border:1px solid #e6ebef;border-radius:8px;background:#fff;}
+    .u-status-pasek{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px;font-size:13px;color:#6b7f84;}
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Zarządzanie</div>
+        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
+        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <a href="czlonkowie.html"><span class="nav-icon">⚇</span> Członkowie</a>
+        <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Uchwały Rady Izby</div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" id="btnRada" title="Skład Rady: kto dostaje uchwały do głosowania">⚇ Skład Rady</button>
+          <button class="btn btn-primary btn-sm" id="btnNowa">＋ Nowa uchwała</button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="u-sum" id="podsumowanie"></div>
+
+        <div class="card"><div class="card-body">
+          <div class="toolbar">
+            <div class="search-box"><span class="search-icon">⌕</span>
+              <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: firma, osoba, NIP, numer…"></div>
+            <select id="fStatus" class="form-control" style="max-width:220px;">
+              <option value="">Wszystkie statusy</option>
+              <option value="projekt">Projekty (do sprawdzenia)</option>
+              <option value="glosowanie">W głosowaniu</option>
+              <option value="przyjeta">Przyjęte</option>
+              <option value="odrzucona">Odrzucone</option>
+              <option value="anulowana">Anulowane</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Nr</th><th>Kandydat</th><th>Utworzono</th><th>Status</th><th>Głosy</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table>
+          </div>
+        </div></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: uchwała (projekt / głosowanie / wynik) -->
+  <div class="modal-overlay" id="uchModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title" id="uchTytul">Uchwała</div>
+        <button class="modal-close" data-modal-close="uchModal">×</button>
+      </div>
+      <div class="modal-body" id="uchTresc"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: nowa uchwała -->
+  <div class="modal-overlay" id="nowaModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Nowa uchwała o przyjęciu członka</div>
+        <button class="modal-close" data-modal-close="nowaModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Ze zgłoszenia ze strony</label>
+          <select class="form-control" id="nowaZgl"><option value="">— wpiszę dane ręcznie —</option></select>
+          <p class="u-mini">Zgłoszenia z formularza „Dołącz do nas", które nie mają jeszcze uchwały. Nowe zgłoszenia dostają projekt uchwały automatycznie; ta lista służy do starszych.</p>
+        </div>
+        <div class="u-grid">
+          <div class="form-group"><label>Imię i nazwisko przedsiębiorcy</label><input class="form-control" id="nowaOsoba"></div>
+          <div class="form-group"><label>NIP</label><input class="form-control" id="nowaNip"></div>
+          <div class="form-group szeroki"><label>Nazwa firmy</label><input class="form-control" id="nowaFirma"></div>
+          <div class="form-group szeroki"><label>Adres siedziby</label><input class="form-control" id="nowaAdres"></div>
+          <div class="form-group"><label>E-mail kandydata</label><input class="form-control" id="nowaEmail"></div>
+          <div class="form-group"><label>Uchwała wchodzi w życie z dniem</label><input class="form-control" type="date" id="nowaData"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-modal-close="nowaModal">Anuluj</button>
+        <button class="btn btn-primary" id="nowaZapisz">Utwórz projekt uchwały</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: skład Rady -->
+  <div class="modal-overlay" id="radaModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title">Skład Rady Izby (odbiorcy uchwał do głosowania)</div>
+        <button class="modal-close" data-modal-close="radaModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="u-mini" style="margin:0 0 12px;">Do głosowania trafiają tylko osoby <strong>aktywne</strong>. Zmiana listy nie dotyka głosowań już rozesłanych. Kolejność decyduje o porządku na liście i w raporcie.</p>
+        <div class="table-wrap">
+          <table class="admin-table u-rada">
+            <thead><tr><th>Imię i nazwisko</th><th>E-mail</th><th>Funkcja</th><th>Kolejność</th><th>Aktywny</th><th></th></tr></thead>
+            <tbody id="radaRows"></tbody>
+          </table>
+        </div>
+        <div class="u-akcje">
+          <button class="btn btn-outline btn-sm" id="radaDodaj">＋ Dodaj osobę</button>
+          <button class="btn btn-primary btn-sm prawo" id="radaZapisz">Zapisz zmiany</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: podgląd maila -->
+  <div class="modal-overlay" id="podgladModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title" id="podgladTytul">Podgląd wiadomości do Rady</div>
+        <button class="modal-close" data-modal-close="podgladModal">×</button>
+      </div>
+      <div class="modal-body"><iframe id="uchPodgladRamka" title="Podgląd maila"></iframe></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    /* ------------------------------------------------------------------
+       Uchwały Rady o przyjęciu członka. Przepływ:
+         zgłoszenie „Dołącz do nas" → trigger w bazie zakłada PROJEKT (tekst uchwały
+         + mail do Rady wg wzoru) → tu sekretariat sprawdza / poprawia → „Wyślij do Rady"
+         (Edge Function uchwala-wyslij: osobisty link dla każdego członka) → głosy
+         wpadają przez /glosowanie/ (Edge Function glosuj) → przypomnienia, raport PDF,
+         zakończenie głosowania.
+       ------------------------------------------------------------------ */
+    let dane = [], glosyWg = {}, rada = [], biezaca = null, adminEmail = '';
+    const ETYK = { projekt:'projekt', glosowanie:'w głosowaniu', przyjeta:'przyjęta', odrzucona:'odrzucona', anulowana:'anulowana' };
+    const BADGE = { projekt:'badge-draft', glosowanie:'badge-new', przyjeta:'badge-confirmed', odrzucona:'badge-cancelled', anulowana:'badge-archived' };
+    const RZYM = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+
+    const etykieta = u => {
+      const d = u.data_wejscia ? new Date(u.data_wejscia + 'T00:00:00') : new Date();
+      return (u.numer && u.numer.trim() ? u.numer.trim() : '…') + '/' + RZYM[d.getMonth()] + '/' + d.getFullYear();
+    };
+    const kogo = u => u.kandydat_firma || u.kandydat_osoba || '(bez nazwy)';
+    const fmtDT = iso => iso ? new Date(iso).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    const fmtDay = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : '';
+    const licz = g => ({ za: g.filter(x => x.glos === 'za').length, przeciw: g.filter(x => x.glos === 'przeciw').length, brak: g.filter(x => !x.glos).length });
+
+    /* Edge Functions panelu: token zalogowanego admina, jak w kreatorze maila (_admin.js) */
+    async function wolaj(nazwa, body){
+      const sesja = await getSession();
+      if (!sesja) throw new Error('sesja wygasła — zaloguj się ponownie');
+      const res = await fetch(SUPABASE_URL + '/functions/v1/' + nazwa, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
+        body: JSON.stringify(body),
+      });
+      const w = await res.json().catch(() => ({}));
+      if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
+      return w;
+    }
+
+    /* ── lista ── */
+    function podsumuj(){
+      const rok = new Date().getFullYear();
+      const n = s => dane.filter(u => u.status === s).length;
+      const przyjete = dane.filter(u => u.status === 'przyjeta' && (u.zamknieto_at || '').startsWith(String(rok))).length;
+      const k = (t, v, small, st, wyr) => `<div class="k" data-st="${st}" ${wyr ? 'style="border-color:#f3ccd4;background:#fff5f6;"' : ''}><div class="t">${t}</div><div class="v" ${wyr ? 'style="color:#cc0a2b;"' : ''}>${v}${small ? ` <small>${small}</small>` : ''}</div></div>`;
+      document.getElementById('podsumowanie').innerHTML =
+        k('Projekty do sprawdzenia', n('projekt'), '', 'projekt', n('projekt') > 0) +
+        k('W głosowaniu', n('glosowanie'), '', 'glosowanie') +
+        k('Przyjęte w ' + rok, przyjete, '', 'przyjeta') +
+        k('Odrzucone', n('odrzucona'), '', 'odrzucona') +
+        k('Rada Izby', rada.filter(r => r.aktywny).length, 'osób głosuje', 'rada');
+      document.querySelectorAll('#podsumowanie .k').forEach(el => el.addEventListener('click', () => {
+        if (el.dataset.st === 'rada') { otworzRade(); return; }
+        document.getElementById('fStatus').value = el.dataset.st; render();
+      }));
+    }
+
+    function filtruj(){
+      const f = document.getElementById('szukaj').value.toLowerCase().trim();
+      const st = document.getElementById('fStatus').value;
+      return dane.filter(u => {
+        if (st && u.status !== st) return false;
+        if (!f) return true;
+        return [u.numer, u.kandydat_osoba, u.kandydat_firma, u.kandydat_nip, u.kandydat_email, u.kandydat_adres]
+          .some(v => (v || '').toLowerCase().includes(f));
+      });
+    }
+
+    function glosyHtml(u){
+      const g = glosyWg[u.id] || [];
+      if (u.status === 'projekt') return '<span class="u-mini">jeszcze nie wysłano</span>';
+      const c = licz(g);
+      return `<span class="u-glosy"><b class="za">${c.za} za</b> · <b class="przeciw">${c.przeciw} przeciw</b> · <b class="brak">${c.brak} bez głosu</b></span>`;
+    }
+
+    function render(){
+      const rows = filtruj();
+      const tb = document.getElementById('rows');
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak uchwał spełniających kryteria.</td></tr>'; return; }
+      tb.innerHTML = rows.map(u => `
+        <tr>
+          <td style="white-space:nowrap;"><strong>${esc(etykieta(u))}</strong></td>
+          <td style="max-width:300px;">
+            <strong>${esc(kogo(u))}</strong>
+            <div class="u-mini">${u.kandydat_firma && u.kandydat_osoba ? esc(u.kandydat_osoba) + ' · ' : ''}${u.kandydat_nip ? 'NIP ' + esc(u.kandydat_nip) : ''}</div>
+          </td>
+          <td style="white-space:nowrap;">${fmtDT(u.created_at)}<div class="u-mini">${u.zgloszenie_id ? 'ze strony' : 'ręcznie'}</div></td>
+          <td><span class="badge ${BADGE[u.status] || 'badge-read'}">${ETYK[u.status] || u.status}</span>
+            ${u.status === 'glosowanie' && u.wyslano_at ? `<div class="u-mini">wysłano ${fmtDT(u.wyslano_at)}</div>` : ''}
+            ${u.zamknieto_at ? `<div class="u-mini">zamknięto ${fmtDT(u.zamknieto_at)}</div>` : ''}</td>
+          <td>${glosyHtml(u)}</td>
+          <td class="actions" style="white-space:nowrap;">
+            <button class="btn btn-outline btn-xs" data-otworz="${u.id}">${u.status === 'projekt' ? 'Sprawdź i wyślij' : 'Otwórz'}</button>
+          </td>
+        </tr>`).join('');
+      tb.querySelectorAll('[data-otworz]').forEach(b => b.addEventListener('click', () => otworz(b.dataset.otworz)));
+    }
+
+    /* ── okno uchwały ── */
+    function pole(id, label, val, extra = ''){
+      return `<div class="form-group ${extra}"><label>${label}</label><input class="form-control" id="${id}" value="${esc(val || '')}"></div>`;
+    }
+
+    function otworz(id){
+      const u = dane.find(x => x.id === id);
+      if (!u) return;
+      biezaca = u;
+      const g = glosyWg[u.id] || [];
+      const c = licz(g);
+      const projekt = u.status === 'projekt';
+      const glosowanie = u.status === 'glosowanie';
+      const edytowalne = projekt;   // po wysłaniu treść jest zamrożona: Rada głosuje nad tym, co dostała
+      document.getElementById('uchTytul').textContent = 'Uchwała ' + etykieta(u) + ' · ' + kogo(u);
+
+      let html = `
+        <div class="u-status-pasek">
+          <span class="badge ${BADGE[u.status]}">${ETYK[u.status]}</span>
+          ${u.wyslano_at ? `<span>wysłano do Rady ${fmtDT(u.wyslano_at)}${u.wyslal ? ' (' + esc(u.wyslal) + ')' : ''}</span>` : ''}
+          ${u.zamknieto_at ? `<span>· zamknięto ${fmtDT(u.zamknieto_at)}${u.zamknal ? ' (' + esc(u.zamknal) + ')' : ''}</span>` : ''}
+          ${u.kandydat_email ? `<span>· <a href="mailto:${esc(u.kandydat_email)}">${esc(u.kandydat_email)}</a></span>` : ''}
+        </div>`;
+
+      if (!projekt) {
+        html += `
+        <div class="u-sekcja">
+          <h4>Głosowanie <small>${g.length} ${g.length === 1 ? 'osoba' : 'osób'} na liście</small></h4>
+          <div class="u-wynik"><span class="za">${c.za} ZA</span><span class="przeciw">${c.przeciw} PRZECIW</span><span class="brak">${c.brak} bez głosu</span></div>
+          <div class="table-wrap"><table class="admin-table">
+            <thead><tr><th>Członek Rady</th><th>Wysłano</th><th>Przypomnienia</th><th>Głos</th><th>Kiedy</th><th>Uzasadnienie</th></tr></thead>
+            <tbody>${g.map(x => `<tr>
+              <td><strong>${esc(x.imie_nazwisko)}</strong><div class="u-mini">${esc(x.email)}</div></td>
+              <td style="white-space:nowrap;">${x.wyslano_at ? fmtDT(x.wyslano_at) : (x.blad_wysylki ? '<span class="badge badge-cancelled" title="' + esc(x.blad_wysylki) + '">błąd wysyłki</span>' : '—')}</td>
+              <td style="text-align:center;">${x.przypomnien || 0}${x.przypomnienie_at ? `<div class="u-mini">${fmtDT(x.przypomnienie_at)}</div>` : ''}</td>
+              <td>${x.glos === 'za' ? '<span class="badge badge-confirmed">ZA</span>' : (x.glos === 'przeciw' ? '<span class="badge badge-cancelled" style="text-decoration:none;">PRZECIW</span>' : '<span class="badge badge-read">brak</span>')}</td>
+              <td style="white-space:nowrap;">${x.glosowano_at ? fmtDT(x.glosowano_at) : ''}</td>
+              <td class="u-uz">${esc(x.uzasadnienie || '')}</td>
+            </tr>`).join('') || '<tr><td colspan="6" style="color:#6b7f84;">Brak listy głosujących.</td></tr>'}</tbody>
+          </table></div>
+          <div class="u-akcje">
+            ${glosowanie ? `<button class="btn btn-outline btn-sm" id="uchPrzypomnij" ${c.brak ? '' : 'disabled'}>✉ Przypomnij niegłosującym (${c.brak})</button>` : ''}
+            <button class="btn btn-outline btn-sm" id="uchRaport">↓ Raport z głosowania (PDF)</button>
+            ${glosowanie ? `<button class="btn btn-primary btn-sm prawo" id="uchZakoncz">Zakończ głosowanie</button>` : ''}
+          </div>
+        </div>`;
+      }
+
+      html += `
+        <div class="u-sekcja">
+          <h4>Kandydat i numer <small>${edytowalne ? 'po zmianie danych kliknij „Wygeneruj treść od nowa"' : 'po wysłaniu do Rady bez zmian'}</small></h4>
+          <div class="u-grid">
+            ${pole('uNumer', 'Numer uchwały (tylko liczba, np. 12)', u.numer)}
+            <div class="form-group"><label>Wchodzi w życie z dniem</label><input class="form-control" type="date" id="uData" value="${esc(u.data_wejscia || '')}"></div>
+            ${pole('uOsoba', 'Imię i nazwisko przedsiębiorcy', u.kandydat_osoba)}
+            ${pole('uNip', 'NIP', u.kandydat_nip)}
+            ${pole('uFirma', 'Nazwa firmy', u.kandydat_firma, 'szeroki')}
+            ${pole('uAdres', 'Adres siedziby', u.kandydat_adres, 'szeroki')}
+          </div>
+        </div>
+        <div class="u-sekcja">
+          <h4>Treść uchwały</h4>
+          <textarea class="form-control u-tresc" id="uTresc" ${edytowalne ? '' : 'readonly'}>${esc(u.tresc || '')}</textarea>
+        </div>
+        <div class="u-sekcja">
+          <h4>Wiadomość do członków Rady</h4>
+          <div class="form-group"><label>Temat</label><input class="form-control" id="uMailTemat" value="${esc(u.mail_temat || '')}" ${edytowalne ? '' : 'readonly'}></div>
+          <div class="form-group" style="margin:0;"><label>Treść <small style="text-transform:none;font-weight:500;">(pusta linia = nowy akapit; projekt uchwały i przyciski głosowania dokładają się same)</small></label>
+            <textarea class="form-control u-mail" id="uMailTresc" ${edytowalne ? '' : 'readonly'}>${esc(u.mail_tresc || '')}</textarea></div>
+        </div>`;
+
+      if (projekt) {
+        html += `
+        <div class="u-sekcja">
+          <h4>Odbiorcy <small>członkowie Rady, którzy dostaną uchwałę do głosowania</small></h4>
+          <div class="u-odb">${rada.filter(r => r.aktywny).map(r => `
+            <label><input type="checkbox" class="uOdb" value="${r.id}" checked> <span>${esc(r.imie_nazwisko)}<div class="mail">${esc(r.email)}</div></span></label>`).join('')
+            || '<span class="u-mini">Lista Rady jest pusta. Uzupełnij ją przyciskiem „Skład Rady".</span>'}</div>
+        </div>
+        <div class="u-akcje">
+          <button class="btn btn-ghost btn-sm" id="uchZapisz">Zapisz zmiany</button>
+          <button class="btn btn-ghost btn-sm" id="uchGeneruj" title="Buduje treść uchwały i maila od nowa z danych kandydata (nadpisze ręczne poprawki)">↻ Wygeneruj treść od nowa</button>
+          <button class="btn btn-outline btn-sm" id="uchPodglad">Podgląd maila</button>
+          <button class="btn btn-danger btn-sm" id="uchUsun">🗑 Usuń projekt</button>
+          <button class="btn btn-primary prawo" id="uchWyslij">✉ Wyślij do Rady</button>
+        </div>`;
+      } else {
+        html += `<div class="u-akcje">
+          ${glosowanie ? '<button class="btn btn-ghost btn-sm" id="uchAnuluj">Anuluj uchwałę (bez rozstrzygnięcia)</button>' : ''}
+          ${u.status === 'anulowana' ? '<button class="btn btn-danger btn-sm" id="uchUsun">🗑 Usuń</button>' : ''}
+        </div>`;
+      }
+
+      document.getElementById('uchTresc').innerHTML = html;
+      openModal('uchModal');
+
+      const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+      on('uchZapisz', () => zapisz(u));
+      on('uchGeneruj', () => generuj(u));
+      on('uchPodglad', () => podglad(u));
+      on('uchWyslij', () => wyslij(u));
+      on('uchUsun', () => usun(u));
+      on('uchPrzypomnij', () => przypomnij(u));
+      on('uchRaport', () => raportPdf(u, g));
+      on('uchZakoncz', () => zakoncz(u, g));
+      on('uchAnuluj', () => anuluj(u));
+    }
+
+    function zebranePola(){
+      const v = id => (document.getElementById(id).value || '').trim();
+      return {
+        numer: v('uNumer') || null, data_wejscia: v('uData') || null,
+        kandydat_osoba: v('uOsoba') || null, kandydat_nip: v('uNip') || null,
+        kandydat_firma: v('uFirma') || null, kandydat_adres: v('uAdres') || null,
+        tresc: document.getElementById('uTresc').value, mail_temat: v('uMailTemat'), mail_tresc: document.getElementById('uMailTresc').value,
+        updated_at: new Date().toISOString(),
+      };
+    }
+
+    async function zapisz(u, cicho){
+      if (u.status !== 'projekt') return true;
+      const p = zebranePola();
+      if (!p.data_wejscia) { toast('Podaj datę wejścia w życie', 'error'); return false; }
+      const { error } = await db.from('uchwaly').update(p).eq('id', u.id);
+      if (error) { toast('Nie udało się zapisać: ' + error.message, 'error'); return false; }
+      Object.assign(u, p);
+      if (!cicho) toast('Zapisano', 'success');
+      return true;
+    }
+
+    async function generuj(u){
+      if (!confirm('Wygenerować treść uchwały i maila od nowa z danych kandydata? Ręczne poprawki w treści zostaną nadpisane.')) return;
+      /* najpierw zapis pól (numer, data, kandydat), żeby generator wziął aktualne dane */
+      if (!await zapisz(u, true)) return;
+      const { error } = await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      if (error) { toast('Błąd generowania: ' + error.message, 'error'); return; }
+      await load();
+      otworz(u.id);
+      toast('Treść wygenerowana od nowa', 'success');
+    }
+
+    async function podglad(u){
+      if (!await zapisz(u, true)) return;
+      try {
+        const w = await wolaj('uchwala-wyslij', { uchwala_id: u.id, tryb: 'podglad' });
+        document.getElementById('podgladTytul').textContent = 'Podgląd: ' + w.subject;
+        document.getElementById('uchPodgladRamka').srcdoc = w.html;
+        openModal('podgladModal');
+      } catch (e) { toast('Podgląd nieudany: ' + e.message, 'error'); }
+    }
+
+    async function wyslij(u){
+      if (!await zapisz(u, true)) return;
+      if (!u.tresc.trim() || !u.mail_temat.trim()) { toast('Uzupełnij treść uchwały i temat maila', 'error'); return; }
+      const odb = [...document.querySelectorAll('.uOdb:checked')].map(x => x.value);
+      if (!odb.length) { toast('Zaznacz co najmniej jednego odbiorcę', 'error'); return; }
+      if (!confirm(`Wysłać uchwałę ${etykieta(u)} (${kogo(u)}) do ${odb.length} ${odb.length === 1 ? 'osoby' : 'osób'} z Rady?\n\nPo wysłaniu treść uchwały i maila będzie zamrożona, a każdy odbiorca dostanie osobisty link do głosowania.`)) return;
+      const btn = document.getElementById('uchWyslij');
+      btn.disabled = true; btn.textContent = 'Wysyłanie…';
+      try {
+        const w = await wolaj('uchwala-wyslij', { uchwala_id: u.id, tryb: 'start', odbiorcy: odb });
+        const nieudane = (w.wyniki || []).filter(x => !x.ok);
+        toast(`Wysłano do ${w.wyslane} z ${w.razem}` + (nieudane.length ? ' (część nie dotarła, sprawdź listę)' : ''), nieudane.length ? 'error' : 'success', 5000);
+        await load();
+        otworz(u.id);
+      } catch (e) {
+        toast('Nie udało się wysłać: ' + e.message, 'error', 6000);
+        btn.disabled = false; btn.textContent = '✉ Wyślij do Rady';
+      }
+    }
+
+    async function przypomnij(u){
+      const g = glosyWg[u.id] || [];
+      const brak = g.filter(x => !x.glos);
+      if (!brak.length) { toast('Wszyscy już zagłosowali'); return; }
+      if (!confirm(`Wysłać przypomnienie do ${brak.length} ${brak.length === 1 ? 'osoby' : 'osób'} bez głosu?\n\n${brak.map(x => '• ' + x.imie_nazwisko).join('\n')}`)) return;
+      const btn = document.getElementById('uchPrzypomnij');
+      btn.disabled = true; btn.textContent = 'Wysyłanie…';
+      try {
+        const w = await wolaj('uchwala-wyslij', { uchwala_id: u.id, tryb: 'przypomnienie' });
+        toast(`Przypomnienie wysłane do ${w.wyslane} z ${w.razem}`, 'success');
+        await load(); otworz(u.id);
+      } catch (e) { toast('Nie udało się wysłać: ' + e.message, 'error', 6000); btn.disabled = false; btn.textContent = '✉ Przypomnij niegłosującym'; }
+    }
+
+    /* Zakończenie: przyjęta, gdy więcej głosów ZA niż PRZECIW spośród oddanych.
+       Nie wymagamy kompletu głosów; przy braku jakiegokolwiek głosu nie ma czego rozstrzygać. */
+    async function zakoncz(u, g){
+      const c = licz(g);
+      if (!c.za && !c.przeciw) { toast('Nikt jeszcze nie zagłosował, nie ma czego rozstrzygać', 'error'); return; }
+      const wynik = c.za > c.przeciw ? 'przyjeta' : 'odrzucona';
+      const opis = wynik === 'przyjeta' ? 'PRZYJĘTA' : 'ODRZUCONA' + (c.za === c.przeciw ? ' (remis)' : '');
+      if (!confirm(`Zakończyć głosowanie nad uchwałą ${etykieta(u)}?\n\nWynik: ${c.za} za, ${c.przeciw} przeciw, ${c.brak} bez głosu.\nUchwała zostanie oznaczona jako ${opis}. Późniejsze głosy nie będą przyjmowane.`)) return;
+      const { error } = await db.from('uchwaly').update({ status: wynik, zamknieto_at: new Date().toISOString(), zamknal: adminEmail, wynik_za: c.za, wynik_przeciw: c.przeciw, updated_at: new Date().toISOString() }).eq('id', u.id);
+      if (error) { toast('Nie udało się zamknąć: ' + error.message, 'error'); return; }
+      toast('Głosowanie zakończone: ' + opis, 'success');
+      await load(); otworz(u.id);
+    }
+
+    async function anuluj(u){
+      if (!confirm('Anulować uchwałę? Głosowanie zostanie zamknięte bez rozstrzygnięcia, a linki z maili przestaną przyjmować głosy.')) return;
+      const { error } = await db.from('uchwaly').update({ status: 'anulowana', zamknieto_at: new Date().toISOString(), zamknal: adminEmail, updated_at: new Date().toISOString() }).eq('id', u.id);
+      if (error) { toast('Nie udało się: ' + error.message, 'error'); return; }
+      toast('Uchwała anulowana'); closeModal('uchModal'); load();
+    }
+
+    async function usun(u){
+      if (!confirm(`Usunąć uchwałę ${etykieta(u)} (${kogo(u)}) na trwałe? Tej operacji nie można cofnąć.`)) return;
+      const { error } = await db.from('uchwaly').delete().eq('id', u.id);
+      if (error) { toast('Nie udało się usunąć: ' + error.message, 'error'); return; }
+      toast('Usunięto'); closeModal('uchModal'); load();
+    }
+
+    /* ── raport PDF (pdfmake, czcionka Roboto z polskimi znakami) ── */
+    function raportPdf(u, g){
+      const c = licz(g);
+      const teraz = new Date();
+      const kiedyRaport = teraz.toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+      const glos = x => x.glos === 'za' ? 'ZA' : (x.glos === 'przeciw' ? 'PRZECIW' : 'brak głosu');
+      const wynikTekst = u.status === 'przyjeta' ? 'uchwała PRZYJĘTA' : (u.status === 'odrzucona' ? 'uchwała ODRZUCONA' : (u.status === 'anulowana' ? 'głosowanie anulowane' : 'głosowanie w toku'));
+      const posort = [...g].sort((a, b) => (a.glosowano_at || 'zzz').localeCompare(b.glosowano_at || 'zzz'));
+
+      const dd = {
+        pageSize: 'A4', pageMargins: [42, 48, 42, 56],
+        info: { title: 'Raport z głosowania ' + etykieta(u), author: 'Panel GIG' },
+        footer: (page, pages) => ({ margin: [42, 14, 42, 0], fontSize: 8, color: '#7a8b97',
+          columns: [{ text: 'Raport pobrano ' + kiedyRaport + (adminEmail ? ' · ' + adminEmail : '') }, { text: 'Strona ' + page + ' z ' + pages, alignment: 'right' }] }),
+        content: [
+          { text: 'GEODEZYJNA IZBA GOSPODARCZA', style: 'h0' },
+          { text: 'Raport z głosowania Rady Izby', style: 'h1' },
+          { text: 'Uchwała nr ' + etykieta(u) + ' w sprawie przyjęcia do Izby: ' + kogo(u), style: 'h2' },
+          { style: 'tab', layout: 'lightHorizontalLines', table: { widths: ['auto', '*'], body: [
+            ['Kandydat', [u.kandydat_osoba, u.kandydat_firma, u.kandydat_adres, u.kandydat_nip ? 'NIP ' + u.kandydat_nip : ''].filter(Boolean).join('\n')],
+            ['Wysłano do Rady', u.wyslano_at ? fmtDT(u.wyslano_at) + (u.wyslal ? ' (' + u.wyslal + ')' : '') : '—'],
+            ['Osób głosujących', String(g.length)],
+            ['Wynik', c.za + ' za, ' + c.przeciw + ' przeciw, ' + c.brak + ' bez głosu · ' + wynikTekst],
+            ['Zamknięto', u.zamknieto_at ? fmtDT(u.zamknieto_at) + (u.zamknal ? ' (' + u.zamknal + ')' : '') : 'głosowanie otwarte'],
+          ] } },
+          { text: 'Szczegóły głosowania', style: 'h2' },
+          { style: 'tab', table: { headerRows: 1, widths: ['*', 'auto', 'auto', '*'], body: [
+            [{ text: 'Członek Rady', style: 'th' }, { text: 'Głos', style: 'th' }, { text: 'Data i godzina', style: 'th' }, { text: 'Uzasadnienie', style: 'th' }],
+            ...posort.map(x => [
+              { text: [{ text: x.imie_nazwisko + '\n', bold: true }, { text: x.email, color: '#7a8b97', fontSize: 8 }] },
+              { text: glos(x), bold: true, color: x.glos === 'za' ? '#1d7a45' : (x.glos === 'przeciw' ? '#cc0a2b' : '#7a8b97') },
+              x.glosowano_at ? fmtDT(x.glosowano_at) : (x.wyslano_at ? 'wysłano ' + fmtDT(x.wyslano_at) + (x.przypomnien ? ', przyp. ×' + x.przypomnien : '') : '—'),
+              x.uzasadnienie || '',
+            ]),
+          ] }, layout: { hLineColor: () => '#e6ebef', vLineColor: () => '#e6ebef' } },
+          { text: 'Treść uchwały poddanej pod głosowanie', style: 'h2', pageBreak: g.length > 14 ? 'before' : undefined },
+          { text: u.tresc, style: 'tresc' },
+          { text: 'Raport wygenerowano ' + kiedyRaport + (adminEmail ? ' · ' + adminEmail : '') + '. Godziny wg czasu polskiego.', style: 'foot' },
+        ],
+        styles: {
+          h0: { fontSize: 9, bold: true, color: '#cc0a2b', characterSpacing: 1, margin: [0, 0, 0, 4] },
+          h1: { fontSize: 18, bold: true, color: '#16202a', margin: [0, 0, 0, 6] },
+          h2: { fontSize: 12, bold: true, color: '#16202a', margin: [0, 16, 0, 8] },
+          th: { bold: true, fillColor: '#f5f8fa', color: '#6b7f84', fontSize: 9 },
+          tab: { fontSize: 9.5, margin: [0, 0, 0, 6] },
+          tresc: { fontSize: 10.5, lineHeight: 1.35, margin: [0, 0, 0, 14] },
+          foot: { fontSize: 8.5, color: '#7a8b97', margin: [0, 10, 0, 0] },
+        },
+        defaultStyle: { font: 'Roboto', fontSize: 10, color: '#2b3a45' },
+      };
+      const nazwa = 'raport-glosowania-' + etykieta(u).replace(/[^\w]+/g, '-').replace(/^-|-$/g, '') + '-' +
+        kogo(u).toLowerCase().replace(/[ąćęłńóśźż]/g, ch => 'acelnoszz'['ąćęłńóśźż'.indexOf(ch)]).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) + '.pdf';
+      try { pdfMake.createPdf(dd).download(nazwa); }
+      catch (e) { console.error(e); toast('Nie udało się zbudować PDF: ' + e.message, 'error'); }
+    }
+
+    /* ── nowa uchwała ── */
+    async function otworzNowa(){
+      const sel = document.getElementById('nowaZgl');
+      sel.innerHTML = '<option value="">— wpiszę dane ręcznie —</option>';
+      ['nowaOsoba','nowaNip','nowaFirma','nowaAdres','nowaEmail'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('nowaData').value = new Date().toISOString().slice(0, 10);
+      /* zgłoszenia członkowskie bez uchwały (starsze niż trigger) */
+      const z = await db.from('submissions_kontakt').select('id,name,email,subject,message,created_at')
+        .ilike('subject', 'Zgłoszenie członkowskie:%').order('created_at', { ascending: false }).limit(50);
+      const maja = new Set(dane.map(u => u.zgloszenie_id).filter(Boolean));
+      (z.data || []).filter(r => !maja.has(r.id)).forEach(r => {
+        const o = document.createElement('option');
+        o.value = r.id; o.textContent = (r.subject || '').replace(/^Zgłoszenie członkowskie:\s*/i, '') + ' · ' + fmtDT(r.created_at);
+        o.dataset.rec = JSON.stringify(r);
+        sel.appendChild(o);
+      });
+      openModal('nowaModal');
+    }
+    document.getElementById('nowaZgl').addEventListener('change', e => {
+      const opt = e.target.selectedOptions[0];
+      if (!opt || !opt.dataset.rec) return;
+      const r = JSON.parse(opt.dataset.rec);
+      const m = r.message || '';
+      const wez = k => { const x = m.match(new RegExp(k + ': ([^\\n]*)')); return x ? x[1].trim().replace(/^—$/, '') : ''; };
+      document.getElementById('nowaFirma').value = wez('Firma') || r.name || '';
+      document.getElementById('nowaAdres').value = wez('Adres');
+      document.getElementById('nowaNip').value = wez('NIP');
+      document.getElementById('nowaOsoba').value = wez('Osoba reprezentująca');
+      document.getElementById('nowaEmail').value = r.email || '';
+    });
+    document.getElementById('nowaZapisz').addEventListener('click', async () => {
+      const v = id => (document.getElementById(id).value || '').trim();
+      if (!v('nowaFirma') && !v('nowaOsoba')) { toast('Podaj firmę albo osobę', 'error'); return; }
+      const rec = { zgloszenie_id: v('nowaZgl') || null, kandydat_osoba: v('nowaOsoba') || null, kandydat_firma: v('nowaFirma') || null,
+        kandydat_adres: v('nowaAdres') || null, kandydat_nip: v('nowaNip') || null, kandydat_email: v('nowaEmail') || null,
+        data_wejscia: v('nowaData') || new Date().toISOString().slice(0, 10) };
+      const ins = await db.from('uchwaly').insert(rec).select('id').single();
+      if (ins.error) { toast('Nie udało się utworzyć: ' + ins.error.message, 'error'); return; }
+      const gen = await db.rpc('gig_uchwala_generuj', { uid: ins.data.id });
+      if (gen.error) toast('Uchwała utworzona, ale bez treści: ' + gen.error.message, 'error');
+      closeModal('nowaModal');
+      await load();
+      otworz(ins.data.id);
+    });
+
+    /* ── skład Rady ── */
+    function otworzRade(){
+      renderRada();
+      openModal('radaModal');
+    }
+    function radaWiersz(r){
+      return `<tr data-id="${r.id || ''}">
+        <td><input class="form-control r-imie" value="${esc(r.imie_nazwisko || '')}" placeholder="Imię i nazwisko"></td>
+        <td><input class="form-control r-email" value="${esc(r.email || '')}" placeholder="adres@domena.pl"></td>
+        <td><input class="form-control r-funkcja" value="${esc(r.funkcja || '')}" placeholder="np. Członek Rady"></td>
+        <td style="width:90px;"><input class="form-control r-kol" type="number" value="${r.kolejnosc ?? 100}"></td>
+        <td style="text-align:center;"><input type="checkbox" class="r-akt" ${r.aktywny !== false ? 'checked' : ''}></td>
+        <td><button class="btn btn-danger btn-xs r-usun" title="Usuń z listy">🗑</button></td>
+      </tr>`;
+    }
+    function renderRada(){
+      const tb = document.getElementById('radaRows');
+      tb.innerHTML = [...rada].sort((a, b) => (a.kolejnosc ?? 100) - (b.kolejnosc ?? 100)).map(radaWiersz).join('');
+      tb.querySelectorAll('.r-usun').forEach(b => b.addEventListener('click', () => usunZRady(b.closest('tr'))));
+    }
+    async function usunZRady(tr){
+      const id = tr.dataset.id;
+      const imie = tr.querySelector('.r-imie').value;
+      if (!id) { tr.remove(); return; }
+      if (!confirm(`Usunąć „${imie}" ze składu Rady? Rozesłane już głosowania zostają bez zmian.`)) return;
+      const { error } = await db.from('rada_izby').delete().eq('id', id);
+      if (error) { toast('Nie udało się usunąć: ' + error.message, 'error'); return; }
+      rada = rada.filter(r => r.id !== id);
+      tr.remove();
+      toast('Usunięto z listy');
+      podsumuj();
+    }
+    document.getElementById('radaDodaj').addEventListener('click', () => {
+      const tb = document.getElementById('radaRows');
+      tb.insertAdjacentHTML('beforeend', radaWiersz({ kolejnosc: (Math.max(0, ...rada.map(r => r.kolejnosc || 0)) + 10) }));
+      tb.querySelectorAll('.r-usun').forEach(b => { b.onclick = () => usunZRady(b.closest('tr')); });
+      tb.lastElementChild.querySelector('.r-imie').focus();
+    });
+    document.getElementById('radaZapisz').addEventListener('click', async () => {
+      const wiersze = [...document.querySelectorAll('#radaRows tr')].map(tr => ({
+        id: tr.dataset.id || undefined,
+        imie_nazwisko: tr.querySelector('.r-imie').value.trim(),
+        email: tr.querySelector('.r-email').value.trim().toLowerCase(),
+        funkcja: tr.querySelector('.r-funkcja').value.trim() || null,
+        kolejnosc: parseInt(tr.querySelector('.r-kol').value, 10) || 100,
+        aktywny: tr.querySelector('.r-akt').checked,
+      }));
+      const zle = wiersze.find(w => !w.imie_nazwisko || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(w.email));
+      if (zle) { toast('Każdy wiersz musi mieć imię i nazwisko oraz poprawny e-mail', 'error'); return; }
+      const { error } = await db.from('rada_izby').upsert(wiersze.map(w => w.id ? w : (({ id, ...r }) => r)(w)), { onConflict: 'email' });
+      if (error) { toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
+      toast('Skład Rady zapisany', 'success');
+      await load();
+      renderRada();
+    });
+
+    /* ── ładowanie ── */
+    async function load(){
+      const [u, g, r] = await Promise.all([
+        db.from('uchwaly').select('*').order('created_at', { ascending: false }),
+        db.from('uchwaly_glosy').select('*'),
+        db.from('rada_izby').select('*').order('kolejnosc'),
+      ]);
+      if (u.error) { toast('Błąd ładowania uchwał', 'error'); console.error(u.error); return; }
+      dane = u.data || [];
+      glosyWg = {};
+      (g.data || []).forEach(x => { (glosyWg[x.uchwala_id] = glosyWg[x.uchwala_id] || []).push(x); });
+      Object.values(glosyWg).forEach(l => l.sort((a, b) => (a.imie_nazwisko || '').localeCompare(b.imie_nazwisko || '', 'pl')));
+      rada = r.data || [];
+      podsumuj();
+      render();
+      loadSidebarBadges();
+    }
+
+    (async () => {
+      const sesja = await requireAuth();
+      if (!sesja) return;
+      adminEmail = sesja.user.email || '';
+      document.getElementById('szukaj').addEventListener('input', render);
+      document.getElementById('fStatus').addEventListener('change', render);
+      document.getElementById('btnNowa').addEventListener('click', otworzNowa);
+      document.getElementById('btnRada').addEventListener('click', otworzRade);
+      await load();
+      /* ?id=<uuid> — wejście prosto do uchwały (np. z maila o zakończonym głosowaniu) */
+      const id = new URLSearchParams(location.search).get('id');
+      if (id && dane.some(x => x.id === id)) otworz(id);
+    })();
+  </script>
+</body>
+</html>
