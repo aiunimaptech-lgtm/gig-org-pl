@@ -647,6 +647,33 @@
 
   list-style: disc;
 
+}/* GUS: przycisk obok NIP-u, wyglada jak pole (ta sama wysokosc), ale czerwony obrys */
+.gig-gus-btn{
+  width: 100%;
+  min-height: 46px;
+  padding: 12px 18px;
+  border: 2px solid #cc0a2b;
+  border-radius: 30px;
+  background: #fff;
+  color: #cc0a2b;
+  font: inherit;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.gig-gus-btn:hover{ background:#cc0a2b; color:#fff; }
+.gig-gus-btn:disabled{ opacity:.6; cursor:default; background:#fff; color:#cc0a2b; }
+.gig-gus-msg{
+  margin: -4px 0 12px !important;
+  padding: 10px 14px;
+  border-radius: 12px;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+.gig-gus-msg.ok  { background:#eaf6ee; border:1px solid #bfe3cb; color:#1c6b39; }
+.gig-gus-msg.err { background:#fdecef; border:1px solid #f3ccd4; color:#a3122c; }
+
 }/* BUTTON */
 
 .gig-form input[type="submit"]{
@@ -1000,6 +1027,17 @@
 </fieldset>
 <div class="wpcf7-turnstile cf-turnstile" data-response-field-name="_wpcf7_turnstile_response" data-sitekey="0x4AAAAAACz_bJmC941I2WZV"></div>
 <div class="gig-form">
+<div class="gig-row gig-gus">
+<div class="gig-col-50">
+<p><span class="wpcf7-form-control-wrap" data-name="company-nip"><input aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" maxlength="20" name="company-nip" placeholder="NIP" size="40" type="text" value="" inputmode="numeric" autocomplete="off"/></span>
+</p>
+</div>
+<div class="gig-col-50">
+<p><button type="button" class="gig-gus-btn" id="gigGusBtn">Wczytaj dane firmy z GUS</button>
+</p>
+</div>
+</div>
+<p class="gig-gus-msg" id="gigGusMsg" hidden></p>
 <div class="gig-row">
 <div class="gig-col-100">
 <p><span class="wpcf7-form-control-wrap" data-name="company-name"><input aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" maxlength="400" name="company-name" placeholder="Nazwa firmy" size="40" type="text" value=""/></span>
@@ -1081,15 +1119,11 @@
 </div>
 </div>
 <div class="gig-row">
-<div class="gig-col-33">
-<p><span class="wpcf7-form-control-wrap" data-name="company-nip"><input aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" maxlength="20" name="company-nip" placeholder="NIP" size="40" type="text" value="" inputmode="numeric" autocomplete="off"/></span>
-</p>
-</div>
-<div class="gig-col-33">
+<div class="gig-col-50">
 <p><span class="wpcf7-form-control-wrap" data-name="company-regon"><input aria-invalid="false" class="wpcf7-form-control wpcf7-text" maxlength="20" name="company-regon" placeholder="REGON" size="40" type="text" value="" inputmode="numeric" autocomplete="off"/></span>
 </p>
 </div>
-<div class="gig-col-33">
+<div class="gig-col-50">
 <p><span class="wpcf7-form-control-wrap" data-name="company-krs"><input aria-invalid="false" class="wpcf7-form-control wpcf7-text" maxlength="20" name="company-krs" placeholder="KRS (jeśli dotyczy)" size="40" type="text" value="" inputmode="numeric" autocomplete="off"/></span>
 </p>
 </div>

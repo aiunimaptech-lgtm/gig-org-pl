@@ -68,6 +68,21 @@ Pola: liczba osób, imiona i nazwiska, nabywca (nazwa/adres/NIP + znacznik JST),
 odbiorca (nazwa/adres/**NIP / ID-wewn.**, domyślnie ukryty), e-mail, telefon, uwagi, RODO.
 Przycisk „Zapisz się" w kalendarzu szkoleń prowadzi tu z `?szkolenie=<tytuł>`.
 
+### Dane firmy po NIP-ie (Edge Function `firma-gus`, przycisk w „Dołącz do nas")
+Na górze formularza jest NIP i przycisk **„Wczytaj dane firmy z GUS"**. Funkcja `firma-gus`
+(v1, verify_jwt=false, bez logowania — dane są z rejestrów publicznych; jedyna bramka to suma
+kontrolna NIP-u, więc nie da się nią skanować zakresów) próbuje dwóch źródeł po kolei:
+1. **GUS BIR1 (REGON)** — komplet: nazwa, ulica z numerem i lokalem, kod, miejscowość,
+   **województwo, powiat, gmina**, REGON, KRS (raport `BIR11OsPrawna`) i **PKD wiodące**
+   (raport `…Pkd`). Wymaga bezpłatnego klucza: wniosek na <https://api.stat.gov.pl> →
+   klucz wpisać jako sekret **`GUS_BIR_KEY`** w Supabase → Edge Functions → Secrets.
+   Bez sekretu funkcja to źródło pomija (SOAP działa, sprawdzone na środowisku testowym GUS
+   kluczem `abcde12345abcde12345`; klient w `skrypty/gus_fetch.py` robi to samo z Pythona).
+2. **Biała lista podatników VAT (MF)** — bez klucza, działa od razu, ale daje tylko nazwę,
+   REGON, KRS i adres w jednej linii (rozbijany regexem na ulicę/kod/miejscowość).
+   Województwa, powiatu, gminy ani PKD tam nie ma — panel mówi wtedy wprost, żeby je dopisać.
+Front **tylko uzupełnia puste pola**: tego, co użytkownik już wpisał, nie nadpisuje.
+
 ### Formularz „Dołącz do nas" (`dolacz-do-nas/index.html` + `handleCzlonkostwo` w `forms_integration.js`)
 Pola od 17.09: nazwa firmy, **adres rozbity** na ulicę i numer / kod pocztowy (format 00-000) /
 miejscowość / województwo (lista 16) / powiat / gmina (powiat i gmina nieobowiązkowe), telefon,

@@ -58,6 +58,56 @@
            "&body=" + encodeURIComponent(body);
   }
 
+  /* ── „Wczytaj dane firmy z GUS" (formularz „Dołącz do nas") ──
+     Edge Function `firma-gus` pyta GUS BIR1 (pełne dane z województwem, powiatem
+     i gminą), a gdy Izba nie ma jeszcze klucza GUS — Białą listę MF (nazwa, adres,
+     REGON, KRS). Pola tylko UZUPEŁNIAMY: tego, co użytkownik już wpisał, nie
+     nadpisujemy bez pytania. */
+  function gusPodepnij() {
+    var btn = document.getElementById("gigGusBtn");
+    if (!btn) return;
+    var form = btn.closest("form");
+    var msg = document.getElementById("gigGusMsg");
+    function pokazGus(tekst, ok) {
+      msg.textContent = tekst;
+      msg.className = "gig-gus-msg " + (ok ? "ok" : "err");
+      msg.hidden = false;
+    }
+    btn.addEventListener("click", async function () {
+      var pole = form.querySelector('[name="company-nip"]');
+      var nip = (pole.value || "").replace(/[\s-]/g, "");
+      if (!/^\d{10}$/.test(nip)) { pokazGus("Najpierw wpisz NIP (10 cyfr).", false); pole.focus(); return; }
+      btn.disabled = true; btn.textContent = "Wczytuję…";
+      try {
+        var res = await fetch(SUPABASE_URL + "/functions/v1/firma-gus?nip=" + nip, { headers: { apikey: SUPABASE_ANON } });
+        var d = await res.json();
+        if (!res.ok || !d.ok) throw new Error(d.error || "Nie udało się pobrać danych.");
+        var mapa = {
+          "company-name": d.nazwa, "company-street": d.ulica, "company-zip": d.kod, "company-city": d.miejscowosc,
+          "company-voivodeship": d.wojewodztwo, "company-county": d.powiat, "company-commune": d.gmina,
+          "company-regon": d.regon, "company-krs": d.krs, "business-type": d.pkd,
+        };
+        var zmienione = 0, pominiete = 0;
+        Object.keys(mapa).forEach(function (name) {
+          var el = form.querySelector('[name="' + name + '"]');
+          if (!el || !mapa[name]) return;
+          if ((el.value || "").trim()) { pominiete++; return; }   // nie nadpisujemy tego, co wpisał użytkownik
+          el.value = mapa[name];
+          zmienione++;
+        });
+        var brakPodzialu = !d.wojewodztwo;
+        pokazGus("Wczytano dane z " + (d.zrodlo === "GUS" ? "GUS" : "rejestru Ministerstwa Finansów") + ": " + (d.nazwa || "") + "."
+          + (zmienione ? " Uzupełniliśmy " + zmienione + (zmienione === 1 ? " pole." : " pól.") : " Wszystkie pola były już wypełnione.")
+          + (pominiete ? " Pól wypełnionych wcześniej nie zmienialiśmy." : "")
+          + (brakPodzialu ? " Województwo, powiat i gminę uzupełnij proszę ręcznie." : ""), true);
+      } catch (e) {
+        pokazGus(e.message || "Nie udało się pobrać danych. Wpisz je ręcznie.", false);
+      } finally {
+        btn.disabled = false; btn.textContent = "Wczytaj dane firmy z GUS";
+      }
+    });
+  }
+
   function classify(form) {
     if (form.querySelector('[name="your-newsletter-email"]')) return "newsletter";
     if (form.querySelector('[name="company-name"], [name="company-email"]')) return "czlonkostwo";
@@ -275,6 +325,7 @@
       if (classify(f)) hook(f);
     });
     prefillFromSzkolenie();
+    gusPodepnij();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
