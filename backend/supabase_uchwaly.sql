@@ -33,6 +33,8 @@ create table if not exists public.uchwaly (
   kandydat_firma  text,
   kandydat_adres  text,
   kandydat_nip    text,
+  kandydat_regon  text,
+  kandydat_krs    text,
   kandydat_email  text,
   data_wejscia    date not null default current_date,    -- „wchodzi w życie z dniem"
   tresc           text not null default '',              -- pełny tekst uchwały (edytowalny)
@@ -50,6 +52,9 @@ create table if not exists public.uchwaly (
   updated_at      timestamptz not null default now()
 );
 create index if not exists uchwaly_status_idx on public.uchwaly(status);
+-- kolumny dołożone 17.09 (create table if not exists nie zmienia istniejącej tabeli)
+alter table public.uchwaly add column if not exists kandydat_regon text;
+alter table public.uchwaly add column if not exists kandydat_krs text;
 
 -- ── 3. Głosy: jeden wiersz na członka Rady i uchwałę, z osobistym tokenem z maila ──
 create table if not exists public.uchwaly_glosy (
@@ -170,7 +175,7 @@ create or replace function public.gig_uchwala_generuj(uid uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare
   u record; osoba text; osoba_dop text; osoba_bier text; plec text; pana text; pania text; prowadz text;
-  spolka boolean; opis text; etykieta text; kogo text; tresc_u text; mail_t text; mail_s text;
+  spolka boolean; opis text; ident text; etykieta text; kogo text; tresc_u text; mail_t text; mail_s text;
 begin
   select * into u from public.uchwaly where id = uid;
   if not found then return; end if;
@@ -184,13 +189,20 @@ begin
   osoba_bier := public.gig_biernik(osoba, plec);
   spolka     := coalesce(u.kandydat_firma, '') ~* '(sp\.? ?z ?o\.? ?o|spółk|s\.a\.|sp\. ?j\.|sp\. ?k\.|s\.k\.a)';
 
+  -- identyfikatory w nawiasie po siedzibie: tylko te, które są (NIP zwykle jest, KRS tylko w spółkach)
+  ident := concat_ws(', ',
+    case when nullif(trim(u.kandydat_nip),   '') is not null then 'NIP '   || trim(u.kandydat_nip)   end,
+    case when nullif(trim(u.kandydat_regon), '') is not null then 'REGON ' || trim(u.kandydat_regon) end,
+    case when nullif(trim(u.kandydat_krs),   '') is not null then 'KRS '   || trim(u.kandydat_krs)   end);
+  ident := case when ident <> '' then ' (' || ident || ')' else '' end;
+
   if spolka then
-    opis := format('przedsiębiorcy %s z siedzibą %s, reprezentowanego przez %s %s',
-                   coalesce(u.kandydat_firma, '(nazwa firmy)'), coalesce(u.kandydat_adres, '(adres)'), pania, osoba_bier);
+    opis := format('przedsiębiorcy %s z siedzibą %s%s, reprezentowanego przez %s %s',
+                   coalesce(u.kandydat_firma, '(nazwa firmy)'), coalesce(u.kandydat_adres, '(adres)'), ident, pania, osoba_bier);
     kogo := coalesce(u.kandydat_firma, '(nazwa firmy)');
   else
-    opis := format('przedsiębiorcy %s %s %s działalność gospodarczą o nazwie: %s z siedzibą %s',
-                   pana, osoba_dop, prowadz, coalesce(u.kandydat_firma, '(nazwa firmy)'), coalesce(u.kandydat_adres, '(adres)'));
+    opis := format('przedsiębiorcy %s %s %s działalność gospodarczą o nazwie: %s z siedzibą %s%s',
+                   pana, osoba_dop, prowadz, coalesce(u.kandydat_firma, '(nazwa firmy)'), coalesce(u.kandydat_adres, '(adres)'), ident);
     kogo := pana || ' ' || osoba_dop;
   end if;
 
@@ -231,15 +243,17 @@ create or replace function public.gig_uchwala_z_zgloszenia() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare
   m text := coalesce(NEW.message, ''); uid uuid;
-  f text; a text; n text; o text;
+  f text; a text; n text; r text; k text; o text;
 begin
   if coalesce(NEW.subject, '') !~* '^Zgłoszenie członkowskie:' then return NEW; end if;
-  f := nullif(trim(substring(m from 'Firma: ([^\n]*)')), '');
-  a := nullif(trim(substring(m from 'Adres: ([^\n]*)')), '');
-  n := nullif(trim(substring(m from 'NIP: ([^\n]*)')), '');
-  o := nullif(trim(substring(m from 'Osoba reprezentująca: ([^\n]*)')), '');
-  insert into public.uchwaly (zgloszenie_id, kandydat_osoba, kandydat_firma, kandydat_adres, kandydat_nip, kandydat_email)
-  values (NEW.id, nullif(o, '—'), coalesce(nullif(f, '—'), NEW.name), nullif(a, '—'), nullif(n, '—'), NEW.email)
+  f := nullif(nullif(trim(substring(m from 'Firma: ([^\n]*)')), ''), '—');
+  a := nullif(nullif(trim(substring(m from 'Adres: ([^\n]*)')), ''), '—');
+  n := nullif(nullif(trim(substring(m from 'NIP: ([^\n]*)')), ''), '—');
+  r := nullif(nullif(trim(substring(m from 'REGON: ([^\n]*)')), ''), '—');
+  k := nullif(nullif(trim(substring(m from 'KRS: ([^\n]*)')), ''), '—');
+  o := nullif(nullif(trim(substring(m from 'Osoba reprezentująca: ([^\n]*)')), ''), '—');
+  insert into public.uchwaly (zgloszenie_id, kandydat_osoba, kandydat_firma, kandydat_adres, kandydat_nip, kandydat_regon, kandydat_krs, kandydat_email)
+  values (NEW.id, o, coalesce(f, NEW.name), a, n, r, k, NEW.email)
   returning id into uid;
   perform public.gig_uchwala_generuj(uid);
   return NEW;

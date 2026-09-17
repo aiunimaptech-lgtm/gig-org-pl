@@ -80,7 +80,9 @@ od początku do końca:
    temat i treść maila do Rady (wzór: mail sekretariatu z 17.09.2026). Odmiana nazwiska przez
    przypadki to heurystyka (`gig_dopelniacz`, `gig_biernik`, `gig_plec`): Piotr Urbański → Pana
    Piotra Urbańskiego, Agnieszka Kowalska → Panią Agnieszkę Kowalską; spółki dostają formę
-   „przedsiębiorcy FIRMA z siedzibą …, reprezentowanego przez …". Nietypowe nazwiska sekretariat
+   „przedsiębiorcy FIRMA z siedzibą …, reprezentowanego przez …". Po siedzibie w nawiasie idą
+   identyfikatory, które są znane: `(NIP …, REGON …, KRS …)`; brakujące po prostu znikają
+   (pola `kandydat_nip/regon/krs`, z formularza „Dołącz do nas"). Nietypowe nazwiska sekretariat
    poprawia ręcznie, bo treść jest edytowalna. Numer uchwały to samo liczba (np. `12`), pełny
    zapis `12/IX/2026` składa się z miesiąca rzymskiego i roku daty wejścia w życie.
 2. **Panel**: projekt widać w zakładce **Uchwały Rady** (plakietka w menu = liczba projektów).
