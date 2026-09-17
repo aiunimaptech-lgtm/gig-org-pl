@@ -68,6 +68,16 @@ Pola: liczba osób, imiona i nazwiska, nabywca (nazwa/adres/NIP + znacznik JST),
 odbiorca (nazwa/adres/**NIP / ID-wewn.**, domyślnie ukryty), e-mail, telefon, uwagi, RODO.
 Przycisk „Zapisz się" w kalendarzu szkoleń prowadzi tu z `?szkolenie=<tytuł>`.
 
+### Formularz „Dołącz do nas" (`dolacz-do-nas/index.html` + `handleCzlonkostwo` w `forms_integration.js`)
+Pola od 17.09: nazwa firmy, **adres rozbity** na ulicę i numer / kod pocztowy (format 00-000) /
+miejscowość / województwo (lista 16) / powiat / gmina (powiat i gmina nieobowiązkowe), telefon,
+e-mail, osoba reprezentująca, liczba pracowników, „Rodzaj prowadzonej działalności - PKD wiodące",
+NIP (wymagany, 10 cyfr), REGON, KRS. Zgody: akces (wpisowe + składki), **newsletter domyślnie
+zaznaczony** (po wysłaniu wniosku adres trafia do `submissions_newsletter`; 23505 = już był na liście),
+RODO. Do `submissions_kontakt` idzie jeden tekst z liniami `Firma: / Adres: / Województwo: / Powiat: /
+Gmina: / Telefon: / E-mail: / NIP: / REGON: / KRS: / Osoba reprezentująca: …` — **linia `Adres:`
+zostaje w jednym wierszu** („ul. X 1, 00-000 Miasto"), bo tak czyta ją trigger uchwał (poniżej).
+
 ### Uchwały Rady o przyjęciu członka (`admin/uchwaly.html`, od 17.09.2026)
 Procedura biura: wpływa zgłoszenie z „Dołącz do nas", sekretariat (Agnieszka Horbaczewska) pisze
 projekt uchwały Rady i rozsyła go mailem członkom Rady, Rada głosuje mailowo. Panel prowadzi to

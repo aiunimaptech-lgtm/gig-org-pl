@@ -124,7 +124,12 @@
   async function handleCzlonkostwo(form) {
     var d = {
       company:   val(form, '[name="company-name"]'),
-      address:   val(form, '[name="company-address"]'),
+      street:    val(form, '[name="company-street"]'),
+      zip:       val(form, '[name="company-zip"]'),
+      city:      val(form, '[name="company-city"]'),
+      voivod:    val(form, '[name="company-voivodeship"]'),
+      county:    val(form, '[name="company-county"]'),
+      commune:   val(form, '[name="company-commune"]'),
       phone:     val(form, '[name="company-phone"]'),
       email:     val(form, '[name="company-email"]'),
       person:    val(form, '[name="representative-name"]'),
@@ -134,10 +139,17 @@
       regon:     val(form, '[name="company-regon"]'),
       krs:       val(form, '[name="company-krs"]')
     };
+    /* Adres w jednej linii ("ul. X 1, 00-000 Miasto") - tak czyta go trigger uchwaly (linia "Adres:") */
+    d.address = [d.street, [d.zip, d.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
     var mc = form.querySelector('[name="membership-consent"]');
     var rodo = form.querySelector('[name="acceptance-rodo"]');
+    var nl = form.querySelector('[name="membership-newsletter"]');
+    var chceNewsletter = !!(nl && nl.checked);
     if (!d.company || !d.email) { showMsg(form, "Uzupełnij nazwę firmy oraz adres e-mail.", false); return; }
     if (!isEmail(d.email)) { showMsg(form, "Podaj poprawny adres e-mail.", false); return; }
+    if (!d.street || !d.zip || !d.city) { showMsg(form, "Uzupełnij adres firmy: ulica i numer, kod pocztowy, miejscowość.", false); return; }
+    if (!/^\d{2}-\d{3}$/.test(d.zip)) { showMsg(form, "Kod pocztowy wpisz w formacie 00-000.", false); return; }
+    if (!d.voivod) { showMsg(form, "Wybierz województwo.", false); return; }
     /* NIP: 10 cyfr po odrzuceniu myslnikow i spacji - bez niego biuro nie sprawdzi firmy w CEIDG/KRS */
     if (d.nip && !/^\d{10}$/.test(d.nip.replace(/[\s-]/g, ""))) { showMsg(form, "NIP powinien mieć 10 cyfr.", false); return; }
     if (!d.nip) { showMsg(form, "Podaj NIP firmy.", false); return; }
@@ -148,6 +160,9 @@
       "ZGŁOSZENIE CZŁONKOWSKIE\n" +
       "Firma: " + d.company + "\n" +
       "Adres: " + (d.address || "—") + "\n" +
+      "Województwo: " + (d.voivod || "—") + "\n" +
+      "Powiat: " + (d.county || "—") + "\n" +
+      "Gmina: " + (d.commune || "—") + "\n" +
       "Telefon: " + (d.phone || "—") + "\n" +
       "E-mail: " + d.email + "\n" +
       "NIP: " + d.nip + "\n" +
@@ -156,7 +171,7 @@
       "Osoba reprezentująca: " + (d.person || "—") + "\n" +
       "Liczba osób w firmie: " + (d.employees || "—") + "\n" +
       "Profil działalności: " + (d.business || "—") + "\n\n" +
-      "Akces członkowski: TAK (wpisowe 75,00 zł + składki). Zgoda RODO: TAK.";
+      "Akces członkowski: TAK (wpisowe 75,00 zł + składki). Zgoda RODO: TAK. Newsletter: " + (chceNewsletter ? "TAK" : "NIE") + ".";
 
     if (!configured) {
       window.location.href = mailto("Zgłoszenie członkowskie GIG: " + d.company, message);
@@ -172,6 +187,14 @@
         subject: "Zgłoszenie członkowskie: " + d.company, message: message, status: "new"
       });
       if (res.error) throw res.error;
+      /* Newsletter dopisujemy po udanym wniosku i nie przerywamy na bledzie:
+         23505 = adres juz jest na liscie, a wniosek i tak jest przyjety. */
+      if (chceNewsletter) {
+        try {
+          var nlr = await db.from("submissions_newsletter").insert({ email: d.email, status: "new" });
+          if (nlr.error && nlr.error.code !== "23505") console.warn("newsletter:", nlr.error.message);
+        } catch (e2) { console.warn("newsletter:", e2); }
+      }
       form.reset();
       showMsg(form, "✓ Dziękujemy! Zgłoszenie zostało wysłane. Skontaktujemy się z Państwem.", true);
     } catch (e) {

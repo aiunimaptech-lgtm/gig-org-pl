@@ -462,6 +462,9 @@
 
 }/* INPUTS / SELECT / TEXTAREA */
 
+/* niewybrane województwo wygląda jak placeholder; formularz ma novalidate, więc :invalid tylko koloruje */
+.gig-form select:invalid{color:#8a94a0;}
+.gig-form select option{color:#16202a;}
 .gig-form input:not([type="submit"]):not([type="checkbox"]),.gig-form textarea,.gig-form select{
 
   width: 100%;
@@ -1005,7 +1008,49 @@
 </div>
 <div class="gig-row">
 <div class="gig-col-100">
-<p><span class="wpcf7-form-control-wrap" data-name="company-address"><input aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" maxlength="400" name="company-address" placeholder="Adres firmy" size="40" type="text" value=""/></span>
+<p><span class="wpcf7-form-control-wrap" data-name="company-street"><input aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" maxlength="200" name="company-street" placeholder="Ulica i numer adresowy" size="40" type="text" value=""/></span>
+</p>
+</div>
+</div>
+<div class="gig-row">
+<div class="gig-col-33">
+<p><span class="wpcf7-form-control-wrap" data-name="company-zip"><input aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" maxlength="200" name="company-zip" placeholder="Kod pocztowy" size="40" type="text" value="" inputmode="numeric" autocomplete="postal-code"/></span>
+</p>
+</div>
+<div class="gig-col-67">
+<p><span class="wpcf7-form-control-wrap" data-name="company-city"><input aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" maxlength="200" name="company-city" placeholder="Miejscowość" size="40" type="text" value="" autocomplete="address-level2"/></span>
+</p>
+</div>
+</div>
+<div class="gig-row">
+<div class="gig-col-33">
+<p><span class="wpcf7-form-control-wrap" data-name="company-voivodeship"><select aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-select wpcf7-validates-as-required" name="company-voivodeship" required>
+<option value="">Województwo</option>
+<option value="dolnośląskie">dolnośląskie</option>
+<option value="kujawsko-pomorskie">kujawsko-pomorskie</option>
+<option value="lubelskie">lubelskie</option>
+<option value="lubuskie">lubuskie</option>
+<option value="łódzkie">łódzkie</option>
+<option value="małopolskie">małopolskie</option>
+<option value="mazowieckie">mazowieckie</option>
+<option value="opolskie">opolskie</option>
+<option value="podkarpackie">podkarpackie</option>
+<option value="podlaskie">podlaskie</option>
+<option value="pomorskie">pomorskie</option>
+<option value="śląskie">śląskie</option>
+<option value="świętokrzyskie">świętokrzyskie</option>
+<option value="warmińsko-mazurskie">warmińsko-mazurskie</option>
+<option value="wielkopolskie">wielkopolskie</option>
+<option value="zachodniopomorskie">zachodniopomorskie</option>
+</select></span>
+</p>
+</div>
+<div class="gig-col-33">
+<p><span class="wpcf7-form-control-wrap" data-name="company-county"><input aria-invalid="false" class="wpcf7-form-control wpcf7-text" maxlength="200" name="company-county" placeholder="Powiat" size="40" type="text" value=""/></span>
+</p>
+</div>
+<div class="gig-col-33">
+<p><span class="wpcf7-form-control-wrap" data-name="company-commune"><input aria-invalid="false" class="wpcf7-form-control wpcf7-text" maxlength="200" name="company-commune" placeholder="Gmina" size="40" type="text" value=""/></span>
 </p>
 </div>
 </div>
@@ -1031,7 +1076,7 @@
 </p>
 </div>
 <div class="gig-col-67">
-<p><span class="wpcf7-form-control-wrap" data-name="business-type"><input aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" maxlength="400" name="business-type" placeholder="Rodzaj prowadzonej działalności" size="40" type="text" value=""/></span>
+<p><span class="wpcf7-form-control-wrap" data-name="business-type"><input aria-invalid="false" aria-required="true" class="wpcf7-form-control wpcf7-text wpcf7-validates-as-required" maxlength="400" name="business-type" placeholder="Rodzaj prowadzonej działalności - PKD wiodące" size="40" type="text" value=""/></span>
 </p>
 </div>
 </div>
@@ -1061,6 +1106,10 @@
 <strong>Płatności dokonywane są kwartalnie.</strong></span></label></span></span></span>
 </p>
 </div>
+</div>
+<div class="gig-consent gig-consent-newsletter">
+<p><span class="wpcf7-form-control-wrap" data-name="membership-newsletter"><span class="wpcf7-form-control wpcf7-acceptance"><span class="wpcf7-list-item"><label><input aria-invalid="false" checked="checked" name="membership-newsletter" type="checkbox" value="1"/><span class="wpcf7-list-item-label">Chcę otrzymywać newsletter GIG: informacje o szkoleniach i wydarzeniach Izby. Zgodę można w każdej chwili wycofać jednym kliknięciem w stopce dowolnej wiadomości.</span></label></span></span></span>
+</p>
 </div>
 <div class="gig-consent gig-consent-rodo">
 <p><span class="wpcf7-form-control-wrap" data-name="acceptance-rodo"><span class="wpcf7-form-control wpcf7-acceptance"><span class="wpcf7-list-item"><label><input aria-invalid="false" name="acceptance-rodo" type="checkbox" value="1"/><span class="wpcf7-list-item-label">Zapoznałem/-am się z <a href="/polityka-prywatnosci-rodo/" rel="noopener" target="_blank">Polityką prywatności</a> i wyrażam zgodę na przetwarzanie moich danych osobowych przez Geodezyjną Izbę Gospodarczą w celu obsługi przesłanego wniosku.</span></label></span></span></span>
