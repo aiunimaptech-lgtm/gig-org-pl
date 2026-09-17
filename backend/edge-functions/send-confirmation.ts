@@ -147,11 +147,38 @@ function czlonkostwoMail(rec: Record<string, unknown>) {
   return { subject: "Otrzymaliśmy wniosek o członkostwo w GIG", html: layout("Wniosek przyjęty ✓", body) };
 }
 
+/* Klient po zapisie na szkolenie zostawil zaznaczona opcje "chce wiedziec wiecej
+   o czlonkostwie" (strona /zapisy/). Potwierdzamy, mowimy co dalej i od razu
+   podajemy, czego bedzie trzeba do wniosku - zeby biuro nie musialo tego pisac. */
+function zainteresowanieMail(rec: Record<string, unknown>) {
+  const name = (rec.name as string) || "";
+  const greet = name && name !== "Anonim" ? `Szanowni Państwo, ${esc(name)},` : "Dzień dobry,";
+  const body = `
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">${greet}</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">dziękujemy za zainteresowanie członkostwem w Geodezyjnej Izbie Gospodarczej, największej organizacji przedsiębiorców geodezyjnych w Polsce. Biuro Izby skontaktuje się z Państwem w najbliższych dniach.</p>
+    <div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Co zyskuje członek Izby</p>
+      <p style="margin:0;font-size:14px;line-height:1.7;">
+        &bull; reprezentacja i ochrona interesów firm wobec administracji, ustawodawcy i rynku,<br>
+        &bull; specjalistyczne szkolenia w cenie członkowskiej,<br>
+        &bull; wsparcie w pozyskiwaniu zleceń,<br>
+        &bull; opiniowanie aktów prawnych i profesjonalne porady prawne,<br>
+        &bull; współpraca z administracją.
+      </p>
+    </div>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">Jeśli chcą Państwo od razu złożyć wniosek, formularz jest na stronie
+      <a href="https://gig.org.pl/dolacz-do-nas/" style="color:${C.mid};">gig.org.pl/dolacz-do-nas</a>. Do rozpatrzenia wniosku potrzebny jest
+      <strong>wydruk z CEIDG lub odpis z KRS</strong>, który prosimy przesłać na <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};">biuro@gig.org.pl</a>.</p>
+    <p style="margin:0;font-size:13px;color:#6b7c8c;line-height:1.6;">Silni wiedzą, zjednoczeni działaniem.</p>`;
+  return { subject: "Członkostwo w GIG: dziękujemy za zainteresowanie", html: layout("Dziękujemy za zainteresowanie", body) };
+}
+
 /* Rodzaj zgloszenia rozpoznajemy po prefiksie tematu, ktory ustawia
    forms_integration.js: zapis na szkolenie, akces czlonkowski albo zwykly kontakt. */
 function rodzaj(subject: string): string {
   if (/^Zapis na szkolenie:/i.test(subject)) return "Zapis na szkolenie";
   if (/^Zgłoszenie członkowskie:/i.test(subject)) return "Zgłoszenie członkowskie";
+  if (/^Zainteresowanie członkostwem:/i.test(subject)) return "Zainteresowanie członkostwem";
   return "Wiadomość z formularza kontaktowego";
 }
 
@@ -463,8 +490,10 @@ Deno.serve(async (req) => {
         wyniki.powiadomienie = r.ok ? "wyslane" : r.info;
       }
       // 2) potwierdzenie dla nadawcy - wniosek czlonkowski ma wlasna tresc (prosba o CEIDG/KRS)
-      const czlonkowski = /^Zgłoszenie członkowskie:/i.test(String(rec.subject ?? ""));
-      const p = await wyslij([nadawca], czlonkowski ? czlonkostwoMail(rec) : kontaktMail(rec));
+      const temat = String(rec.subject ?? "");
+      const potwierdzenie = /^Zgłoszenie członkowskie:/i.test(temat) ? czlonkostwoMail(rec)
+        : (/^Zainteresowanie członkostwem:/i.test(temat) ? zainteresowanieMail(rec) : kontaktMail(rec));
+      const p = await wyslij([nadawca], potwierdzenie);
       wyniki.potwierdzenie = p.ok ? "wyslane" : p.info;
 
     } else if (table === "zapisy_szkolenia") {

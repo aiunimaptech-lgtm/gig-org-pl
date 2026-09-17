@@ -25,8 +25,9 @@ cache przeglądarki przy testach panelu, Vercel Security Checkpoint blokujący `
 i to, że brama Supabase wymusza `text/plain` na odpowiedziach Edge Functions.
 
 **Wersje Edge Functions na 9.09.2026** (repo = wdrożone, poza komentarzami):
-`send-confirmation` v11 (verify_jwt=true; od 17.09 wniosek członkowski dostaje własne
-potwierdzenie z prośbą o wydruk CEIDG/KRS, rozpoznawane po prefiksie tematu „Zgłoszenie członkowskie:"), `wyslij-mail` v6, `wyslij-kampanie` v5,
+`send-confirmation` v12 (verify_jwt=true; od 17.09 potwierdzenia rozpoznawane po prefiksie tematu
+w `submissions_kontakt`: „Zgłoszenie członkowskie:" = wniosek z prośbą o wydruk CEIDG/KRS,
+„Zainteresowanie członkostwem:" = klient zostawił zaznaczoną zachętę po zapisie na szkolenie), `wyslij-mail` v6, `wyslij-kampanie` v5,
 `panel-logowanie` v2, `panel-rejestracja` v3, `panel-haslo` v2, `baza-wypis` v1,
 `newsletter-unsubscribe` v1, `pierwsze-haslo` v1.
 
