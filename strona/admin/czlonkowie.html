@@ -29,7 +29,7 @@
         <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
         <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
         <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
-        <a href="czlonkowie.html"><span class="nav-icon">⚇</span> Członkowie</a>
+        <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">⚇</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
         <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
         <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
         <div class="nav-section">Strona</div>
@@ -57,8 +57,15 @@
           <div class="toolbar">
             <div class="search-box"><span class="search-icon">⌕</span>
               <input type="text" class="form-control" id="search" placeholder="Szukaj firmy, osoby, regionu…"></div>
+            <select id="fStatus" class="form-control" style="max-width:230px;">
+              <option value="">Wszyscy</option>
+              <option value="oczekuje">Do zatwierdzenia</option>
+              <option value="published">Widoczni na stronie</option>
+              <option value="draft">Ukryci</option>
+            </select>
             <span style="color:#6b7f84;font-size:13px;" id="cnt"></span>
           </div>
+          <div id="oczekujacePasek" hidden style="margin:0 0 14px;padding:11px 15px;background:#fff8e6;border:1px solid #f0e2b6;border-radius:10px;font-size:13.5px;line-height:1.6;color:#7a5c14;"></div>
           <div class="table-wrap">
             <table class="admin-table">
               <thead><tr><th>Firma</th><th>Region</th><th>Osoba</th><th>E-mail</th><th>NIP</th><th>WWW</th><th>Status</th><th></th></tr></thead>
@@ -80,7 +87,7 @@
         <div class="grid-2">
           <div class="form-group"><label>Region (województwo)</label><input type="text" id="cRegion" class="form-control"></div>
           <div class="form-group"><label>Status</label>
-            <select id="cStatus" class="form-control"><option value="published">Opublikowany</option><option value="draft">Ukryty</option></select></div>
+            <select id="cStatus" class="form-control"><option value="published">Opublikowany (widoczny na stronie)</option><option value="oczekuje">Do zatwierdzenia</option><option value="draft">Ukryty</option></select></div>
         </div>
         <div class="form-group"><label>Adres</label><input type="text" id="cAddress" class="form-control"></div>
         <div class="grid-2">
@@ -123,14 +130,34 @@
     function domena(url){
       return String(url||'').replace(/^https?:\/\//i,'').replace(/^www\./i,'').replace(/\/.*$/,'');
     }
+    /* Trzy stany wpisu: „oczekuje" (zgłoszenie ze strony, czeka na biuro),
+       „published" (widoczny w katalogu na stronie), „draft" (ukryty). */
+    const STATUS_BADGE = r => r.status==='published'
+      ? '<span class="badge badge-published">widoczny</span>'
+      : (r.status==='oczekuje'
+          ? '<span class="badge badge-draft">do zatwierdzenia</span>'
+          : '<span class="badge badge-archived">ukryty</span>');
+
     function filtruj(filter=''){
       const f=(filter||'').toLowerCase();
-      return data.filter(r=>((r.name||'')+' '+(r.person||'')+' '+(r.region||'')).toLowerCase().includes(f));
+      const st=(document.getElementById('fStatus')||{}).value||'';
+      return data.filter(r=>{
+        if(st && (r.status||'')!==st) return false;
+        return ((r.name||'')+' '+(r.person||'')+' '+(r.region||'')+' '+(r.email||'')+' '+(r.nip||'')).toLowerCase().includes(f);
+      });
     }
     function render(filter=''){
       const rows=filtruj(filter);
       const tb=document.getElementById('rows');
-      document.getElementById('cnt').textContent=data.length+' firm';
+      const oczek=data.filter(r=>r.status==='oczekuje').length;
+      const widoczni=data.filter(r=>r.status==='published').length;
+      document.getElementById('cnt').textContent=`${rows.length} z ${data.length} firm · ${widoczni} na stronie`;
+      const pasek=document.getElementById('oczekujacePasek');
+      pasek.hidden=!oczek;
+      if(oczek) pasek.innerHTML=`<strong>${oczek} ${oczek===1?'firma czeka':'firm czeka'} na zatwierdzenie.</strong>
+        Zgłoszenia z formularza „Dołącz do nas" trafiają tu automatycznie i nie są widoczne na stronie,
+        dopóki ich nie zatwierdzisz. Uchwałę Rady w tej sprawie prowadzisz w zakładce
+        <a href="uchwaly.html" style="color:#7a5c14;text-decoration:underline;">Uchwały Rady</a>.`;
       if(!rows.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak. Uruchom supabase_czlonkowie.sql albo dodaj firmę.</td></tr>';return;}
       tb.innerHTML=rows.map(r=>`
         <tr>
@@ -144,14 +171,20 @@
           <td>${r.website
             ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer" style="color:#cc0a2b;text-decoration:none;">${esc(domena(r.website))}</a>`
             : '<span style="color:#c0392b">—</span>'}</td>
-          <td><span class="badge badge-${r.status==='published'?'published':'draft'}">${r.status==='published'?'widoczny':'ukryty'}</span></td>
-          <td class="actions">
+          <td>${STATUS_BADGE(r)}</td>
+          <td class="actions" style="white-space:nowrap;">
+            ${r.status==='oczekuje'
+              ? `<button class="btn btn-outline btn-xs" data-ok="${r.id}" title="Zatwierdź: firma pojawi się w katalogu na stronie">✓ zatwierdź</button>
+                 <button class="btn btn-ghost btn-xs" data-nie="${r.id}" title="Odrzuć: wpis zostaje w panelu jako ukryty">✕ odrzuć</button>`
+              : ''}
             <button class="btn btn-ghost btn-xs" data-edit="${r.id}">✎</button>
             <button class="btn btn-danger btn-xs" data-del="${r.id}">🗑</button>
           </td>
         </tr>`).join('');
       tb.querySelectorAll('[data-edit]').forEach(b=>b.addEventListener('click',()=>openEditor(b.dataset.edit)));
       tb.querySelectorAll('[data-del]').forEach(b=>b.addEventListener('click',()=>del(b.dataset.del)));
+      tb.querySelectorAll('[data-ok]').forEach(b=>b.addEventListener('click',()=>zatwierdz(b.dataset.ok)));
+      tb.querySelectorAll('[data-nie]').forEach(b=>b.addEventListener('click',()=>odrzuc(b.dataset.nie)));
     }
     function openEditor(id){
       const r=id?data.find(x=>x.id===id):null;
@@ -179,6 +212,24 @@
       if(res.error){console.error(res.error);toast('Błąd zapisu (nazwa musi być unikalna?)','error');return;}
       toast('Zapisano','success');closeModal('editModal');load();
     }
+    /* Zatwierdzenie = publikacja w katalogu na stronie. Przypominamy o odświeżeniu
+       kopii offline (czlonkowie-fallback.js), bo to snapshot, a nie żywe dane. */
+    async function zatwierdz(id){
+      const r=data.find(x=>x.id===id); if(!r) return;
+      if(!confirm(`Zatwierdzić firmę „${r.name}"?\n\nOd tej chwili będzie widoczna w katalogu Członków na stronie.`)) return;
+      const {error}=await db.from('czlonkowie').update({status:'published',updated_at:new Date().toISOString()}).eq('id',id);
+      if(error){console.error(error);toast('Nie udało się zatwierdzić','error');return;}
+      toast('Zatwierdzono — firma jest już w katalogu na stronie','success',5000);
+      await load();
+      toast('Pamiętaj o odświeżeniu kopii offline katalogu (gen_czlonkowie_fallback.js)','default',6000);
+    }
+    async function odrzuc(id){
+      const r=data.find(x=>x.id===id); if(!r) return;
+      if(!confirm(`Odrzucić zgłoszenie firmy „${r.name}"?\n\nWpis zostanie w panelu jako ukryty — nie pojawi się na stronie, ale danych nie tracisz.`)) return;
+      const {error}=await db.from('czlonkowie').update({status:'draft',updated_at:new Date().toISOString()}).eq('id',id);
+      if(error){console.error(error);toast('Nie udało się zapisać','error');return;}
+      toast('Zgłoszenie odrzucone (wpis ukryty)','success');load();
+    }
     async function del(id){
       if(!confirm('Usunąć tego członka z katalogu?'))return;
       const {error}=await db.from('czlonkowie').delete().eq('id',id);
@@ -195,6 +246,10 @@
       document.getElementById('newBtn').addEventListener('click',()=>openEditor(null));
       document.getElementById('saveBtn').addEventListener('click',save);
       document.getElementById('search').addEventListener('input',e=>render(e.target.value));
+      document.getElementById('fStatus').addEventListener('change',()=>render(document.getElementById('search').value));
+      /* ?status=oczekuje — wejście z plakietki w menu prosto do zgłoszeń */
+      const stUrl=new URLSearchParams(location.search).get('status');
+      if(stUrl) document.getElementById('fStatus').value=stUrl;
 
       /* Eksport: KOMPLET danych z tabeli `czlonkowie` (bez id — do niczego nie służy
          poza panelem). Współrzędne i status też, bo plik bywa punktem wyjścia do
@@ -205,7 +260,7 @@
         if(!rows.length){toast('Brak danych do eksportu');return;}
         const dane=rows.map(r=>({
           ...r,
-          status_pl: r.status==='published' ? 'widoczny' : 'ukryty',
+          status_pl: r.status==='published' ? 'widoczny' : (r.status==='oczekuje' ? 'do zatwierdzenia' : 'ukryty'),
           wspolrzedne: (r.lat!=null&&r.lng!=null) ? `${r.lat}, ${r.lng}` : '',
           opis: (r.description||'').replace(/\s*\n\s*/g,' | '),
           dodano: fmtDate(r.created_at),

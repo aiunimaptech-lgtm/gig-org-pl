@@ -75,3 +75,18 @@ INSERT INTO czlonkowie (name,region,person,phone,email,address) VALUES ('GEODEZJ
 INSERT INTO czlonkowie (name,region,person,phone,email,address) VALUES ('GEOSYSTEM Jerzy Cieszko','Zachodniopomorskie','Jerzy Cieszko','602-105-840','geosystem@ko.onet.pl','Szczecinek, ul. Warcisława IV nr 6 lok. 2, 78-400 Szczecinek') ON CONFLICT (name) DO NOTHING;
 INSERT INTO czlonkowie (name,region,person,phone,email,address) VALUES ('GEOTOTAL PRO SP. Z. O.O','Zachodniopomorskie','Krzysztof Senderowicz','601-414-691, 91-434-11-67','senderowicz@geototal.com.pl','ul. Dworcowa 19, 70-206 Szczecin') ON CONFLICT (name) DO NOTHING;
 INSERT INTO czlonkowie (name,region,person,phone,email,address) VALUES ('PUGiK Zbigniew Królik','Zachodniopomorskie','Zbigniew Królik','604-066-385, 95-765-80-40','zkpugik@op.pl','ul. Norwida 37, 73-200 Choszczno') ON CONFLICT (name) DO NOTHING;
+
+-- ============================================================
+-- 17.09.2026 — zgłoszenia członkowskie ze strony trafiają na listę jako „oczekuje"
+-- (pełna definicja wgrana migracją `czlonkowie_zgloszenia_do_zatwierdzenia`).
+-- Panel: /admin/czlonkowie.html — filtr „Do zatwierdzenia", przyciski ✓ / ✕.
+-- Publiczny katalog pokazuje wyłącznie status 'published', więc firma pojawia się
+-- na stronie dopiero po zatwierdzeniu w panelu.
+-- ============================================================
+alter table public.czlonkowie drop constraint if exists czlonkowie_status_check;
+alter table public.czlonkowie add constraint czlonkowie_status_check
+  check (status = any (array['draft','published','oczekuje']));
+alter table public.czlonkowie add column if not exists zgloszenie_id uuid
+  references public.submissions_kontakt(id) on delete set null;
+create index if not exists czlonkowie_status_idx on public.czlonkowie(status);
+-- trigger gig_czlonek_z_zgloszenia / on_kontakt_czlonek: patrz migracja w Supabase
