@@ -80,8 +80,10 @@ plik od D. Tomaszewskiego). Kafelek na stronie głównej stoi zaraz za „Nadcho
 * **Strona**: sekcje rozwijane, licznik wypełnionych pozycji, przycisk „Wczytaj dane firmy z GUS"
   (ta sama funkcja `firma-gus`), wybór kwartału, uwagi. **Wymagany NIP** — po nim rozpoznajemy
   członka Izby (trigger `gig_wezel_czlonek`) i widać, gdy jedna firma wypełnia dwa razy.
-  Pod formularzem **domyślnie zaznaczone** zgody: informacje o szkoleniach i newsletter — pierwsza
-  tworzy wpis w `submissions_kontakt` („Zainteresowanie szkoleniami: …"), druga zapis do newslettera.
+  Pod formularzem **domyślnie zaznaczona** zgoda na newsletter (po wysłaniu adres trafia do
+  `submissions_newsletter`). Zgoda na informacje o szkoleniach była tu do 17.09 wieczorem
+  i została usunięta na prośbę Izby — kolumna `wezel_ankiety.szkolenia` zostaje w bazie
+  (domyślnie `false`), żeby starsze wpisy nie straciły znaczenia.
 * **Baza**: `wezel_ankiety` + `wezel_ceny` (jedna cena = jeden wiersz, unikat na ankietę i kod),
   widok `wezel_zestawienie` (min/max/średnia/mediana per pozycja i okres). RLS: publiczny INSERT jak
   w formularzach, odczyt tylko dla panelu po kodzie. **Uwaga:** strona wpisuje id ankiety sama

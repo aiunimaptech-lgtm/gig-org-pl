@@ -190,10 +190,6 @@
   </fieldset>
 
   <div class="chk">
-    <input type="checkbox" id="szkolenia" checked>
-    <label for="szkolenia">Chcę dostawać informacje o <strong>szkoleniach GIG</strong> (m.in. wycena prac geodezyjnych, umowy, przetargi). Członkowie Izby płacą za nie mniej.</label>
-  </div>
-  <div class="chk">
     <input type="checkbox" id="newsletter" checked>
     <label for="newsletter">Chcę otrzymywać newsletter GIG: aktualności Izby i zaproszenia na wydarzenia. Zgodę można wycofać jednym kliknięciem w stopce dowolnej wiadomości.</label>
   </div>
@@ -359,7 +355,7 @@
         osoba: val("osoba") || null, email: val("email"), telefon: val("telefon") || null,
         wojewodztwo: val("wojewodztwo"), zasieg: val("zasieg") || null, wielkosc: val("wielkosc") || null,
         okres: val("okres"), uwagi: val("uwagi") || null,
-        newsletter: $("newsletter").checked, szkolenia: $("szkolenia").checked, status: "new"
+        newsletter: $("newsletter").checked, status: "new"
       });
       if (ank.error) throw ank.error;
 
@@ -376,21 +372,6 @@
           if (!nl.error || nl.error.code === "23505") zapisy.push("newslettera");
         } catch (e2) { console.warn("newsletter:", e2); }
       }
-      if ($("szkolenia").checked) {
-        try {
-          var kt = await db.from("submissions_kontakt").insert({
-            name: val("osoba") || val("firma"), email: val("email"),
-            subject: "Zainteresowanie szkoleniami: " + val("firma"),
-            message: "ZAINTERESOWANIE SZKOLENIAMI (z ankiety Węzeł Jakości)\n" +
-              "Firma: " + val("firma") + "\nNIP: " + nip + "\nWojewództwo: " + val("wojewodztwo") +
-              "\nE-mail: " + val("email") + "\nTelefon: " + (val("telefon") || "—") +
-              "\n\nFirma prosi o informacje o szkoleniach GIG.",
-            status: "new"
-          });
-          if (!kt.error) zapisy.push("informacji o szkoleniach");
-        } catch (e3) { console.warn("szkolenia:", e3); }
-      }
-
       form.style.display = "none";
       $("wOk").style.display = "block";
       $("wOkZapisy").textContent = "Podałeś ceny w " + ceny.length + (ceny.length === 1 ? " pozycji." : " pozycjach.") +
