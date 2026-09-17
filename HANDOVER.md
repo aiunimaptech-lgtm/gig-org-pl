@@ -68,7 +68,18 @@ Pola: liczba osób, imiona i nazwiska, nabywca (nazwa/adres/NIP + znacznik JST),
 odbiorca (nazwa/adres/**NIP / ID-wewn.**, domyślnie ukryty), e-mail, telefon, uwagi, RODO.
 Przycisk „Zapisz się" w kalendarzu szkoleń prowadzi tu z `?szkolenie=<tytuł>`.
 
+### Pułapka: kolejność skryptów a `window.GIG_CFG`
+`gig-config.js` musi być wpięty **przed** każdym skryptem, który czyta `window.GIG_CFG`.
+Na `/wpis/` (widok pojedynczego artykułu z panelu) config stał na końcu `<body>`, za skryptem
+renderującym — strona kończyła na „Ładowanie wpisu…" i **żaden wpis z panelu nie był dostępny
+pod `/wpis/<slug>/`**. Naprawione 17.09; przy dokładaniu skryptów na kolejnych stronach sprawdzaj
+tę kolejność, bo objaw (pusta strona) nie wskazuje wprost na przyczynę.
+
 ### Węzeł Jakości — ankieta cenowa (`/wezel-jakosci/` + `admin/wezel.html`, od 17.09.2026)
+Ankieta to pierwsze narzędzie **Węzła Jakości w Geodezji** — platformy wiarygodności z wpisu
+„list intencyjny z Fundacją Galicea" (`/wezel-jakosci-w-geodezji/`, 4.08.2026). Nowe treści
+o cenach odwołują się do tamtej zapowiedzi, więc warto trzymać ten wątek razem.
+Wpis o starcie ankiety: `articles`, slug `wezel-jakosci-ankieta-cenowa` (kategoria aktualnosci).
 Firmy podają swoje stawki w układzie wskaźników **SEKOCENBUD** (pozycje WKI 7.5, opracowanie ZOPI,
 plik od D. Tomaszewskiego). Kafelek na stronie głównej stoi zaraz za „Nadchodzące wydarzenia".
 
