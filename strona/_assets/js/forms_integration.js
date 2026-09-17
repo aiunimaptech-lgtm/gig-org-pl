@@ -129,12 +129,18 @@
       email:     val(form, '[name="company-email"]'),
       person:    val(form, '[name="representative-name"]'),
       employees: val(form, '[name="employees-count"]'),
-      business:  val(form, '[name="business-type"]')
+      business:  val(form, '[name="business-type"]'),
+      nip:       val(form, '[name="company-nip"]'),
+      regon:     val(form, '[name="company-regon"]'),
+      krs:       val(form, '[name="company-krs"]')
     };
     var mc = form.querySelector('[name="membership-consent"]');
     var rodo = form.querySelector('[name="acceptance-rodo"]');
     if (!d.company || !d.email) { showMsg(form, "Uzupełnij nazwę firmy oraz adres e-mail.", false); return; }
     if (!isEmail(d.email)) { showMsg(form, "Podaj poprawny adres e-mail.", false); return; }
+    /* NIP: 10 cyfr po odrzuceniu myslnikow i spacji - bez niego biuro nie sprawdzi firmy w CEIDG/KRS */
+    if (d.nip && !/^\d{10}$/.test(d.nip.replace(/[\s-]/g, ""))) { showMsg(form, "NIP powinien mieć 10 cyfr.", false); return; }
+    if (!d.nip) { showMsg(form, "Podaj NIP firmy.", false); return; }
     if (mc && !mc.checked) { showMsg(form, "Zaznacz oświadczenie o akcesie członkowskim.", false); return; }
     if (rodo && !rodo.checked) { showMsg(form, "Zaznacz zgodę na przetwarzanie danych (RODO).", false); return; }
 
@@ -144,6 +150,9 @@
       "Adres: " + (d.address || "—") + "\n" +
       "Telefon: " + (d.phone || "—") + "\n" +
       "E-mail: " + d.email + "\n" +
+      "NIP: " + d.nip + "\n" +
+      "REGON: " + (d.regon || "—") + "\n" +
+      "KRS: " + (d.krs || "—") + "\n" +
       "Osoba reprezentująca: " + (d.person || "—") + "\n" +
       "Liczba osób w firmie: " + (d.employees || "—") + "\n" +
       "Profil działalności: " + (d.business || "—") + "\n\n" +

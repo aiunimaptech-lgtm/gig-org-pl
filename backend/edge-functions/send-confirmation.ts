@@ -126,6 +126,27 @@ function kontaktMail(rec: Record<string, unknown>) {
   return { subject: "Otrzymaliśmy Twoją wiadomość - GIG", html: layout("Wiadomość przyjęta ✓", body) };
 }
 
+/* Potwierdzenie wniosku czlonkowskiego: od razu prosimy o wydruk z CEIDG/KRS,
+   bo bez niego biuro i tak nie moze rozpatrzyc wniosku - jedna wymiana maili mniej. */
+function czlonkostwoMail(rec: Record<string, unknown>) {
+  const name = (rec.name as string) || "";
+  const greet = name && name !== "Anonim" ? `Szanowni Państwo, ${esc(name)},` : "Dzień dobry,";
+  const msg = (rec.message as string) || "";
+  const body = `
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">${greet}</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">dziękujemy za złożenie wniosku o członkostwo w Geodezyjnej Izbie Gospodarczej. Wniosek trafił do biura Izby.</p>
+    <div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Prośba o dokument</p>
+      <p style="margin:0;font-size:14px;line-height:1.6;">Do rozpatrzenia wniosku potrzebujemy dokumentu potwierdzającego status prawny firmy:
+      <strong>wydruku z CEIDG lub odpisu z KRS</strong>. Prosimy o przesłanie go w odpowiedzi na tę wiadomość albo na adres
+      <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};">biuro@gig.org.pl</a>. Po otrzymaniu dokumentu skontaktujemy się w sprawie dalszych kroków.</p>
+    </div>
+    ${msg ? `<div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-radius:6px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Dane z wniosku:</p>
+      <p style="margin:0;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(msg)}</p></div>` : ""}`;
+  return { subject: "Otrzymaliśmy wniosek o członkostwo w GIG", html: layout("Wniosek przyjęty ✓", body) };
+}
+
 /* Rodzaj zgloszenia rozpoznajemy po prefiksie tematu, ktory ustawia
    forms_integration.js: zapis na szkolenie, akces czlonkowski albo zwykly kontakt. */
 function rodzaj(subject: string): string {
@@ -441,8 +462,9 @@ Deno.serve(async (req) => {
         const r = await wyslij(NOTIFY_EMAILS, notifyMail(rec), nadawca);
         wyniki.powiadomienie = r.ok ? "wyslane" : r.info;
       }
-      // 2) potwierdzenie dla nadawcy
-      const p = await wyslij([nadawca], kontaktMail(rec));
+      // 2) potwierdzenie dla nadawcy - wniosek czlonkowski ma wlasna tresc (prosba o CEIDG/KRS)
+      const czlonkowski = /^Zgłoszenie członkowskie:/i.test(String(rec.subject ?? ""));
+      const p = await wyslij([nadawca], czlonkowski ? czlonkostwoMail(rec) : kontaktMail(rec));
       wyniki.potwierdzenie = p.ok ? "wyslane" : p.info;
 
     } else if (table === "zapisy_szkolenia") {
