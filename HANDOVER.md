@@ -123,7 +123,10 @@ Front **tylko uzupełnia puste pola**: tego, co użytkownik już wpisał, nie na
 Pola od 17.09: nazwa firmy, **adres rozbity** na ulicę i numer / kod pocztowy (format 00-000) /
 miejscowość / województwo (lista 16) / powiat / gmina (powiat i gmina nieobowiązkowe), telefon,
 e-mail, osoba reprezentująca, liczba pracowników, „Rodzaj prowadzonej działalności - PKD wiodące",
-NIP (wymagany, 10 cyfr), REGON, KRS. Zgody: akces (wpisowe + składki), **newsletter domyślnie
+NIP (wymagany, 10 cyfr), REGON, KRS oraz dane **wizytówkowe**: strona WWW, Facebook, LinkedIn
+i krótki opis (300 znaków, obecne opisy w katalogu mają średnio 120). Adresy bez protokołu
+dostają `https://` po stronie przeglądarki, żeby w katalogu były klikalne. Te cztery pola
+trafiają prosto do katalogu Członków, więc formularz mówi wprost, że będą publiczne. Zgody: akces (wpisowe + składki), **newsletter domyślnie
 zaznaczony** (po wysłaniu wniosku adres trafia do `submissions_newsletter`; 23505 = już był na liście),
 RODO. Do `submissions_kontakt` idzie jeden tekst z liniami `Firma: / Adres: / Województwo: / Powiat: /
 Gmina: / Telefon: / E-mail: / NIP: / REGON: / KRS: / Osoba reprezentująca: …` — **linia `Adres:`

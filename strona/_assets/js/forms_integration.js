@@ -187,8 +187,15 @@
       business:  val(form, '[name="business-type"]'),
       nip:       val(form, '[name="company-nip"]'),
       regon:     val(form, '[name="company-regon"]'),
-      krs:       val(form, '[name="company-krs"]')
+      krs:       val(form, '[name="company-krs"]'),
+      website:   val(form, '[name="company-website"]'),
+      facebook:  val(form, '[name="company-facebook"]'),
+      linkedin:  val(form, '[name="company-linkedin"]'),
+      opis:      val(form, '[name="company-description"]')
     };
+    /* „firma.pl" wpisane bez protokołu nie byłoby klikalnym linkiem w katalogu */
+    var zURL = function (u) { return u && !/^https?:\/\//i.test(u) ? "https://" + u : u; };
+    d.website = zURL(d.website); d.facebook = zURL(d.facebook); d.linkedin = zURL(d.linkedin);
     /* Adres w jednej linii ("ul. X 1, 00-000 Miasto") - tak czyta go trigger uchwaly (linia "Adres:") */
     d.address = [d.street, [d.zip, d.city].filter(Boolean).join(" ")].filter(Boolean).join(", ");
     var mc = form.querySelector('[name="membership-consent"]');
@@ -218,6 +225,10 @@
       "NIP: " + d.nip + "\n" +
       "REGON: " + (d.regon || "—") + "\n" +
       "KRS: " + (d.krs || "—") + "\n" +
+      "WWW: " + (d.website || "—") + "\n" +
+      "Facebook: " + (d.facebook || "—") + "\n" +
+      "LinkedIn: " + (d.linkedin || "—") + "\n" +
+      "Opis: " + (d.opis || "—") + "\n" +
       "Osoba reprezentująca: " + (d.person || "—") + "\n" +
       "Liczba osób w firmie: " + (d.employees || "—") + "\n" +
       "Profil działalności: " + (d.business || "—") + "\n\n" +
