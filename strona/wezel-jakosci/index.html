@@ -80,10 +80,11 @@
       .w-cena{width:auto;grid-row:span 2;}
       .w-ref{grid-column:1 / -1;}
     }
-    .w-ref-przelacznik{margin:0 0 18px;padding:12px 16px;background:#f7f9fb;border:1px solid var(--line);border-radius:12px;}
-    .w-ref-przelacznik label{display:flex;align-items:center;gap:9px;margin:0;font-weight:600;font-size:14px;cursor:pointer;}
-    .w-ref-przelacznik input{width:17px;height:17px;accent-color:var(--red);flex:none;}
-    .w-ref-przelacznik .hint{margin:5px 0 0 26px;}
+    /* opcja pomocnicza, nie decyzja: stonowana, żeby nie konkurowała ze zgodami i przyciskiem */
+    .w-ref-przelacznik{margin:0 0 14px;padding:0;}
+    .w-ref-przelacznik label{display:flex;align-items:center;gap:9px;margin:0;font-weight:400;font-size:13.5px;color:var(--muted);cursor:pointer;}
+    .w-ref-przelacznik input{width:15px;height:15px;accent-color:#9aa7b2;flex:none;}
+    .w-ref-przelacznik .hint{margin:3px 0 0 24px;font-size:12px;color:#9aa7b2;}
     .chk{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;margin:0 0 14px;}
     .chk input{margin-top:3px;flex:none;width:17px;height:17px;accent-color:var(--red);}
     .chk label{font-weight:500;margin:0;}
