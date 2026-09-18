@@ -80,6 +80,10 @@
       .w-cena{width:auto;grid-row:span 2;}
       .w-ref{grid-column:1 / -1;}
     }
+    .w-ref-przelacznik{margin:0 0 18px;padding:12px 16px;background:#f7f9fb;border:1px solid var(--line);border-radius:12px;}
+    .w-ref-przelacznik label{display:flex;align-items:center;gap:9px;margin:0;font-weight:600;font-size:14px;cursor:pointer;}
+    .w-ref-przelacznik input{width:17px;height:17px;accent-color:var(--red);flex:none;}
+    .w-ref-przelacznik .hint{margin:5px 0 0 26px;}
     .chk{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;margin:0 0 14px;}
     .chk input{margin-top:3px;flex:none;width:17px;height:17px;accent-color:var(--red);}
     .chk label{font-weight:500;margin:0;}
@@ -179,8 +183,6 @@
     <legend>Ceny netto za pozycję<span class="opis">Stawki w złotych, bez VAT. Wypełnij tylko to, co wykonujesz.</span></legend>
     <div class="w-pasek">
       <span>Wypełnione pozycje: <span class="licznik" id="licznik">0</span> z 73</span>
-      <label><input type="checkbox" id="pokazRef"> Pokaż wskaźniki SEKOCENBUD z <span id="zrodloOkres">poprzedniego badania</span></label>
-      <span class="hint" style="margin:0;">Domyślnie ukryte, żeby nie sugerowały odpowiedzi.</span>
     </div>
     <div id="katalog"></div>
     <div class="pole" style="margin:18px 0 0;">
@@ -188,6 +190,13 @@
       <textarea id="uwagi" name="uwagi" placeholder="Np. czego nie obejmują podane stawki, jakie są typowe dopłaty, co najmocniej wpływa na cenę."></textarea>
     </div>
   </fieldset>
+
+  <!-- Wskaźniki z katalogu pokazujemy dopiero na końcu i dopiero komuś, kto już coś wpisał:
+       widoczne od początku działałyby jak podpowiedź i zaniżały wartość badania. -->
+  <div class="w-ref-przelacznik" id="refPrzelacznik" hidden>
+    <label><input type="checkbox" id="pokazRef"> Pokaż wskaźniki SEKOCENBUD z <span id="zrodloOkres">poprzedniego badania</span> przy wypełnionych pozycjach</label>
+    <p class="hint">Do porównania po wypełnieniu. Ukrywamy je wcześniej, żeby nie sugerowały odpowiedzi.</p>
+  </div>
 
   <div class="chk">
     <input type="checkbox" id="newsletter" checked>
@@ -294,7 +303,10 @@
   var pola = function () { return Array.prototype.slice.call(document.querySelectorAll("#katalog input[data-kod]")); };
   form.addEventListener("input", function (e) {
     if (!e.target.dataset || !e.target.dataset.kod) return;
-    $("licznik").textContent = pola().filter(function (i) { return i.value.trim() !== ""; }).length;
+    var ile = pola().filter(function (i) { return i.value.trim() !== ""; }).length;
+    $("licznik").textContent = ile;
+    /* przełącznik wskaźników pojawia się dopiero, gdy jest już co porównywać */
+    $("refPrzelacznik").hidden = ile === 0;
   });
   $("pokazRef").addEventListener("change", function () {
     document.querySelectorAll(".w-ref").forEach(function (el) { el.classList.toggle("ukryty", !$("pokazRef").checked); });

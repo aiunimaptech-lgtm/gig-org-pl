@@ -86,8 +86,11 @@ plik od D. Tomaszewskiego). Kafelek na stronie głównej stoi zaraz za „Nadcho
 * **Katalog**: `strona/_assets/js/wezel-katalog.js` — 73 pozycje w 22 grupach i 4 sekcjach
   (prace bieżące 7.51x, drogi 7.52x/7.53x, koleje 7.54x). Generowany z arkusza:
   `python skrypty/gen_wezel_katalog.py "<plik.xlsx>" [--kwartal "2 kw. 2025"]`. Wskaźniki z arkusza
-  siedzą w polu `ref` i na stronie są **domyślnie ukryte** (przełącznik „Pokaż wskaźniki"), żeby nie
-  sugerowały odpowiedzi; w panelu służą jako punkt odniesienia („vs SEKOCENBUD").
+  siedzą w polu `ref` i na stronie są **domyślnie ukryte**, żeby nie sugerowały odpowiedzi.
+  Przełącznik „Pokaż wskaźniki" stoi na samym dole, nad zgodą na newsletter, i **pojawia się
+  dopiero, gdy ktoś wypełni pierwszą cenę** (znika, gdy wyczyści wszystkie): przed wypełnieniem
+  byłby podpowiedzią, po wypełnieniu jest porównaniem. W panelu te same wskaźniki służą jako
+  punkt odniesienia w kolumnie „vs SEKOCENBUD".
 * **Strona**: sekcje rozwijane, licznik wypełnionych pozycji, przycisk „Wczytaj dane firmy z GUS"
   (ta sama funkcja `firma-gus`), wybór kwartału, uwagi. **Wymagany NIP** — po nim rozpoznajemy
   członka Izby (trigger `gig_wezel_czlonek`) i widać, gdy jedna firma wypełnia dwa razy.
