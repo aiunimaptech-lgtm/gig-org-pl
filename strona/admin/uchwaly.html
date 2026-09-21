@@ -42,6 +42,29 @@
     .u-rada td{vertical-align:middle;}
     #uchPodgladRamka{width:100%;height:70vh;border:1px solid #e6ebef;border-radius:8px;background:#fff;}
     .u-status-pasek{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px;font-size:13px;color:#6b7f84;}
+    /* ścieżka sprawy: zgłoszenie → opinia Prezydium → uchwała Rady → wynik (art. 12 pkt 1 Statutu) */
+    .u-sciezka{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 18px;}
+    .u-sciezka .krok{flex:1 1 150px;min-width:0;padding:9px 12px;border-radius:8px;background:#f2f5f7;border:1px solid #e3e9ee;font-size:12px;color:#8b98a3;}
+    .u-sciezka .krok b{display:block;font-size:13px;font-weight:800;color:#8b98a3;margin-bottom:1px;}
+    .u-sciezka .krok.zrobiony{background:#eef7f1;border-color:#cfe6d8;}
+    .u-sciezka .krok.zrobiony b,.u-sciezka .krok.zrobiony{color:#1d7a45;}
+    .u-sciezka .krok.teraz{background:#fff5f6;border-color:#f3ccd4;}
+    .u-sciezka .krok.teraz b{color:#cc0a2b;}
+    .u-sciezka .krok.teraz{color:#a8707b;}
+    .u-sciezka .krok.zly{background:#fdecef;border-color:#f3ccd4;}
+    .u-sciezka .krok.zly b{color:#cc0a2b;}
+    .u-sekcja.etap1{border-left:3px solid #cfd8de;}
+    .u-sekcja.etap2{border-left:3px solid #cfd8de;}
+    .u-sekcja.aktywna{border-left-color:#cc0a2b;background:#fdfbfb;}
+    .u-sekcja.zablokowana{opacity:.72;}
+    .u-info{margin:0 0 12px;padding:11px 14px;border-radius:8px;font-size:13.5px;line-height:1.55;}
+    .u-info.czeka{background:#f2f5f7;border:1px solid #e3e9ee;color:#6b7f84;}
+    .u-info.ostrzez{background:#fff8e6;border:1px solid #f0e2b6;color:#7a5c14;}
+    .u-info.zle{background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .u-info.dobrze{background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .u-checkline{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:6px 0;}
+    .u-checkline input[type=checkbox]{width:16px;height:16px;accent-color:#cc0a2b;flex:none;}
+    .u-odb label.konsult{background:#f7f9fb;border:1px dashed #d6dde3;border-radius:7px;padding:5px 9px;}
   </style>
 </head>
 <body>
@@ -95,10 +118,13 @@
           <div class="toolbar">
             <div class="search-box"><span class="search-icon">⌕</span>
               <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: firma, osoba, NIP, numer…"></div>
-            <select id="fStatus" class="form-control" style="max-width:220px;">
-              <option value="">Wszystkie statusy</option>
-              <option value="projekt">Projekty (do sprawdzenia)</option>
-              <option value="glosowanie">W głosowaniu</option>
+            <select id="fStatus" class="form-control" style="max-width:260px;">
+              <option value="">Wszystkie sprawy</option>
+              <option value="op-projekt">Etap 1: do wysłania do Prezydium</option>
+              <option value="op-glosowanie">Etap 1: w opiniowaniu</option>
+              <option value="op-negatywna">Etap 1: opinia negatywna</option>
+              <option value="projekt">Etap 2: projekty uchwał</option>
+              <option value="glosowanie">Etap 2: w głosowaniu Rady</option>
               <option value="przyjeta">Przyjęte</option>
               <option value="odrzucona">Odrzucone</option>
               <option value="anulowana">Anulowane</option>
@@ -106,7 +132,7 @@
           </div>
           <div class="table-wrap">
             <table class="admin-table">
-              <thead><tr><th>Nr</th><th>Kandydat</th><th>Utworzono</th><th>Status</th><th>Głosy</th><th></th></tr></thead>
+              <thead><tr><th>Nr</th><th>Kandydat</th><th>Utworzono</th><th>Etap</th><th>Opinia / głosy</th><th></th></tr></thead>
               <tbody id="rows"><tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
             </table>
           </div>
@@ -161,14 +187,20 @@
   <div class="modal-overlay" id="radaModal">
     <div class="modal-box modal-szeroki">
       <div class="modal-header">
-        <div class="modal-title">Skład Rady Izby (odbiorcy uchwał do głosowania)</div>
+        <div class="modal-title">Skład Rady Izby i Prezydium</div>
         <button class="modal-close" data-modal-close="radaModal">×</button>
       </div>
       <div class="modal-body">
-        <p class="u-mini" style="margin:0 0 12px;">Do głosowania trafiają tylko osoby <strong>aktywne</strong>. Zmiana listy nie dotyka głosowań już rozesłanych. Kolejność decyduje o porządku na liście i w raporcie.</p>
+        <p class="u-mini" style="margin:0 0 12px;">
+          <strong>Prezydium</strong> (Prezes i trzej Wiceprezesi, art. 19 ust. 4 Statutu) opiniuje kandydatów w etapie 1.
+          <strong>Rada</strong> głosuje nad uchwałą w etapie 2. Prezes jest w obu, więc to dwa niezależne znaczniki.
+          Osoba bez żadnego znacznika zostaje na liście tylko do konsultacji (Prezes Oddziału, Przedstawiciel Regionalny)
+          i można ją doraźnie dopisać do odbiorców prośby o opinię.
+          Wysyłamy wyłącznie do osób <strong>aktywnych</strong>; zmiana listy nie dotyka spraw już rozesłanych.
+        </p>
         <div class="table-wrap">
           <table class="admin-table u-rada">
-            <thead><tr><th>Imię i nazwisko</th><th>E-mail</th><th>Funkcja</th><th>Kolejność</th><th>Aktywny</th><th></th></tr></thead>
+            <thead><tr><th>Imię i nazwisko</th><th>E-mail</th><th>Funkcja</th><th>Obszar</th><th>Kol.</th><th>Prezydium</th><th>Rada</th><th>Aktywny</th><th></th></tr></thead>
             <tbody id="radaRows"></tbody>
           </table>
         </div>
@@ -198,16 +230,26 @@
   <script src="/admin/_admin.js"></script>
   <script>
     /* ------------------------------------------------------------------
-       Uchwały Rady o przyjęciu członka. Przepływ:
-         zgłoszenie „Dołącz do nas" → trigger w bazie zakłada PROJEKT (tekst uchwały
-         + mail do Rady wg wzoru) → tu sekretariat sprawdza / poprawia → „Wyślij do Rady"
-         (Edge Function uchwala-wyslij: osobisty link dla każdego członka) → głosy
-         wpadają przez /glosowanie/ (Edge Function glosuj) → przypomnienia, raport PDF,
-         zakończenie głosowania.
+       Przyjęcie członka w dwóch etapach, zgodnie z art. 12 pkt 1 Statutu GIG:
+       uchwałę Rady podejmuje się PO pozytywnym zaopiniowaniu kandydatury przez
+       Prezydium, a przed wydaniem opinii Prezydium konsultuje się z właściwym
+       Prezesem Oddziału lub Przedstawicielem Regionalnym.
+
+         zgłoszenie „Dołącz do nas" → trigger zakłada sprawę na etapie 1 (prośba
+         o opinię do Prezydium + projekt uchwały na zapas)
+       ETAP 1  → „Wyślij do Prezydium" (uchwala-wyslij, etap 'opinia') → opinie
+                 wpadają przez /glosowanie/ → „Zakończ opiniowanie"
+                    opinia pozytywna → sprawa przechodzi na etap 2
+                    opinia negatywna → odmowa (też w formie uchwały, art. 12 pkt 1 zd. ost.)
+       ETAP 2  → „Wyślij do Rady" (etap 'uchwala') → głosy → „Zakończ głosowanie"
+                 → raport PDF z obu etapów.
        ------------------------------------------------------------------ */
     let dane = [], glosyWg = {}, rada = [], biezaca = null, adminEmail = '';
-    const ETYK = { projekt:'projekt', glosowanie:'w głosowaniu', przyjeta:'przyjęta', odrzucona:'odrzucona', anulowana:'anulowana' };
-    const BADGE = { projekt:'badge-draft', glosowanie:'badge-new', przyjeta:'badge-confirmed', odrzucona:'badge-cancelled', anulowana:'badge-archived' };
+    const ETYK = { opiniowanie:'etap 1: opinia', projekt:'etap 2: projekt uchwały', glosowanie:'etap 2: głosowanie', przyjeta:'przyjęta', odrzucona:'odrzucona', anulowana:'anulowana' };
+    const BADGE = { opiniowanie:'badge-draft', projekt:'badge-draft', glosowanie:'badge-new', przyjeta:'badge-confirmed', odrzucona:'badge-cancelled', anulowana:'badge-archived' };
+    const ETYK_OP = { projekt:'do wysłania do Prezydium', glosowanie:'Prezydium opiniuje', pozytywna:'opinia pozytywna', negatywna:'opinia negatywna', pominieta:'opinia poza panelem' };
+    const BADGE_OP = { projekt:'badge-draft', glosowanie:'badge-new', pozytywna:'badge-confirmed', negatywna:'badge-cancelled', pominieta:'badge-archived' };
+    const DOK = { ceidg:'wydruk z CEIDG', krs:'odpis z KRS', inny:'inny dokument rejestrowy' };
     const RZYM = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
 
     const etykieta = u => {
@@ -218,6 +260,12 @@
     const fmtDT = iso => iso ? new Date(iso).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
     const fmtDay = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : '';
     const licz = g => ({ za: g.filter(x => x.glos === 'za').length, przeciw: g.filter(x => x.glos === 'przeciw').length, brak: g.filter(x => !x.glos).length });
+    /* Głosy trzymamy w jednej tabeli, rozdzielone kolumną `etap`. */
+    const gl = (u, etap) => (glosyWg[u.id] || {})[etap] || [];
+    /* Opinię wydaje Prezydium; odpowiedź osoby konsultowanej trafia do protokołu,
+       ale nie do wyniku (art. 12 pkt 1 zd. trzecie). */
+    const liczOpinie = g => licz(g.filter(x => x.rola !== 'konsultacja'));
+    const etap1Otwarty = u => u.status === 'opiniowanie' && u.opinia_status === 'glosowanie';
 
     /* Edge Functions panelu: token zalogowanego admina, jak w kreatorze maila (_admin.js) */
     async function wolaj(nazwa, body){
@@ -234,17 +282,26 @@
     }
 
     /* ── lista ── */
+    function pasujeStatus(u, st){
+      if (!st) return true;
+      if (st.startsWith('op-')) return u.status === 'opiniowanie' && u.opinia_status === st.slice(3);
+      return u.status === st;
+    }
+
     function podsumuj(){
       const rok = new Date().getFullYear();
-      const n = s => dane.filter(u => u.status === s).length;
+      const n = st => dane.filter(u => pasujeStatus(u, st)).length;
       const przyjete = dane.filter(u => u.status === 'przyjeta' && (u.zamknieto_at || '').startsWith(String(rok))).length;
       const k = (t, v, small, st, wyr) => `<div class="k" data-st="${st}" ${wyr ? 'style="border-color:#f3ccd4;background:#fff5f6;"' : ''}><div class="t">${t}</div><div class="v" ${wyr ? 'style="color:#cc0a2b;"' : ''}>${v}${small ? ` <small>${small}</small>` : ''}</div></div>`;
+      const doWyslania = n('op-projekt');
+      const doSprawdzenia = n('projekt');
       document.getElementById('podsumowanie').innerHTML =
-        k('Projekty do sprawdzenia', n('projekt'), '', 'projekt', n('projekt') > 0) +
-        k('W głosowaniu', n('glosowanie'), '', 'glosowanie') +
+        k('Do Prezydium (etap 1)', doWyslania, '', 'op-projekt', doWyslania > 0) +
+        k('Prezydium opiniuje', n('op-glosowanie'), '', 'op-glosowanie') +
+        k('Projekty uchwał (etap 2)', doSprawdzenia, '', 'projekt', doSprawdzenia > 0) +
+        k('W głosowaniu Rady', n('glosowanie'), '', 'glosowanie') +
         k('Przyjęte w ' + rok, przyjete, '', 'przyjeta') +
-        k('Odrzucone', n('odrzucona'), '', 'odrzucona') +
-        k('Rada Izby', rada.filter(r => r.aktywny).length, 'osób głosuje', 'rada');
+        k('Prezydium / Rada', rada.filter(r => r.aktywny && r.prezydium).length + ' / ' + rada.filter(r => r.aktywny && r.rada).length, 'osób', 'rada');
       document.querySelectorAll('#podsumowanie .k').forEach(el => el.addEventListener('click', () => {
         if (el.dataset.st === 'rada') { otworzRade(); return; }
         document.getElementById('fStatus').value = el.dataset.st; render();
@@ -255,94 +312,238 @@
       const f = document.getElementById('szukaj').value.toLowerCase().trim();
       const st = document.getElementById('fStatus').value;
       return dane.filter(u => {
-        if (st && u.status !== st) return false;
+        if (!pasujeStatus(u, st)) return false;
         if (!f) return true;
         return [u.numer, u.kandydat_osoba, u.kandydat_firma, u.kandydat_nip, u.kandydat_regon, u.kandydat_krs, u.kandydat_email, u.kandydat_adres]
           .some(v => (v || '').toLowerCase().includes(f));
       });
     }
 
+    /* Etykieta przed liczbą, bo „2 pozytywne" i „5 pozytywnych" odmieniają się inaczej,
+       a licznik ma działać dla każdej liczby. */
+    const wynikHtml = (c, opinia) => `<span class="u-glosy">` +
+      (opinia
+        ? `<b class="za">pozytywne: ${c.za}</b> · <b class="przeciw">negatywne: ${c.przeciw}</b> · <b class="brak">bez opinii: ${c.brak}</b>`
+        : `<b class="za">${c.za} za</b> · <b class="przeciw">${c.przeciw} przeciw</b> · <b class="brak">bez głosu: ${c.brak}</b>`) +
+      `</span>`;
+
+    /* W kolumnie pokazujemy wynik etapu, na którym sprawa faktycznie stoi. */
     function glosyHtml(u){
-      const g = glosyWg[u.id] || [];
-      if (u.status === 'projekt') return '<span class="u-mini">jeszcze nie wysłano</span>';
-      const c = licz(g);
-      return `<span class="u-glosy"><b class="za">${c.za} za</b> · <b class="przeciw">${c.przeciw} przeciw</b> · <b class="brak">${c.brak} bez głosu</b></span>`;
+      if (u.status === 'opiniowanie') {
+        if (u.opinia_status === 'projekt') return '<span class="u-mini">prośba o opinię jeszcze nie wysłana</span>';
+        if (u.opinia_status === 'pominieta') return '<span class="u-mini">opinia wydana poza panelem</span>';
+        return wynikHtml(liczOpinie(gl(u, 'opinia')), true);
+      }
+      if (u.status === 'projekt') return '<span class="u-mini">uchwała jeszcze nie wysłana</span>';
+      return wynikHtml(licz(gl(u, 'uchwala')), false);
     }
 
     function render(){
       const rows = filtruj();
       const tb = document.getElementById('rows');
-      if (!rows.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak uchwał spełniających kryteria.</td></tr>'; return; }
-      tb.innerHTML = rows.map(u => `
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak spraw spełniających kryteria.</td></tr>'; return; }
+      tb.innerHTML = rows.map(u => {
+        const opiniowanie = u.status === 'opiniowanie';
+        const odmowa = u.rodzaj === 'odmowa';
+        return `
         <tr>
-          <td style="white-space:nowrap;"><strong>${esc(etykieta(u))}</strong></td>
+          <td style="white-space:nowrap;"><strong>${esc(etykieta(u))}</strong>${odmowa ? '<div class="u-mini">odmowa</div>' : ''}</td>
           <td style="max-width:300px;">
             <strong>${esc(kogo(u))}</strong>
             <div class="u-mini">${u.kandydat_firma && u.kandydat_osoba ? esc(u.kandydat_osoba) + ' · ' : ''}${u.kandydat_nip ? 'NIP ' + esc(u.kandydat_nip) : ''}</div>
           </td>
           <td style="white-space:nowrap;">${fmtDT(u.created_at)}<div class="u-mini">${u.zgloszenie_id ? 'ze strony' : 'ręcznie'}</div></td>
-          <td><span class="badge ${BADGE[u.status] || 'badge-read'}">${ETYK[u.status] || u.status}</span>
+          <td>
+            <span class="badge ${opiniowanie ? (BADGE_OP[u.opinia_status] || 'badge-read') : (BADGE[u.status] || 'badge-read')}">${opiniowanie ? (ETYK_OP[u.opinia_status] || u.opinia_status) : (ETYK[u.status] || u.status)}</span>
+            ${opiniowanie && u.opinia_termin ? `<div class="u-mini">termin opinii ${fmtDay(u.opinia_termin)}</div>` : ''}
+            ${opiniowanie && u.opinia_wyslano_at ? `<div class="u-mini">wysłano ${fmtDT(u.opinia_wyslano_at)}</div>` : ''}
             ${u.status === 'glosowanie' && u.wyslano_at ? `<div class="u-mini">wysłano ${fmtDT(u.wyslano_at)}</div>` : ''}
             ${u.zamknieto_at ? `<div class="u-mini">zamknięto ${fmtDT(u.zamknieto_at)}</div>` : ''}</td>
           <td>${glosyHtml(u)}</td>
           <td class="actions" style="white-space:nowrap;">
-            <button class="btn btn-outline btn-xs" data-otworz="${u.id}">${u.status === 'projekt' ? 'Sprawdź i wyślij' : 'Otwórz'}</button>
+            <button class="btn btn-outline btn-xs" data-otworz="${u.id}">${(opiniowanie && u.opinia_status === 'projekt') || u.status === 'projekt' ? 'Sprawdź i wyślij' : 'Otwórz'}</button>
           </td>
-        </tr>`).join('');
+        </tr>`; }).join('');
       tb.querySelectorAll('[data-otworz]').forEach(b => b.addEventListener('click', () => otworz(b.dataset.otworz)));
     }
 
-    /* ── okno uchwały ── */
+    /* ── okno sprawy ── */
     function pole(id, label, val, extra = ''){
       return `<div class="form-group ${extra}"><label>${label}</label><input class="form-control" id="${id}" value="${esc(val || '')}"></div>`;
+    }
+
+    /* Ścieżka sprawy u góry okna: jednym rzutem oka widać, gdzie stoi
+       i czego jeszcze brakuje. */
+    function sciezkaHtml(u){
+      const op = u.opinia_status, zamkn = ['przyjeta','odrzucona','anulowana'].includes(u.status);
+      const kroki = [
+        ['Zgłoszenie', u.zgloszenie_id ? 'z formularza na stronie' : 'wpisane ręcznie', 'zrobiony'],
+        ['Opinia Prezydium',
+          ETYK_OP[op] || op,
+          op === 'negatywna' ? 'zly' : (op === 'pozytywna' || op === 'pominieta' ? 'zrobiony' : 'teraz')],
+        [u.rodzaj === 'odmowa' ? 'Uchwała o odmowie' : 'Uchwała Rady',
+          u.status === 'opiniowanie' ? 'czeka na opinię'
+            : (u.status === 'projekt' ? 'projekt do wysłania' : (u.status === 'glosowanie' ? 'Rada głosuje' : 'głosowanie zamknięte')),
+          u.status === 'opiniowanie' ? '' : (zamkn ? 'zrobiony' : 'teraz')],
+        ['Wynik',
+          u.status === 'przyjeta' ? 'przyjęta' : (u.status === 'odrzucona' ? 'odrzucona' : (u.status === 'anulowana' ? 'anulowana' : 'czeka')),
+          u.status === 'przyjeta' ? 'zrobiony' : (u.status === 'odrzucona' || u.status === 'anulowana' ? 'zly' : '')],
+      ];
+      return '<div class="u-sciezka">' + kroki.map(([t, o, st]) =>
+        `<div class="krok ${st}"><b>${esc(t)}</b>${esc(o)}</div>`).join('') + '</div>';
+    }
+
+    /* Tabela odpowiedzi — ta sama dla opinii i dla głosowania, zmieniają się podpisy. */
+    function tabelaGlosow(g, opinia){
+      const naglowek = opinia ? 'Członek Prezydium' : 'Członek Rady';
+      const etykZa = opinia ? 'POZYTYWNA' : 'ZA';
+      const etykPrzeciw = opinia ? 'NEGATYWNA' : 'PRZECIW';
+      return `<div class="table-wrap"><table class="admin-table">
+        <thead><tr><th>${naglowek}</th><th>Wysłano</th><th>Przyp.</th><th>${opinia ? 'Opinia' : 'Głos'}</th><th>Kiedy</th><th>Uzasadnienie</th></tr></thead>
+        <tbody>${g.map(x => `<tr>
+          <td><strong>${esc(x.imie_nazwisko)}</strong>${x.rola === 'konsultacja' ? ' <span class="badge badge-read" title="art. 12 pkt 1 zd. trzecie Statutu: konsultacja, poza wynikiem opinii">konsultacja</span>' : ''}<div class="u-mini">${esc(x.email)}</div></td>
+          <td style="white-space:nowrap;">${x.wyslano_at ? fmtDT(x.wyslano_at) : (x.blad_wysylki ? '<span class="badge badge-cancelled" title="' + esc(x.blad_wysylki) + '">błąd wysyłki</span>' : '—')}</td>
+          <td style="text-align:center;">${x.przypomnien || 0}${x.przypomnienie_at ? `<div class="u-mini">${fmtDT(x.przypomnienie_at)}</div>` : ''}</td>
+          <td>${x.glos === 'za' ? `<span class="badge badge-confirmed">${etykZa}</span>` : (x.glos === 'przeciw' ? `<span class="badge badge-cancelled" style="text-decoration:none;">${etykPrzeciw}</span>` : '<span class="badge badge-read">brak</span>')}</td>
+          <td style="white-space:nowrap;">${x.glosowano_at ? fmtDT(x.glosowano_at) : ''}</td>
+          <td class="u-uz">${esc(x.uzasadnienie || '')}</td>
+        </tr>`).join('') || '<tr><td colspan="6" style="color:#6b7f84;">Brak listy odbiorców.</td></tr>'}</tbody>
+      </table></div>`;
+    }
+
+    function odbiorcyHtml(klasa, ktoDomyslnie){
+      const lista = rada.filter(r => r.aktywny);
+      if (!lista.length) return '<span class="u-mini">Lista jest pusta. Uzupełnij ją przyciskiem „Skład Rady".</span>';
+      return lista.map(r => {
+        const dom = ktoDomyslnie(r);
+        return `<label class="${dom ? '' : 'konsult'}"><input type="checkbox" class="${klasa}" value="${r.id}" ${dom ? 'checked' : ''}> <span>${esc(r.imie_nazwisko)}${r.funkcja ? ' <span class="mail">· ' + esc(r.funkcja) + '</span>' : ''}<div class="mail">${esc(r.email)}</div></span></label>`;
+      }).join('');
     }
 
     function otworz(id){
       const u = dane.find(x => x.id === id);
       if (!u) return;
       biezaca = u;
-      const g = glosyWg[u.id] || [];
-      const c = licz(g);
+      const gOp = gl(u, 'opinia'), gUch = gl(u, 'uchwala');
+      const cOp = liczOpinie(gOp), cUch = licz(gUch);
+      const opProjekt = u.status === 'opiniowanie' && u.opinia_status === 'projekt';
+      const opGlosowanie = etap1Otwarty(u);
       const projekt = u.status === 'projekt';
       const glosowanie = u.status === 'glosowanie';
       const edytowalne = projekt;   // po wysłaniu treść jest zamrożona: Rada głosuje nad tym, co dostała
-      document.getElementById('uchTytul').textContent = 'Uchwała ' + etykieta(u) + ' · ' + kogo(u);
+      const odmowa = u.rodzaj === 'odmowa';
+      document.getElementById('uchTytul').textContent = (odmowa ? 'Odmowa przyjęcia ' : 'Przyjęcie do Izby ') + etykieta(u) + ' · ' + kogo(u);
 
-      let html = `
+      let html = sciezkaHtml(u) + `
         <div class="u-status-pasek">
-          <span class="badge ${BADGE[u.status]}">${ETYK[u.status]}</span>
-          ${u.wyslano_at ? `<span>wysłano do Rady ${fmtDT(u.wyslano_at)}${u.wyslal ? ' (' + esc(u.wyslal) + ')' : ''}</span>` : ''}
-          ${u.zamknieto_at ? `<span>· zamknięto ${fmtDT(u.zamknieto_at)}${u.zamknal ? ' (' + esc(u.zamknal) + ')' : ''}</span>` : ''}
+          ${u.opinia_wyslano_at ? `<span>prośba o opinię ${fmtDT(u.opinia_wyslano_at)}</span>` : ''}
+          ${u.opinia_zamknieto_at ? `<span>· opinia zamknięta ${fmtDT(u.opinia_zamknieto_at)}${u.opinia_zamknal ? ' (' + esc(u.opinia_zamknal) + ')' : ''}</span>` : ''}
+          ${u.wyslano_at ? `<span>· uchwała do Rady ${fmtDT(u.wyslano_at)}${u.wyslal ? ' (' + esc(u.wyslal) + ')' : ''}</span>` : ''}
+          ${u.zamknieto_at ? `<span>· głosowanie zamknięte ${fmtDT(u.zamknieto_at)}${u.zamknal ? ' (' + esc(u.zamknal) + ')' : ''}</span>` : ''}
           ${u.kandydat_email ? `<span>· <a href="mailto:${esc(u.kandydat_email)}">${esc(u.kandydat_email)}</a></span>` : ''}
+        </div>
+
+        <div class="u-sekcja">
+          <h4>Dokumenty i wpisowe <small>art. 12 pkt 1 Statutu: do wniosku dołącza się wydruk z CEIDG albo odpis z KRS, a uchwała wchodzi w życie pod warunkiem uiszczenia wpisowego</small></h4>
+          <div class="u-grid">
+            <div class="form-group"><label>Dokument rejestrowy</label>
+              <select class="form-control" id="uDok">
+                <option value="">— jeszcze nie wpłynął —</option>
+                <option value="ceidg" ${u.dok_rodzaj === 'ceidg' ? 'selected' : ''}>wydruk z CEIDG</option>
+                <option value="krs" ${u.dok_rodzaj === 'krs' ? 'selected' : ''}>odpis z KRS</option>
+                <option value="inny" ${u.dok_rodzaj === 'inny' ? 'selected' : ''}>inny dokument rejestrowy</option>
+              </select></div>
+            <div class="form-group"><label>Data wpływu dokumentu</label><input class="form-control" type="date" id="uDokData" value="${esc(u.dok_otrzymany_at || '')}"></div>
+            <div class="form-group"><label>Wpisowe</label>
+              <div class="u-checkline"><input type="checkbox" id="uWpisowe" ${u.wpisowe_oplacone ? 'checked' : ''}> <label for="uWpisowe" style="margin:0;font-weight:400;">wpisowe uiszczone (75,00 zł)</label></div></div>
+            <div class="form-group"><label>Data wpłaty wpisowego</label><input class="form-control" type="date" id="uWpisoweData" value="${esc(u.wpisowe_at || '')}"></div>
+          </div>
+          <div class="u-akcje"><button class="btn btn-ghost btn-sm" id="uchDok">Zapisz stan dokumentów</button>
+            <span class="u-mini">Te dwa fakty wchodzą do prośby o opinię i do wiadomości dla Rady, więc warto je uzupełnić przed wysyłką.</span></div>
         </div>`;
 
-      if (!projekt) {
+      /* ── ETAP 1: opinia Prezydium ── */
+      html += `<div class="u-sekcja etap1 ${u.status === 'opiniowanie' ? 'aktywna' : ''}">
+        <h4>Etap 1: opinia Prezydium Rady <small>art. 12 pkt 1 Statutu</small></h4>`;
+
+      if (opProjekt) {
         html += `
-        <div class="u-sekcja">
-          <h4>Głosowanie <small>${g.length} ${g.length === 1 ? 'osoba' : 'osób'} na liście</small></h4>
-          <div class="u-wynik"><span class="za">${c.za} ZA</span><span class="przeciw">${c.przeciw} PRZECIW</span><span class="brak">${c.brak} bez głosu</span></div>
-          <div class="table-wrap"><table class="admin-table">
-            <thead><tr><th>Członek Rady</th><th>Wysłano</th><th>Przypomnienia</th><th>Głos</th><th>Kiedy</th><th>Uzasadnienie</th></tr></thead>
-            <tbody>${g.map(x => `<tr>
-              <td><strong>${esc(x.imie_nazwisko)}</strong><div class="u-mini">${esc(x.email)}</div></td>
-              <td style="white-space:nowrap;">${x.wyslano_at ? fmtDT(x.wyslano_at) : (x.blad_wysylki ? '<span class="badge badge-cancelled" title="' + esc(x.blad_wysylki) + '">błąd wysyłki</span>' : '—')}</td>
-              <td style="text-align:center;">${x.przypomnien || 0}${x.przypomnienie_at ? `<div class="u-mini">${fmtDT(x.przypomnienie_at)}</div>` : ''}</td>
-              <td>${x.glos === 'za' ? '<span class="badge badge-confirmed">ZA</span>' : (x.glos === 'przeciw' ? '<span class="badge badge-cancelled" style="text-decoration:none;">PRZECIW</span>' : '<span class="badge badge-read">brak</span>')}</td>
-              <td style="white-space:nowrap;">${x.glosowano_at ? fmtDT(x.glosowano_at) : ''}</td>
-              <td class="u-uz">${esc(x.uzasadnienie || '')}</td>
-            </tr>`).join('') || '<tr><td colspan="6" style="color:#6b7f84;">Brak listy głosujących.</td></tr>'}</tbody>
-          </table></div>
-          <div class="u-akcje">
-            ${glosowanie ? `<button class="btn btn-outline btn-sm" id="uchPrzypomnij" ${c.brak ? '' : 'disabled'}>✉ Przypomnij niegłosującym (${c.brak})</button>` : ''}
-            <button class="btn btn-outline btn-sm" id="uchRaport">↓ Raport z głosowania (PDF)</button>
-            ${glosowanie ? `<button class="btn btn-primary btn-sm prawo" id="uchZakoncz">Zakończ głosowanie</button>` : ''}
+          <div class="u-grid">
+            <div class="form-group"><label>Termin na wydanie opinii</label><input class="form-control" type="date" id="opTermin" value="${esc(u.opinia_termin || '')}"></div>
+            ${pole('opMailTemat', 'Temat wiadomości', u.opinia_mail_temat)}
           </div>
-        </div>`;
+          <div class="form-group"><label>Treść prośby <small style="text-transform:none;font-weight:500;">(pusta linia = nowy akapit; dane z deklaracji i przyciski opinii dokładają się same)</small></label>
+            <textarea class="form-control u-mail" id="opMailTresc">${esc(u.opinia_mail_tresc || '')}</textarea></div>
+          <div class="form-group"><label>Odbiorcy <small style="text-transform:none;font-weight:500;">zaznaczone: Prezydium. Osoby bez zaznaczenia to konsultacja (Prezes Oddziału, Przedstawiciel Regionalny) — ich odpowiedź trafia do protokołu, ale nie do wyniku opinii.</small></label>
+            <div class="u-odb">${odbiorcyHtml('opOdb', r => r.prezydium)}</div></div>
+          <div class="u-akcje">
+            <button class="btn btn-ghost btn-sm" id="opZapisz">Zapisz zmiany</button>
+            <button class="btn btn-ghost btn-sm" id="opGeneruj" title="Buduje prośbę o opinię od nowa z danych kandydata i stanu dokumentów">↻ Wygeneruj prośbę od nowa</button>
+            <button class="btn btn-outline btn-sm" id="opPodglad">Podgląd maila</button>
+            <button class="btn btn-ghost btn-sm" id="opPomin" title="Opinia zapadła poza panelem, np. na posiedzeniu Prezydium">Opinia już wydana poza panelem</button>
+            <button class="btn btn-primary prawo" id="opWyslij">✉ Wyślij do Prezydium</button>
+          </div>`;
+      } else if (u.opinia_status === 'pominieta') {
+        html += `<div class="u-info czeka">Opiniowanie prowadzone poza panelem.${u.opinia_uwagi ? ' ' + esc(u.opinia_uwagi) : ''}</div>`;
+      } else {
+        html += `
+          <div class="u-wynik"><span class="za">POZYTYWNE: ${cOp.za}</span><span class="przeciw">NEGATYWNE: ${cOp.przeciw}</span><span class="brak">bez opinii: ${cOp.brak}</span></div>
+          ${u.opinia_status === 'pozytywna' ? '<div class="u-info dobrze">Opinia pozytywna. Zgodnie z art. 12 pkt 1 Statutu Rada może podjąć uchwałę o przyjęciu.</div>' : ''}
+          ${u.opinia_status === 'negatywna' ? '<div class="u-info zle">Opinia negatywna. Uchwała o przyjęciu wymaga pozytywnej opinii Prezydium; odmowa przyjęcia też zapada w formie uchwały Rady (art. 12 pkt 1 zdanie ostatnie).</div>' : ''}
+          ${tabelaGlosow(gOp, true)}
+          <div class="u-akcje">
+            ${opGlosowanie ? `<button class="btn btn-outline btn-sm" id="opPrzypomnij" ${cOp.brak ? '' : 'disabled'}>✉ Przypomnij bez opinii (${cOp.brak})</button>` : ''}
+            <button class="btn btn-outline btn-sm" id="opProtokol">↓ Protokół z opiniowania (PDF)</button>
+            ${opGlosowanie ? '<button class="btn btn-primary btn-sm prawo" id="opZakoncz">Zakończ opiniowanie</button>' : ''}
+          </div>`;
       }
 
-      html += `
-        <div class="u-sekcja">
-          <h4>Kandydat i numer <small>${edytowalne ? 'po zmianie danych kliknij „Wygeneruj treść od nowa"' : 'po wysłaniu do Rady bez zmian'}</small></h4>
+      /* konsultacja z Prezesem Oddziału / Przedstawicielem Regionalnym — notatka do protokołu */
+      if (u.status === 'opiniowanie') {
+        html += `
+          <div class="u-grid" style="margin-top:14px;">
+            ${pole('opKonsKto', 'Konsultacja z Prezesem Oddziału / Przedstawicielem Regionalnym', u.konsultacja_kto)}
+            <div class="form-group"><label>Data konsultacji</label><input class="form-control" type="date" id="opKonsData" value="${esc(u.konsultacja_at || '')}"></div>
+            ${pole('opKonsOpinia', 'Stanowisko z konsultacji', u.konsultacja_opinia, 'szeroki')}
+          </div>
+          <div class="u-akcje"><button class="btn btn-ghost btn-sm" id="opKonsZapisz">Zapisz konsultację</button>
+            <span class="u-mini">Statut każe Prezydium skonsultować kandydaturę przed wydaniem opinii; zapis trafia do protokołu PDF.</span></div>`;
+      } else if (u.konsultacja_kto) {
+        html += `<div class="u-mini" style="margin-top:10px;">Konsultacja: ${esc(u.konsultacja_kto)}${u.konsultacja_at ? ', ' + fmtDay(u.konsultacja_at) : ''}${u.konsultacja_opinia ? ' — ' + esc(u.konsultacja_opinia) : ''}</div>`;
+      }
+      html += '</div>';
+
+      /* ── ETAP 2: uchwała Rady ── */
+      html += `<div class="u-sekcja etap2 ${u.status !== 'opiniowanie' ? 'aktywna' : 'zablokowana'}">
+        <h4>Etap 2: ${odmowa ? 'uchwała o odmowie przyjęcia' : 'uchwała Rady Izby o przyjęciu'} <small>art. 21 pkt 2 Statutu</small></h4>`;
+
+      if (u.status === 'opiniowanie') {
+        if (u.opinia_status === 'negatywna') {
+          html += `
+            <div class="u-info ostrzez">Prezydium zaopiniowało kandydaturę negatywnie. Do wyboru: skierować pod głosowanie Rady uchwałę o odmowie przyjęcia (od której kandydatowi służy odwołanie do Walnego Zgromadzenia w terminie 30 dni, art. 12 pkt 3) albo zamknąć sprawę bez uchwały.</div>
+            <div class="u-akcje">
+              <button class="btn btn-primary btn-sm" id="opOdmowa">Przygotuj uchwałę o odmowie</button>
+              <button class="btn btn-ghost btn-sm" id="opMimoTo" title="Statut wymaga pozytywnej opinii Prezydium; użyj tylko po ponownym rozpatrzeniu sprawy">Mimo to przygotuj uchwałę o przyjęciu</button>
+              <button class="btn btn-ghost btn-sm prawo" id="opZamknij">Zamknij sprawę bez uchwały</button>
+            </div>`;
+        } else {
+          html += `<div class="u-info czeka">Uchwała czeka na wynik etapu 1. Zgodnie z art. 12 pkt 1 Statutu Rada podejmuje ją dopiero po pozytywnym zaopiniowaniu kandydatury przez Prezydium.</div>`;
+        }
+        html += '</div>';
+      } else {
+        if (!projekt) {
+          html += `
+            <div class="u-wynik"><span class="za">${cUch.za} ZA</span><span class="przeciw">${cUch.przeciw} PRZECIW</span><span class="brak">${cUch.brak} bez głosu</span></div>
+            ${tabelaGlosow(gUch, false)}
+            <div class="u-akcje">
+              ${glosowanie ? `<button class="btn btn-outline btn-sm" id="uchPrzypomnij" ${cUch.brak ? '' : 'disabled'}>✉ Przypomnij niegłosującym (${cUch.brak})</button>` : ''}
+              <button class="btn btn-outline btn-sm" id="uchRaport">↓ Raport z głosowania (PDF)</button>
+              ${glosowanie ? `<button class="btn btn-primary btn-sm prawo" id="uchZakoncz">Zakończ głosowanie</button>` : ''}
+            </div>`;
+        }
+
+        html += `
+          <h4 style="margin-top:16px;">Kandydat i numer <small>${edytowalne ? 'po zmianie danych kliknij „Wygeneruj treść od nowa"' : 'po wysłaniu do Rady bez zmian'}</small></h4>
           <div class="u-grid">
             ${pole('uNumer', 'Numer uchwały (tylko liczba, np. 12)', u.numer)}
             <div class="form-group"><label>Wchodzi w życie z dniem</label><input class="form-control" type="date" id="uData" value="${esc(u.data_wejscia || '')}"></div>
@@ -353,69 +554,181 @@
             ${pole('uFirma', 'Nazwa firmy', u.kandydat_firma, 'szeroki')}
             ${pole('uAdres', 'Adres siedziby', u.kandydat_adres, 'szeroki')}
           </div>
-        </div>
-        <div class="u-sekcja">
-          <h4>Treść uchwały</h4>
+          <h4 style="margin-top:16px;">Treść uchwały</h4>
           <textarea class="form-control u-tresc" id="uTresc" ${edytowalne ? '' : 'readonly'}>${esc(u.tresc || '')}</textarea>
-        </div>
-        <div class="u-sekcja">
-          <h4>Wiadomość do członków Rady</h4>
+          <h4 style="margin-top:16px;">Wiadomość do członków Rady</h4>
           <div class="form-group"><label>Temat</label><input class="form-control" id="uMailTemat" value="${esc(u.mail_temat || '')}" ${edytowalne ? '' : 'readonly'}></div>
           <div class="form-group" style="margin:0;"><label>Treść <small style="text-transform:none;font-weight:500;">(pusta linia = nowy akapit; projekt uchwały i przyciski głosowania dokładają się same)</small></label>
-            <textarea class="form-control u-mail" id="uMailTresc" ${edytowalne ? '' : 'readonly'}>${esc(u.mail_tresc || '')}</textarea></div>
-        </div>`;
+            <textarea class="form-control u-mail" id="uMailTresc" ${edytowalne ? '' : 'readonly'}>${esc(u.mail_tresc || '')}</textarea></div>`;
 
-      if (projekt) {
-        html += `
-        <div class="u-sekcja">
-          <h4>Odbiorcy <small>członkowie Rady, którzy dostaną uchwałę do głosowania</small></h4>
-          <div class="u-odb">${rada.filter(r => r.aktywny).map(r => `
-            <label><input type="checkbox" class="uOdb" value="${r.id}" checked> <span>${esc(r.imie_nazwisko)}<div class="mail">${esc(r.email)}</div></span></label>`).join('')
-            || '<span class="u-mini">Lista Rady jest pusta. Uzupełnij ją przyciskiem „Skład Rady".</span>'}</div>
-        </div>
-        <div class="u-akcje">
-          <button class="btn btn-ghost btn-sm" id="uchZapisz">Zapisz zmiany</button>
-          <button class="btn btn-ghost btn-sm" id="uchGeneruj" title="Buduje treść uchwały i maila od nowa z danych kandydata (nadpisze ręczne poprawki)">↻ Wygeneruj treść od nowa</button>
-          <button class="btn btn-outline btn-sm" id="uchPodglad">Podgląd maila</button>
-          <button class="btn btn-danger btn-sm" id="uchUsun">🗑 Usuń projekt</button>
-          <button class="btn btn-primary prawo" id="uchWyslij">✉ Wyślij do Rady</button>
-        </div>`;
-      } else {
-        html += `<div class="u-akcje">
-          ${glosowanie ? '<button class="btn btn-ghost btn-sm" id="uchAnuluj">Anuluj uchwałę (bez rozstrzygnięcia)</button>' : ''}
-          <button class="btn btn-danger btn-sm prawo" id="uchUsun">🗑 Usuń uchwałę</button>
-        </div>`;
+        if (projekt) {
+          html += `
+          <div class="form-group" style="margin-top:14px;"><label>Odbiorcy <small style="text-transform:none;font-weight:500;">członkowie Rady, którzy dostaną uchwałę do głosowania</small></label>
+            <div class="u-odb">${odbiorcyHtml('uOdb', r => r.rada)}</div></div>
+          <div class="u-akcje">
+            <button class="btn btn-ghost btn-sm" id="uchZapisz">Zapisz zmiany</button>
+            <button class="btn btn-ghost btn-sm" id="uchGeneruj" title="Buduje treść uchwały i maila od nowa z danych kandydata (nadpisze ręczne poprawki)">↻ Wygeneruj treść od nowa</button>
+            <button class="btn btn-outline btn-sm" id="uchPodglad">Podgląd maila</button>
+            <button class="btn btn-primary prawo" id="uchWyslij">✉ Wyślij do Rady</button>
+          </div>`;
+        }
+        html += '</div>';
       }
+
+      html += `<div class="u-akcje">
+        ${glosowanie ? '<button class="btn btn-ghost btn-sm" id="uchAnuluj">Anuluj sprawę (bez rozstrzygnięcia)</button>' : ''}
+        <button class="btn btn-danger btn-sm prawo" id="uchUsun">🗑 Usuń sprawę</button>
+      </div>`;
 
       document.getElementById('uchTresc').innerHTML = html;
       openModal('uchModal');
 
       const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+      on('uchDok', () => zapiszDokumenty(u));
+      on('opZapisz', () => zapiszOpinie(u));
+      on('opGeneruj', () => generujOpinie(u));
+      on('opPodglad', () => podglad(u, 'opinia'));
+      on('opWyslij', () => wyslij(u, 'opinia'));
+      on('opPomin', () => pominOpinie(u));
+      on('opPrzypomnij', () => przypomnij(u, 'opinia'));
+      on('opProtokol', () => raportPdf(u, true));
+      on('opZakoncz', () => zakonczOpinie(u));
+      on('opKonsZapisz', () => zapiszKonsultacje(u));
+      on('opOdmowa', () => naOdmowe(u));
+      on('opMimoTo', () => mimoOpinii(u));
+      on('opZamknij', () => zamknijBezUchwaly(u));
       on('uchZapisz', () => zapisz(u));
       on('uchGeneruj', () => generuj(u));
-      on('uchPodglad', () => podglad(u));
-      on('uchWyslij', () => wyslij(u));
+      on('uchPodglad', () => podglad(u, 'uchwala'));
+      on('uchWyslij', () => wyslij(u, 'uchwala'));
       on('uchUsun', () => usun(u));
-      on('uchPrzypomnij', () => przypomnij(u));
-      on('uchRaport', () => raportPdf(u, g));
-      on('uchZakoncz', () => zakoncz(u, g));
+      on('uchPrzypomnij', () => przypomnij(u, 'uchwala'));
+      on('uchRaport', () => raportPdf(u, false));
+      on('uchZakoncz', () => zakoncz(u, gUch));
       on('uchAnuluj', () => anuluj(u));
     }
 
+    const val = id => { const el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
+
+    /* ── wspólne: dokumenty, wpisowe, konsultacja ── */
+    async function zapiszPola(u, p, komunikat){
+      p.updated_at = new Date().toISOString();
+      const { error } = await db.from('uchwaly').update(p).eq('id', u.id);
+      if (error) { toast('Nie udało się zapisać: ' + error.message, 'error'); return false; }
+      Object.assign(u, p);
+      if (komunikat) toast(komunikat, 'success');
+      return true;
+    }
+
+    /* Stan dokumentów wchodzi do treści obu maili, więc po zapisie odświeżamy
+       teksty, których sekretariat jeszcze nie wysłał. */
+    async function zapiszDokumenty(u){
+      const ok = await zapiszPola(u, {
+        dok_rodzaj: val('uDok') || null,
+        dok_otrzymany_at: val('uDokData') || null,
+        wpisowe_oplacone: document.getElementById('uWpisowe').checked,
+        wpisowe_at: val('uWpisoweData') || null,
+      }, 'Zapisano stan dokumentów');
+      if (!ok) return;
+      if (u.status === 'opiniowanie' && u.opinia_status === 'projekt') await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      await load(); otworz(u.id);
+    }
+
+    function zapiszKonsultacje(u){
+      return zapiszPola(u, {
+        konsultacja_kto: val('opKonsKto') || null,
+        konsultacja_at: val('opKonsData') || null,
+        konsultacja_opinia: val('opKonsOpinia') || null,
+      }, 'Zapisano konsultację');
+    }
+
+    /* ── etap 1: opinia Prezydium ── */
+    async function zapiszOpinie(u, cicho){
+      if (!(u.status === 'opiniowanie' && u.opinia_status === 'projekt')) return true;
+      return zapiszPola(u, {
+        opinia_termin: val('opTermin') || null,
+        opinia_mail_temat: val('opMailTemat'),
+        opinia_mail_tresc: document.getElementById('opMailTresc').value,
+      }, cicho ? '' : 'Zapisano');
+    }
+
+    async function generujOpinie(u){
+      if (!confirm('Wygenerować prośbę o opinię od nowa z danych kandydata i stanu dokumentów? Ręczne poprawki w jej treści zostaną nadpisane.')) return;
+      if (!await zapiszOpinie(u, true)) return;
+      const { error } = await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      if (error) { toast('Błąd generowania: ' + error.message, 'error'); return; }
+      await load(); otworz(u.id);
+      toast('Prośba wygenerowana od nowa', 'success');
+    }
+
+    /* Opinia bywa wydawana na posiedzeniu Prezydium — wtedy panel tylko ją odnotowuje. */
+    async function pominOpinie(u){
+      const uwaga = prompt('Opinia Prezydium została już wydana poza panelem. Jak ją odnotować w protokole?\n(np. „Opinia pozytywna, posiedzenie Prezydium 12 września 2026 r.")', u.opinia_uwagi || '');
+      if (uwaga === null) return;
+      if (!uwaga.trim()) { toast('Wpisz krótką notatkę do protokołu', 'error'); return; }
+      if (!await zapiszPola(u, { opinia_status: 'pominieta', opinia_uwagi: uwaga.trim(), status: 'projekt' })) return;
+      await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      await load(); otworz(u.id);
+      toast('Odnotowano. Sprawa przeszła do etapu 2', 'success');
+    }
+
+    /* Bez kompletu opinii też rozstrzygamy: liczy się większość wśród wydanych.
+       Głos osoby konsultowanej nie wchodzi do wyniku (art. 12 pkt 1 zd. trzecie). */
+    async function zakonczOpinie(u){
+      const c = liczOpinie(gl(u, 'opinia'));
+      if (!c.za && !c.przeciw) { toast('Nikt z Prezydium nie wydał jeszcze opinii', 'error'); return; }
+      const poz = c.za > c.przeciw;
+      const opis = poz ? 'POZYTYWNA' : 'NEGATYWNA' + (c.za === c.przeciw ? ' (remis)' : '');
+      if (!confirm(`Zakończyć opiniowanie kandydatury ${kogo(u)}?\n\nWynik: pozytywne ${c.za}, negatywne ${c.przeciw}, bez opinii ${c.brak}.\nOpinia zostanie oznaczona jako ${opis}.` +
+        (poz ? '\n\nSprawa przejdzie do etapu 2: projekt uchwały Rady o przyjęciu.' : '\n\nUchwała o przyjęciu wymaga opinii pozytywnej. Panel zaproponuje uchwałę o odmowie albo zamknięcie sprawy.') +
+        '\n\nPóźniejsze opinie nie będą przyjmowane.')) return;
+      if (!await zapiszPola(u, {
+        opinia_status: poz ? 'pozytywna' : 'negatywna',
+        opinia_zamknieto_at: new Date().toISOString(), opinia_zamknal: adminEmail,
+        opinia_za: c.za, opinia_przeciw: c.przeciw,
+        status: poz ? 'projekt' : 'opiniowanie',
+      })) return;
+      /* treść uchwały powołuje się na opinię i jej datę, więc budujemy ją na nowo */
+      await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      await load(); otworz(u.id);
+      toast('Opiniowanie zakończone: opinia ' + (poz ? 'pozytywna' : 'negatywna'), poz ? 'success' : 'error', 5000);
+    }
+
+    async function naOdmowe(u){
+      if (!confirm(`Przygotować uchwałę o ODMOWIE przyjęcia (${kogo(u)})?\n\nPanel wygeneruje projekt uchwały odmownej z pouczeniem o odwołaniu do Walnego Zgromadzenia (art. 12 pkt 3 Statutu) i przekaże sprawę do etapu 2.`)) return;
+      if (!await zapiszPola(u, { rodzaj: 'odmowa', status: 'projekt' })) return;
+      await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      await load(); otworz(u.id);
+      toast('Projekt uchwały o odmowie gotowy do sprawdzenia', 'success');
+    }
+
+    async function mimoOpinii(u){
+      if (!confirm('Art. 12 pkt 1 Statutu wymaga POZYTYWNEJ opinii Prezydium przed uchwałą o przyjęciu, a tutaj opinia jest negatywna.\n\nPrzejść mimo to do projektu uchwały o przyjęciu? Użyj tego tylko wtedy, gdy Prezydium zmieniło stanowisko poza panelem — powód warto dopisać w notatce konsultacji.')) return;
+      if (!await zapiszPola(u, { status: 'projekt' })) return;
+      await load(); otworz(u.id);
+      toast('Sprawa przeniesiona do etapu 2', 'success');
+    }
+
+    async function zamknijBezUchwaly(u){
+      if (!confirm(`Zamknąć sprawę ${kogo(u)} bez uchwały Rady?\n\nSprawa zostanie oznaczona jako odrzucona. Formalna odmowa przyjęcia wymaga uchwały Rady (art. 12 pkt 1 zdanie ostatnie), więc użyj tego tylko wtedy, gdy kandydat wycofał wniosek albo sprawa nie będzie prowadzona dalej.`)) return;
+      if (!await zapiszPola(u, { status: 'odrzucona', zamknieto_at: new Date().toISOString(), zamknal: adminEmail })) return;
+      toast('Sprawa zamknięta'); closeModal('uchModal'); load();
+    }
+
+    /* ── etap 2: uchwała Rady ── */
     function zebranePola(){
-      const v = id => (document.getElementById(id).value || '').trim();
       return {
-        numer: v('uNumer') || null, data_wejscia: v('uData') || null,
-        kandydat_osoba: v('uOsoba') || null, kandydat_nip: v('uNip') || null,
-        kandydat_regon: v('uRegon') || null, kandydat_krs: v('uKrs') || null,
-        kandydat_firma: v('uFirma') || null, kandydat_adres: v('uAdres') || null,
-        tresc: document.getElementById('uTresc').value, mail_temat: v('uMailTemat'), mail_tresc: document.getElementById('uMailTresc').value,
+        numer: val('uNumer') || null, data_wejscia: val('uData') || null,
+        kandydat_osoba: val('uOsoba') || null, kandydat_nip: val('uNip') || null,
+        kandydat_regon: val('uRegon') || null, kandydat_krs: val('uKrs') || null,
+        kandydat_firma: val('uFirma') || null, kandydat_adres: val('uAdres') || null,
+        tresc: document.getElementById('uTresc').value, mail_temat: val('uMailTemat'), mail_tresc: document.getElementById('uMailTresc').value,
         updated_at: new Date().toISOString(),
       };
     }
 
     async function zapisz(u, cicho){
-      if (u.status !== 'projekt') return true;
+      if (u.status !== 'projekt' || !document.getElementById('uTresc')) return true;
       const p = zebranePola();
       if (!p.data_wejscia) { toast('Podaj datę wejścia w życie', 'error'); return false; }
       const { error } = await db.from('uchwaly').update(p).eq('id', u.id);
@@ -436,81 +749,102 @@
       toast('Treść wygenerowana od nowa', 'success');
     }
 
-    async function podglad(u){
-      if (!await zapisz(u, true)) return;
+    /* ── wspólne dla obu etapów: podgląd, wysyłka, przypomnienie ── */
+    async function zapiszEtap(u, etap){
+      return etap === 'opinia' ? zapiszOpinie(u, true) : zapisz(u, true);
+    }
+
+    async function podglad(u, etap){
+      if (!await zapiszEtap(u, etap)) return;
       try {
-        const w = await wolaj('uchwala-wyslij', { uchwala_id: u.id, tryb: 'podglad' });
+        const w = await wolaj('uchwala-wyslij', { uchwala_id: u.id, etap, tryb: 'podglad' });
         document.getElementById('podgladTytul').textContent = 'Podgląd: ' + w.subject;
         document.getElementById('uchPodgladRamka').srcdoc = w.html;
         openModal('podgladModal');
       } catch (e) { toast('Podgląd nieudany: ' + e.message, 'error'); }
     }
 
-    async function wyslij(u){
-      if (!await zapisz(u, true)) return;
-      if (!u.tresc.trim() || !u.mail_temat.trim()) { toast('Uzupełnij treść uchwały i temat maila', 'error'); return; }
-      const odb = [...document.querySelectorAll('.uOdb:checked')].map(x => x.value);
+    async function wyslij(u, etap){
+      const opinia = etap === 'opinia';
+      if (!await zapiszEtap(u, etap)) return;
+      if (opinia ? !u.opinia_mail_tresc.trim() || !u.opinia_mail_temat.trim()
+                 : !u.tresc.trim() || !u.mail_temat.trim()) {
+        toast('Uzupełnij treść i temat wiadomości', 'error'); return;
+      }
+      const odb = [...document.querySelectorAll(opinia ? '.opOdb:checked' : '.uOdb:checked')].map(x => x.value);
       if (!odb.length) { toast('Zaznacz co najmniej jednego odbiorcę', 'error'); return; }
-      if (!confirm(`Wysłać uchwałę ${etykieta(u)} (${kogo(u)}) do ${odb.length} ${odb.length === 1 ? 'osoby' : 'osób'} z Rady?\n\nPo wysłaniu treść uchwały i maila będzie zamrożona, a każdy odbiorca dostanie osobisty link do głosowania.`)) return;
-      const btn = document.getElementById('uchWyslij');
+      const pyt = opinia
+        ? `Wysłać prośbę o zaopiniowanie kandydatury (${kogo(u)}) do ${odb.length} ${odb.length === 1 ? 'osoby' : 'osób'}?\n\nPo wysłaniu treść prośby będzie zamrożona, a każdy odbiorca dostanie osobisty link do wydania opinii.`
+        : `Wysłać uchwałę ${etykieta(u)} (${kogo(u)}) do ${odb.length} ${odb.length === 1 ? 'osoby' : 'osób'} z Rady?\n\nPo wysłaniu treść uchwały i maila będzie zamrożona, a każdy odbiorca dostanie osobisty link do głosowania.`;
+      if (!confirm(pyt)) return;
+      const btn = document.getElementById(opinia ? 'opWyslij' : 'uchWyslij');
+      const etykietaBtn = btn.textContent;
       btn.disabled = true; btn.textContent = 'Wysyłanie…';
       try {
-        const w = await wolaj('uchwala-wyslij', { uchwala_id: u.id, tryb: 'start', odbiorcy: odb });
+        const w = await wolaj('uchwala-wyslij', { uchwala_id: u.id, etap, tryb: 'start', odbiorcy: odb });
         const nieudane = (w.wyniki || []).filter(x => !x.ok);
         toast(`Wysłano do ${w.wyslane} z ${w.razem}` + (nieudane.length ? ' (część nie dotarła, sprawdź listę)' : ''), nieudane.length ? 'error' : 'success', 5000);
         await load();
         otworz(u.id);
       } catch (e) {
         toast('Nie udało się wysłać: ' + e.message, 'error', 6000);
-        btn.disabled = false; btn.textContent = '✉ Wyślij do Rady';
+        btn.disabled = false; btn.textContent = etykietaBtn;
       }
     }
 
-    async function przypomnij(u){
-      const g = glosyWg[u.id] || [];
-      const brak = g.filter(x => !x.glos);
-      if (!brak.length) { toast('Wszyscy już zagłosowali'); return; }
-      if (!confirm(`Wysłać przypomnienie do ${brak.length} ${brak.length === 1 ? 'osoby' : 'osób'} bez głosu?\n\n${brak.map(x => '• ' + x.imie_nazwisko).join('\n')}`)) return;
-      const btn = document.getElementById('uchPrzypomnij');
+    async function przypomnij(u, etap){
+      const opinia = etap === 'opinia';
+      const brak = gl(u, etap).filter(x => !x.glos);
+      if (!brak.length) { toast(opinia ? 'Wszyscy wydali już opinię' : 'Wszyscy już zagłosowali'); return; }
+      if (!confirm(`Wysłać przypomnienie do ${brak.length} ${brak.length === 1 ? 'osoby' : 'osób'} bez ${opinia ? 'opinii' : 'głosu'}?\n\n${brak.map(x => '• ' + x.imie_nazwisko).join('\n')}`)) return;
+      const btn = document.getElementById(opinia ? 'opPrzypomnij' : 'uchPrzypomnij');
+      const etykietaBtn = btn.textContent;
       btn.disabled = true; btn.textContent = 'Wysyłanie…';
       try {
-        const w = await wolaj('uchwala-wyslij', { uchwala_id: u.id, tryb: 'przypomnienie' });
+        const w = await wolaj('uchwala-wyslij', { uchwala_id: u.id, etap, tryb: 'przypomnienie' });
         toast(`Przypomnienie wysłane do ${w.wyslane} z ${w.razem}`, 'success');
         await load(); otworz(u.id);
-      } catch (e) { toast('Nie udało się wysłać: ' + e.message, 'error', 6000); btn.disabled = false; btn.textContent = '✉ Przypomnij niegłosującym'; }
+      } catch (e) { toast('Nie udało się wysłać: ' + e.message, 'error', 6000); btn.disabled = false; btn.textContent = etykietaBtn; }
     }
 
-    /* Zakończenie: przyjęta, gdy więcej głosów ZA niż PRZECIW spośród oddanych.
-       Nie wymagamy kompletu głosów; przy braku jakiegokolwiek głosu nie ma czego rozstrzygać. */
+    /* Zakończenie: rozstrzyga większość wśród oddanych głosów. Nie wymagamy kompletu;
+       przy braku jakiegokolwiek głosu nie ma czego rozstrzygać.
+       Przy uchwale o odmowie „za" znaczy: odmowa podjęta, czyli kandydat nieprzyjęty. */
     async function zakoncz(u, g){
       const c = licz(g);
       if (!c.za && !c.przeciw) { toast('Nikt jeszcze nie zagłosował, nie ma czego rozstrzygać', 'error'); return; }
-      const wynik = c.za > c.przeciw ? 'przyjeta' : 'odrzucona';
-      const opis = wynik === 'przyjeta' ? 'PRZYJĘTA' : 'ODRZUCONA' + (c.za === c.przeciw ? ' (remis)' : '');
-      if (!confirm(`Zakończyć głosowanie nad uchwałą ${etykieta(u)}?\n\nWynik: ${c.za} za, ${c.przeciw} przeciw, ${c.brak} bez głosu.\nUchwała zostanie oznaczona jako ${opis}. Późniejsze głosy nie będą przyjmowane.`)) return;
+      const podjeta = c.za > c.przeciw;
+      const odmowa = u.rodzaj === 'odmowa';
+      const wynik = odmowa ? (podjeta ? 'odrzucona' : 'anulowana') : (podjeta ? 'przyjeta' : 'odrzucona');
+      const opis = odmowa
+        ? (podjeta ? 'UCHWAŁA O ODMOWIE PODJĘTA — kandydat nieprzyjęty' : 'UCHWAŁA O ODMOWIE NIEPODJĘTA — sprawa bez rozstrzygnięcia')
+        : (podjeta ? 'PRZYJĘTA' : 'ODRZUCONA' + (c.za === c.przeciw ? ' (remis)' : ''));
+      if (!confirm(`Zakończyć głosowanie nad uchwałą ${etykieta(u)}?\n\nWynik: ${c.za} za, ${c.przeciw} przeciw, ${c.brak} bez głosu.\n${opis}. Późniejsze głosy nie będą przyjmowane.`)) return;
       const { error } = await db.from('uchwaly').update({ status: wynik, zamknieto_at: new Date().toISOString(), zamknal: adminEmail, wynik_za: c.za, wynik_przeciw: c.przeciw, updated_at: new Date().toISOString() }).eq('id', u.id);
       if (error) { toast('Nie udało się zamknąć: ' + error.message, 'error'); return; }
-      toast('Głosowanie zakończone: ' + opis, 'success');
+      toast('Głosowanie zakończone: ' + opis, podjeta && !odmowa ? 'success' : 'error', 6000);
       await load(); otworz(u.id);
     }
 
     async function anuluj(u){
-      if (!confirm('Anulować uchwałę? Głosowanie zostanie zamknięte bez rozstrzygnięcia, a linki z maili przestaną przyjmować głosy.')) return;
+      if (!confirm('Anulować sprawę? Głosowanie zostanie zamknięte bez rozstrzygnięcia, a linki z maili przestaną przyjmować głosy.')) return;
       const { error } = await db.from('uchwaly').update({ status: 'anulowana', zamknieto_at: new Date().toISOString(), zamknal: adminEmail, updated_at: new Date().toISOString() }).eq('id', u.id);
       if (error) { toast('Nie udało się: ' + error.message, 'error'); return; }
-      toast('Uchwała anulowana'); closeModal('uchModal'); load();
+      toast('Sprawa anulowana'); closeModal('uchModal'); load();
     }
 
-    /* Usunięcie kasuje też oddane głosy (klucz obcy z ON DELETE CASCADE), więc przy
-       uchwale po głosowaniu mówimy wprost, co przepada — raport PDF trzeba pobrać wcześniej. */
+    /* Usunięcie kasuje też opinie i głosy (klucz obcy z ON DELETE CASCADE), więc przy
+       sprawie po wysyłce mówimy wprost, co przepada — PDF trzeba pobrać wcześniej. */
     async function usun(u){
-      const g = glosyWg[u.id] || [];
-      const oddane = g.filter(x => x.glos).length;
-      let pytanie = `Usunąć uchwałę ${etykieta(u)} (${kogo(u)}) na trwałe? Tej operacji nie można cofnąć.`;
-      if (u.status !== 'projekt') {
-        pytanie += `\n\nRazem z uchwałą znikną: lista ${g.length} osób z Rady i ${oddane} oddanych głosów`
+      const gOp = gl(u, 'opinia'), gUch = gl(u, 'uchwala');
+      const razem = gOp.length + gUch.length;
+      const oddane = gOp.filter(x => x.glos).length + gUch.filter(x => x.glos).length;
+      let pytanie = `Usunąć sprawę ${etykieta(u)} (${kogo(u)}) na trwałe? Tej operacji nie można cofnąć.`;
+      if (razem) {
+        pytanie += `\n\nRazem ze sprawą zniknie lista ${razem} odbiorców oraz ${oddane} zapisanych odpowiedzi`
+          + (gOp.length ? ' (w tym opinie Prezydium)' : '')
           + (u.status === 'przyjeta' || u.status === 'odrzucona' ? ', a także zapis wyniku głosowania' : '')
-          + '.\nJeśli raport z głosowania ma zostać w dokumentach, pobierz PDF przed usunięciem.';
+          + '.\nJeśli protokół lub raport mają zostać w dokumentach, pobierz PDF przed usunięciem.';
       }
       if (!confirm(pytanie)) return;
       const { error } = await db.from('uchwaly').delete().eq('id', u.id);
@@ -518,50 +852,92 @@
       toast('Usunięto'); closeModal('uchModal'); load();
     }
 
-    /* ── raport PDF (pdfmake, czcionka Roboto z polskimi znakami) ── */
-    function raportPdf(u, g){
-      const c = licz(g);
+    /* ── PDF (pdfmake, czcionka Roboto z polskimi znakami) ──
+       `tylkoOpinia` = protokół z etapu 1, do wpięcia w dokumenty Prezydium.
+       Pełny raport obejmuje oba etapy, bo dopiero razem dokumentują tryb
+       przyjęcia wymagany przez art. 12 pkt 1 Statutu. */
+    function raportPdf(u, tylkoOpinia){
+      const gOp = gl(u, 'opinia'), gUch = gl(u, 'uchwala');
+      const cOp = liczOpinie(gOp), cUch = licz(gUch);
       const teraz = new Date();
       const kiedyRaport = teraz.toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
-      const glos = x => x.glos === 'za' ? 'ZA' : (x.glos === 'przeciw' ? 'PRZECIW' : 'brak głosu');
-      const wynikTekst = u.status === 'przyjeta' ? 'uchwała PRZYJĘTA' : (u.status === 'odrzucona' ? 'uchwała ODRZUCONA' : (u.status === 'anulowana' ? 'głosowanie anulowane' : 'głosowanie w toku'));
-      const posort = [...g].sort((a, b) => (a.glosowano_at || 'zzz').localeCompare(b.glosowano_at || 'zzz'));
+      const odmowa = u.rodzaj === 'odmowa';
+      const posort = g => [...g].sort((a, b) => (a.glosowano_at || 'zzz').localeCompare(b.glosowano_at || 'zzz'));
+
+      const opiniaTekst = { pozytywna:'opinia POZYTYWNA', negatywna:'opinia NEGATYWNA', glosowanie:'opiniowanie w toku',
+                            projekt:'prośba o opinię jeszcze nie wysłana', pominieta:'opinia wydana poza panelem' }[u.opinia_status] || u.opinia_status;
+      const wynikTekst = u.status === 'przyjeta' ? 'uchwała PRZYJĘTA'
+        : (u.status === 'odrzucona' ? (odmowa ? 'uchwała o odmowie PODJĘTA, kandydat nieprzyjęty' : 'uchwała ODRZUCONA')
+        : (u.status === 'anulowana' ? 'sprawa anulowana bez rozstrzygnięcia'
+        : (u.status === 'glosowanie' ? 'głosowanie w toku' : 'uchwała jeszcze nie poddana pod głosowanie')));
+
+      /* jedna tabela odpowiedzi, użyta dla opinii i dla głosowania */
+      const tabela = (g, opinia) => ({ style: 'tab', layout: { hLineColor: () => '#e6ebef', vLineColor: () => '#e6ebef' },
+        table: { headerRows: 1, widths: ['*', 'auto', 'auto', '*'], body: [
+          [{ text: opinia ? 'Członek Prezydium' : 'Członek Rady', style: 'th' },
+           { text: opinia ? 'Opinia' : 'Głos', style: 'th' }, { text: 'Data i godzina', style: 'th' }, { text: 'Uzasadnienie', style: 'th' }],
+          ...posort(g).map(x => [
+            { text: [{ text: x.imie_nazwisko + '\n', bold: true },
+                     { text: x.email + (x.rola === 'konsultacja' ? '  (konsultacja, poza wynikiem)' : ''), color: '#7a8b97', fontSize: 8 }] },
+            { text: x.glos === 'za' ? (opinia ? 'POZYTYWNA' : 'ZA') : (x.glos === 'przeciw' ? (opinia ? 'NEGATYWNA' : 'PRZECIW') : (opinia ? 'brak opinii' : 'brak głosu')),
+              bold: true, color: x.glos === 'za' ? '#1d7a45' : (x.glos === 'przeciw' ? '#cc0a2b' : '#7a8b97') },
+            x.glosowano_at ? fmtDT(x.glosowano_at) : (x.wyslano_at ? 'wysłano ' + fmtDT(x.wyslano_at) + (x.przypomnien ? ', przyp. ×' + x.przypomnien : '') : '—'),
+            x.uzasadnienie || '',
+          ]),
+        ] } });
+
+      const metryka = [
+        ['Kandydat', [u.kandydat_osoba, u.kandydat_firma, u.kandydat_adres,
+          [u.kandydat_nip ? 'NIP ' + u.kandydat_nip : '', u.kandydat_regon ? 'REGON ' + u.kandydat_regon : '', u.kandydat_krs ? 'KRS ' + u.kandydat_krs : ''].filter(Boolean).join(' · ')].filter(Boolean).join('\n')],
+        ['Dokument rejestrowy', (DOK[u.dok_rodzaj] || 'brak') + (u.dok_otrzymany_at ? ', wpłynął ' + fmtDay(u.dok_otrzymany_at) : '')],
+        ['Wpisowe', u.wpisowe_oplacone ? 'uiszczone' + (u.wpisowe_at ? ' ' + fmtDay(u.wpisowe_at) : '') : 'brak wpłaty'],
+      ];
+      if (u.konsultacja_kto) metryka.push(['Konsultacja (art. 12 pkt 1)',
+        u.konsultacja_kto + (u.konsultacja_at ? ', ' + fmtDay(u.konsultacja_at) : '') + (u.konsultacja_opinia ? '\n' + u.konsultacja_opinia : '')]);
+
+      const tresc = [
+        { text: 'GEODEZYJNA IZBA GOSPODARCZA', style: 'h0' },
+        { text: tylkoOpinia ? 'Protokół z opiniowania kandydatury' : 'Raport z postępowania o przyjęcie w poczet członków', style: 'h1' },
+        { text: (tylkoOpinia ? 'Kandydat: ' : 'Uchwała nr ' + etykieta(u) + ' w sprawie ' + (odmowa ? 'odmowy przyjęcia do Izby: ' : 'przyjęcia do Izby: ')) + kogo(u), style: 'h2' },
+        { style: 'tab', layout: 'lightHorizontalLines', table: { widths: ['auto', '*'], body: metryka } },
+
+        { text: 'Etap 1. Opinia Prezydium Rady Izby (art. 12 pkt 1 Statutu)', style: 'h2' },
+        { style: 'tab', layout: 'lightHorizontalLines', table: { widths: ['auto', '*'], body: [
+          ['Wysłano do Prezydium', u.opinia_wyslano_at ? fmtDT(u.opinia_wyslano_at) + (u.opinia_wyslal ? ' (' + u.opinia_wyslal + ')' : '') : '—'],
+          ['Termin na opinię', u.opinia_termin ? fmtDay(u.opinia_termin) : '—'],
+          ['Wynik', 'pozytywne ' + cOp.za + ', negatywne ' + cOp.przeciw + ', bez opinii ' + cOp.brak + ' · ' + opiniaTekst],
+          ['Zamknięto', u.opinia_zamknieto_at ? fmtDT(u.opinia_zamknieto_at) + (u.opinia_zamknal ? ' (' + u.opinia_zamknal + ')' : '') : (u.opinia_uwagi || 'opiniowanie otwarte')],
+        ] } },
+      ];
+      if (gOp.length) tresc.push({ text: 'Szczegóły opiniowania', style: 'h3' }, tabela(gOp, true));
+
+      if (!tylkoOpinia) {
+        tresc.push(
+          { text: 'Etap 2. Głosowanie Rady Izby nad uchwałą', style: 'h2', pageBreak: gOp.length > 8 ? 'before' : undefined },
+          { style: 'tab', layout: 'lightHorizontalLines', table: { widths: ['auto', '*'], body: [
+            ['Wysłano do Rady', u.wyslano_at ? fmtDT(u.wyslano_at) + (u.wyslal ? ' (' + u.wyslal + ')' : '') : '—'],
+            ['Osób głosujących', String(gUch.length)],
+            ['Wynik', cUch.za + ' za, ' + cUch.przeciw + ' przeciw, ' + cUch.brak + ' bez głosu · ' + wynikTekst],
+            ['Zamknięto', u.zamknieto_at ? fmtDT(u.zamknieto_at) + (u.zamknal ? ' (' + u.zamknal + ')' : '') : 'głosowanie otwarte'],
+          ] } });
+        if (gUch.length) tresc.push({ text: 'Szczegóły głosowania', style: 'h3' }, tabela(gUch, false));
+        tresc.push(
+          { text: 'Treść uchwały poddanej pod głosowanie', style: 'h2', pageBreak: gUch.length > 10 ? 'before' : undefined },
+          { text: u.tresc, style: 'tresc' });
+      }
+      tresc.push({ text: (tylkoOpinia ? 'Protokół' : 'Raport') + ' wygenerowano ' + kiedyRaport + (adminEmail ? ' · ' + adminEmail : '') + '. Godziny wg czasu polskiego.', style: 'foot' });
 
       const dd = {
         pageSize: 'A4', pageMargins: [42, 48, 42, 56],
-        info: { title: 'Raport z głosowania ' + etykieta(u), author: 'Panel GIG' },
+        info: { title: (tylkoOpinia ? 'Protokół z opiniowania ' : 'Raport z głosowania ') + etykieta(u), author: 'Panel GIG' },
         footer: (page, pages) => ({ margin: [42, 14, 42, 0], fontSize: 8, color: '#7a8b97',
-          columns: [{ text: 'Raport pobrano ' + kiedyRaport + (adminEmail ? ' · ' + adminEmail : '') }, { text: 'Strona ' + page + ' z ' + pages, alignment: 'right' }] }),
-        content: [
-          { text: 'GEODEZYJNA IZBA GOSPODARCZA', style: 'h0' },
-          { text: 'Raport z głosowania Rady Izby', style: 'h1' },
-          { text: 'Uchwała nr ' + etykieta(u) + ' w sprawie przyjęcia do Izby: ' + kogo(u), style: 'h2' },
-          { style: 'tab', layout: 'lightHorizontalLines', table: { widths: ['auto', '*'], body: [
-            ['Kandydat', [u.kandydat_osoba, u.kandydat_firma, u.kandydat_adres,
-              [u.kandydat_nip ? 'NIP ' + u.kandydat_nip : '', u.kandydat_regon ? 'REGON ' + u.kandydat_regon : '', u.kandydat_krs ? 'KRS ' + u.kandydat_krs : ''].filter(Boolean).join(' · ')].filter(Boolean).join('\n')],
-            ['Wysłano do Rady', u.wyslano_at ? fmtDT(u.wyslano_at) + (u.wyslal ? ' (' + u.wyslal + ')' : '') : '—'],
-            ['Osób głosujących', String(g.length)],
-            ['Wynik', c.za + ' za, ' + c.przeciw + ' przeciw, ' + c.brak + ' bez głosu · ' + wynikTekst],
-            ['Zamknięto', u.zamknieto_at ? fmtDT(u.zamknieto_at) + (u.zamknal ? ' (' + u.zamknal + ')' : '') : 'głosowanie otwarte'],
-          ] } },
-          { text: 'Szczegóły głosowania', style: 'h2' },
-          { style: 'tab', table: { headerRows: 1, widths: ['*', 'auto', 'auto', '*'], body: [
-            [{ text: 'Członek Rady', style: 'th' }, { text: 'Głos', style: 'th' }, { text: 'Data i godzina', style: 'th' }, { text: 'Uzasadnienie', style: 'th' }],
-            ...posort.map(x => [
-              { text: [{ text: x.imie_nazwisko + '\n', bold: true }, { text: x.email, color: '#7a8b97', fontSize: 8 }] },
-              { text: glos(x), bold: true, color: x.glos === 'za' ? '#1d7a45' : (x.glos === 'przeciw' ? '#cc0a2b' : '#7a8b97') },
-              x.glosowano_at ? fmtDT(x.glosowano_at) : (x.wyslano_at ? 'wysłano ' + fmtDT(x.wyslano_at) + (x.przypomnien ? ', przyp. ×' + x.przypomnien : '') : '—'),
-              x.uzasadnienie || '',
-            ]),
-          ] }, layout: { hLineColor: () => '#e6ebef', vLineColor: () => '#e6ebef' } },
-          { text: 'Treść uchwały poddanej pod głosowanie', style: 'h2', pageBreak: g.length > 14 ? 'before' : undefined },
-          { text: u.tresc, style: 'tresc' },
-          { text: 'Raport wygenerowano ' + kiedyRaport + (adminEmail ? ' · ' + adminEmail : '') + '. Godziny wg czasu polskiego.', style: 'foot' },
-        ],
+          columns: [{ text: 'Dokument pobrano ' + kiedyRaport + (adminEmail ? ' · ' + adminEmail : '') }, { text: 'Strona ' + page + ' z ' + pages, alignment: 'right' }] }),
+        content: tresc,
         styles: {
           h0: { fontSize: 9, bold: true, color: '#cc0a2b', characterSpacing: 1, margin: [0, 0, 0, 4] },
           h1: { fontSize: 18, bold: true, color: '#16202a', margin: [0, 0, 0, 6] },
           h2: { fontSize: 12, bold: true, color: '#16202a', margin: [0, 16, 0, 8] },
+          h3: { fontSize: 10.5, bold: true, color: '#6b7f84', margin: [0, 8, 0, 6] },
           th: { bold: true, fillColor: '#f5f8fa', color: '#6b7f84', fontSize: 9 },
           tab: { fontSize: 9.5, margin: [0, 0, 0, 6] },
           tresc: { fontSize: 10.5, lineHeight: 1.35, margin: [0, 0, 0, 14] },
@@ -569,7 +945,7 @@
         },
         defaultStyle: { font: 'Roboto', fontSize: 10, color: '#2b3a45' },
       };
-      const nazwa = 'raport-glosowania-' + etykieta(u).replace(/[^\w]+/g, '-').replace(/^-|-$/g, '') + '-' +
+      const nazwa = (tylkoOpinia ? 'protokol-opiniowania-' : 'raport-glosowania-') + etykieta(u).replace(/[^\w]+/g, '-').replace(/^-|-$/g, '') + '-' +
         kogo(u).toLowerCase().replace(/[ąćęłńóśźż]/g, ch => 'acelnoszz'['ąćęłńóśźż'.indexOf(ch)]).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) + '.pdf';
       try { pdfMake.createPdf(dd).download(nazwa); }
       catch (e) { console.error(e); toast('Nie udało się zbudować PDF: ' + e.message, 'error'); }
@@ -610,9 +986,13 @@
     document.getElementById('nowaZapisz').addEventListener('click', async () => {
       const v = id => (document.getElementById(id).value || '').trim();
       if (!v('nowaFirma') && !v('nowaOsoba')) { toast('Podaj firmę albo osobę', 'error'); return; }
+      /* Nowa sprawa startuje od etapu 1, tak samo jak zgłoszenie ze strony;
+         termin na opinię domyślnie za tydzień, do poprawienia w oknie sprawy. */
+      const zaTydzien = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
       const rec = { zgloszenie_id: v('nowaZgl') || null, kandydat_osoba: v('nowaOsoba') || null, kandydat_firma: v('nowaFirma') || null,
         kandydat_adres: v('nowaAdres') || null, kandydat_nip: v('nowaNip') || null,
         kandydat_regon: v('nowaRegon') || null, kandydat_krs: v('nowaKrs') || null, kandydat_email: v('nowaEmail') || null,
+        status: 'opiniowanie', opinia_status: 'projekt', opinia_termin: zaTydzien,
         data_wejscia: v('nowaData') || new Date().toISOString().slice(0, 10) };
       const ins = await db.from('uchwaly').insert(rec).select('id').single();
       if (ins.error) { toast('Nie udało się utworzyć: ' + ins.error.message, 'error'); return; }
@@ -633,7 +1013,10 @@
         <td><input class="form-control r-imie" value="${esc(r.imie_nazwisko || '')}" placeholder="Imię i nazwisko"></td>
         <td><input class="form-control r-email" value="${esc(r.email || '')}" placeholder="adres@domena.pl"></td>
         <td><input class="form-control r-funkcja" value="${esc(r.funkcja || '')}" placeholder="np. Członek Rady"></td>
-        <td style="width:90px;"><input class="form-control r-kol" type="number" value="${r.kolejnosc ?? 100}"></td>
+        <td><input class="form-control r-region" value="${esc(r.region || '')}" placeholder="np. Oddział Pomorski"></td>
+        <td style="width:78px;"><input class="form-control r-kol" type="number" value="${r.kolejnosc ?? 100}"></td>
+        <td style="text-align:center;"><input type="checkbox" class="r-prez" ${r.prezydium ? 'checked' : ''} title="opiniuje kandydatów (etap 1)"></td>
+        <td style="text-align:center;"><input type="checkbox" class="r-rada" ${r.rada !== false ? 'checked' : ''} title="głosuje nad uchwałą (etap 2)"></td>
         <td style="text-align:center;"><input type="checkbox" class="r-akt" ${r.aktywny !== false ? 'checked' : ''}></td>
         <td><button class="btn btn-danger btn-xs r-usun" title="Usuń z listy">🗑</button></td>
       </tr>`;
@@ -667,7 +1050,10 @@
         imie_nazwisko: tr.querySelector('.r-imie').value.trim(),
         email: tr.querySelector('.r-email').value.trim().toLowerCase(),
         funkcja: tr.querySelector('.r-funkcja').value.trim() || null,
+        region: tr.querySelector('.r-region').value.trim() || null,
         kolejnosc: parseInt(tr.querySelector('.r-kol').value, 10) || 100,
+        prezydium: tr.querySelector('.r-prez').checked,
+        rada: tr.querySelector('.r-rada').checked,
         aktywny: tr.querySelector('.r-akt').checked,
       }));
       const zle = wiersze.find(w => !w.imie_nazwisko || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(w.email));
@@ -698,9 +1084,15 @@
       ]);
       if (u.error) { toast('Błąd ładowania uchwał', 'error'); console.error(u.error); return; }
       dane = u.data || [];
+      /* Obie listy odpowiedzi siedzą w jednej tabeli; rozdzielamy je po kolumnie `etap`.
+         Wiersze sprzed wdrożenia etapu 1 nie mają jej wypełnionej inaczej niż 'uchwala'. */
       glosyWg = {};
-      (g.data || []).forEach(x => { (glosyWg[x.uchwala_id] = glosyWg[x.uchwala_id] || []).push(x); });
-      Object.values(glosyWg).forEach(l => l.sort((a, b) => (a.imie_nazwisko || '').localeCompare(b.imie_nazwisko || '', 'pl')));
+      (g.data || []).forEach(x => {
+        const b = glosyWg[x.uchwala_id] = glosyWg[x.uchwala_id] || { opinia: [], uchwala: [] };
+        (x.etap === 'opinia' ? b.opinia : b.uchwala).push(x);
+      });
+      Object.values(glosyWg).forEach(b => ['opinia', 'uchwala'].forEach(e =>
+        b[e].sort((a, c) => (a.imie_nazwisko || '').localeCompare(c.imie_nazwisko || '', 'pl'))));
       rada = r.data || [];
       podsumuj();
       render();

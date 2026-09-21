@@ -30,6 +30,15 @@
     .g-kandydat small,.g-uchwala small{display:block;font-weight:600;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;}
     .g-kandydat b{display:block;font-size:17px;}
     .g-kandydat span{display:block;color:var(--muted);font-size:14px;}
+    /* deklaracja kandydata: przy opiniowaniu uchwały jeszcze nie ma, więc Prezydium
+       decyduje na podstawie danych z wniosku - muszą być czytelne na telefonie */
+    .g-dane{margin:12px 0 0;border-top:1px solid var(--line);padding-top:10px;}
+    .g-dane div{display:flex;gap:10px;padding:3px 0;font-size:13.5px;line-height:1.5;flex-wrap:wrap;}
+    .g-dane dt{flex:0 0 190px;color:var(--muted);margin:0;}
+    .g-dane dd{flex:1 1 220px;margin:0;color:var(--ink);word-break:break-word;}
+    @media(max-width:560px){.g-dane dt{flex-basis:100%;}}
+    .g-termin{font-size:13.5px;color:#7a5c14;background:#fff8e6;border:1px solid #f0e2b6;border-radius:8px;padding:9px 13px;margin:0 0 16px;}
+    .g-rola{font-size:13px;color:var(--muted);margin:-8px 0 16px;}
     .g-uchwala{background:#fdf5f6;border-radius:12px;padding:18px 22px;margin:0 0 24px;}
     .g-uchwala pre{margin:0;white-space:pre-wrap;font-family:Georgia,'Times New Roman',serif;font-size:15.5px;line-height:1.7;color:var(--ink);}
     .g-wybor{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 18px;}
@@ -65,9 +74,9 @@
 
 <section class="z-hero">
   <div class="wrap">
-    <span class="z-kicker">Rada Izby</span>
-    <h1>Głosowanie nad uchwałą</h1>
-    <p class="lead" id="gLead">Wczytujemy treść uchwały…</p>
+    <span class="z-kicker" id="gKicker">Rada Izby</span>
+    <h1 id="gTytul">Głosowanie nad uchwałą</h1>
+    <p class="lead" id="gLead">Wczytujemy dane sprawy…</p>
   </div>
 </section>
 
@@ -75,28 +84,31 @@
   <div class="g-box err" id="gBlad" hidden></div>
 
   <div id="gTresc" hidden>
-    <p class="g-kto">Głosuje: <strong id="gKto"></strong></p>
+    <p class="g-kto" id="gKtoWiersz">Głosuje: <strong id="gKto"></strong></p>
+    <p class="g-rola" id="gRola" hidden></p>
+    <p class="g-termin" id="gTermin" hidden></p>
 
     <div class="g-kandydat">
-      <small>Przyjęcie do Izby</small>
+      <small id="gKandydatNagl">Przyjęcie do Izby</small>
       <b id="gFirma"></b>
       <span id="gOsoba"></span>
       <span id="gAdres"></span>
+      <dl class="g-dane" id="gDane" hidden></dl>
     </div>
 
-    <div class="g-uchwala">
+    <div class="g-uchwala" id="gUchwalaBox">
       <small>Projekt uchwały</small>
       <pre id="gUchwala"></pre>
     </div>
 
     <form id="gForm" novalidate>
       <div class="g-wybor">
-        <label class="g-opt za"><input type="radio" name="glos" value="za"> <span>✓ Głosuję ZA</span></label>
-        <label class="g-opt przeciw"><input type="radio" name="glos" value="przeciw"> <span>✕ Głosuję PRZECIW</span></label>
+        <label class="g-opt za"><input type="radio" name="glos" value="za"> <span id="gOptZa">✓ Głosuję ZA</span></label>
+        <label class="g-opt przeciw"><input type="radio" name="glos" value="przeciw"> <span id="gOptPrzeciw">✕ Głosuję PRZECIW</span></label>
       </div>
       <label class="g-lab" for="gUz">Uzasadnienie (opcjonalnie)</label>
       <textarea id="gUz" maxlength="2000" placeholder="Możesz dopisać uzasadnienie swojej decyzji; zobaczy je biuro Izby w raporcie z głosowania."></textarea>
-      <p class="hint">Głos jest ostateczny: po zapisaniu nie da się go zmienić. Link jest osobisty, prosimy nie przekazywać go dalej.</p>
+      <p class="hint" id="gHint">Głos jest ostateczny: po zapisaniu nie da się go zmienić. Link jest osobisty, prosimy nie przekazywać go dalej.</p>
       <button type="submit" class="z-send" id="gSend">Oddaj głos</button>
       <div class="z-msg" id="gMsg"></div>
     </form>
@@ -104,11 +116,11 @@
     <div class="g-box info" id="gZamkniete" hidden>Głosowanie nad tą uchwałą jest już zamknięte. Dziękujemy.</div>
 
     <div class="g-oddany" id="gOddany" hidden>
-      <p>Twój głos w tej sprawie:</p>
+      <p id="gOddanyWstep">Twój głos w tej sprawie:</p>
       <span class="duzy" id="gOddanyJak"></span>
       <p id="gOddanyKiedy"></p>
       <p id="gOddanyUz"></p>
-      <p style="margin-top:14px">Dziękujemy. Wynik głosowania biuro Izby przekaże członkom Rady.</p>
+      <p style="margin-top:14px" id="gOddanyStopka">Dziękujemy. Wynik głosowania biuro Izby przekaże członkom Rady.</p>
     </div>
   </div>
 </main>
@@ -136,29 +148,91 @@
   var wstepnie = q.get("g") || "";
   var URL_F = window.GIG_CFG.SUPABASE_URL + "/functions/v1/glosuj";
   var $ = function (id) { return document.getElementById(id); };
+  var opinia = false;   // etap: opinia Prezydium (art. 12 pkt 1) albo głosowanie Rady nad uchwałą
 
-  function blad(t) { $("gBlad").textContent = t; $("gBlad").hidden = false; $("gLead").textContent = "Nie możemy wyświetlić tej uchwały."; }
+  function blad(t) { $("gBlad").textContent = t; $("gBlad").hidden = false; $("gLead").textContent = "Nie możemy wyświetlić tej sprawy."; }
   function kiedy(iso) {
     return iso ? new Date(iso).toLocaleString("pl-PL", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+  }
+  function dzien(iso) {
+    return iso ? new Date(iso + "T00:00:00").toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" }) : "";
   }
   function pokazOddany(g) {
     $("gForm").hidden = true;
     $("gOddany").hidden = false;
     var el = $("gOddanyJak");
-    el.textContent = g.glos === "za" ? "✓ ZA" : "✕ PRZECIW";
+    el.textContent = opinia
+      ? (g.glos === "za" ? "✓ POZYTYWNA" : "✕ NEGATYWNA")
+      : (g.glos === "za" ? "✓ ZA" : "✕ PRZECIW");
     el.className = "duzy " + g.glos;
-    $("gOddanyKiedy").textContent = "Oddany " + kiedy(g.glosowano_at);
+    $("gOddanyWstep").textContent = opinia ? "Twoja opinia w tej sprawie:" : "Twój głos w tej sprawie:";
+    $("gOddanyKiedy").textContent = (opinia ? "Wydana " : "Oddany ") + kiedy(g.glosowano_at);
     $("gOddanyUz").textContent = g.uzasadnienie ? "Uzasadnienie: " + g.uzasadnienie : "";
+    $("gOddanyStopka").textContent = opinia
+      ? "Dziękujemy. Po zebraniu opinii Prezydium biuro Izby skieruje uchwałę pod głosowanie Rady."
+      : "Dziękujemy. Wynik głosowania biuro Izby przekaże członkom Rady.";
+  }
+  /* Dane z deklaracji przystąpienia: przy opiniowaniu to jedyna podstawa decyzji,
+     bo projektu uchwały jeszcze nie ma. */
+  function daneKandydata(u) {
+    var w = [
+      ["NIP / REGON / KRS", [u.kandydat_nip, u.kandydat_regon, u.kandydat_krs].filter(Boolean).join(" · ")],
+      ["Osoba reprezentująca", u.kandydat_firma && u.kandydat_osoba ? u.kandydat_osoba : ""],
+      ["Kontakt", [u.kandydat_email, u.kandydat_telefon].filter(Boolean).join(" · ")],
+      ["Strona WWW", u.kandydat_www],
+      ["Rodzaj działalności (PKD wiodące)", u.kandydat_pkd],
+      ["Liczba osób w firmie", u.kandydat_osob],
+      ["Opis działalności", u.kandydat_opis]
+    ].filter(function (p) { return p[1]; });
+    if (!w.length) return;
+    $("gDane").innerHTML = w.map(function (p) {
+      var dd = p[0] === "Strona WWW"
+        ? '<dd><a href="' + encodeURI(p[1]) + '" target="_blank" rel="noopener">' + esc(p[1]) + "</a></dd>"
+        : "<dd>" + esc(p[1]) + "</dd>";
+      return "<div><dt>" + esc(p[0]) + "</dt>" + dd + "</div>";
+    }).join("");
+    $("gDane").hidden = false;
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
   function pokaz(d) {
     var u = d.uchwala;
-    $("gLead").textContent = "Uchwała " + (u.numer ? "nr " + u.numer : "(numer nada Rada)") + " w sprawie przyjęcia nowego członka Geodezyjnej Izby Gospodarczej.";
+    opinia = d.etap === "opinia";
+
+    if (opinia) {
+      $("gKicker").textContent = "Prezydium Rady Izby";
+      $("gTytul").textContent = "Opinia o kandydacie";
+      $("gLead").textContent = "Prosimy o zaopiniowanie kandydatury przedsiębiorcy ubiegającego się o przyjęcie do Geodezyjnej Izby Gospodarczej, zgodnie z art. 12 pkt 1 Statutu Izby.";
+      $("gKtoWiersz").firstChild.nodeValue = "Opiniuje: ";
+      $("gKandydatNagl").textContent = "Kandydat na członka Izby";
+      $("gUchwalaBox").hidden = true;
+      $("gOptZa").textContent = "✓ Opiniuję POZYTYWNIE";
+      $("gOptPrzeciw").textContent = "✕ Opiniuję NEGATYWNIE";
+      $("gSend").textContent = "Wydaj opinię";
+      $("gHint").textContent = "Opinia jest ostateczna: po zapisaniu nie da się jej zmienić. Link jest osobisty, prosimy nie przekazywać go dalej.";
+      $("gUz").placeholder = "Możesz dopisać uzasadnienie swojej opinii; zobaczy je biuro Izby w protokole z opiniowania.";
+      $("gZamkniete").textContent = "Opiniowanie tego kandydata jest już zamknięte. Dziękujemy.";
+      if (u.opinia_termin) {
+        $("gTermin").textContent = "Termin na wydanie opinii: " + dzien(u.opinia_termin) + ".";
+        $("gTermin").hidden = false;
+      }
+      if (d.rola === "konsultacja") {
+        $("gRola").textContent = "Państwa stanowisko zbieramy w trybie konsultacji z Prezesem Oddziału / Przedstawicielem Regionalnym (art. 12 pkt 1 zdanie trzecie Statutu). Nie wlicza się ono do wyniku opinii Prezydium, ale trafia do protokołu.";
+        $("gRola").hidden = false;
+      }
+      daneKandydata(u);
+    } else {
+      $("gLead").textContent = "Uchwała " + (u.numer ? "nr " + u.numer : "(numer nada Rada)") + " w sprawie przyjęcia nowego członka Geodezyjnej Izby Gospodarczej.";
+      $("gUchwala").textContent = u.tresc;
+    }
+
     $("gKto").textContent = d.glosujacy.imie_nazwisko;
     $("gFirma").textContent = u.kandydat_firma || u.kandydat_osoba || "";
-    $("gOsoba").textContent = u.kandydat_firma && u.kandydat_osoba ? u.kandydat_osoba : "";
+    $("gOsoba").textContent = !opinia && u.kandydat_firma && u.kandydat_osoba ? u.kandydat_osoba : "";
     $("gAdres").textContent = u.kandydat_adres || "";
-    $("gUchwala").textContent = u.tresc;
     $("gTresc").hidden = false;
+
     if (d.glos) { pokazOddany(d.glos); return; }
     if (!d.otwarte) { $("gForm").hidden = true; $("gZamkniete").hidden = false; return; }
     if (wstepnie === "za" || wstepnie === "przeciw") {
@@ -167,20 +241,20 @@
     }
   }
 
-  if (!token) { blad("W adresie brakuje tokenu głosowania. Otwórz stronę z linku w wiadomości od biura Izby."); return; }
+  if (!token) { blad("W adresie brakuje tokenu. Otwórz stronę z linku w wiadomości od biura Izby."); return; }
 
   fetch(URL_F + "?t=" + encodeURIComponent(token), { headers: { "apikey": window.GIG_CFG.SUPABASE_ANON } })
     .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
     .then(function (x) { if (!x.ok || !x.d.ok) throw new Error(x.d.error || "Błąd " ); pokaz(x.d); })
-    .catch(function (e) { blad(e.message || "Nie udało się pobrać uchwały. Spróbuj ponownie za chwilę."); });
+    .catch(function (e) { blad(e.message || "Nie udało się pobrać danych sprawy. Spróbuj ponownie za chwilę."); });
 
   $("gForm").addEventListener("submit", function (ev) {
     ev.preventDefault();
     var wyb = document.querySelector('input[name="glos"]:checked');
     var msg = $("gMsg");
-    if (!wyb) { msg.textContent = "Zaznacz: ZA albo PRZECIW."; msg.className = "z-msg err"; return; }
+    if (!wyb) { msg.textContent = opinia ? "Zaznacz: opinia pozytywna albo negatywna." : "Zaznacz: ZA albo PRZECIW."; msg.className = "z-msg err"; return; }
     var btn = $("gSend");
-    btn.disabled = true; msg.textContent = "Zapisujemy głos…"; msg.className = "z-msg ok";
+    btn.disabled = true; msg.textContent = opinia ? "Zapisujemy opinię…" : "Zapisujemy głos…"; msg.className = "z-msg ok";
     fetch(URL_F, {
       method: "POST",
       headers: { "Content-Type": "application/json", "apikey": window.GIG_CFG.SUPABASE_ANON },
@@ -189,7 +263,7 @@
       .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
       .then(function (x) {
         if (x.d && x.d.glos) { pokazOddany(x.d.glos); return; }   // zapisano albo już wcześniej oddany
-        throw new Error((x.d && x.d.error) || "Nie udało się zapisać głosu.");
+        throw new Error((x.d && x.d.error) || (opinia ? "Nie udało się zapisać opinii." : "Nie udało się zapisać głosu."));
       })
       .catch(function (e) { btn.disabled = false; msg.textContent = e.message; msg.className = "z-msg err"; });
   });

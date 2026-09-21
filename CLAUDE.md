@@ -15,11 +15,17 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
 - **Zapisy na szkolenia**: osobna strona `/zapisy/` (ręczna, nie mirror) → tabela `zapisy_szkolenia`.
   Zbiera uczestników i dane do faktury (nabywca + odbiorca, znacznik JST). Przycisk „Zapisz się”
   w kalendarzu prowadzi tam z `?szkolenie=<tytuł>`.
-- **Uchwały Rady o przyjęciu członka**: zgłoszenie „Dołącz do nas" → trigger zakłada projekt
-  uchwały i maila (`backend/supabase_uchwaly.sql`, tabele `uchwaly`, `uchwaly_glosy`, `rada_izby`)
-  → panel `/admin/uchwaly.html` (sprawdzenie, wysyłka przez Edge Function `uchwala-wyslij`,
-  przypomnienia, raport PDF) → członkowie Rady głosują z osobistego linku na `/glosowanie/`
-  (Edge Function `glosuj`). Szczegóły w HANDOVER.md.
+- **Przyjęcie członka — dwa etapy wg art. 12 pkt 1 Statutu** (`backend/supabase_uchwaly.sql`
+  + `backend/supabase_uchwaly_opinia.sql`, tabele `uchwaly`, `uchwaly_glosy`, `rada_izby`):
+  zgłoszenie „Dołącz do nas" → mail do kandydata z prośbą o wydruk CEIDG/KRS **i** potwierdzenie
+  przelewu wpisowego → trigger zakłada sprawę na **etapie 1** (prośba do Prezydium o zaopiniowanie)
+  → panel `/admin/uchwaly.html` wysyła ją Edge Function `uchwala-wyslij` (`etap: 'opinia'`)
+  → Prezydium opiniuje z osobistego linku na `/glosowanie/` (Edge Function `glosuj`)
+  → po **opinii pozytywnej** sprawa przechodzi na **etap 2**: projekt uchwały Rady → wysyłka
+  (`etap: 'uchwala'`) → głosowanie Rady → raport PDF z obu etapów.
+  Opinia negatywna prowadzi do uchwały o odmowie (`uchwaly.rodzaj = 'odmowa'`, z pouczeniem
+  o odwołaniu do Walnego Zgromadzenia, art. 12 pkt 3) albo do zamknięcia sprawy.
+  Szczegóły w HANDOVER.md.
 - **Węzeł Jakości**: ankieta cenowa `/wezel-jakosci/` (katalog pozycji SEKOCENBUD w
   `_assets/js/wezel-katalog.js`, generowany `skrypty/gen_wezel_katalog.py`) → tabele
   `wezel_ankiety` / `wezel_ceny` → panel `/admin/wezel.html` (zestawienie min/max/średnia,

@@ -24,12 +24,14 @@ tak stanowią polityki RLS. Konta: `biuro@gig.org.pl`, `jerzy.bryk@gmail.com`.
 cache przeglądarki przy testach panelu, Vercel Security Checkpoint blokujący `curl`,
 i to, że brama Supabase wymusza `text/plain` na odpowiedziach Edge Functions.
 
-**Wersje Edge Functions na 9.09.2026** (repo = wdrożone, poza komentarzami):
-`send-confirmation` v12 (verify_jwt=true; od 17.09 potwierdzenia rozpoznawane po prefiksie tematu
-w `submissions_kontakt`: „Zgłoszenie członkowskie:" = wniosek z prośbą o wydruk CEIDG/KRS,
-„Zainteresowanie członkostwem:" = klient zostawił zaznaczoną zachętę po zapisie na szkolenie), `wyslij-mail` v6, `wyslij-kampanie` v5,
-`panel-logowanie` v2, `panel-rejestracja` v3, `panel-haslo` v2, `baza-wypis` v1,
-`newsletter-unsubscribe` v1, `pierwsze-haslo` v1.
+**Wersje Edge Functions na 21.09.2026** (repo = wdrożone, poza komentarzami):
+`send-confirmation` v14 (potwierdzenia rozpoznawane po prefiksie tematu w `submissions_kontakt`:
+„Zgłoszenie członkowskie:" = wniosek, w którym prosimy o wydruk CEIDG/KRS **i** potwierdzenie
+przelewu wpisowego 75 zł na konto Izby, z terminem +14 dni i opisem dalszej drogi: opinia Prezydium,
+potem uchwała Rady; „Zainteresowanie członkostwem:" = klient zostawił zaznaczoną zachętę po zapisie
+na szkolenie), `uchwala-wyslij` v2 i `glosuj` v2 (oba z obsługą etapu `opinia`), `wyslij-mail` v6,
+`wyslij-kampanie` v5, `panel-logowanie` v2, `panel-rejestracja` v3, `panel-haslo` v2, `baza-wypis` v1,
+`newsletter-unsubscribe` v1, `pierwsze-haslo` v1, `firma-gus` v1.
 
 **Otwarte zadania** (szczegóły w sekcji 3):
 1. `GIG_HOOK_TOKEN` w sekretach Supabase — brama `send-confirmation` czeka bezczynnie (punkt C).
@@ -135,16 +137,51 @@ RODO. Do `submissions_kontakt` idzie jeden tekst z liniami `Firma: / Adres: / Wo
 Gmina: / Telefon: / E-mail: / NIP: / REGON: / KRS: / Osoba reprezentująca: …` — **linia `Adres:`
 zostaje w jednym wierszu** („ul. X 1, 00-000 Miasto"), bo tak czyta ją trigger uchwał (poniżej).
 
-### Uchwały Rady o przyjęciu członka (`admin/uchwaly.html`, od 17.09.2026)
-Procedura biura: wpływa zgłoszenie z „Dołącz do nas", sekretariat (Agnieszka Horbaczewska) pisze
-projekt uchwały Rady i rozsyła go mailem członkom Rady, Rada głosuje mailowo. Panel prowadzi to
-od początku do końca:
+### Przyjęcie członka: dwa etapy (`admin/uchwaly.html`, od 17.09.2026, dwuetapowe od 21.09.2026)
+
+**Art. 12 pkt 1 Statutu** (tekst jednolity 27.05.2023, `dokumenty izby/md/Statut GIG 27.05.2023.md`)
+wymaga, żeby uchwała o przyjęciu zapadła **po pozytywnym zaopiniowaniu kandydatury przez Prezydium
+Rady Izby**, a Prezydium przed wydaniem opinii konsultowało się z właściwym Prezesem Oddziału lub
+Przedstawicielem Regionalnym. Odmowa przyjęcia też zapada w formie uchwały Rady, a od niej służy
+odwołanie do Walnego Zgromadzenia w 30 dni (art. 12 pkt 3). Panel prowadzi całą tę ścieżkę:
+
+```
+zgłoszenie ze strony  →  mail do kandydata (CEIDG/KRS + potwierdzenie przelewu wpisowego 75 zł)
+ETAP 1  opiniowanie/projekt     → „Wyślij do Prezydium" (uchwala-wyslij, etap 'opinia')
+        opiniowanie/głosowanie  → opinie z /glosowanie/ → „Zakończ opiniowanie"
+             pozytywna  → ETAP 2                 negatywna → uchwała o odmowie albo zamknięcie
+ETAP 2  projekt → „Wyślij do Rady" (etap 'uchwala') → głosowanie → przyjęta / odrzucona
+        → raport PDF z obu etapów
+```
+
+**Co jest gdzie.** Kolumny etapu 1 (`opinia_status`, `opinia_termin`, `opinia_mail_*`,
+`opinia_wyslano_at`, `opinia_zamknieto_at`, `opinia_za/przeciw`, `opinia_uwagi`), konsultacja
+(`konsultacja_kto/at/opinia`), dokumenty i wpisowe (`dok_rodzaj`, `dok_otrzymany_at`,
+`wpisowe_oplacone`, `wpisowe_at`), rodzaj rozstrzygnięcia (`rodzaj` = `przyjecie` | `odmowa`)
+oraz dane z deklaracji (`kandydat_telefon/www/opis/pkd/osob`) siedzą w `uchwaly`
+(`backend/supabase_uchwaly_opinia.sql`). Odpowiedzi obu etapów są w jednej tabeli
+`uchwaly_glosy`, rozdzielone kolumną `etap` (`opinia` | `uchwala`); `rola` mówi, czy głos liczy
+się do wyniku (`prezydium`, `rada`) czy jest tylko konsultacją (`konsultacja`, art. 12 pkt 1
+zd. trzecie). Klucz unikalny to `(uchwala_id, email, etap)`, więc ta sama osoba może opiniować
+i głosować. `rada_izby` ma dwa niezależne znaczniki: `prezydium` (opiniuje, etap 1) i `rada`
+(głosuje, etap 2) — Prezes jest w obu, Przedstawiciel Regionalny w żadnym, a i tak można go
+doraźnie dopisać do odbiorców prośby o opinię.
+
+**Sprawy sprzed 21.09** dostały `opinia_status = 'pominieta'`, żeby panel nie kazał opiniować
+od nowa czegoś, co już poszło do Rady. Ten sam status nadaje przycisk „Opinia już wydana poza
+panelem", gdy Prezydium zaopiniowało kandydata na posiedzeniu — wtedy sprawa przeskakuje na etap 2
+z notatką w `opinia_uwagi`, która trafia do protokołu PDF.
+
+Dalej, krok po kroku:
 
 1. **Trigger `on_kontakt_uchwala`** (`backend/supabase_uchwaly.sql`): każdy wpis do
    `submissions_kontakt` z tematem „Zgłoszenie członkowskie: …" zakłada wiersz w `uchwaly`
-   (status `projekt`) i woła `gig_uchwala_generuj(uid)`, który z danych kandydata buduje treść
-   uchwały (wzór: uchwała z 17.09.2026, art. 21 pkt 2 Statutu i § 4 Regulaminu Pracy Rady) oraz
-   temat i treść maila do Rady (wzór: mail sekretariatu z 17.09.2026). Odmiana nazwiska przez
+   (status `opiniowanie`, `opinia_status` `projekt`, termin opinii +7 dni) i woła
+   `gig_uchwala_generuj(uid)`, który z danych kandydata buduje **prośbę do Prezydium**
+   (wzór: mail sekretariatu z 17.09.2026, biernik: „przez przedsiębiorcę Panią Dagmarę Kępę
+   prowadzącą działalność…"), treść uchwały (dopełniacz: „przedsiębiorcy Pani Dagmary Kępy
+   prowadzącej działalność…", art. 12 pkt 1 i art. 21 pkt 2 Statutu oraz § 4 Regulaminu Pracy
+   Rady) oraz temat i treść maila do Rady. Odmiana nazwiska przez
    przypadki to heurystyka (`gig_dopelniacz`, `gig_biernik`, `gig_plec`): Piotr Urbański → Pana
    Piotra Urbańskiego, Agnieszka Kowalska → Panią Agnieszkę Kowalską; spółki dostają formę
    „przedsiębiorcy FIRMA z siedzibą …, reprezentowanego przez …". Po siedzibie w nawiasie idą
@@ -152,35 +189,52 @@ od początku do końca:
    (pola `kandydat_nip/regon/krs`, z formularza „Dołącz do nas"). Nietypowe nazwiska sekretariat
    poprawia ręcznie, bo treść jest edytowalna. Numer uchwały to samo liczba (np. `12`), pełny
    zapis `12/IX/2026` składa się z miesiąca rzymskiego i roku daty wejścia w życie.
-2. **Panel**: projekt widać w zakładce **Uchwały Rady** (plakietka w menu = liczba projektów).
-   Sekretariat poprawia numer, datę, dane kandydata, treść uchwały i maila, wybiera odbiorców ze
-   składu Rady (tabela `rada_izby`, edytowalna przyciskiem „Skład Rady"; wpisany skład z maila
-   z 17.09: 10 osób, dwa nazwiska do uzupełnienia), ogląda podgląd maila i klika „Wyślij do Rady".
-3. **Edge Function `uchwala-wyslij`** (v1, verify_jwt=false, autoryzacja jak `wyslij-mail`: JWT
-   admina + sesja po kodzie): tryb `start` zakłada w `uchwaly_glosy` po jednym wierszu na
-   odbiorcę z losowym tokenem (32 znaki base64url), wysyła każdemu osobny mail z projektem
-   uchwały w ramce i dwoma przyciskami (ZA / PRZECIW → `/glosowanie/?t=<token>&g=za|przeciw`),
-   ustawia status `glosowanie`. Tryb `przypomnienie` pisze tylko do osób bez głosu (licznik
-   `przypomnien`). Tryb `podglad` zwraca HTML maila bez wysyłki. Po wysłaniu treść jest
-   zamrożona (Rada głosuje nad tym, co dostała).
-4. **Strona `/glosowanie/`** + **Edge Function `glosuj`** (v1, verify_jwt=false, token zamiast
-   logowania, pisze kluczem service_role): GET pokazuje uchwałę i kto głosuje, POST zapisuje
-   głos (za/przeciw + uzasadnienie do 2000 znaków, czas, IP). Głos jest jeden i ostateczny
-   (warunek `is('glos', null)` w UPDATE chroni przed podwójnym kliknięciem). Przycisk w mailu
-   tylko zaznacza wybór; głos pada po „Oddaj głos" na stronie, więc skanery linków w poczcie nie
-   głosują za nikogo. Gdy oddany zostanie ostatni brakujący głos, biuro dostaje mail
-   „[GIG] Głosowanie zakończone: …" (NOTIFY_EMAILS).
-5. **Zakończenie**: panel liczy ZA/PRZECIW/bez głosu; „Zakończ głosowanie" nadaje status
-   `przyjeta` (więcej ZA niż PRZECIW spośród oddanych) albo `odrzucona` (remis też). Nie trzeba
-   kompletu głosów. „Anuluj" zamyka bez rozstrzygnięcia. **Raport PDF** (pdfmake z jsDelivr,
-   czcionka Roboto z polskimi znakami): dane kandydata, wynik, tabela kto/jak/kiedy/uzasadnienie,
-   pełna treść uchwały, w stopce data i godzina pobrania oraz e-mail osoby pobierającej.
+2. **Panel, okno sprawy**: u góry ścieżka „Zgłoszenie → Opinia Prezydium → Uchwała Rady → Wynik",
+   pod nią zawsze widoczny blok **Dokumenty i wpisowe** (rodzaj dokumentu, data wpływu, wpisowe
+   z datą). Te dwa fakty wchodzą zdaniami do obu maili („Wydruk z CEIDG wpłynął do biura Izby.",
+   „Wpisowe zostało już uiszczone."), więc zapis stanu dokumentów odświeża treść prośby o opinię.
+   Dalej sekcja **etapu 1** i sekcja **etapu 2**; etap 2 jest zablokowany komunikatem, dopóki
+   etap 1 się nie domknie. Plakietka w menu liczy sprawy o statusie `opiniowanie` **i** `projekt`.
+3. **Etap 1 w panelu**: termin opinii, temat i treść prośby (edytowalne), odbiorcy — domyślnie
+   zaznaczone Prezydium, osoby spoza niego widać jako przerywane kafelki do doraźnej konsultacji.
+   Obok pola na konsultację z Prezesem Oddziału / Przedstawicielem Regionalnym (kto, kiedy,
+   stanowisko) — wymaganą przez Statut i drukowaną w protokole. „Zakończ opiniowanie" liczy
+   **tylko głosy z rolą `prezydium`**, większość wśród wydanych rozstrzyga, kompletu nie trzeba.
+   Po opinii pozytywnej panel od nowa generuje treść uchwały, żeby powołała się na opinię i jej datę.
+4. **Edge Function `uchwala-wyslij`** (v2, verify_jwt=false, autoryzacja jak `wyslij-mail`: JWT
+   admina + sesja po kodzie). Body ma teraz `etap: 'opinia' | 'uchwala'` (brak pola = `uchwala`,
+   zgodnie ze starym zachowaniem). Tryb `start` zakłada w `uchwaly_glosy` po jednym wierszu na
+   odbiorcę z losowym tokenem (32 znaki base64url) i rolą wyliczoną z `rada_izby.prezydium`,
+   wysyła każdemu osobny mail i przestawia status **tego** etapu. Mail etapu 1 ma w ramce
+   **deklarację przystąpienia** (firma, siedziba, NIP/REGON/KRS, osoba, kontakt, WWW, PKD, liczba
+   osób, opis) i przyciski „Opiniuję POZYTYWNIE / NEGATYWNIE"; mail etapu 2 — projekt uchwały
+   i „Głosuję ZA / PRZECIW". Oba prowadzą na `/glosowanie/?t=<token>&g=za|przeciw`. Tryb
+   `przypomnienie` pisze tylko do osób bez odpowiedzi w danym etapie (licznik `przypomnien`).
+   Tryb `podglad` zwraca HTML maila bez wysyłki. Po wysłaniu treść jest zamrożona.
+5. **Strona `/glosowanie/`** + **Edge Function `glosuj`** (v2, verify_jwt=false, token zamiast
+   logowania, pisze kluczem service_role): GET zwraca `etap` i `rola`, a strona sama przełącza
+   nagłówki, podpisy przycisków i komunikaty. Przy opinii zamiast treści uchwały pokazuje dane
+   kandydata i termin, a osobie konsultowanej mówi wprost, że jej stanowisko nie wlicza się do
+   wyniku. POST zapisuje odpowiedź (za/przeciw + uzasadnienie do 2000 znaków, czas, IP); jest
+   jedna i ostateczna (warunek `is('glos', null)` w UPDATE chroni przed podwójnym kliknięciem).
+   Przycisk w mailu tylko zaznacza wybór; odpowiedź pada po kliknięciu na stronie, więc skanery
+   linków w poczcie nie odpowiadają za nikogo. Gdy wpadnie ostatnia brakująca odpowiedź w etapie,
+   biuro dostaje mail „[GIG] Opiniowanie/Głosowanie zakończone: …" (NOTIFY_EMAILS).
+6. **Zakończenie etapu 2**: „Zakończ głosowanie" nadaje `przyjeta` (więcej ZA niż PRZECIW spośród
+   oddanych) albo `odrzucona` (remis też). Przy uchwale o odmowie „za" znaczy, że odmowa zapadła,
+   więc wynik to `odrzucona`; gdy Rada odmowy nie podjęła, sprawa idzie na `anulowana`.
+   „Anuluj" zamyka bez rozstrzygnięcia. **PDF** (pdfmake z jsDelivr, czcionka Roboto z polskimi
+   znakami) w dwóch wersjach: „Protokół z opiniowania" (sam etap 1) i „Raport z postępowania
+   o przyjęcie" (metryka z dokumentami i wpisowym, konsultacja, etap 1, etap 2, pełna treść
+   uchwały). W stopce data i godzina pobrania oraz e-mail osoby pobierającej.
 
-RLS: trzy nowe tabele tylko dla admina po kodzie (jak reszta panelu), anon nie ma żadnych praw.
-Testowane 17.09 na wierszach `*@example.invalid` (usunięte): generator (trigger + spółka + kobieta),
-`glosuj` GET/POST/409, raport PDF (25 KB), panel na atrapie bazy. **Nie testowałem wysyłki
-`uchwala-wyslij` na żywo** (wymaga sesji panelu z kodem z maila): pierwszą uchwałę wyślij do siebie,
-wybierając w odbiorcach tylko jedną osobę.
+RLS: tabele uchwał tylko dla admina po kodzie (jak reszta panelu), anon nie ma żadnych praw.
+Testowane 21.09 na wierszach `*@example.invalid` (usunięte): generator obu etapów (biernik/dopełniacz,
+spółka i kobieta), `glosuj` GET/POST dla etapu `opinia` i `uchwala` na żywo przeciw wdrożonej funkcji,
+zapis roli `konsultacja`, panel na atrapie bazy we wszystkich stanach (etap 1 projekt / w toku /
+opinia negatywna, etap 2 głosowanie, sprawa przyjęta), oba PDF-y (pełny raport zbudował się w 30 KB).
+**Nie testowałem wysyłki `uchwala-wyslij` na żywo** (wymaga sesji panelu z kodem z maila): pierwszą
+prośbę o opinię wyślij do siebie, wybierając w odbiorcach tylko jedną osobę.
 
 ### Panel `/admin/` na telefonie
 Do 900 px szerokości pasek boczny chowa się za lewą krawędź, a `_admin.js` (`initMobileMenu`)

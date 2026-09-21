@@ -126,24 +126,51 @@ function kontaktMail(rec: Record<string, unknown>) {
   return { subject: "Otrzymaliśmy Twoją wiadomość - GIG", html: layout("Wiadomość przyjęta ✓", body) };
 }
 
-/* Potwierdzenie wniosku czlonkowskiego: od razu prosimy o wydruk z CEIDG/KRS,
-   bo bez niego biuro i tak nie moze rozpatrzyc wniosku - jedna wymiana maili mniej. */
+/* Potwierdzenie wniosku czlonkowskiego: od razu prosimy o wydruk z CEIDG/KRS
+   i o potwierdzenie przelewu wpisowego - bez tych dwoch rzeczy Rada i tak nie
+   rozpatrzy wniosku, a tak zalatwiamy je jedna wiadomoscia.
+   Wpisowe: uchwala Rady o przyjeciu wchodzi w zycie pod warunkiem jego uiszczenia
+   (art. 12 pkt 1 Statutu). Kwota i konto sa tu na sztywno - zmieniaja sie raz na
+   lata, a w sekrecie biuro nie zobaczyloby, co poszlo w mailu. */
+const WPISOWE_KWOTA = "75,00 zł";
+const WPISOWE_KONTO = "61 1240 6175 1111 0000 4574 9045";
+const WPISOWE_BANK = "Bank PEKAO SA Oddział w Warszawie";
+const WPISOWE_DNI = 14;
+
 function czlonkostwoMail(rec: Record<string, unknown>) {
   const name = (rec.name as string) || "";
   const greet = name && name !== "Anonim" ? `Szanowni Państwo, ${esc(name)},` : "Dzień dobry,";
   const msg = (rec.message as string) || "";
+  // poludnie UTC, zeby dataPL (czyta czesci UTC) nie cofnela dnia przy mailu wyslanym nad ranem
+  const termin = new Date(Date.now() + WPISOWE_DNI * 86400000);
+  termin.setUTCHours(12, 0, 0, 0);
   const body = `
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">${greet}</p>
-    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">dziękujemy za złożenie wniosku o członkostwo w Geodezyjnej Izbie Gospodarczej. Wniosek trafił do biura Izby.</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">dziękujemy za złożenie akcesu członkowskiego do Geodezyjnej Izby Gospodarczej. Wniosek trafił do biura Izby.</p>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">Do rozpatrzenia wniosku przez Radę Izby potrzebujemy jeszcze dwóch rzeczy. Prosimy o przesłanie ich razem,
+      w odpowiedzi na tę wiadomość albo na adres <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};">biuro@gig.org.pl</a>,
+      <strong>do dnia ${esc(dataPL(termin))}</strong>.</p>
     <div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
-      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Prośba o dokument</p>
-      <p style="margin:0 0 10px;font-size:14px;line-height:1.6;">Do rozpatrzenia wniosku potrzebujemy dokumentu potwierdzającego status prawny firmy:
-      <strong>wydruku z CEIDG lub odpisu z KRS</strong>. Prosimy o przesłanie go w odpowiedzi na tę wiadomość albo na adres
-      <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};">biuro@gig.org.pl</a>. Po otrzymaniu dokumentu skontaktujemy się w sprawie dalszych kroków.</p>
-      <p style="margin:0;font-size:14px;line-height:1.6;">Dokument pobiorą Państwo bezpłatnie ze strony
+      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">1. Dokument rejestrowy firmy</p>
+      <p style="margin:0 0 10px;font-size:14px;line-height:1.6;">Dokument potwierdzający status prawny firmy:
+      <strong>wydruk z CEIDG lub odpis z rejestru przedsiębiorców KRS</strong>.</p>
+      <p style="margin:0;font-size:14px;line-height:1.6;">Pobiorą go Państwo bezpłatnie ze strony
       <a href="https://wyszukiwarka-krs.ms.gov.pl/" style="color:${C.mid};">wyszukiwarka-krs.ms.gov.pl</a> (spółki wpisane do KRS) lub
       <a href="https://aplikacja.ceidg.gov.pl/CEIDG/Index.aspx" style="color:${C.mid};">ceidg.gov.pl</a> (jednoosobowa działalność gospodarcza).</p>
     </div>
+    <div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
+      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">2. Potwierdzenie przelewu opłaty wpisowej</p>
+      <p style="margin:0 0 10px;font-size:14px;line-height:1.6;">Opłata wpisowa wynosi <strong>${WPISOWE_KWOTA}</strong>. Prosimy o jej uiszczenie na konto Izby
+      i przesłanie potwierdzenia przelewu razem z dokumentem rejestrowym.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="font-size:14px;line-height:1.6;">
+        <tr><td style="padding:2px 12px 2px 0;color:#6b7c8c;white-space:nowrap;">Odbiorca</td><td style="padding:2px 0;">Geodezyjna Izba Gospodarcza<br>ul. Czackiego 3/5, 00-043 Warszawa</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#6b7c8c;white-space:nowrap;">Bank</td><td style="padding:2px 0;">${WPISOWE_BANK}</td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#6b7c8c;white-space:nowrap;">Numer rachunku</td><td style="padding:2px 0;"><strong style="letter-spacing:.4px;">${WPISOWE_KONTO}</strong></td></tr>
+        <tr><td style="padding:2px 12px 2px 0;color:#6b7c8c;white-space:nowrap;">Tytuł przelewu</td><td style="padding:2px 0;">Opłata wpisowa GIG${name && name !== "Anonim" ? " - " + esc(name) : ""}</td></tr>
+      </table>
+    </div>
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">Po otrzymaniu kompletu dokumentów kandydaturę opiniuje Prezydium Rady Izby, a następnie Rada Izby podejmuje uchwałę
+      o przyjęciu w poczet członków (art. 12 pkt 1 Statutu Izby). O decyzji poinformujemy Państwa mailem.</p>
     ${msg ? `<div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-radius:6px;">
       <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Dane z wniosku:</p>
       <p style="margin:0;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(msg)}</p></div>` : ""}`;
@@ -171,7 +198,8 @@ function zainteresowanieMail(rec: Record<string, unknown>) {
     </div>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">Jeśli chcą Państwo od razu złożyć wniosek, formularz jest na stronie
       <a href="https://gig.org.pl/dolacz-do-nas/" style="color:${C.mid};">gig.org.pl/dolacz-do-nas</a>. Do rozpatrzenia wniosku potrzebny jest
-      <strong>wydruk z CEIDG lub odpis z KRS</strong>, który prosimy przesłać na <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};">biuro@gig.org.pl</a>.
+      <strong>wydruk z CEIDG lub odpis z KRS</strong> oraz potwierdzenie przelewu opłaty wpisowej (${WPISOWE_KWOTA}), które prosimy przesłać na
+      <a href="mailto:biuro@gig.org.pl" style="color:${C.mid};">biuro@gig.org.pl</a>.
       Dokument pobiorą Państwo bezpłatnie ze strony <a href="https://wyszukiwarka-krs.ms.gov.pl/" style="color:${C.mid};">wyszukiwarka-krs.ms.gov.pl</a>
       lub <a href="https://aplikacja.ceidg.gov.pl/CEIDG/Index.aspx" style="color:${C.mid};">ceidg.gov.pl</a>.</p>
     <p style="margin:0;font-size:13px;color:#6b7c8c;line-height:1.6;">Silni wiedzą, zjednoczeni działaniem.</p>`;
@@ -494,7 +522,7 @@ Deno.serve(async (req) => {
         const r = await wyslij(NOTIFY_EMAILS, notifyMail(rec), nadawca);
         wyniki.powiadomienie = r.ok ? "wyslane" : r.info;
       }
-      // 2) potwierdzenie dla nadawcy - wniosek czlonkowski ma wlasna tresc (prosba o CEIDG/KRS)
+      // 2) potwierdzenie dla nadawcy - wniosek czlonkowski ma wlasna tresc (CEIDG/KRS + wpisowe)
       const temat = String(rec.subject ?? "");
       const potwierdzenie = /^Zgłoszenie członkowskie:/i.test(temat) ? czlonkostwoMail(rec)
         : (/^Zainteresowanie członkostwem:/i.test(temat) ? zainteresowanieMail(rec) : kontaktMail(rec));

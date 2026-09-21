@@ -76,7 +76,9 @@ async function loadSidebarBadges() {
     { table: 'submissions_newsletter', id: 'navBadgeNewsletter' },
     { table: 'submissions_kontakt',    id: 'navBadgeKontakt' },
     { table: 'zapisy_szkolenia',       id: 'navBadgeZapisy' },
-    { table: 'uchwaly',                id: 'navBadgeUchwaly', status: 'projekt' },   // projekty uchwal do sprawdzenia
+    // sprawy czekajace na sekretariat: prosba o opinie do Prezydium (etap 1)
+    // oraz projekt uchwaly do wyslania Radzie (etap 2)
+    { table: 'uchwaly',                id: 'navBadgeUchwaly', statusy: ['opiniowanie', 'projekt'] },
     { table: 'wezel_ankiety',          id: 'navBadgeWezel' },                        // nowe ankiety cenowe
     { table: 'czlonkowie',             id: 'navBadgeCzlonkowie', status: 'oczekuje' }, // zgloszenia czlonkowskie do zatwierdzenia
   ];
@@ -84,9 +86,9 @@ async function loadSidebarBadges() {
     const el = document.getElementById(m.id);
     if (!el) continue;
     try {
-      const { count } = await db.from(m.table)
-        .select('id', { count: 'exact', head: true })
-        .eq('status', m.status || 'new');
+      let q = db.from(m.table).select('id', { count: 'exact', head: true });
+      q = m.statusy ? q.in('status', m.statusy) : q.eq('status', m.status || 'new');
+      const { count } = await q;
       if (count && count > 0) { el.textContent = count; el.style.display = ''; }
       else { el.style.display = 'none'; }
     } catch (_) { el.style.display = 'none'; }
