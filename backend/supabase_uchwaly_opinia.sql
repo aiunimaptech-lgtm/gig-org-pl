@@ -294,6 +294,16 @@ update public.rada_izby set prezydium = true
  where lower(coalesce(funkcja, '')) like '%prezes%'
    and lower(coalesce(funkcja, '')) not like '%oddzia%';
 
+-- Partner konsultacji z art. 12 pkt 1 zd. trzeciego. Izba nie ma obecnie Oddziałów,
+-- jest jeden Przedstawiciel Regionalny. Nie jest członkiem Rady (art. 19 ust. 1) —
+-- w obradach bierze udział z głosem doradczym po imiennym zaproszeniu (art. 20 ust. 4) —
+-- więc `rada = false`: nie dostaje uchwały do głosowania, tylko bywa pytany o opinię.
+insert into public.rada_izby (imie_nazwisko, email, funkcja, region, prezydium, rada, aktywny, kolejnosc)
+values ('Dawid Sienkiewicz', 'dawid.sienkiewicz@gig.org.pl', 'Przedstawiciel Regionalny', 'Region Południowy', false, false, true, 110)
+on conflict (email) do update
+  set funkcja = excluded.funkcja, region = excluded.region,
+      prezydium = excluded.prezydium, rada = excluded.rada;
+
 -- kontrola
 select 'rada'            as co, count(*)::text from public.rada_izby
 union all select 'w prezydium', count(*)::text from public.rada_izby where prezydium

@@ -135,7 +135,7 @@ function kontaktMail(rec: Record<string, unknown>) {
 const WPISOWE_KWOTA = "75,00 zł";
 const WPISOWE_KONTO = "61 1240 6175 1111 0000 4574 9045";
 const WPISOWE_BANK = "Bank PEKAO SA Oddział w Warszawie";
-const WPISOWE_DNI = 14;
+const WPISOWE_DNI = 7;   // termin liczony od zgloszenia; tyle samo co domyslny termin opinii Prezydium
 
 function czlonkostwoMail(rec: Record<string, unknown>) {
   const name = (rec.name as string) || "";

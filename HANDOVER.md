@@ -27,7 +27,8 @@ i to, że brama Supabase wymusza `text/plain` na odpowiedziach Edge Functions.
 **Wersje Edge Functions na 21.09.2026** (repo = wdrożone, poza komentarzami):
 `send-confirmation` v14 (potwierdzenia rozpoznawane po prefiksie tematu w `submissions_kontakt`:
 „Zgłoszenie członkowskie:" = wniosek, w którym prosimy o wydruk CEIDG/KRS **i** potwierdzenie
-przelewu wpisowego 75 zł na konto Izby, z terminem +14 dni i opisem dalszej drogi: opinia Prezydium,
+przelewu wpisowego 75 zł na konto Izby, z terminem +7 dni (stała `WPISOWE_DNI`, tyle samo co
+domyślny termin opinii Prezydium) i opisem dalszej drogi: opinia Prezydium,
 potem uchwała Rady; „Zainteresowanie członkostwem:" = klient zostawił zaznaczoną zachętę po zapisie
 na szkolenie), `uchwala-wyslij` v2 i `glosuj` v2 (oba z obsługą etapu `opinia`), `wyslij-mail` v6,
 `wyslij-kampanie` v5, `panel-logowanie` v2, `panel-rejestracja` v3, `panel-haslo` v2, `baza-wypis` v1,
@@ -146,7 +147,7 @@ Przedstawicielem Regionalnym. Odmowa przyjęcia też zapada w formie uchwały Ra
 odwołanie do Walnego Zgromadzenia w 30 dni (art. 12 pkt 3). Panel prowadzi całą tę ścieżkę:
 
 ```
-zgłoszenie ze strony  →  mail do kandydata (CEIDG/KRS + potwierdzenie przelewu wpisowego 75 zł)
+zgłoszenie ze strony  →  mail do kandydata (CEIDG/KRS + przelew wpisowego 75 zł, termin 7 dni)
 ETAP 1  opiniowanie/projekt     → „Wyślij do Prezydium" (uchwala-wyslij, etap 'opinia')
         opiniowanie/głosowanie  → opinie z /glosowanie/ → „Zakończ opiniowanie"
              pozytywna  → ETAP 2                 negatywna → uchwała o odmowie albo zamknięcie
@@ -164,8 +165,14 @@ oraz dane z deklaracji (`kandydat_telefon/www/opis/pkd/osob`) siedzą w `uchwaly
 się do wyniku (`prezydium`, `rada`) czy jest tylko konsultacją (`konsultacja`, art. 12 pkt 1
 zd. trzecie). Klucz unikalny to `(uchwala_id, email, etap)`, więc ta sama osoba może opiniować
 i głosować. `rada_izby` ma dwa niezależne znaczniki: `prezydium` (opiniuje, etap 1) i `rada`
-(głosuje, etap 2) — Prezes jest w obu, Przedstawiciel Regionalny w żadnym, a i tak można go
-doraźnie dopisać do odbiorców prośby o opinię.
+(głosuje, etap 2). Skład na 21.09: Prezydium to Rafał Kraska (Prezes) i trzej Wiceprezesi
+(Bryk, Tomaszewski, Zając), wszyscy też w Radzie; Rada liczy 9 osób. **Izba nie ma Oddziałów**,
+więc jedynym partnerem konsultacji z art. 12 pkt 1 jest **Dawid Sienkiewicz, Przedstawiciel
+Regionalny na Region Południowy** (`dawid.sienkiewicz@gig.org.pl`) — ma `rada = false`, bo nie
+jest członkiem Rady (art. 19 ust. 1; w obradach z głosem doradczym po zaproszeniu, art. 20 ust. 4).
+W odbiorcach prośby o opinię widnieje odznaczony, z podpisem „Przedstawiciel Regionalny, Region
+Południowy"; sekretariat dopisuje go, gdy kandydat jest z jego regionu. Do odbiorców uchwały
+(etap 2) w ogóle nie trafia, bo ta lista bierze tylko osoby ze znacznikiem `rada`.
 
 **Sprawy sprzed 21.09** dostały `opinia_status = 'pominieta'`, żeby panel nie kazał opiniować
 od nowa czegoś, co już poszło do Rady. Ten sam status nadaje przycisk „Opinia już wydana poza

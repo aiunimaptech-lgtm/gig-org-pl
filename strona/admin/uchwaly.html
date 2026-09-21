@@ -411,12 +411,14 @@
       </table></div>`;
     }
 
-    function odbiorcyHtml(klasa, ktoDomyslnie){
-      const lista = rada.filter(r => r.aktywny);
-      if (!lista.length) return '<span class="u-mini">Lista jest pusta. Uzupełnij ją przyciskiem „Skład Rady".</span>';
+    /* `lista` jest już przefiltrowana pod etap: opinia idzie do wszystkich aktywnych
+       (Prezydium zaznaczone, reszta jako konsultacja), uchwała tylko do członków Rady. */
+    function odbiorcyHtml(klasa, lista, ktoDomyslnie, pusto){
+      if (!lista.length) return `<span class="u-mini">${pusto} Uzupełnij listę przyciskiem „Skład Rady".</span>`;
       return lista.map(r => {
         const dom = ktoDomyslnie(r);
-        return `<label class="${dom ? '' : 'konsult'}"><input type="checkbox" class="${klasa}" value="${r.id}" ${dom ? 'checked' : ''}> <span>${esc(r.imie_nazwisko)}${r.funkcja ? ' <span class="mail">· ' + esc(r.funkcja) + '</span>' : ''}<div class="mail">${esc(r.email)}</div></span></label>`;
+        const podpis = [r.funkcja, r.region].filter(Boolean).join(', ');
+        return `<label class="${dom ? '' : 'konsult'}"><input type="checkbox" class="${klasa}" value="${r.id}" ${dom ? 'checked' : ''}> <span>${esc(r.imie_nazwisko)}${podpis ? ' <span class="mail">· ' + esc(podpis) + '</span>' : ''}<div class="mail">${esc(r.email)}</div></span></label>`;
       }).join('');
     }
 
@@ -474,8 +476,8 @@
           </div>
           <div class="form-group"><label>Treść prośby <small style="text-transform:none;font-weight:500;">(pusta linia = nowy akapit; dane z deklaracji i przyciski opinii dokładają się same)</small></label>
             <textarea class="form-control u-mail" id="opMailTresc">${esc(u.opinia_mail_tresc || '')}</textarea></div>
-          <div class="form-group"><label>Odbiorcy <small style="text-transform:none;font-weight:500;">zaznaczone: Prezydium. Osoby bez zaznaczenia to konsultacja (Prezes Oddziału, Przedstawiciel Regionalny) — ich odpowiedź trafia do protokołu, ale nie do wyniku opinii.</small></label>
-            <div class="u-odb">${odbiorcyHtml('opOdb', r => r.prezydium)}</div></div>
+          <div class="form-group"><label>Odbiorcy <small style="text-transform:none;font-weight:500;">zaznaczone: Prezydium. Osoby bez zaznaczenia dopisujesz do konsultacji, jeśli są właściwe dla regionu kandydata (art. 12 pkt 1 zd. trzecie) — ich odpowiedź trafia do protokołu, ale nie do wyniku opinii.</small></label>
+            <div class="u-odb">${odbiorcyHtml('opOdb', rada.filter(r => r.aktywny), r => r.prezydium, 'Lista jest pusta.')}</div></div>
           <div class="u-akcje">
             <button class="btn btn-ghost btn-sm" id="opZapisz">Zapisz zmiany</button>
             <button class="btn btn-ghost btn-sm" id="opGeneruj" title="Buduje prośbę o opinię od nowa z danych kandydata i stanu dokumentów">↻ Wygeneruj prośbę od nowa</button>
@@ -563,8 +565,8 @@
 
         if (projekt) {
           html += `
-          <div class="form-group" style="margin-top:14px;"><label>Odbiorcy <small style="text-transform:none;font-weight:500;">członkowie Rady, którzy dostaną uchwałę do głosowania</small></label>
-            <div class="u-odb">${odbiorcyHtml('uOdb', r => r.rada)}</div></div>
+          <div class="form-group" style="margin-top:14px;"><label>Odbiorcy <small style="text-transform:none;font-weight:500;">osoby ze znacznikiem „Rada" w składzie; Przedstawiciel Regionalny nie jest członkiem Rady i nad uchwałą nie głosuje</small></label>
+            <div class="u-odb">${odbiorcyHtml('uOdb', rada.filter(r => r.aktywny && r.rada), () => true, 'Nikt nie ma znacznika „Rada".')}</div></div>
           <div class="u-akcje">
             <button class="btn btn-ghost btn-sm" id="uchZapisz">Zapisz zmiany</button>
             <button class="btn btn-ghost btn-sm" id="uchGeneruj" title="Buduje treść uchwały i maila od nowa z danych kandydata (nadpisze ręczne poprawki)">↻ Wygeneruj treść od nowa</button>
