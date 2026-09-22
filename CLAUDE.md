@@ -26,6 +26,13 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   Opinia negatywna prowadzi do uchwały o odmowie (`uchwaly.rodzaj = 'odmowa'`, z pouczeniem
   o odwołaniu do Walnego Zgromadzenia, art. 12 pkt 3) albo do zamknięcia sprawy.
   Szczegóły w HANDOVER.md.
+- **Konsultacje**: doraźne zapytania, w których Izba zabiera głos kolegialnie (patronat,
+  partnerstwo, stanowisko w sprawie bieżącej). Panel `/admin/konsultacje.html` → wybór grupy
+  (Prezydium, Rada, Przedstawiciele Regionalni, Członkowie Izby) albo pojedynczych osób →
+  Edge Function `konsultacja-wyslij` → odbiorcy odpowiadają za/przeciw z uzasadnieniem
+  ze strony `/ankieta/` (Edge Function `konsultacja-glosuj`) → przypomnienia, eksport CSV.
+  Tabele `konsultacje`, `konsultacje_glosy`, widok `gig_odbiorcy_konsultacji`
+  (`backend/supabase_konsultacje.sql`). To **nie** jest tryb uchwał z art. 12 Statutu.
 - **Węzeł Jakości**: ankieta cenowa `/wezel-jakosci/` (katalog pozycji SEKOCENBUD w
   `_assets/js/wezel-katalog.js`, generowany `skrypty/gen_wezel_katalog.py`) → tabele
   `wezel_ankiety` / `wezel_ceny` → panel `/admin/wezel.html` (zestawienie min/max/średnia,

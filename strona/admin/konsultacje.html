@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Konsultacje — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .k-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:18px;}
+    .k-sum .k{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:12px 16px;min-width:0;cursor:pointer;}
+    .k-sum .k:hover{border-color:#cc0a2b;}
+    .k-sum .k .t{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .k-sum .k .v{font-size:22px;font-weight:800;color:#16202a;margin-top:3px;}
+    .k-sum .k .v small{font-size:13px;font-weight:600;color:#6b7f84;}
+    .u-mini{font-size:12px;color:#6b7f84;line-height:1.5;margin-top:3px;}
+    .u-glosy b{font-weight:800;}
+    .u-glosy .za{color:#1d7a45;}.u-glosy .przeciw{color:#cc0a2b;}.u-glosy .brak{color:#9aa7b2;}
+    .u-sekcja{margin:0 0 18px;padding:16px 18px;background:#f7f9fb;border-radius:10px;}
+    .u-sekcja h4{margin:0 0 10px;font-size:13px;color:#16202a;text-transform:uppercase;letter-spacing:.5px;}
+    .u-sekcja h4 small{text-transform:none;letter-spacing:0;font-weight:500;color:#6b7f84;margin-left:6px;}
+    .u-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .u-grid .form-group{margin-bottom:0;}
+    .u-grid .szeroki{grid-column:1 / -1;}
+    @media(max-width:640px){.u-grid{grid-template-columns:1fr;}}
+    textarea.k-tresc{min-height:220px;line-height:1.55;resize:vertical;}
+    .u-akcje{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px;}
+    .u-akcje .prawo{margin-left:auto;}
+    .u-wynik{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 12px;}
+    .u-wynik span{padding:8px 14px;border-radius:20px;font-weight:800;font-size:14px;}
+    .u-wynik .za{background:#e6f5ec;color:#1d7a45;}.u-wynik .przeciw{background:#fdecef;color:#cc0a2b;}.u-wynik .brak{background:#f3f4f5;color:#6b7f84;}
+    .u-uz{font-size:12.5px;color:#6b7f84;white-space:pre-wrap;}
+    #konsPodgladRamka{width:100%;height:70vh;border:1px solid #e6ebef;border-radius:8px;background:#fff;}
+    .u-status-pasek{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 16px;font-size:13px;color:#6b7f84;}
+    .u-info{margin:0 0 12px;padding:11px 14px;border-radius:8px;font-size:13.5px;line-height:1.55;}
+    .u-info.czeka{background:#f2f5f7;border:1px solid #e3e9ee;color:#6b7f84;}
+    .u-info.dobrze{background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    /* wybór odbiorców: cztery grupy, każda z licznikiem i zaznaczaniem hurtem */
+    .k-grupa{border:1px solid #e3e9ee;border-radius:10px;background:#fff;margin-bottom:10px;overflow:hidden;}
+    .k-grupa > summary{list-style:none;cursor:pointer;padding:11px 14px;display:flex;align-items:center;gap:10px;font-weight:700;font-size:14px;}
+    .k-grupa > summary::-webkit-details-marker{display:none;}
+    .k-grupa > summary .licz{margin-left:auto;font-weight:600;font-size:12.5px;color:#6b7f84;}
+    .k-grupa > summary .strzalka{color:#9aa7b2;font-size:12px;}
+    .k-grupa[open] > summary{border-bottom:1px solid #eef2f5;}
+    .k-grupa .osoby{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2px 14px;padding:10px 14px 12px;}
+    .k-grupa .osoby label{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;padding:4px 0;}
+    .k-grupa .osoby input{width:16px;height:16px;accent-color:#cc0a2b;margin-top:2px;flex:none;}
+    .k-grupa .osoby .mail{color:#6b7f84;font-size:12px;display:block;}
+    .k-hurt{display:flex;gap:8px;padding:0 14px 12px;}
+    .k-podsum{font-size:13.5px;font-weight:700;color:#16202a;margin:4px 0 12px;}
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-section">Zarządzanie</div>
+        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
+        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">⚇</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
+        <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
+        <a class="active" href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
+        <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Konsultacje</div>
+        <div class="topbar-actions">
+          <button class="btn btn-primary btn-sm" id="btnNowa">＋ Nowe zapytanie</button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="k-sum" id="podsumowanie"></div>
+
+        <div class="card"><div class="card-body">
+          <div class="toolbar">
+            <div class="search-box"><span class="search-icon">⌕</span>
+              <input type="text" class="form-control" id="szukaj" placeholder="Szukaj w temacie i treści…"></div>
+            <select id="fStatus" class="form-control" style="max-width:240px;">
+              <option value="">Wszystkie zapytania</option>
+              <option value="projekt">Szkice (do wysłania)</option>
+              <option value="glosowanie">W toku</option>
+              <option value="zakonczona">Zakończone</option>
+              <option value="anulowana">Anulowane</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Temat</th><th>Odbiorcy</th><th>Utworzono</th><th>Status</th><th>Odpowiedzi</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table>
+          </div>
+        </div></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- MODAL: zapytanie -->
+  <div class="modal-overlay" id="konsModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title" id="konsTytul">Zapytanie</div>
+        <button class="modal-close" data-modal-close="konsModal">×</button>
+      </div>
+      <div class="modal-body" id="konsTresc"></div>
+    </div>
+  </div>
+
+  <!-- MODAL: nowe zapytanie -->
+  <div class="modal-overlay" id="nowaModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div class="modal-title">Nowe zapytanie do konsultacji</div>
+        <button class="modal-close" data-modal-close="nowaModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group"><label>Temat <small style="font-weight:400;color:#6b7f84;">trafia do tematu wiadomości</small></label>
+          <input class="form-control" id="nowaTemat" placeholder="np. Patronat Izby nad konferencją GeoInfo 2026"></div>
+        <div class="form-group"><label>Kogo pytamy</label>
+          <select class="form-control" id="nowaGrupa">
+            <option value="prezydium">Prezydium Rady (4 osoby)</option>
+            <option value="rada">Rada Izby (9 osób)</option>
+            <option value="przedstawiciel">Przedstawiciele Regionalni</option>
+            <option value="czlonek">Członkowie Izby</option>
+            <option value="reczna">Wybiorę osoby ręcznie</option>
+          </select>
+          <p class="u-mini">To tylko punkt wyjścia. Listę odbiorców doprecyzujesz w następnym kroku i możesz dowolnie mieszać grupy.</p></div>
+        <div class="form-group"><label>Termin na odpowiedź</label><input class="form-control" type="date" id="nowaTermin"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-modal-close="nowaModal">Anuluj</button>
+        <button class="btn btn-primary" id="nowaZapisz">Utwórz szkic</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: podgląd maila -->
+  <div class="modal-overlay" id="podgladModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title" id="podgladTytul">Podgląd wiadomości</div>
+        <button class="modal-close" data-modal-close="podgladModal">×</button>
+      </div>
+      <div class="modal-body"><iframe id="konsPodgladRamka" title="Podgląd maila"></iframe></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    /* ------------------------------------------------------------------
+       Konsultacje: doraźne zapytania, w których Izba zabiera głos kolegialnie
+       (patronat, partnerstwo, stanowisko w sprawie bieżącej). To NIE jest tryb
+       uchwał Rady z art. 12 Statutu — tamten ma własną zakładkę i dwa etapy.
+       Tutaj: jedno pytanie, jedna runda, za/przeciw z uzasadnieniem.
+
+         szkic → „Wyślij zapytanie" (konsultacja-wyslij) → odpowiedzi z /ankieta/
+         (konsultacja-glosuj) → przypomnienia → „Zakończ i podsumuj".
+       ------------------------------------------------------------------ */
+    let dane = [], glosyWg = {}, odbiorcy = [], adminEmail = '';
+    const ETYK = { projekt:'szkic', glosowanie:'w toku', zakonczona:'zakończona', anulowana:'anulowana' };
+    const BADGE = { projekt:'badge-draft', glosowanie:'badge-new', zakonczona:'badge-confirmed', anulowana:'badge-archived' };
+    const GRUPY = [
+      { id:'prezydium',      nazwa:'Prezydium Rady',            opis:'Prezes i Wiceprezesi' },
+      { id:'rada',           nazwa:'Rada Izby (pozostali)',      opis:'członkowie Rady spoza Prezydium' },
+      { id:'przedstawiciel', nazwa:'Przedstawiciele Regionalni', opis:'nie są członkami Rady' },
+      { id:'czlonek',        nazwa:'Członkowie Izby',            opis:'firmy z katalogu na stronie' },
+    ];
+
+    const fmtDT = iso => iso ? new Date(iso).toLocaleString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '';
+    const fmtDay = iso => iso ? new Date(iso + 'T00:00:00').toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit', year:'numeric' }) : '';
+    const licz = g => ({ za: g.filter(x => x.glos === 'za').length, przeciw: g.filter(x => x.glos === 'przeciw').length, brak: g.filter(x => !x.glos).length });
+    const gl = k => glosyWg[k.id] || [];
+    /* „1 osoba, 2 osoby, 5 osób": liczebnik po polsku, bo liczniki widać w kafelkach
+       i w potwierdzeniach wysyłki, a „1 osób" od razu kłuje w oczy. */
+    function odmiana(n, formy){
+      const j = n % 10, d = n % 100;
+      if (n === 1) return formy[0];
+      if (j >= 2 && j <= 4 && (d < 12 || d > 14)) return formy[1];
+      return formy[2];
+    }
+    const osoby = n => n + ' ' + odmiana(n, ['osoba', 'osoby', 'osób']);
+
+    async function wolaj(nazwa, body){
+      const sesja = await getSession();
+      if (!sesja) throw new Error('sesja wygasła, zaloguj się ponownie');
+      const res = await fetch(SUPABASE_URL + '/functions/v1/' + nazwa, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
+        body: JSON.stringify(body),
+      });
+      const w = await res.json().catch(() => ({}));
+      if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
+      return w;
+    }
+
+    /* ── lista ── */
+    function podsumuj(){
+      const n = s => dane.filter(k => k.status === s).length;
+      const kafel = (t, v, small, st, wyr) => `<div class="k" data-st="${st}" ${wyr ? 'style="border-color:#f3ccd4;background:#fff5f6;"' : ''}><div class="t">${t}</div><div class="v" ${wyr ? 'style="color:#cc0a2b;"' : ''}>${v}${small ? ` <small>${small}</small>` : ''}</div></div>`;
+      const czekaja = dane.filter(k => k.status === 'glosowanie')
+        .reduce((s, k) => s + licz(gl(k)).brak, 0);
+      document.getElementById('podsumowanie').innerHTML =
+        kafel('Szkice do wysłania', n('projekt'), '', 'projekt', n('projekt') > 0) +
+        kafel('W toku', n('glosowanie'), '', 'glosowanie') +
+        kafel('Czekamy na odpowiedzi', czekaja, odmiana(czekaja, ['osoba', 'osoby', 'osób']), 'glosowanie') +
+        kafel('Zakończone', n('zakonczona'), '', 'zakonczona');
+      document.querySelectorAll('#podsumowanie .k').forEach(el => el.addEventListener('click', () => {
+        document.getElementById('fStatus').value = el.dataset.st; render();
+      }));
+    }
+
+    function filtruj(){
+      const f = document.getElementById('szukaj').value.toLowerCase().trim();
+      const st = document.getElementById('fStatus').value;
+      return dane.filter(k => {
+        if (st && k.status !== st) return false;
+        if (!f) return true;
+        return [k.temat, k.tresc, k.pytanie].some(v => (v || '').toLowerCase().includes(f));
+      });
+    }
+
+    function render(){
+      const rows = filtruj();
+      const tb = document.getElementById('rows');
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak zapytań spełniających kryteria.</td></tr>'; return; }
+      tb.innerHTML = rows.map(k => {
+        const g = gl(k), c = licz(g);
+        return `<tr>
+          <td style="max-width:330px;"><strong>${esc(k.temat || '(bez tematu)')}</strong>
+            <div class="u-mini">${esc((k.tresc || '').replace(/\s+/g, ' ').slice(0, 90))}${(k.tresc || '').length > 90 ? '…' : ''}</div></td>
+          <td style="white-space:nowrap;">${g.length ? osoby(g.length) : '<span class="u-mini">jeszcze nie wysłano</span>'}</td>
+          <td style="white-space:nowrap;">${fmtDT(k.created_at)}
+            ${k.termin ? `<div class="u-mini">termin ${fmtDay(k.termin)}</div>` : ''}</td>
+          <td><span class="badge ${BADGE[k.status] || 'badge-read'}">${ETYK[k.status] || k.status}</span>
+            ${k.wyslano_at ? `<div class="u-mini">wysłano ${fmtDT(k.wyslano_at)}</div>` : ''}
+            ${k.zamknieto_at ? `<div class="u-mini">zamknięto ${fmtDT(k.zamknieto_at)}</div>` : ''}</td>
+          <td>${k.status === 'projekt' ? '<span class="u-mini">—</span>'
+              : `<span class="u-glosy"><b class="za">${c.za} za</b> · <b class="przeciw">${c.przeciw} przeciw</b> · <b class="brak">bez odpowiedzi: ${c.brak}</b></span>`}</td>
+          <td class="actions" style="white-space:nowrap;">
+            <button class="btn btn-outline btn-xs" data-otworz="${k.id}">${k.status === 'projekt' ? 'Sprawdź i wyślij' : 'Otwórz'}</button>
+          </td>
+        </tr>`; }).join('');
+      tb.querySelectorAll('[data-otworz]').forEach(b => b.addEventListener('click', () => otworz(b.dataset.otworz)));
+    }
+
+    /* ── wybór odbiorców ── */
+    function odbiorcyHtml(zaznaczeni){
+      return GRUPY.map(gr => {
+        const osoby = odbiorcy.filter(o => o.grupa === gr.id);
+        if (!osoby.length) return '';
+        const ile = osoby.filter(o => zaznaczeni.has(o.id)).length;
+        return `<details class="k-grupa" data-grupa="${gr.id}" ${ile ? 'open' : ''}>
+          <summary><span class="strzalka">▸</span> ${esc(gr.nazwa)}
+            <span class="licz"><span class="licz-wybrane">${ile}</span> z ${osoby.length} · ${esc(gr.opis)}</span></summary>
+          <div class="osoby">${osoby.map(o => `
+            <label><input type="checkbox" class="kOdb" value="${esc(o.id)}" data-grupa="${gr.id}" ${zaznaczeni.has(o.id) ? 'checked' : ''}>
+              <span>${esc(o.nazwa)}<span class="mail">${esc(o.opis || '')}${o.opis ? ' · ' : ''}${esc(o.email)}</span></span></label>`).join('')}</div>
+          <div class="k-hurt">
+            <button type="button" class="btn btn-ghost btn-xs" data-zazn="${gr.id}">Zaznacz wszystkich</button>
+            <button type="button" class="btn btn-ghost btn-xs" data-odzn="${gr.id}">Odznacz</button>
+          </div>
+        </details>`;
+      }).join('');
+    }
+
+    function policzOdbiorcow(){
+      GRUPY.forEach(gr => {
+        const det = document.querySelector(`.k-grupa[data-grupa="${gr.id}"]`);
+        if (!det) return;
+        det.querySelector('.licz-wybrane').textContent = det.querySelectorAll('.kOdb:checked').length;
+      });
+      const razem = document.querySelectorAll('.kOdb:checked').length;
+      const el = document.getElementById('kRazem');
+      if (el) el.textContent = razem
+        ? `Zapytanie pójdzie do ${razem} ${odmiana(razem, ['osoby', 'osób', 'osób'])}.`
+        : 'Nie wybrano jeszcze żadnego odbiorcy.';
+    }
+
+    function podepnijOdbiorcow(){
+      document.querySelectorAll('[data-zazn]').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll(`.kOdb[data-grupa="${b.dataset.zazn}"]`).forEach(i => { i.checked = true; });
+        policzOdbiorcow();
+      }));
+      document.querySelectorAll('[data-odzn]').forEach(b => b.addEventListener('click', () => {
+        document.querySelectorAll(`.kOdb[data-grupa="${b.dataset.odzn}"]`).forEach(i => { i.checked = false; });
+        policzOdbiorcow();
+      }));
+      document.querySelectorAll('.kOdb').forEach(i => i.addEventListener('change', policzOdbiorcow));
+      policzOdbiorcow();
+    }
+
+    /* ── okno zapytania ── */
+    function otworz(id){
+      const k = dane.find(x => x.id === id);
+      if (!k) return;
+      const g = gl(k), c = licz(g);
+      const projekt = k.status === 'projekt';
+      const wToku = k.status === 'glosowanie';
+      document.getElementById('konsTytul').textContent = k.temat || '(bez tematu)';
+
+      let html = `<div class="u-status-pasek">
+        <span class="badge ${BADGE[k.status]}">${ETYK[k.status]}</span>
+        ${k.termin ? `<span>· termin odpowiedzi ${fmtDay(k.termin)}</span>` : ''}
+        ${k.wyslano_at ? `<span>· wysłano ${fmtDT(k.wyslano_at)}${k.wyslal ? ' (' + esc(k.wyslal) + ')' : ''}</span>` : ''}
+        ${k.zamknieto_at ? `<span>· zamknięto ${fmtDT(k.zamknieto_at)}${k.zamknal ? ' (' + esc(k.zamknal) + ')' : ''}</span>` : ''}
+      </div>`;
+
+      if (!projekt) {
+        html += `<div class="u-sekcja">
+          <h4>Odpowiedzi <small>${osoby(g.length)} na liście</small></h4>
+          <div class="u-wynik"><span class="za">${c.za} ZA</span><span class="przeciw">${c.przeciw} PRZECIW</span><span class="brak">bez odpowiedzi: ${c.brak}</span></div>
+          <div class="table-wrap"><table class="admin-table">
+            <thead><tr><th>Odbiorca</th><th>Wysłano</th><th>Przyp.</th><th>Odpowiedź</th><th>Kiedy</th><th>Uzasadnienie</th></tr></thead>
+            <tbody>${g.map(x => `<tr>
+              <td><strong>${esc(x.imie_nazwisko)}</strong>${x.organizacja ? `<div class="u-mini">${esc(x.organizacja)}</div>` : ''}<div class="u-mini">${esc(x.email)}</div></td>
+              <td style="white-space:nowrap;">${x.wyslano_at ? fmtDT(x.wyslano_at) : (x.blad_wysylki ? '<span class="badge badge-cancelled" title="' + esc(x.blad_wysylki) + '">błąd wysyłki</span>' : '—')}</td>
+              <td style="text-align:center;">${x.przypomnien || 0}</td>
+              <td>${x.glos === 'za' ? '<span class="badge badge-confirmed">ZA</span>' : (x.glos === 'przeciw' ? '<span class="badge badge-cancelled" style="text-decoration:none;">PRZECIW</span>' : '<span class="badge badge-read">brak</span>')}</td>
+              <td style="white-space:nowrap;">${x.glosowano_at ? fmtDT(x.glosowano_at) : ''}</td>
+              <td class="u-uz">${esc(x.uzasadnienie || '')}</td>
+            </tr>`).join('') || '<tr><td colspan="6" style="color:#6b7f84;">Brak listy odbiorców.</td></tr>'}</tbody>
+          </table></div>
+          <div class="u-akcje">
+            ${wToku ? `<button class="btn btn-outline btn-sm" id="konsPrzypomnij" ${c.brak ? '' : 'disabled'}>✉ Przypomnij bez odpowiedzi (${c.brak})</button>` : ''}
+            <button class="btn btn-outline btn-sm" id="konsCsv">↓ Pobierz odpowiedzi (CSV)</button>
+            ${wToku ? '<button class="btn btn-primary btn-sm prawo" id="konsZakoncz">Zakończ i podsumuj</button>' : ''}
+          </div>
+        </div>`;
+      }
+
+      html += `<div class="u-sekcja">
+        <h4>Treść zapytania <small>${projekt ? 'do wysyłki; pusta linia zaczyna nowy akapit' : 'po wysłaniu bez zmian'}</small></h4>
+        <div class="u-grid">
+          <div class="form-group szeroki"><label>Temat wiadomości</label>
+            <input class="form-control" id="kTemat" value="${esc(k.temat || '')}" ${projekt ? '' : 'readonly'}></div>
+          <div class="form-group szeroki"><label>Treść</label>
+            <textarea class="form-control k-tresc" id="kTresc" ${projekt ? '' : 'readonly'}>${esc(k.tresc || '')}</textarea></div>
+          <div class="form-group szeroki"><label>Pytanie pod treścią</label>
+            <input class="form-control" id="kPytanie" value="${esc(k.pytanie || '')}" ${projekt ? '' : 'readonly'}></div>
+          <div class="form-group"><label>Napis na przycisku ZA</label>
+            <input class="form-control" id="kZa" value="${esc(k.etykieta_za || '')}" ${projekt ? '' : 'readonly'}></div>
+          <div class="form-group"><label>Napis na przycisku PRZECIW</label>
+            <input class="form-control" id="kPrzeciw" value="${esc(k.etykieta_przeciw || '')}" ${projekt ? '' : 'readonly'}></div>
+          <div class="form-group"><label>Termin na odpowiedź</label>
+            <input class="form-control" type="date" id="kTermin" value="${esc(k.termin || '')}" ${projekt ? '' : 'readonly'}></div>
+        </div>
+      </div>`;
+
+      if (projekt) {
+        const wstepni = new Set(k.grupa === 'reczna' ? [] : odbiorcy.filter(o =>
+          k.grupa === 'rada' ? (o.grupa === 'rada' || o.grupa === 'prezydium') : o.grupa === k.grupa).map(o => o.id));
+        html += `<div class="u-sekcja">
+          <h4>Odbiorcy <small>zaznacz grupy albo pojedyncze osoby</small></h4>
+          <p class="k-podsum" id="kRazem"></p>
+          ${odbiorcyHtml(wstepni)}
+        </div>
+        <div class="u-akcje">
+          <button class="btn btn-ghost btn-sm" id="konsZapisz">Zapisz zmiany</button>
+          <button class="btn btn-outline btn-sm" id="konsPodglad">Podgląd maila</button>
+          <button class="btn btn-danger btn-sm" id="konsUsun">🗑 Usuń szkic</button>
+          <button class="btn btn-primary prawo" id="konsWyslij">✉ Wyślij zapytanie</button>
+        </div>`;
+      } else {
+        html += `<div class="u-sekcja">
+          <h4>Podsumowanie biura <small>notatka na potrzeby dokumentacji, nie wychodzi mailem</small></h4>
+          <textarea class="form-control" id="kPodsum" style="min-height:90px;">${esc(k.podsumowanie || '')}</textarea>
+          <div class="u-akcje"><button class="btn btn-ghost btn-sm" id="konsPodsumZapisz">Zapisz podsumowanie</button></div>
+        </div>
+        <div class="u-akcje">
+          ${wToku ? '<button class="btn btn-ghost btn-sm" id="konsAnuluj">Anuluj zapytanie</button>' : ''}
+          <button class="btn btn-danger btn-sm prawo" id="konsUsun">🗑 Usuń zapytanie</button>
+        </div>`;
+      }
+
+      document.getElementById('konsTresc').innerHTML = html;
+      openModal('konsModal');
+      if (projekt) podepnijOdbiorcow();
+
+      const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+      on('konsZapisz', () => zapisz(k));
+      on('konsPodglad', () => podglad(k));
+      on('konsWyslij', () => wyslij(k));
+      on('konsUsun', () => usun(k));
+      on('konsPrzypomnij', () => przypomnij(k));
+      on('konsZakoncz', () => zakoncz(k));
+      on('konsAnuluj', () => anuluj(k));
+      on('konsCsv', () => csv(k));
+      on('konsPodsumZapisz', () => zapiszPodsumowanie(k));
+    }
+
+    /* ── zapis i wysyłka ── */
+    const val = id => { const el = document.getElementById(id); return el ? (el.value || '').trim() : ''; };
+
+    async function zapisz(k, cicho){
+      if (k.status !== 'projekt') return true;
+      const p = {
+        temat: val('kTemat'), tresc: document.getElementById('kTresc').value,
+        pytanie: val('kPytanie') || 'Czy jest Pani/Pan za?',
+        etykieta_za: val('kZa') || 'Jestem ZA', etykieta_przeciw: val('kPrzeciw') || 'Jestem PRZECIW',
+        termin: val('kTermin') || null, updated_at: new Date().toISOString(),
+      };
+      if (!p.temat || !p.tresc.trim()) { toast('Uzupełnij temat i treść zapytania', 'error'); return false; }
+      const { error } = await db.from('konsultacje').update(p).eq('id', k.id);
+      if (error) { toast('Nie udało się zapisać: ' + error.message, 'error'); return false; }
+      Object.assign(k, p);
+      if (!cicho) toast('Zapisano', 'success');
+      return true;
+    }
+
+    async function zapiszPodsumowanie(k){
+      const { error } = await db.from('konsultacje')
+        .update({ podsumowanie: document.getElementById('kPodsum').value.trim() || null, updated_at: new Date().toISOString() })
+        .eq('id', k.id);
+      if (error) { toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
+      toast('Zapisano podsumowanie', 'success');
+      await load();
+    }
+
+    async function podglad(k){
+      if (!await zapisz(k, true)) return;
+      try {
+        const w = await wolaj('konsultacja-wyslij', { konsultacja_id: k.id, tryb: 'podglad' });
+        document.getElementById('podgladTytul').textContent = 'Podgląd: ' + w.subject;
+        document.getElementById('konsPodgladRamka').srcdoc = w.html;
+        openModal('podgladModal');
+      } catch (e) { toast('Podgląd nieudany: ' + e.message, 'error'); }
+    }
+
+    async function wyslij(k){
+      if (!await zapisz(k, true)) return;
+      const odb = [...document.querySelectorAll('.kOdb:checked')].map(x => x.value);
+      if (!odb.length) { toast('Zaznacz co najmniej jednego odbiorcę', 'error'); return; }
+      if (!confirm(`Wysłać zapytanie „${k.temat}" do ${odb.length} ${odmiana(odb.length, ['osoby', 'osób', 'osób'])}?\n\nPo wysłaniu treść będzie zamrożona, a każdy odbiorca dostanie osobisty link do odpowiedzi.`)) return;
+      const btn = document.getElementById('konsWyslij');
+      btn.disabled = true; btn.textContent = 'Wysyłanie…';
+      try {
+        const w = await wolaj('konsultacja-wyslij', { konsultacja_id: k.id, tryb: 'start', odbiorcy: odb });
+        const nieudane = (w.wyniki || []).filter(x => !x.ok);
+        toast(`Wysłano do ${w.wyslane} z ${w.razem}` + (nieudane.length ? ' (część nie dotarła, sprawdź listę)' : ''), nieudane.length ? 'error' : 'success', 5000);
+        await load(); otworz(k.id);
+      } catch (e) {
+        toast('Nie udało się wysłać: ' + e.message, 'error', 6000);
+        btn.disabled = false; btn.textContent = '✉ Wyślij zapytanie';
+      }
+    }
+
+    async function przypomnij(k){
+      const brak = gl(k).filter(x => !x.glos);
+      if (!brak.length) { toast('Wszyscy już odpowiedzieli'); return; }
+      if (!confirm(`Wysłać przypomnienie do ${brak.length} ${odmiana(brak.length, ['osoby', 'osób', 'osób'])}?\n\n${brak.slice(0, 15).map(x => '• ' + x.imie_nazwisko).join('\n')}${brak.length > 15 ? '\n…' : ''}`)) return;
+      const btn = document.getElementById('konsPrzypomnij');
+      btn.disabled = true; btn.textContent = 'Wysyłanie…';
+      try {
+        const w = await wolaj('konsultacja-wyslij', { konsultacja_id: k.id, tryb: 'przypomnienie' });
+        toast(`Przypomnienie wysłane do ${w.wyslane} z ${w.razem}`, 'success');
+        await load(); otworz(k.id);
+      } catch (e) { toast('Nie udało się wysłać: ' + e.message, 'error', 6000); btn.disabled = false; btn.textContent = '✉ Przypomnij bez odpowiedzi'; }
+    }
+
+    /* Rozstrzyga większość wśród oddanych; kompletu nie wymagamy, bo część
+       odbiorców zwykle nie odpowiada, a sprawa i tak musi się domknąć. */
+    async function zakoncz(k){
+      const c = licz(gl(k));
+      if (!c.za && !c.przeciw) { toast('Nikt jeszcze nie odpowiedział, nie ma czego podsumowywać', 'error'); return; }
+      const wynik = c.za > c.przeciw ? 'stanowisko ZA' : (c.za < c.przeciw ? 'stanowisko PRZECIW' : 'remis, bez rozstrzygnięcia');
+      if (!confirm(`Zakończyć konsultację „${k.temat}"?\n\nWynik: ${c.za} za, ${c.przeciw} przeciw, bez odpowiedzi ${c.brak}.\nPrzeważa: ${wynik}.\nPóźniejsze odpowiedzi nie będą przyjmowane.`)) return;
+      const { error } = await db.from('konsultacje').update({
+        status: 'zakonczona', zamknieto_at: new Date().toISOString(), zamknal: adminEmail,
+        wynik_za: c.za, wynik_przeciw: c.przeciw, updated_at: new Date().toISOString(),
+      }).eq('id', k.id);
+      if (error) { toast('Nie udało się zamknąć: ' + error.message, 'error'); return; }
+      toast('Konsultacja zakończona: ' + wynik, 'success', 5000);
+      await load(); otworz(k.id);
+    }
+
+    async function anuluj(k){
+      if (!confirm('Anulować zapytanie? Linki z maili przestaną przyjmować odpowiedzi.')) return;
+      const { error } = await db.from('konsultacje').update({
+        status: 'anulowana', zamknieto_at: new Date().toISOString(), zamknal: adminEmail, updated_at: new Date().toISOString(),
+      }).eq('id', k.id);
+      if (error) { toast('Nie udało się: ' + error.message, 'error'); return; }
+      toast('Zapytanie anulowane'); closeModal('konsModal'); load();
+    }
+
+    async function usun(k){
+      const g = gl(k), oddane = g.filter(x => x.glos).length;
+      let pytanie = `Usunąć zapytanie „${k.temat}" na trwałe? Tej operacji nie można cofnąć.`;
+      if (g.length) pytanie += `\n\nZnikną też: lista ${g.length} odbiorców i ${oddane} zapisanych odpowiedzi.\nJeśli mają zostać w dokumentach, pobierz wcześniej CSV.`;
+      if (!confirm(pytanie)) return;
+      const { error } = await db.from('konsultacje').delete().eq('id', k.id);
+      if (error) { toast('Nie udało się usunąć: ' + error.message, 'error'); return; }
+      toast('Usunięto'); closeModal('konsModal'); load();
+    }
+
+    /* CSV z BOM, żeby Excel nie połamał polskich znaków. */
+    function csv(k){
+      const wiersze = [['Odbiorca', 'Organizacja', 'E-mail', 'Grupa', 'Odpowiedź', 'Kiedy', 'Uzasadnienie']];
+      gl(k).forEach(x => wiersze.push([
+        x.imie_nazwisko, x.organizacja || '', x.email, x.grupa || '',
+        x.glos === 'za' ? 'ZA' : (x.glos === 'przeciw' ? 'PRZECIW' : 'brak'),
+        x.glosowano_at ? fmtDT(x.glosowano_at) : '', (x.uzasadnienie || '').replace(/\s+/g, ' '),
+      ]));
+      const tekst = '﻿' + wiersze.map(r => r.map(p => '"' + String(p).replace(/"/g, '""') + '"').join(';')).join('\r\n');
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([tekst], { type: 'text/csv;charset=utf-8;' }));
+      a.download = 'konsultacja-' + (k.temat || 'zapytanie').toLowerCase()
+        .replace(/[ąćęłńóśźż]/g, ch => 'acelnoszz'['ąćęłńóśźż'.indexOf(ch)])
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 50) + '.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+
+    /* ── nowe zapytanie ── */
+    document.getElementById('btnNowa').addEventListener('click', () => {
+      document.getElementById('nowaTemat').value = '';
+      document.getElementById('nowaGrupa').value = 'prezydium';
+      document.getElementById('nowaTermin').value = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+      openModal('nowaModal');
+    });
+    document.getElementById('nowaZapisz').addEventListener('click', async () => {
+      const temat = document.getElementById('nowaTemat').value.trim();
+      if (!temat) { toast('Podaj temat zapytania', 'error'); return; }
+      const rec = {
+        temat, grupa: document.getElementById('nowaGrupa').value,
+        termin: document.getElementById('nowaTermin').value || null,
+        tresc: 'Szanowni Państwo,\n\n\n\nZ wyrazami szacunku\nBiuro Geodezyjnej Izby Gospodarczej',
+      };
+      const ins = await db.from('konsultacje').insert(rec).select('id').single();
+      if (ins.error) { toast('Nie udało się utworzyć: ' + ins.error.message, 'error'); return; }
+      closeModal('nowaModal');
+      await load();
+      otworz(ins.data.id);
+    });
+
+    /* ── ładowanie ── */
+    async function load(){
+      const [k, g, o] = await Promise.all([
+        db.from('konsultacje').select('*').order('created_at', { ascending: false }),
+        db.from('konsultacje_glosy').select('*'),
+        db.from('gig_odbiorcy_konsultacji').select('*').order('kolejnosc'),
+      ]);
+      if (k.error) { toast('Błąd ładowania konsultacji', 'error'); console.error(k.error); return; }
+      dane = k.data || [];
+      glosyWg = {};
+      (g.data || []).forEach(x => { (glosyWg[x.konsultacja_id] = glosyWg[x.konsultacja_id] || []).push(x); });
+      Object.values(glosyWg).forEach(l => l.sort((a, b) => (a.imie_nazwisko || '').localeCompare(b.imie_nazwisko || '', 'pl')));
+      odbiorcy = (o.data || []).sort((a, b) =>
+        (a.kolejnosc - b.kolejnosc) || (a.nazwa || '').localeCompare(b.nazwa || '', 'pl'));
+      podsumuj();
+      render();
+      loadSidebarBadges();
+    }
+
+    (async () => {
+      const sesja = await requireAuth();
+      if (!sesja) return;
+      adminEmail = sesja.user.email || '';
+      document.getElementById('szukaj').addEventListener('input', render);
+      document.getElementById('fStatus').addEventListener('change', render);
+      await load();
+      /* ?id=<uuid> — wejście prosto do sprawy, np. z maila o zakończonej konsultacji */
+      const id = new URLSearchParams(location.search).get('id');
+      if (id && dane.some(x => x.id === id)) otworz(id);
+    })();
+  </script>
+</body>
+</html>

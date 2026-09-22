@@ -255,6 +255,39 @@ opinia negatywna, etap 2 głosowanie, sprawa przyjęta), oba PDF-y (pełny rapor
 **Nie testowałem wysyłki `uchwala-wyslij` na żywo** (wymaga sesji panelu z kodem z maila): pierwszą
 prośbę o opinię wyślij do siebie, wybierając w odbiorcach tylko jedną osobę.
 
+### Konsultacje: doraźne zapytania kolegialne (`admin/konsultacje.html`, od 22.09.2026)
+Nie każda sprawa jest uchwałą Rady. Patronat nad konferencją, partnerstwo przy wydarzeniu,
+stanowisko w sprawie bieżącej: Izba odpowiada kolegialnie, ale bez trybu z art. 12 Statutu.
+Stąd osobna zakładka i osobne tabele, żeby nie mieszać tego z uchwałami, które mają rygor statutowy.
+
+Biuro pisze treść zapytania, ustawia pytanie i napisy na obu przyciskach (domyślnie
+„Jestem ZA" / „Jestem PRZECIW", ale przy patronacie bywa „Popieram" / „Nie popieram"),
+wybiera odbiorców i wysyła. Każdy dostaje osobisty link, odpowiada jednym kliknięciem
+i może dopisać uzasadnienie.
+
+- **Odbiorcy** pochodzą z widoku `gig_odbiorcy_konsultacji`, który skleja dwa źródła:
+  `rada_izby` (grupy `prezydium`, `rada`, `przedstawiciel`) i `czlonkowie` ze statusem
+  `published` (grupa `czlonek`, 64 firmy). Panel pokazuje je w czterech rozwijanych grupach
+  z licznikiem i przyciskami „Zaznacz wszystkich" / „Odznacz"; można mieszać grupy
+  i dobierać pojedyncze osoby. **Edge Function rozwiązuje adresy po id z widoku**, więc
+  z panelu nie da się wysłać na dowolny adres.
+- **Edge Functions**: `konsultacja-wyslij` (v1, verify_jwt=false, autoryzacja jak
+  `uchwala-wyslij`: JWT admina + sesja po kodzie) z trybami `start` / `przypomnienie` /
+  `podglad`, oraz `konsultacja-glosuj` (v1, token zamiast logowania, pisze service_role).
+  Ta sama osoba w dwóch źródłach dostaje jeden mail: funkcja odsiewa powtórzone adresy.
+- **Strona `/ankieta/`**: treść zapytania, pytanie, dwa przyciski z etykietami z panelu,
+  pole na uzasadnienie. Odpowiedź jest jedna i ostateczna (`is('glos', null)` w UPDATE).
+  Przycisk w mailu tylko zaznacza wybór, zapis następuje po potwierdzeniu na stronie.
+- **Zamknięcie**: „Zakończ i podsumuj" liczy większość wśród oddanych (kompletu nie wymagamy),
+  zapisuje wynik i pozwala dopisać notatkę biura. Odpowiedzi schodzą do CSV z BOM-em
+  (Excel nie łamie polskich znaków). Gdy odpowiedzą wszyscy, biuro dostaje maila.
+- Plakietka w menu liczy **szkice** czekające na wysyłkę.
+
+Testowane 22.09 na atrapie bazy (lista, wybór odbiorców hurtem, wszystkie trzy stany)
+i na żywo przeciw wdrożonym funkcjom (`konsultacja-glosuj` GET i POST, zapis z IP,
+wiersz `*@example.invalid` usunięty). **Nie testowałem wysyłki `konsultacja-wyslij`
+na żywo** (wymaga sesji panelu z kodem z maila): pierwsze zapytanie wyślij do siebie.
+
 ### Panel `/admin/` na telefonie
 Do 900 px szerokości pasek boczny chowa się za lewą krawędź, a `_admin.js` (`initMobileMenu`)
 dokłada na początku górnego paska przycisk ☰ i ciemne tło pod wysuniętym menu; zamyka je tapnięcie

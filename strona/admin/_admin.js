@@ -79,6 +79,7 @@ async function loadSidebarBadges() {
     // sprawy czekajace na sekretariat: prosba o opinie do Prezydium (etap 1)
     // oraz projekt uchwaly do wyslania Radzie (etap 2)
     { table: 'uchwaly',                id: 'navBadgeUchwaly', statusy: ['opiniowanie', 'projekt'] },
+    { table: 'konsultacje',            id: 'navBadgeKonsultacje', status: 'projekt' }, // szkice zapytan do wyslania
     { table: 'wezel_ankiety',          id: 'navBadgeWezel' },                        // nowe ankiety cenowe
     { table: 'czlonkowie',             id: 'navBadgeCzlonkowie', status: 'oczekuje' }, // zgloszenia czlonkowskie do zatwierdzenia
   ];
