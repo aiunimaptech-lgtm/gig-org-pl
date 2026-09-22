@@ -81,20 +81,23 @@
         </a>
       </div>
       <nav class="sidebar-nav">
-        <div class="nav-section">Zarządzanie</div>
-        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="dashboard.html"><span class="nav-icon">🏠</span> Pulpit</a>
+        <div class="nav-section">Zgłoszenia ze strony</div>
+        <a href="formularze.html#kontakt"><span class="nav-icon">📨</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
         <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">📝</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <div class="nav-section">Sprawy Izby</div>
+        <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
+        <a href="uchwaly.html" class="active"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
+        <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
+        <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
+        <div class="nav-section">Treści na stronie</div>
+        <a href="artykuly.html"><span class="nav-icon">📰</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <div class="nav-section">Wysyłka maili</div>
         <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
         <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
         <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
-        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
-        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
-        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
-        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
-        <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">⚇</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
-        <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
-        <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
-        <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
         <div class="nav-section">Strona</div>
         <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
       </nav>
@@ -1168,8 +1171,15 @@
       document.getElementById('btnNowa').addEventListener('click', otworzNowa);
       document.getElementById('btnRada').addEventListener('click', otworzRade);
       await load();
+      const q = new URLSearchParams(location.search);
+      /* ?status=<wartosc z listy> — wejście z pulpitu prosto na właściwy filtr */
+      const st = q.get('status');
+      if (st && [...document.querySelectorAll('#fStatus option')].some(o => o.value === st)) {
+        document.getElementById('fStatus').value = st;
+        render();
+      }
       /* ?id=<uuid> — wejście prosto do uchwały (np. z maila o zakończonym głosowaniu) */
-      const id = new URLSearchParams(location.search).get('id');
+      const id = q.get('id');
       if (id && dane.some(x => x.id === id)) otworz(id);
     })();
   </script>

@@ -288,6 +288,37 @@ i na żywo przeciw wdrożonym funkcjom (`konsultacja-glosuj` GET i POST, zapis z
 wiersz `*@example.invalid` usunięty). **Nie testowałem wysyłki `konsultacja-wyslij`
 na żywo** (wymaga sesji panelu z kodem z maila): pierwsze zapytanie wyślij do siebie.
 
+### Pulpit i nawigacja panelu (przebudowa 22.09.2026)
+Stary pulpit pokazywał pięć sum od początku istnienia panelu („412 zapisów do newslettera"),
+po których nie dało się poznać, czy cokolwiek wymaga reakcji, a jedyną drogą do funkcji było
+lewe menu z dwunastoma pozycjami w jednej liście. Teraz pulpit ma trzy warstwy:
+
+1. **„Czeka na Ciebie"** — skrzynka zadań budowana z dwunastu liczników (`head: true`, więc
+   nie ściągamy wierszy tylko po to, żeby je policzyć). Pokazujemy **wyłącznie pozycje
+   niezerowe**; każda prowadzi prosto do właściwego filtra. Sprawy wymagające ruchu biura mają
+   czerwoną krawędź, sprawy w toku (`pilne: false`) spokojną szarą. Gdy nie ma nic, pojawia się
+   zielony blok „Wszystko na bieżąco" zamiast pustej listy.
+2. **„Szybkie akcje"** — cztery skróty do czynności. `artykuly.html?nowy=1`, `szkolenia.html?nowy=1`
+   i `konsultacje.html?nowy=1` otwierają od razu okno tworzenia (kilka linii na końcu skryptu
+   każdej z tych stron), więc skrót prowadzi do czynności, a nie tylko do listy.
+3. **„Co możesz zrobić"** — dwanaście kafelków z ikoną, nazwą i jednym zdaniem o tym, do czego
+   służy dana część panelu. To odpowiedź na pytanie nowej osoby „co ja tu w ogóle mogę".
+   Licznik w rogu kafelka pojawia się tylko wtedy, gdy coś czeka.
+
+Niżej zostaje „Ostatnio wpłynęło" (trzy źródła scalone po dacie) i dopiero na końcu
+**„Izba w liczbach"**, bo sumy to kontekst, nie zadanie. Style: blok `PULPIT` na końcu
+`_admin.css` (prefiks `.pd-`).
+
+**Menu ma jedno źródło prawdy: `skrypty/gen_panel_nav.py`.** Lista `MENU` w tym pliku opisuje
+sekcje, ikony, etykiety i identyfikatory plakietek; skrypt przepisuje blok
+`<nav class="sidebar-nav">` we wszystkich `strona/admin/*.html` i sam zaznacza aktywną pozycję.
+Po każdej zmianie menu uruchom `python skrypty/gen_panel_nav.py` zamiast edytować kilkanaście
+plików ręcznie (idempotentny, strony logowania bez menu pomija). Pozycje są pogrupowane:
+Zgłoszenia ze strony / Sprawy Izby / Treści na stronie / Wysyłka maili / Strona.
+Deep linki, które działają: `czlonkowie.html?status=`, `uchwaly.html?status=` i `?id=`,
+`konsultacje.html?id=` i `?nowy=1`, `zapisy.html?szkolenie=`, `artykuly.html?nowy=1`,
+`szkolenia.html?nowy=1`.
+
 ### Panel `/admin/` na telefonie
 Do 900 px szerokości pasek boczny chowa się za lewą krawędź, a `_admin.js` (`initMobileMenu`)
 dokłada na początku górnego paska przycisk ☰ i ciemne tło pod wysuniętym menu; zamyka je tapnięcie

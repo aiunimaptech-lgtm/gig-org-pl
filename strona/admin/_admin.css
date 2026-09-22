@@ -733,3 +733,99 @@ select.form-control { cursor: pointer; }
 .gig-up-usun:hover{background:#fff5f6;border-color:#cc0a2b;}
 .gig-up-praca{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   background:rgba(255,255,255,.9);border-radius:12px;font-weight:600;color:#16202a;}
+
+/* ============================================================
+   PULPIT — układ zadaniowy
+   Pulpit ma odpowiadać na dwa pytania od progu: co czeka na moją decyzję
+   i co w ogóle mogę tu zrobić. Stąd trzy warstwy: skrzynka zadań, kafelki
+   funkcji z krótkim opisem, a dopiero na końcu liczby Izby jako kontekst.
+   ============================================================ */
+
+/* ── powitanie ── */
+.pd-hello { margin: 0 0 20px; }
+.pd-hello h2 { font-size: 21px; font-weight: 800; color: var(--brand-dark); margin-bottom: 3px; }
+.pd-hello p { color: var(--text-muted); font-size: 13.5px; }
+
+/* ── skrzynka zadań ── */
+.pd-zadania { margin-bottom: 26px; }
+.pd-naglowek {
+  display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+  margin: 0 0 12px;
+}
+.pd-naglowek h3 { font-size: 15px; font-weight: 800; color: var(--brand-dark); }
+.pd-naglowek span { font-size: 12.5px; color: var(--text-muted); }
+
+.pd-lista { display: grid; gap: 10px; }
+.pd-zad {
+  display: flex; align-items: center; gap: 14px;
+  background: #fff; border: 1px solid var(--border); border-left: 4px solid var(--brand-mid);
+  border-radius: var(--radius); padding: 14px 18px; box-shadow: var(--shadow-sm);
+  color: inherit; text-decoration: none;
+}
+.pd-zad:hover { text-decoration: none; border-color: var(--brand-mid); box-shadow: var(--shadow-md); }
+.pd-zad .ile {
+  flex: none; min-width: 42px; height: 42px; padding: 0 8px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--brand-bg); color: var(--brand-mid);
+  border-radius: 11px; font-size: 19px; font-weight: 800;
+}
+.pd-zad .tresc { flex: 1; min-width: 0; }
+.pd-zad .tytul { font-weight: 700; font-size: 14.5px; color: var(--brand-dark); }
+.pd-zad .opis { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+.pd-zad .idz { flex: none; color: var(--brand-mid); font-weight: 700; font-size: 13px; white-space: nowrap; }
+/* zadania bez presji czasu: ten sam układ, spokojniejszy kolor */
+.pd-zad.spokojne { border-left-color: #c8d2da; }
+.pd-zad.spokojne .ile { background: #eef2f5; color: var(--text-muted); }
+
+.pd-czysto {
+  display: flex; align-items: center; gap: 14px;
+  background: #eef7f1; border: 1px solid #cfe6d8; border-radius: var(--radius);
+  padding: 16px 20px; color: #1c6b39;
+}
+.pd-czysto .znak { font-size: 26px; line-height: 1; }
+.pd-czysto strong { display: block; font-size: 15px; }
+.pd-czysto span { font-size: 13px; color: #2e7d55; }
+
+/* ── kafelki funkcji ── */
+.pd-kafelki {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: 12px; margin-bottom: 26px;
+}
+.pd-kafel {
+  position: relative; display: block;
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow-sm); color: inherit; text-decoration: none;
+}
+.pd-kafel:hover { text-decoration: none; border-color: var(--brand-mid); box-shadow: var(--shadow-md); }
+.pd-kafel .ikona {
+  width: 38px; height: 38px; border-radius: 11px; background: var(--brand-bg);
+  display: flex; align-items: center; justify-content: center; font-size: 19px; margin-bottom: 10px;
+}
+.pd-kafel .tytul { font-weight: 800; font-size: 14.5px; color: var(--brand-dark); margin-bottom: 3px; }
+.pd-kafel .opis { font-size: 12.5px; color: var(--text-muted); line-height: 1.5; }
+.pd-kafel .licznik {
+  position: absolute; top: 14px; right: 14px;
+  background: var(--brand-mid); color: #fff; font-size: 11.5px; font-weight: 800;
+  border-radius: 20px; padding: 2px 9px;
+}
+.pd-kafel .licznik.cicho { background: #eef2f5; color: var(--text-muted); }
+
+/* ── szybkie akcje ── */
+.pd-akcje { display: flex; flex-wrap: wrap; gap: 9px; margin-bottom: 26px; }
+
+/* ── liczby Izby ── */
+.pd-liczby { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.pd-liczba {
+  background: #fff; border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 14px 16px; box-shadow: var(--shadow-sm);
+}
+.pd-liczba .v { font-size: 23px; font-weight: 800; color: var(--brand-dark); line-height: 1.1; }
+.pd-liczba .t { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
+
+@media (max-width: 640px) {
+  .pd-kafelki { grid-template-columns: 1fr; gap: 10px; }
+  .pd-zad { padding: 12px 14px; gap: 11px; }
+  .pd-zad .idz { display: none; }
+  .pd-liczby { grid-template-columns: 1fr 1fr; }
+  .pd-akcje .btn { flex: 1 1 auto; }
+}

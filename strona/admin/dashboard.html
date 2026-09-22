@@ -19,30 +19,30 @@
         </a>
       </div>
       <nav class="sidebar-nav">
-        <div class="nav-section">Zarządzanie</div>
-        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="dashboard.html" class="active"><span class="nav-icon">🏠</span> Pulpit</a>
+        <div class="nav-section">Zgłoszenia ze strony</div>
+        <a href="formularze.html#kontakt"><span class="nav-icon">📨</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
         <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
-        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
-        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
-        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
-        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
-        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
-        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
-        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
-        <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">⚇</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">📝</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <div class="nav-section">Sprawy Izby</div>
+        <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
         <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
         <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
         <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
+        <div class="nav-section">Treści na stronie</div>
+        <a href="artykuly.html"><span class="nav-icon">📰</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <div class="nav-section">Wysyłka maili</div>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
         <div class="nav-section">Strona</div>
         <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
       </nav>
       <div class="sidebar-footer">
         <div class="sidebar-user">
           <span class="user-avatar" id="userAvatar">A</span>
-          <div class="user-info">
-            <div class="user-name" id="userName">admin</div>
-            <div class="user-role">Administrator</div>
-          </div>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
           <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
         </div>
       </div>
@@ -55,75 +55,234 @@
           <a href="/" target="_blank" class="btn btn-ghost btn-sm">↗ Strona</a>
         </div>
       </header>
+
       <main class="admin-content">
-        <div class="stats-grid" id="statsGrid">
-          <div class="stat-card"><div class="stat-icon teal">✉</div><div class="stat-body">
-            <div class="stat-value" id="stNewsletter">—</div><div class="stat-label">Zapisów do newslettera</div>
-            <div class="stat-delta up" id="stNewsletterNew"></div></div></div>
-          <div class="stat-card"><div class="stat-icon blue">☎</div><div class="stat-body">
-            <div class="stat-value" id="stKontakt">—</div><div class="stat-label">Wiadomości kontaktowych</div>
-            <div class="stat-delta up" id="stKontaktNew"></div></div></div>
-          <div class="stat-card"><div class="stat-icon rose">✓</div><div class="stat-body">
-            <div class="stat-value" id="stZapisy">—</div><div class="stat-label">Zapisów na szkolenia</div>
-            <div class="stat-delta up" id="stZapisyNew"></div></div></div>
-          <div class="stat-card"><div class="stat-icon green">✎</div><div class="stat-body">
-            <div class="stat-value" id="stArticles">—</div><div class="stat-label">Opublikowanych artykułów</div></div></div>
-          <div class="stat-card"><div class="stat-icon orange">◷</div><div class="stat-body">
-            <div class="stat-value" id="stDrafts">—</div><div class="stat-label">Szkiców</div></div></div>
+        <div class="pd-hello">
+          <h2 id="pdPowitanie">Dzień dobry</h2>
+          <p>Panel Geodezyjnej Izby Gospodarczej. Najpierw to, co czeka na Twoją decyzję, niżej wszystko, co możesz tu zrobić.</p>
         </div>
 
+        <section class="pd-zadania">
+          <div class="pd-naglowek">
+            <h3>Czeka na Ciebie</h3>
+            <span id="pdZadaniaInfo">sprawdzamy…</span>
+          </div>
+          <div class="pd-lista" id="pdZadania"></div>
+        </section>
+
+        <section>
+          <div class="pd-naglowek">
+            <h3>Szybkie akcje</h3>
+            <span>najczęstsze czynności, od razu z otwartym oknem</span>
+          </div>
+          <div class="pd-akcje">
+            <a class="btn btn-primary btn-sm" href="artykuly.html?nowy=1">📰 Nowy artykuł</a>
+            <a class="btn btn-outline btn-sm" href="szkolenia.html?nowy=1">🎓 Nowe szkolenie</a>
+            <a class="btn btn-outline btn-sm" href="konsultacje.html?nowy=1">🗳 Nowe zapytanie do konsultacji</a>
+            <a class="btn btn-outline btn-sm" href="wysylki.html">📣 Wysyłka do bazy</a>
+          </div>
+        </section>
+
+        <section>
+          <div class="pd-naglowek">
+            <h3>Co możesz zrobić</h3>
+            <span>każdy kafelek to osobna część panelu</span>
+          </div>
+          <div class="pd-kafelki" id="pdKafelki"></div>
+        </section>
+
         <div class="card">
-          <div class="card-header"><div class="card-title">Ostatnie zgłoszenia</div>
-            <a href="formularze.html" class="btn btn-outline btn-sm">Wszystkie →</a></div>
+          <div class="card-header"><div class="card-title">Ostatnio wpłynęło</div>
+            <a href="formularze.html" class="btn btn-outline btn-sm">Wszystkie zgłoszenia →</a></div>
           <div class="card-body">
             <div class="table-wrap">
               <table class="admin-table">
-                <thead><tr><th>Typ</th><th>Kontakt</th><th>Treść / temat</th><th>Data</th><th>Status</th></tr></thead>
+                <thead><tr><th>Skąd</th><th>Kontakt</th><th>Treść / temat</th><th>Data</th><th>Status</th></tr></thead>
                 <tbody id="recentRows"><tr><td colspan="5" style="text-align:center;color:#6b7f84;padding:24px;">Ładowanie…</td></tr></tbody>
               </table>
             </div>
           </div>
         </div>
+
+        <section style="margin-top:26px;">
+          <div class="pd-naglowek">
+            <h3>Izba w liczbach</h3>
+            <span>stan na dziś</span>
+          </div>
+          <div class="pd-liczby" id="pdLiczby"></div>
+        </section>
       </main>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/_assets/js/gig-config.js"></script>
-<script src="/admin/_admin.js"></script>
+  <script src="/admin/_admin.js"></script>
   <script>
+    /* ------------------------------------------------------------------
+       Pulpit odpowiada na dwa pytania od progu:
+         1. co czeka na moją decyzję (skrzynka zadań, tylko niezerowe pozycje),
+         2. co w ogóle mogę tu zrobić (kafelki z jednozdaniowym opisem).
+       Liczby Izby są na końcu, bo to kontekst, a nie zadanie. Dawny pulpit
+       pokazywał same sumy od początku istnienia panelu, po których nie dało
+       się poznać, czy cokolwiek wymaga reakcji.
+       ------------------------------------------------------------------ */
     (async () => {
-      if (!await requireAuth()) return;
+      const sesja = await requireAuth();
+      if (!sesja) return;
+      loadSidebarBadges();
 
-      async function cnt(table, opts) {
-        let q = db.from(table).select('id', { count: 'exact', head: true });
-        if (opts && opts.eq)  q = q.eq(opts.eq[0], opts.eq[1]);
-        if (opts && opts.neq) q = q.neq(opts.neq[0], opts.neq[1]);
-        const { count } = await q;
-        return count || 0;
+      const godzina = new Date().getHours();
+      document.getElementById('pdPowitanie').textContent =
+        godzina < 10 ? 'Dzień dobry' : (godzina < 18 ? 'Dzień dobry' : 'Dobry wieczór');
+
+      /* Liczymy głowami (head: true), więc nie ściągamy wierszy tylko po to,
+         żeby je policzyć. `filtry` to pary [kolumna, wartość]. */
+      async function ile(tabela, ...filtry) {
+        try {
+          let q = db.from(tabela).select('id', { count: 'exact', head: true });
+          filtry.forEach(([k, v]) => { q = Array.isArray(v) ? q.in(k, v) : q.eq(k, v); });
+          const { count } = await q;
+          return count || 0;
+        } catch (_) { return 0; }
       }
-      try {
-        const [nl, nlNew, kt, ktNew, zp, zpNew, pub, draft] = await Promise.all([
-          cnt('submissions_newsletter'),
-          cnt('submissions_newsletter', { eq: ['status', 'new'] }),
-          cnt('submissions_kontakt'),
-          cnt('submissions_kontakt', { eq: ['status', 'new'] }),
-          cnt('zapisy_szkolenia', { neq: ['status', 'cancelled'] }),   // anulowane nie liczą się jako zapis
-          cnt('zapisy_szkolenia', { eq: ['status', 'new'] }),
-          cnt('articles', { eq: ['status', 'published'] }),
-          cnt('articles', { eq: ['status', 'draft'] }),
-        ]);
-        stNewsletter.textContent = nl;
-        stNewsletterNew.textContent = nlNew ? `+${nlNew} nowych` : '';
-        stKontakt.textContent = kt;
-        stKontaktNew.textContent = ktNew ? `+${ktNew} nowych` : '';
-        stZapisy.textContent = zp;
-        stZapisyNew.textContent = zpNew ? `+${zpNew} nowych` : '';
-        stArticles.textContent = pub;
-        stDrafts.textContent = draft;
-      } catch (e) { console.error(e); toast('Błąd ładowania statystyk', 'error'); }
 
-      // ostatnie zgłoszenia (newsletter + kontakt + zapisy na szkolenia, scalone)
+      const [
+        ktNowe, zpNowe, czlOczek,
+        uchOpiniaDoWyslania, uchOpiniaWToku, uchProjekt, uchGlosowanie,
+        konsSzkic, konsWToku, wezelNowe, nlNowe, artSzkice,
+        czlRazem, nlRazem, bazaRazem, artOpub, szkPub, uchPrzyjete,
+      ] = await Promise.all([
+        ile('submissions_kontakt', ['status', 'new']),
+        ile('zapisy_szkolenia', ['status', 'new']),
+        ile('czlonkowie', ['status', 'oczekuje']),
+        ile('uchwaly', ['status', 'opiniowanie'], ['opinia_status', 'projekt']),
+        ile('uchwaly', ['status', 'opiniowanie'], ['opinia_status', 'glosowanie']),
+        ile('uchwaly', ['status', 'projekt']),
+        ile('uchwaly', ['status', 'glosowanie']),
+        ile('konsultacje', ['status', 'projekt']),
+        ile('konsultacje', ['status', 'glosowanie']),
+        ile('wezel_ankiety', ['status', 'new']),
+        ile('submissions_newsletter', ['status', 'new']),
+        ile('articles', ['status', 'draft']),
+        ile('czlonkowie', ['status', 'published']),
+        ile('submissions_newsletter'),
+        ile('baza_email', ['status', 'aktywny']),
+        ile('articles', ['status', 'published']),
+        ile('szkolenia', ['status', 'published']),
+        ile('uchwaly', ['status', 'przyjeta']),
+      ]);
+
+      /* ── skrzynka zadań ── */
+      /* `pilne: false` = sprawa w toku, o której warto wiedzieć, ale nikt nie czeka
+         na ruch biura w tej minucie. Dostaje spokojniejszy kolor. */
+      const zadania = [
+        { ile: ktNowe, pilne: true, href: 'formularze.html#kontakt',
+          tytul: 'Nowe wiadomości z formularza kontaktowego',
+          opis: 'Odpowiedz nadawcy albo oznacz jako przeczytane' },
+        { ile: zpNowe, pilne: true, href: 'zapisy.html',
+          tytul: 'Nowe zapisy na szkolenia',
+          opis: 'Sprawdź dane do faktury i potwierdź zgłoszenie' },
+        { ile: czlOczek, pilne: true, href: 'czlonkowie.html?status=oczekuje',
+          tytul: 'Firmy czekają na zatwierdzenie',
+          opis: 'Po zatwierdzeniu trafiają do katalogu Członków na stronie' },
+        { ile: uchOpiniaDoWyslania, pilne: true, href: 'uchwaly.html?status=op-projekt',
+          tytul: 'Prośby o opinię do wysłania do Prezydium',
+          opis: 'Etap 1 przyjęcia członka: sprawdź treść i wyślij' },
+        { ile: uchProjekt, pilne: true, href: 'uchwaly.html',
+          tytul: 'Projekty uchwał do wysłania do Rady',
+          opis: 'Etap 2: kandydatura ma już pozytywną opinię Prezydium' },
+        { ile: konsSzkic, pilne: true, href: 'konsultacje.html',
+          tytul: 'Szkice zapytań do wysłania',
+          opis: 'Konsultacje czekają na sprawdzenie treści i odbiorców' },
+        { ile: wezelNowe, pilne: true, href: 'wezel.html',
+          tytul: 'Nowe ankiety cenowe w Węźle Jakości',
+          opis: 'Przejrzyj stawki i zweryfikuj ankietę' },
+        { ile: uchOpiniaWToku, pilne: false, href: 'uchwaly.html',
+          tytul: 'Prezydium opiniuje kandydatów',
+          opis: 'Możesz przypomnieć osobom bez opinii albo zakończyć etap' },
+        { ile: uchGlosowanie, pilne: false, href: 'uchwaly.html',
+          tytul: 'Rada głosuje nad uchwałami',
+          opis: 'Po zebraniu głosów zamknij głosowanie i pobierz raport' },
+        { ile: konsWToku, pilne: false, href: 'konsultacje.html',
+          tytul: 'Konsultacje w toku',
+          opis: 'Zbieramy odpowiedzi; zamknij, gdy uznasz zestaw za pełny' },
+        { ile: nlNowe, pilne: false, href: 'formularze.html#newsletter',
+          tytul: 'Nowe zapisy do newslettera',
+          opis: 'Nic nie musisz robić, adresy są już w bazie wysyłkowej' },
+        { ile: artSzkice, pilne: false, href: 'artykuly.html',
+          tytul: 'Szkice artykułów',
+          opis: 'Dokończ i opublikuj na stronie' },
+      ].filter(z => z.ile > 0);
+
+      const lista = document.getElementById('pdZadania');
+      const info = document.getElementById('pdZadaniaInfo');
+      if (!zadania.length) {
+        info.textContent = '';
+        lista.innerHTML = `<div class="pd-czysto"><span class="znak">✓</span>
+          <div><strong>Wszystko na bieżąco</strong>
+          <span>Nic nie czeka na Twoją decyzję. Niżej znajdziesz wszystkie funkcje panelu.</span></div></div>`;
+      } else {
+        const pilnych = zadania.filter(z => z.pilne).length;
+        info.textContent = pilnych
+          ? `${pilnych} ${pilnych === 1 ? 'sprawa wymaga' : 'spraw wymaga'} reakcji`
+          : 'nic pilnego, same sprawy w toku';
+        lista.innerHTML = zadania.map(z => `
+          <a class="pd-zad ${z.pilne ? '' : 'spokojne'}" href="${z.href}">
+            <span class="ile">${z.ile}</span>
+            <span class="tresc"><span class="tytul">${esc(z.tytul)}</span>
+              <span class="opis">${esc(z.opis)}</span></span>
+            <span class="idz">Przejdź →</span>
+          </a>`).join('');
+      }
+
+      /* ── kafelki: co w ogóle da się tu zrobić ── */
+      const kafelki = [
+        { href: 'formularze.html#kontakt', ikona: '📨', tytul: 'Kontakt',
+          opis: 'Wiadomości z formularza na stronie, z historią odpowiedzi.', licznik: ktNowe },
+        { href: 'zapisy.html', ikona: '📝', tytul: 'Zapisy na szkolenia',
+          opis: 'Zgłoszenia z danymi do faktury i suma należności za szkolenie.', licznik: zpNowe },
+        { href: 'czlonkowie.html', ikona: '🏢', tytul: 'Członkowie',
+          opis: 'Katalog firm widoczny na stronie i zatwierdzanie nowych zgłoszeń.', licznik: czlOczek },
+        { href: 'uchwaly.html', ikona: '⚖', tytul: 'Uchwały Rady',
+          opis: 'Przyjęcie członka w dwóch etapach: opinia Prezydium, potem uchwała Rady.',
+          licznik: uchOpiniaDoWyslania + uchProjekt },
+        { href: 'konsultacje.html', ikona: '🗳', tytul: 'Konsultacje',
+          opis: 'Zapytania do Prezydium, Rady i członków z głosowaniem za albo przeciw.', licznik: konsSzkic },
+        { href: 'wezel.html', ikona: '📊', tytul: 'Węzeł Jakości',
+          opis: 'Ankieta cenowa SEKOCENBUD: zestawienia zbiorcze i eksport do CSV.', licznik: wezelNowe },
+        { href: 'artykuly.html', ikona: '📰', tytul: 'Artykuły',
+          opis: 'Aktualności i biuletyn publikowane na stronie Izby.', licznik: artSzkice, cicho: true },
+        { href: 'szkolenia.html', ikona: '🎓', tytul: 'Szkolenia',
+          opis: 'Kalendarz szkoleń, ceny członkowskie i terminy zgłoszeń.', licznik: 0 },
+        { href: 'formularze.html#newsletter', ikona: '✉', tytul: 'Newsletter',
+          opis: 'Zapisy z formularza na stronie i wypisania jednym kliknięciem.', licznik: nlNowe, cicho: true },
+        { href: 'baza-email.html', ikona: '📇', tytul: 'Baza e-mail',
+          opis: 'Adresy do wysyłek: import, weryfikacja i podział na grupy.', licznik: 0 },
+        { href: 'wysylki.html', ikona: '📣', tytul: 'Wysyłki',
+          opis: 'Kampanie mailowe do wybranej grupy, z kolejką i limitem dziennym.', licznik: 0 },
+        { href: 'dmarc.html', ikona: '🛡', tytul: 'DMARC',
+          opis: 'Raporty o tym, czy poczta z domeny Izby dociera i nie jest podszywana.', licznik: 0 },
+      ];
+      document.getElementById('pdKafelki').innerHTML = kafelki.map(k => `
+        <a class="pd-kafel" href="${k.href}">
+          ${k.licznik ? `<span class="licznik ${k.cicho ? 'cicho' : ''}">${k.licznik}</span>` : ''}
+          <span class="ikona">${k.ikona}</span>
+          <div class="tytul">${esc(k.tytul)}</div>
+          <div class="opis">${esc(k.opis)}</div>
+        </a>`).join('');
+
+      /* ── liczby Izby ── */
+      document.getElementById('pdLiczby').innerHTML = [
+        [czlRazem, 'firm w katalogu Członków'],
+        [uchPrzyjete, 'uchwał o przyjęciu'],
+        [szkPub, 'szkoleń w kalendarzu'],
+        [artOpub, 'opublikowanych artykułów'],
+        [nlRazem, 'zapisów do newslettera'],
+        [bazaRazem, 'adresów w bazie wysyłkowej'],
+      ].map(([v, t]) => `<div class="pd-liczba"><div class="v">${v}</div><div class="t">${esc(t)}</div></div>`).join('');
+
+      /* ── ostatnio wpłynęło: trzy źródła scalone po dacie ── */
       const ETYK  = { new:'nowe', read:'przeczytane', replied:'odpowiedziano', confirmed:'potwierdzone', cancelled:'anulowane', unsubscribed:'wypisany' };
       const KLASA = { new:'new', confirmed:'confirmed', cancelled:'cancelled' };
       try {
@@ -135,7 +294,7 @@
         const rows = [
           ...(nlRes.data || []).map(r => ({ ...r, _type: 'Newsletter', _href: 'formularze.html#newsletter' })),
           ...(ktRes.data || []).map(r => ({ ...r, _type: 'Kontakt',    _href: 'formularze.html#kontakt' })),
-          /* zapis na szkolenie: jako „nadawcę” pokazujemy pierwszego uczestnika, w temacie szkolenie i liczbę osób */
+          /* zapis na szkolenie: jako „nadawcę" pokazujemy pierwszego uczestnika, w temacie szkolenie i liczbę osób */
           ...(zpRes.data || []).map(r => ({ ...r, _type: 'Szkolenie', _href: 'zapisy.html',
             name: (r.uczestnicy || '').split(/\n/)[0].trim() || r.nabywca_nazwa || '',
             subject: (r.szkolenie || 'zapis na szkolenie') + ' · ' + gigLiczbaOsob(r) + ' os.' })),

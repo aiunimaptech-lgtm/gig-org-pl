@@ -19,22 +19,25 @@
         </a>
       </div>
       <nav class="sidebar-nav">
-        <div class="nav-section">Zarządzanie</div>
-        <a href="dashboard.html"><span class="nav-icon">▦</span> Pulpit</a>
+        <a href="dashboard.html"><span class="nav-icon">🏠</span> Pulpit</a>
+        <div class="nav-section">Zgłoszenia ze strony</div>
+        <a href="formularze.html#kontakt"><span class="nav-icon">📨</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
         <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
-        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
-        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
-        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
-        <a href="formularze.html#kontakt"><span class="nav-icon">☎</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
-        <a href="zapisy.html"><span class="nav-icon">✓</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
-        <a href="artykuly.html"><span class="nav-icon">✎</span> Artykuły</a>
-        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
-        <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">⚇</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">📝</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <div class="nav-section">Sprawy Izby</div>
+        <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
         <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
         <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
         <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
+        <div class="nav-section">Treści na stronie</div>
+        <a href="artykuly.html"><span class="nav-icon">📰</span> Artykuły</a>
+        <a href="szkolenia.html" class="active"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <div class="nav-section">Wysyłka maili</div>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
         <div class="nav-section">Strona</div>
-        <a href="/szkolenia/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
       </nav>
       <div class="sidebar-footer">
         <div class="sidebar-user">
@@ -283,6 +286,13 @@
       document.getElementById('saveBtn').addEventListener('click',save);
       load();
     })();
+  
+    /* ?nowy=1 z pulpitu: otwiera od razu okno tworzenia, zeby skrot z kafelka
+       prowadzil do czynnosci, a nie tylko do listy. */
+    if (new URLSearchParams(location.search).get('nowy') === '1') {
+      const b = document.getElementById('newBtn');
+      if (b) setTimeout(() => b.click(), 60);
+    }
   </script>
 </body>
 </html>
