@@ -165,14 +165,26 @@ oraz dane z deklaracji (`kandydat_telefon/www/opis/pkd/osob`) siedzą w `uchwaly
 się do wyniku (`prezydium`, `rada`) czy jest tylko konsultacją (`konsultacja`, art. 12 pkt 1
 zd. trzecie). Klucz unikalny to `(uchwala_id, email, etap)`, więc ta sama osoba może opiniować
 i głosować. `rada_izby` ma dwa niezależne znaczniki: `prezydium` (opiniuje, etap 1) i `rada`
-(głosuje, etap 2). Skład na 21.09: Prezydium to Rafał Kraska (Prezes) i trzej Wiceprezesi
-(Bryk, Tomaszewski, Zając), wszyscy też w Radzie; Rada liczy 9 osób. **Izba nie ma Oddziałów**,
-więc jedynym partnerem konsultacji z art. 12 pkt 1 jest **Dawid Sienkiewicz, Przedstawiciel
-Regionalny na Region Południowy** (`dawid.sienkiewicz@gig.org.pl`) — ma `rada = false`, bo nie
-jest członkiem Rady (art. 19 ust. 1; w obradach z głosem doradczym po zaproszeniu, art. 20 ust. 4).
-W odbiorcach prośby o opinię widnieje odznaczony, z podpisem „Przedstawiciel Regionalny, Region
-Południowy"; sekretariat dopisuje go, gdy kandydat jest z jego regionu. Do odbiorców uchwały
-(etap 2) w ogóle nie trafia, bo ta lista bierze tylko osoby ze znacznikiem `rada`.
+(głosuje, etap 2). Skład wg „Spis tel.-Członkowie Organów GIG IX Kadencja": Prezydium to Rafał
+Kraska (Prezes) i trzej Wiceprezesi (Bryk, Tomaszewski, Zając), wszyscy też w Radzie; Rada liczy
+9 osób. **Izba nie ma Oddziałów**, więc partnerami konsultacji z art. 12 pkt 1 są wyłącznie
+**Przedstawiciele Regionalni**, obaj z `rada = false`, bo nie są członkami Rady (art. 19 ust. 1;
+w obradach z głosem doradczym po zaproszeniu, art. 20 ust. 4):
+
+| Przedstawiciel | Region | Województwa (`rada_izby.wojewodztwa`) |
+|---|---|---|
+| Dawid Sienkiewicz | Region Południowy | śląskie, dolnośląskie, opolskie |
+| Daniel Ruszała | Region Południowo-Wschodni | podkarpackie, łódzkie, świętokrzyskie, małopolskie |
+
+**Dopasowanie po województwie.** Trigger przepisuje linię `Województwo:` ze zgłoszenia do
+`uchwaly.kandydat_wojewodztwo`, a panel w etapie 1 **sam zaznacza** tego Przedstawiciela, którego
+`wojewodztwa` zawierają województwo kandydata, i oznacza go zieloną plakietką „właściwy dla woj. X".
+W oknie sprawy jest lista rozwijana „Województwo kandydata": po jej zmianie lista odbiorców
+przerysowuje się, podpowiedź z poprzedniego regionu znika, a ręczne zaznaczenia zostają.
+Zasięg edytuje się w „Skład Rady", kolumna **Województwa** (po przecinku, nazwy jak w formularzu
+„Dołącz do nas", literówkę panel odrzuca przy zapisie). Do odbiorców uchwały (etap 2)
+Przedstawiciele nie trafiają, bo ta lista bierze tylko osoby ze znacznikiem `rada`.
+Pozostałe dziewięć województw nie ma Przedstawiciela, więc panel nikogo tam nie podpowie.
 
 **Sprawy sprzed 21.09** dostały `opinia_status = 'pominieta'`, żeby panel nie kazał opiniować
 od nowa czegoś, co już poszło do Rady. Ten sam status nadaje przycisk „Opinia już wydana poza

@@ -65,6 +65,10 @@
     .u-checkline{display:flex;align-items:center;gap:8px;font-size:13.5px;padding:6px 0;}
     .u-checkline input[type=checkbox]{width:16px;height:16px;accent-color:#cc0a2b;flex:none;}
     .u-odb label.konsult{background:#f7f9fb;border:1px dashed #d6dde3;border-radius:7px;padding:5px 9px;}
+    /* Przedstawiciel Regionalny właściwy dla województwa kandydata: panel sam go zaznacza,
+       więc musi być widać, dlaczego pojawił się na liście. */
+    .u-odb label.wlasciwy{background:#eef7f1;border:1px solid #cfe6d8;border-radius:7px;padding:5px 9px;}
+    .u-odb label.wlasciwy .badge{margin-left:4px;font-size:10.5px;}
   </style>
 </head>
 <body>
@@ -200,10 +204,13 @@
         </p>
         <div class="table-wrap">
           <table class="admin-table u-rada">
-            <thead><tr><th>Imię i nazwisko</th><th>E-mail</th><th>Funkcja</th><th>Obszar</th><th>Kol.</th><th>Prezydium</th><th>Rada</th><th>Aktywny</th><th></th></tr></thead>
+            <thead><tr><th>Imię i nazwisko</th><th>E-mail</th><th>Funkcja</th><th>Obszar</th><th>Województwa</th><th>Kol.</th><th>Prezydium</th><th>Rada</th><th>Aktywny</th><th></th></tr></thead>
             <tbody id="radaRows"></tbody>
           </table>
         </div>
+        <p class="u-mini" style="margin:10px 0 0;">W kolumnie <strong>Województwa</strong> wpisz po przecinku obszar Przedstawiciela Regionalnego
+          (np. <em>śląskie, dolnośląskie, opolskie</em>). Gdy kandydat pochodzi z któregoś z nich, panel sam zaznaczy tę osobę
+          przy prośbie o opinię. Nazwy muszą być takie, jak w formularzu „Dołącz do nas", czyli małymi literami.</p>
         <div class="u-akcje">
           <button class="btn btn-outline btn-sm" id="radaDodaj">＋ Dodaj osobę</button>
           <button class="btn btn-primary btn-sm prawo" id="radaZapisz">Zapisz zmiany</button>
@@ -251,6 +258,14 @@
     const BADGE_OP = { projekt:'badge-draft', glosowanie:'badge-new', pozytywna:'badge-confirmed', negatywna:'badge-cancelled', pominieta:'badge-archived' };
     const DOK = { ceidg:'wydruk z CEIDG', krs:'odpis z KRS', inny:'inny dokument rejestrowy' };
     const RZYM = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+    /* Te same nazwy, co w liście rozwijanej formularza „Dołącz do nas" — po nich
+       dopasowujemy właściwego Przedstawiciela Regionalnego (art. 12 pkt 1 zd. trzecie). */
+    const WOJ = ['dolnośląskie','kujawsko-pomorskie','lubelskie','lubuskie','łódzkie','małopolskie',
+      'mazowieckie','opolskie','podkarpackie','podlaskie','pomorskie','śląskie','świętokrzyskie',
+      'warmińsko-mazurskie','wielkopolskie','zachodniopomorskie'];
+    const norm = w => (w || '').toString().trim().toLowerCase();
+    /* Przedstawiciel „właściwy" dla kandydata: ma to województwo w swoim zasięgu. */
+    const wlasciwy = (r, woj) => !!woj && Array.isArray(r.wojewodztwa) && r.wojewodztwa.some(x => norm(x) === norm(woj));
 
     const etykieta = u => {
       const d = u.data_wejscia ? new Date(u.data_wejscia + 'T00:00:00') : new Date();
@@ -412,14 +427,38 @@
     }
 
     /* `lista` jest już przefiltrowana pod etap: opinia idzie do wszystkich aktywnych
-       (Prezydium zaznaczone, reszta jako konsultacja), uchwała tylko do członków Rady. */
-    function odbiorcyHtml(klasa, lista, ktoDomyslnie, pusto){
+       (Prezydium zaznaczone, reszta jako konsultacja), uchwała tylko do członków Rady.
+       `woj` (tylko etap 1) podświetla i zaznacza Przedstawiciela właściwego dla
+       województwa kandydata, bo to jego Statut każe zapytać. */
+    function odbiorcyHtml(klasa, lista, ktoDomyslnie, pusto, woj){
       if (!lista.length) return `<span class="u-mini">${pusto} Uzupełnij listę przyciskiem „Skład Rady".</span>`;
       return lista.map(r => {
-        const dom = ktoDomyslnie(r);
+        const pasuje = wlasciwy(r, woj);
+        const dom = ktoDomyslnie(r) || pasuje;
         const podpis = [r.funkcja, r.region].filter(Boolean).join(', ');
-        return `<label class="${dom ? '' : 'konsult'}"><input type="checkbox" class="${klasa}" value="${r.id}" ${dom ? 'checked' : ''}> <span>${esc(r.imie_nazwisko)}${podpis ? ' <span class="mail">· ' + esc(podpis) + '</span>' : ''}<div class="mail">${esc(r.email)}</div></span></label>`;
+        return `<label class="${dom ? '' : 'konsult'}${pasuje ? ' wlasciwy' : ''}"><input type="checkbox" class="${klasa}" value="${r.id}" ${dom ? 'checked' : ''}> <span>${esc(r.imie_nazwisko)}${podpis ? ' <span class="mail">· ' + esc(podpis) + '</span>' : ''}${pasuje ? ' <span class="badge badge-confirmed" title="Statut każe skonsultować kandydaturę z właściwym Przedstawicielem Regionalnym">właściwy dla woj. ' + esc(woj) + '</span>' : ''}<div class="mail">${esc(r.email)}</div></span></label>`;
       }).join('');
+    }
+
+    /* Kto został zaznaczony samą regułą województwa, a nie ręką sekretariatu. */
+    let autoWoj = new Set();
+
+    function odbiorcyOpiniaHtml(woj, recznie){
+      const lista = rada.filter(r => r.aktywny);
+      autoWoj = new Set(lista.filter(r => wlasciwy(r, woj)).map(r => r.id));
+      return odbiorcyHtml('opOdb', lista, r => r.prezydium || recznie.has(r.id), 'Lista jest pusta.', woj);
+    }
+
+    /* Lista odbiorców etapu 1 przerysowuje się po zmianie województwa kandydata.
+       Ręczne zaznaczenia zostają, ale podpowiedź sprzed poprawki znika — inaczej po
+       zmianie województwa zostałby zaznaczony Przedstawiciel z poprzedniego regionu. */
+    function odswiezOdbiorcowOpinii(){
+      const sel = document.getElementById('opWoj');
+      const box = document.getElementById('opOdbLista');
+      if (!sel || !box) return;
+      const recznie = new Set([...box.querySelectorAll('.opOdb:checked')]
+        .map(x => x.value).filter(id => !autoWoj.has(id)));
+      box.innerHTML = odbiorcyOpiniaHtml(sel.value, recznie);
     }
 
     function otworz(id){
@@ -472,12 +511,17 @@
         html += `
           <div class="u-grid">
             <div class="form-group"><label>Termin na wydanie opinii</label><input class="form-control" type="date" id="opTermin" value="${esc(u.opinia_termin || '')}"></div>
-            ${pole('opMailTemat', 'Temat wiadomości', u.opinia_mail_temat)}
+            <div class="form-group"><label>Województwo kandydata <small style="text-transform:none;font-weight:500;">po nim panel podpowiada właściwego Przedstawiciela Regionalnego</small></label>
+              <select class="form-control" id="opWoj">
+                <option value="">— nie podano —</option>
+                ${WOJ.map(w => `<option value="${w}" ${norm(u.kandydat_wojewodztwo) === w ? 'selected' : ''}>${w}</option>`).join('')}
+              </select></div>
+            ${pole('opMailTemat', 'Temat wiadomości', u.opinia_mail_temat, 'szeroki')}
           </div>
           <div class="form-group"><label>Treść prośby <small style="text-transform:none;font-weight:500;">(pusta linia = nowy akapit; dane z deklaracji i przyciski opinii dokładają się same)</small></label>
             <textarea class="form-control u-mail" id="opMailTresc">${esc(u.opinia_mail_tresc || '')}</textarea></div>
-          <div class="form-group"><label>Odbiorcy <small style="text-transform:none;font-weight:500;">zaznaczone: Prezydium. Osoby bez zaznaczenia dopisujesz do konsultacji, jeśli są właściwe dla regionu kandydata (art. 12 pkt 1 zd. trzecie) — ich odpowiedź trafia do protokołu, ale nie do wyniku opinii.</small></label>
-            <div class="u-odb">${odbiorcyHtml('opOdb', rada.filter(r => r.aktywny), r => r.prezydium, 'Lista jest pusta.')}</div></div>
+          <div class="form-group"><label>Odbiorcy <small style="text-transform:none;font-weight:500;">zaznaczone: Prezydium oraz Przedstawiciel Regionalny właściwy dla województwa kandydata (art. 12 pkt 1 zd. trzecie). Odpowiedź osoby konsultowanej trafia do protokołu, ale nie do wyniku opinii Prezydium.</small></label>
+            <div class="u-odb" id="opOdbLista">${odbiorcyOpiniaHtml(norm(u.kandydat_wojewodztwo), new Set())}</div></div>
           <div class="u-akcje">
             <button class="btn btn-ghost btn-sm" id="opZapisz">Zapisz zmiany</button>
             <button class="btn btn-ghost btn-sm" id="opGeneruj" title="Buduje prośbę o opinię od nowa z danych kandydata i stanu dokumentów">↻ Wygeneruj prośbę od nowa</button>
@@ -586,6 +630,8 @@
       openModal('uchModal');
 
       const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
+      const opWoj = document.getElementById('opWoj');
+      if (opWoj) opWoj.addEventListener('change', odswiezOdbiorcowOpinii);
       on('uchDok', () => zapiszDokumenty(u));
       on('opZapisz', () => zapiszOpinie(u));
       on('opGeneruj', () => generujOpinie(u));
@@ -649,6 +695,7 @@
       if (!(u.status === 'opiniowanie' && u.opinia_status === 'projekt')) return true;
       return zapiszPola(u, {
         opinia_termin: val('opTermin') || null,
+        kandydat_wojewodztwo: val('opWoj') || null,
         opinia_mail_temat: val('opMailTemat'),
         opinia_mail_tresc: document.getElementById('opMailTresc').value,
       }, cicho ? '' : 'Zapisano');
@@ -1015,7 +1062,8 @@
         <td><input class="form-control r-imie" value="${esc(r.imie_nazwisko || '')}" placeholder="Imię i nazwisko"></td>
         <td><input class="form-control r-email" value="${esc(r.email || '')}" placeholder="adres@domena.pl"></td>
         <td><input class="form-control r-funkcja" value="${esc(r.funkcja || '')}" placeholder="np. Członek Rady"></td>
-        <td><input class="form-control r-region" value="${esc(r.region || '')}" placeholder="np. Oddział Pomorski"></td>
+        <td><input class="form-control r-region" value="${esc(r.region || '')}" placeholder="np. Region Południowy"></td>
+        <td><input class="form-control r-woj" value="${esc((r.wojewodztwa || []).join(', '))}" placeholder="śląskie, opolskie"></td>
         <td style="width:78px;"><input class="form-control r-kol" type="number" value="${r.kolejnosc ?? 100}"></td>
         <td style="text-align:center;"><input type="checkbox" class="r-prez" ${r.prezydium ? 'checked' : ''} title="opiniuje kandydatów (etap 1)"></td>
         <td style="text-align:center;"><input type="checkbox" class="r-rada" ${r.rada !== false ? 'checked' : ''} title="głosuje nad uchwałą (etap 2)"></td>
@@ -1053,6 +1101,9 @@
         email: tr.querySelector('.r-email').value.trim().toLowerCase(),
         funkcja: tr.querySelector('.r-funkcja').value.trim() || null,
         region: tr.querySelector('.r-region').value.trim() || null,
+        /* pusta lista to nie to samo co brak zasięgu, więc puste pole zapisujemy jako NULL */
+        wojewodztwa: (w => w.length ? w : null)(
+          tr.querySelector('.r-woj').value.split(',').map(x => norm(x)).filter(Boolean)),
         kolejnosc: parseInt(tr.querySelector('.r-kol').value, 10) || 100,
         prezydium: tr.querySelector('.r-prez').checked,
         rada: tr.querySelector('.r-rada').checked,
@@ -1060,6 +1111,12 @@
       }));
       const zle = wiersze.find(w => !w.imie_nazwisko || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(w.email));
       if (zle) { toast('Każdy wiersz musi mieć imię i nazwisko oraz poprawny e-mail', 'error'); return; }
+      /* Literówka w nazwie województwa nie dałaby błędu, tylko po cichu zepsułaby
+         podpowiadanie właściwego Przedstawiciela, więc sprawdzamy ją od razu. */
+      for (const w of wiersze) {
+        const bledne = (w.wojewodztwa || []).filter(x => !WOJ.includes(x));
+        if (bledne.length) { toast(`Nieznane województwo przy „${w.imie_nazwisko}": ${bledne.join(', ')}`, 'error', 6000); return; }
+      }
       /* Istniejące wiersze idą po kluczu id (zmiana e-maila to zwykła aktualizacja),
          nowe osobno jako insert. Upsert po e-mailu przy zmianie adresu próbował
          wstawić drugi wiersz z tym samym id i wywalał się na kluczu głównym. */

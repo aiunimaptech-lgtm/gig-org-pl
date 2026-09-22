@@ -23,7 +23,8 @@
 -- Uruchom w: Supabase → SQL Editor → Run (albo apply_migration). Idempotentne.
 -- Wymaga wcześniejszego supabase_uchwaly.sql.
 -- Wdrożone jako migracje: uchwaly_etap_opiniowania_prezydium,
--- uchwaly_generator_dwuetapowy, uchwaly_rodzaj_odmowa.
+-- uchwaly_generator_dwuetapowy, uchwaly_rodzaj_odmowa,
+-- przedstawiciele_regionalni_wojewodztwa.
 -- ============================================================
 
 -- ── 1. Rada Izby: kto jest w Prezydium, kto w Radzie, kogo pytamy o konsultację ──
@@ -264,25 +265,27 @@ create or replace function public.gig_uchwala_z_zgloszenia() returns trigger
 language plpgsql security definer set search_path = public as $$
 declare
   m text := coalesce(NEW.message, ''); uid uuid;
-  f text; a text; n text; r text; k text; o text; t text; w text; d text; p text; il text;
+  f text; a text; n text; r text; k text; o text; t text; w text; d text; p text; il text; woj text;
 begin
   if coalesce(NEW.subject, '') !~* '^Zgłoszenie członkowskie:' then return NEW; end if;
-  f  := nullif(nullif(trim(substring(m from 'Firma: ([^\n]*)')), ''), '—');
-  a  := nullif(nullif(trim(substring(m from 'Adres: ([^\n]*)')), ''), '—');
-  n  := nullif(nullif(trim(substring(m from 'NIP: ([^\n]*)')), ''), '—');
-  r  := nullif(nullif(trim(substring(m from 'REGON: ([^\n]*)')), ''), '—');
-  k  := nullif(nullif(trim(substring(m from 'KRS: ([^\n]*)')), ''), '—');
-  o  := nullif(nullif(trim(substring(m from 'Osoba reprezentująca: ([^\n]*)')), ''), '—');
-  t  := nullif(nullif(trim(substring(m from 'Telefon: ([^\n]*)')), ''), '—');
-  w  := nullif(nullif(trim(substring(m from 'WWW: ([^\n]*)')), ''), '—');
-  d  := nullif(nullif(trim(substring(m from 'Opis: ([^\n]*)')), ''), '—');
-  p  := nullif(nullif(trim(substring(m from 'Profil działalności: ([^\n]*)')), ''), '—');
-  il := nullif(nullif(trim(substring(m from 'Liczba osób w firmie: ([^\n]*)')), ''), '—');
+  f   := nullif(nullif(trim(substring(m from 'Firma: ([^\n]*)')), ''), '—');
+  a   := nullif(nullif(trim(substring(m from 'Adres: ([^\n]*)')), ''), '—');
+  n   := nullif(nullif(trim(substring(m from 'NIP: ([^\n]*)')), ''), '—');
+  r   := nullif(nullif(trim(substring(m from 'REGON: ([^\n]*)')), ''), '—');
+  k   := nullif(nullif(trim(substring(m from 'KRS: ([^\n]*)')), ''), '—');
+  o   := nullif(nullif(trim(substring(m from 'Osoba reprezentująca: ([^\n]*)')), ''), '—');
+  t   := nullif(nullif(trim(substring(m from 'Telefon: ([^\n]*)')), ''), '—');
+  w   := nullif(nullif(trim(substring(m from 'WWW: ([^\n]*)')), ''), '—');
+  d   := nullif(nullif(trim(substring(m from 'Opis: ([^\n]*)')), ''), '—');
+  p   := nullif(nullif(trim(substring(m from 'Profil działalności: ([^\n]*)')), ''), '—');
+  il  := nullif(nullif(trim(substring(m from 'Liczba osób w firmie: ([^\n]*)')), ''), '—');
+  -- po województwie panel dobiera właściwego Przedstawiciela Regionalnego do konsultacji
+  woj := lower(nullif(nullif(trim(substring(m from 'Województwo: ([^\n]*)')), ''), '—'));
   insert into public.uchwaly (zgloszenie_id, kandydat_osoba, kandydat_firma, kandydat_adres,
                               kandydat_nip, kandydat_regon, kandydat_krs, kandydat_email,
                               kandydat_telefon, kandydat_www, kandydat_opis, kandydat_pkd, kandydat_osob,
-                              status, opinia_status, opinia_termin)
-  values (NEW.id, o, coalesce(f, NEW.name), a, n, r, k, NEW.email, t, w, d, p, il,
+                              kandydat_wojewodztwo, status, opinia_status, opinia_termin)
+  values (NEW.id, o, coalesce(f, NEW.name), a, n, r, k, NEW.email, t, w, d, p, il, woj,
           'opiniowanie', 'projekt', current_date + 7)
   returning id into uid;
   perform public.gig_uchwala_generuj(uid);
@@ -294,15 +297,27 @@ update public.rada_izby set prezydium = true
  where lower(coalesce(funkcja, '')) like '%prezes%'
    and lower(coalesce(funkcja, '')) not like '%oddzia%';
 
--- Partner konsultacji z art. 12 pkt 1 zd. trzeciego. Izba nie ma obecnie Oddziałów,
--- jest jeden Przedstawiciel Regionalny. Nie jest członkiem Rady (art. 19 ust. 1) —
--- w obradach bierze udział z głosem doradczym po imiennym zaproszeniu (art. 20 ust. 4) —
--- więc `rada = false`: nie dostaje uchwały do głosowania, tylko bywa pytany o opinię.
-insert into public.rada_izby (imie_nazwisko, email, funkcja, region, prezydium, rada, aktywny, kolejnosc)
-values ('Dawid Sienkiewicz', 'dawid.sienkiewicz@gig.org.pl', 'Przedstawiciel Regionalny', 'Region Południowy', false, false, true, 110)
+-- ── 8. Przedstawiciele Regionalni: partnerzy konsultacji z art. 12 pkt 1 zd. trzeciego ──
+-- Izba nie ma obecnie Oddziałów, więc „właściwym" partnerem konsultacji jest zawsze
+-- Przedstawiciel Regionalny. Żaden z nich nie jest członkiem Rady (art. 19 ust. 1);
+-- w obradach bierze udział z głosem doradczym po imiennym zaproszeniu (art. 20 ust. 4),
+-- stąd `rada = false`: nie dostaje uchwały do głosowania, tylko bywa pytany o opinię.
+-- Zasięg trzymamy wprost przy osobie, nazwami z listy rozwijanej formularza „Dołącz do nas",
+-- bo po nich panel dopasowuje przedstawiciela do województwa kandydata.
+-- Skład wg „Spis tel.-Członkowie Organów GIG IX Kadencja".
+alter table public.rada_izby add column if not exists wojewodztwa text[];
+alter table public.uchwaly  add column if not exists kandydat_wojewodztwo text;
+
+insert into public.rada_izby (imie_nazwisko, email, funkcja, region, wojewodztwa, prezydium, rada, aktywny, kolejnosc)
+values
+  ('Dawid Sienkiewicz', 'dawid.sienkiewicz@gig.org.pl', 'Przedstawiciel Regionalny',
+   'Region Południowy', array['śląskie','dolnośląskie','opolskie'], false, false, true, 110),
+  ('Daniel Ruszała', 'daniel.ruszala@gig.org.pl', 'Przedstawiciel Regionalny',
+   'Region Południowo-Wschodni', array['podkarpackie','łódzkie','świętokrzyskie','małopolskie'], false, false, true, 120)
 on conflict (email) do update
-  set funkcja = excluded.funkcja, region = excluded.region,
-      prezydium = excluded.prezydium, rada = excluded.rada;
+  set imie_nazwisko = excluded.imie_nazwisko, funkcja = excluded.funkcja, region = excluded.region,
+      wojewodztwa = excluded.wojewodztwa, prezydium = excluded.prezydium, rada = excluded.rada,
+      aktywny = excluded.aktywny, kolejnosc = excluded.kolejnosc;
 
 -- kontrola
 select 'rada'            as co, count(*)::text from public.rada_izby
