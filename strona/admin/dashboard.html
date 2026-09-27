@@ -28,6 +28,7 @@
         <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
         <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
         <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
+        <a href="wizytowki.html"><span class="nav-icon">🪪</span> Wizytówki członków <span class="nav-badge" id="navBadgeWizytowki" style="display:none">0</span></a>
         <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
         <div class="nav-section">Treści na stronie</div>
         <a href="artykuly.html"><span class="nav-icon">📰</span> Artykuły</a>
@@ -151,7 +152,7 @@
         ktNowe, zpNowe, czlOczek,
         uchOpiniaDoWyslania, uchOpiniaWToku, uchProjekt, uchGlosowanie,
         konsSzkic, konsWToku, wezelNowe, nlNowe, artSzkice,
-        czlRazem, nlRazem, bazaRazem, artOpub, szkPub, uchPrzyjete,
+        czlRazem, nlRazem, bazaRazem, artOpub, szkPub, uchPrzyjete, wizDoZatw,
       ] = await Promise.all([
         ile('submissions_kontakt', ['status', 'new']),
         ile('zapisy_szkolenia', ['status', 'new']),
@@ -171,6 +172,7 @@
         ile('articles', ['status', 'published']),
         ile('szkolenia', ['status', 'published']),
         ile('uchwaly', ['status', 'przyjeta']),
+        ile('wizytowki_weryfikacja', ['status', 'zgloszono']),
       ]);
 
       /* ── skrzynka zadań ── */
@@ -195,6 +197,9 @@
         { ile: konsSzkic, pilne: true, href: 'konsultacje.html',
           tytul: 'Szkice zapytań do wysłania',
           opis: 'Konsultacje czekają na sprawdzenie treści i odbiorców' },
+        { ile: wizDoZatw, pilne: true, href: 'wizytowki.html',
+          tytul: 'Wizytówki członków do zatwierdzenia',
+          opis: 'Firmy przesłały nowe dane do katalogu; sprawdź zmiany i opublikuj' },
         { ile: wezelNowe, pilne: true, href: 'wezel.html',
           tytul: 'Nowe ankiety cenowe w Węźle Jakości',
           opis: 'Przejrzyj stawki i zweryfikuj ankietę' },
@@ -249,6 +254,8 @@
           licznik: uchOpiniaDoWyslania + uchProjekt },
         { href: 'konsultacje.html', ikona: '🗳', tytul: 'Konsultacje',
           opis: 'Zapytania do Prezydium, Rady i członków z głosowaniem za albo przeciw.', licznik: konsSzkic },
+        { href: 'wizytowki.html', ikona: '🪪', tytul: 'Wizytówki członków',
+          opis: 'Prośba do firm o sprawdzenie danych w katalogu, zatwierdzanie zmian.', licznik: wizDoZatw },
         { href: 'wezel.html', ikona: '📊', tytul: 'Węzeł Jakości',
           opis: 'Ankieta cenowa SEKOCENBUD: zestawienia zbiorcze i eksport do CSV.', licznik: wezelNowe },
         { href: 'artykuly.html', ikona: '📰', tytul: 'Artykuły',

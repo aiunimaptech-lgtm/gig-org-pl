@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Wizytówki członków: Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .wv-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:18px;}
+    .wv-sum .k{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:12px 16px;cursor:pointer;}
+    .wv-sum .k.akt{border-color:#cc0a2b;box-shadow:0 0 0 2px rgba(204,10,43,.12);}
+    .wv-sum .k .t{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+    .wv-sum .k .v{font-size:22px;font-weight:800;color:#16202a;margin-top:3px;}
+    .wv-mini{font-size:12px;color:#6b7f84;line-height:1.5;}
+    .wv-diff{width:100%;border-collapse:collapse;font-size:14px;}
+    .wv-diff th,.wv-diff td{border-bottom:1px solid #edf1f4;padding:9px 8px;vertical-align:top;text-align:left;}
+    .wv-diff th{font-size:12px;color:#6b7f84;text-transform:uppercase;letter-spacing:.4px;}
+    .wv-diff td.pole{font-weight:700;color:#16202a;white-space:nowrap;width:140px;}
+    .wv-diff td.teraz{color:#6b7f84;width:36%;word-break:break-word;}
+    .wv-diff tr.zmiana td{background:#fff8e6;}
+    .wv-diff tr.zmiana td.pole::after{content:" • zmiana";color:#b7791f;font-weight:600;font-size:11px;}
+    .wv-diff input,.wv-diff textarea,.wv-diff select{width:100%;padding:7px 9px;border:1px solid #d6dde3;border-radius:7px;font:inherit;font-size:14px;}
+    .wv-diff textarea{min-height:110px;resize:vertical;}
+    .wv-z-pliku{font-size:11px;color:#9aa7b2;display:block;}
+    .wv-brak{display:inline-block;background:#f1f3f5;border-radius:12px;padding:2px 9px;font-size:12px;color:#6b7f84;margin-top:4px;}
+    .wv-uwagi{background:#f7f9fb;border-left:3px solid #cc0a2b;border-radius:0 8px 8px 0;padding:10px 14px;margin:0 0 14px;font-size:14px;}
+    .wv-akcje{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;margin-top:16px;}
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html"><span class="nav-icon">🏠</span> Pulpit</a>
+        <div class="nav-section">Zgłoszenia ze strony</div>
+        <a href="formularze.html#kontakt"><span class="nav-icon">📨</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">📝</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <div class="nav-section">Sprawy Izby</div>
+        <a href="czlonkowie.html?status=oczekuje"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
+        <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
+        <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
+        <a href="wizytowki.html" class="active"><span class="nav-icon">🪪</span> Wizytówki członków <span class="nav-badge" id="navBadgeWizytowki" style="display:none">0</span></a>
+        <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
+        <div class="nav-section">Treści na stronie</div>
+        <a href="artykuly.html"><span class="nav-icon">📰</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <div class="nav-section">Wysyłka maili</div>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Wizytówki członków</div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" id="btnPodglad">👁 Podgląd maila</button>
+          <button class="btn btn-outline btn-sm" id="btnPrzypomnij" title="Do firm, które dostały prośbę i nie odpowiedziały">↻ Przypomnij</button>
+          <button class="btn btn-primary btn-sm" id="btnWyslij" title="Do firm, które jeszcze nie dostały prośby">✉ Wyślij prośbę</button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="card" style="margin-bottom:18px;"><div class="card-body">
+          <p style="margin:0;font-size:14px;line-height:1.6;color:#38444e;">
+            Każda firma dostaje mailem osobisty link do formularza, w którym sprawdza swoją wizytówkę z katalogu
+            <a href="/czlonkowie/" target="_blank">gig.org.pl/czlonkowie</a>, dopisuje opis i linki albo zaznacza, że ich nie ma.
+            <strong>Nic nie trafia na stronę bez zatwierdzenia tutaj.</strong> Po zatwierdzeniu dane firmy stają się źródłem prawdy:
+            katalog nie uzupełnia już jej opisu i linków ze starego pliku.</p>
+        </div></div>
+
+        <div class="wv-sum" id="podsumowanie"></div>
+
+        <div class="card"><div class="card-body">
+          <div class="toolbar">
+            <div class="search-box"><span class="search-icon">⌕</span>
+              <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: firma, e-mail, osoba…"></div>
+            <select id="fStan" class="form-control" style="max-width:220px;">
+              <option value="">Wszystkie firmy</option>
+              <option value="zgloszono">Do zatwierdzenia</option>
+              <option value="wyslano">Bez odpowiedzi</option>
+              <option value="brak">Prośba niewysłana</option>
+              <option value="zatwierdzono">Zatwierdzone</option>
+              <option value="odrzucono">Odrzucone</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Firma</th><th>Stan</th><th>Prośba wysłana</th><th>Otwarto</th><th>Odpowiedź</th><th></th></tr></thead>
+              <tbody id="rows"><tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table>
+          </div>
+        </div></div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="wvModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title" id="wvTytul">Wizytówka</div>
+        <button class="modal-close" data-modal-close="wvModal">×</button>
+      </div>
+      <div class="modal-body" id="wvTresc"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/_assets/js/czlonkowie-enrich.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    /* Wizytówki członków: prośby o weryfikację danych w katalogu /czlonkowie/.
+       Tabela wizytowki_weryfikacja (backend/supabase_wizytowki.sql), wysyłka przez
+       Edge Function wizytowka-wyslij, formularz członka: /wizytowka/?t=<token>. */
+    let firmy = [], wiz = {}, filtr = '';
+    const WOJ = ['Dolnośląskie','Kujawsko-pomorskie','Lubelskie','Lubuskie','Łódzkie','Małopolskie','Mazowieckie','Opolskie',
+      'Podkarpackie','Podlaskie','Pomorskie','Śląskie','Świętokrzyskie','Warmińsko-Mazurskie','Wielkopolskie','Zachodniopomorskie'];
+    const POLA = [
+      ['name', 'Nazwa firmy'], ['person', 'Osoba kontaktowa'], ['phone', 'Telefon'], ['email', 'E-mail'],
+      ['address', 'Adres'], ['region', 'Województwo'], ['description', 'Opis firmy'],
+      ['website', 'Strona www'], ['linkedin', 'LinkedIn'], ['facebook', 'Facebook'],
+    ];
+    const BRAK = { website: 'brak_www', linkedin: 'brak_linkedin', facebook: 'brak_facebook' };
+    const STANY = {
+      brak: ['read', 'nie wysłano'], wyslano: ['new', 'bez odpowiedzi'], zgloszono: ['new', 'do zatwierdzenia'],
+      zatwierdzono: ['replied', 'zatwierdzono'], odrzucono: ['read', 'odrzucono'],
+    };
+    const stan = f => wiz[f.id] ? wiz[f.id].status : 'brak';
+    const czyste = v => { v = (v == null ? '' : String(v)).trim(); return v.toLowerCase() === 'brak' ? '' : v; };
+
+    /* Co dziś widać w katalogu: baza, a puste pola uzupełnione ze statycznego pliku
+       (tak jak robi to /czlonkowie/), chyba że wizytówka jest już zweryfikowana. */
+    function naStronie(f, k) {
+      const v = czyste(f[k]);
+      if (v || f.zweryfikowano_at || !['website', 'linkedin', 'facebook', 'description'].includes(k)) return { v, plik: false };
+      const e = (window.GIG_ENRICH || {})[f.name];
+      const z = e ? czyste(e[k]) : '';
+      return { v: z, plik: !!z };
+    }
+
+    function podsumuj() {
+      const ile = s => firmy.filter(f => stan(f) === s).length;
+      const kafle = [
+        ['', 'Firm w katalogu', firmy.length],
+        ['zgloszono', 'Do zatwierdzenia', ile('zgloszono')],
+        ['wyslano', 'Bez odpowiedzi', ile('wyslano')],
+        ['brak', 'Prośba niewysłana', ile('brak')],
+        ['zatwierdzono', 'Zatwierdzone', ile('zatwierdzono')],
+        ['otwarto', 'Otworzyło formularz', Object.values(wiz).filter(w => w.otwarto_at).length],
+      ];
+      document.getElementById('podsumowanie').innerHTML = kafle.map(([k, t, v]) =>
+        `<div class="k${filtr === k && k !== 'otwarto' ? ' akt' : ''}" data-f="${k}"><div class="t">${t}</div><div class="v">${v}</div></div>`).join('');
+      document.querySelectorAll('#podsumowanie .k').forEach(el => el.addEventListener('click', () => {
+        if (el.dataset.f === 'otwarto') return;
+        document.getElementById('fStan').value = el.dataset.f; filtr = el.dataset.f; render();
+      }));
+    }
+
+    function render() {
+      podsumuj();
+      const q = document.getElementById('szukaj').value.toLowerCase();
+      const lista = firmy.filter(f => (!filtr || stan(f) === filtr) &&
+        ((f.name || '') + ' ' + (f.email || '') + ' ' + (f.person || '')).toLowerCase().includes(q));
+      const tb = document.getElementById('rows');
+      if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak firm w tym widoku.</td></tr>'; return; }
+      tb.innerHTML = lista.map(f => {
+        const w = wiz[f.id], s = stan(f), [kl, et] = STANY[s];
+        return `<tr>
+          <td><strong>${esc(f.name)}</strong><br><span class="wv-mini">${esc(f.email || 'brak adresu e-mail')}</span></td>
+          <td><span class="badge badge-${kl}">${et}</span>${w && w.blad_wysylki ? '<br><span class="wv-mini" style="color:#a3122c">błąd wysyłki</span>' : ''}</td>
+          <td style="white-space:nowrap;">${w && w.wyslano_at ? fmtDate(w.wyslano_at) : '—'}${w && w.przypomnien ? `<br><span class="wv-mini">przypomnień: ${w.przypomnien}</span>` : ''}</td>
+          <td style="white-space:nowrap;">${w && w.otwarto_at ? fmtDate(w.otwarto_at) : '—'}</td>
+          <td style="white-space:nowrap;">${w && w.zgloszono_at ? fmtDate(w.zgloszono_at) : '—'}</td>
+          <td class="actions" style="white-space:nowrap;">
+            ${w && w.zgloszono_at ? `<button class="btn ${s === 'zgloszono' ? 'btn-primary' : 'btn-outline'} btn-xs" data-przejrzyj="${f.id}">Przejrzyj</button>` : ''}
+            <button class="btn btn-ghost btn-xs" data-wyslij="${f.id}" title="${w ? 'Wyślij prośbę ponownie (ten sam link)' : 'Wyślij prośbę do tej firmy'}">${w ? '↻' : '✉'}</button>
+          </td></tr>`;
+      }).join('');
+      tb.querySelectorAll('[data-przejrzyj]').forEach(b => b.addEventListener('click', () => przejrzyj(b.dataset.przejrzyj)));
+      tb.querySelectorAll('[data-wyslij]').forEach(b => b.addEventListener('click', () => {
+        const f = firmy.find(x => x.id === b.dataset.wyslij);
+        if (f && confirm(`Wysłać prośbę o sprawdzenie wizytówki do „${f.name}” (${f.email})?`)) wyslij('wyslij', [f.id]);
+      }));
+    }
+
+    async function load() {
+      const [fq, wq] = await Promise.all([
+        db.from('czlonkowie').select('*').eq('status', 'published').order('name'),
+        db.from('wizytowki_weryfikacja').select('*'),
+      ]);
+      if (fq.error || wq.error) { console.error(fq.error || wq.error); toast('Błąd ładowania danych', 'error'); return; }
+      firmy = fq.data || [];
+      wiz = {}; (wq.data || []).forEach(w => { wiz[w.czlonek_id] = w; });
+      render();
+      loadSidebarBadges();
+    }
+
+    async function wolaj(body) {
+      const sesja = await getSession();
+      if (!sesja) throw new Error('sesja wygasła, zaloguj się ponownie');
+      const res = await fetch(SUPABASE_URL + '/functions/v1/wizytowka-wyslij', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
+        body: JSON.stringify(body),
+      });
+      const w = await res.json().catch(() => ({}));
+      if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
+      return w;
+    }
+
+    async function wyslij(tryb, czlonkowie) {
+      toast(tryb === 'przypomnienie' ? 'Wysyłam przypomnienia…' : 'Wysyłam prośby…', 'default', 8000);
+      try {
+        const w = await wolaj({ tryb, czlonkowie: czlonkowie || [] });
+        if (w.info) toast(w.info);
+        else {
+          const nieudane = (w.wyniki || []).filter(x => !x.ok);
+          toast(`Wysłano ${w.wyslane} z ${w.razem}` + (nieudane.length ? `; nie dotarło: ${nieudane.map(x => x.nazwa).join(', ')}` : ''),
+            nieudane.length ? 'error' : 'success', 8000);
+        }
+      } catch (e) { console.error(e); toast('Nie udało się wysłać: ' + e.message, 'error', 8000); }
+      load();
+    }
+
+    function przejrzyj(czlonekId) {
+      const f = firmy.find(x => x.id === czlonekId), w = wiz[czlonekId];
+      if (!f || !w) return;
+      const wiersze = POLA.map(([k, et]) => {
+        const teraz = naStronie(f, k);
+        const brak = BRAK[k] && w[BRAK[k]];
+        const nowa = brak ? '' : (w['p_' + k] || '');
+        const zmiana = (nowa || '') !== (teraz.v || '') || (brak && teraz.v);
+        let pole;
+        if (k === 'description') pole = `<textarea data-k="${k}">${esc(nowa)}</textarea>`;
+        else if (k === 'region') pole = `<select data-k="${k}"><option value=""></option>${WOJ.concat(nowa && !WOJ.includes(nowa) ? [nowa] : [])
+          .map(x => `<option${x === nowa ? ' selected' : ''}>${esc(x)}</option>`).join('')}</select>`;
+        else pole = `<input type="text" data-k="${k}" value="${esc(nowa)}">`;
+        if (BRAK[k]) pole += `<label class="wv-mini" style="display:flex;gap:6px;align-items:center;margin-top:5px;"><input type="checkbox" data-brak="${k}" style="width:auto"${brak ? ' checked' : ''}> firma deklaruje: nie mamy</label>`;
+        return `<tr class="${zmiana ? 'zmiana' : ''}"><td class="pole">${et}</td>
+          <td class="teraz">${teraz.v ? esc(teraz.v).replace(/\n/g, '<br>') : '<span class="wv-mini">puste</span>'}${teraz.plik ? '<span class="wv-z-pliku">ze starego pliku, nie z bazy</span>' : ''}</td>
+          <td>${pole}</td></tr>`;
+      }).join('');
+      const emailZmiana = (w.p_email || '').toLowerCase() !== (f.email || '').toLowerCase();
+      document.getElementById('wvTytul').textContent = 'Wizytówka: ' + f.name;
+      document.getElementById('wvTresc').innerHTML = `
+        <p class="wv-mini" style="margin:0 0 12px;">Zgłoszono ${fmtDate(w.zgloszono_at)} z adresu ${esc(w.email)}. Pola z żółtym tłem różnią się od tego, co dziś widać w katalogu.
+          Propozycję możesz poprawić przed zatwierdzeniem.</p>
+        ${w.uwagi ? `<div class="wv-uwagi"><strong>Wiadomość od firmy:</strong> ${esc(w.uwagi)}</div>` : ''}
+        ${emailZmiana ? `<p class="wv-mini" style="color:#b7791f;margin:0 0 12px;">Zmiana adresu e-mail dotyczy też wysyłek Izby do tej firmy (konsultacje, newsletter członkowski).</p>` : ''}
+        ${(w.p_address || '') !== (f.address || '') ? `<p class="wv-mini" style="color:#b7791f;margin:0 0 12px;">Zmienił się adres: sprawdź pinezkę firmy na mapie katalogu (współrzędne edytujesz w zakładce Członkowie).</p>` : ''}
+        <table class="wv-diff"><thead><tr><th>Pole</th><th>Teraz na stronie</th><th>Propozycja firmy (do zatwierdzenia)</th></tr></thead><tbody>${wiersze}</tbody></table>
+        <div class="wv-akcje">
+          <button class="btn btn-outline" id="wvOdrzuc">✕ Odrzuć</button>
+          <button class="btn btn-primary" id="wvZatwierdz">✓ Zatwierdź i opublikuj</button>
+        </div>`;
+      const box = document.getElementById('wvTresc');
+      box.querySelectorAll('[data-brak]').forEach(chk => {
+        const pole = box.querySelector(`[data-k="${chk.dataset.brak}"]`);
+        const przelacz = () => { pole.disabled = chk.checked; if (chk.checked) pole.value = ''; };
+        chk.addEventListener('change', przelacz); przelacz();
+      });
+      document.getElementById('wvZatwierdz').addEventListener('click', () => zatwierdz(f, w));
+      document.getElementById('wvOdrzuc').addEventListener('click', () => odrzuc(f, w));
+      openModal('wvModal');
+    }
+
+    async function zatwierdz(f, w) {
+      const box = document.getElementById('wvTresc');
+      const dane = {};
+      POLA.forEach(([k]) => { const el = box.querySelector(`[data-k="${k}"]`); dane[k] = el && !el.disabled ? el.value.trim() || null : null; });
+      if (!dane.name) { toast('Nazwa firmy nie może być pusta', 'error'); return; }
+      if (!dane.email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(dane.email)) { toast('Podaj poprawny adres e-mail firmy', 'error'); return; }
+      if (!confirm(`Opublikować dane „${dane.name}” w katalogu Członków?`)) return;
+      const teraz = new Date().toISOString();
+      const kto = (await getSession())?.user?.email || null;
+      const u1 = await db.from('czlonkowie').update({ ...dane, zweryfikowano_at: teraz, updated_at: teraz }).eq('id', f.id);
+      if (u1.error) { console.error(u1.error); toast('Nie udało się zapisać danych firmy', 'error'); return; }
+      const u2 = await db.from('wizytowki_weryfikacja').update({
+        status: 'zatwierdzono', rozpatrzono_at: teraz, rozpatrzyl: kto, updated_at: teraz,
+        brak_www: !dane.website && !!box.querySelector('[data-brak="website"]')?.checked,
+        brak_linkedin: !dane.linkedin && !!box.querySelector('[data-brak="linkedin"]')?.checked,
+        brak_facebook: !dane.facebook && !!box.querySelector('[data-brak="facebook"]')?.checked,
+      }).eq('id', w.id);
+      if (u2.error) console.error(u2.error);
+      toast('Wizytówka opublikowana', 'success');
+      closeModal('wvModal');
+      load();
+    }
+
+    async function odrzuc(f, w) {
+      const notatka = prompt(`Dlaczego odrzucasz zmiany „${f.name}”? (notatka tylko dla biura; firmie wyjaśnij mailowo)`, '');
+      if (notatka === null) return;
+      const teraz = new Date().toISOString();
+      const kto = (await getSession())?.user?.email || null;
+      const { error } = await db.from('wizytowki_weryfikacja').update({ status: 'odrzucono', rozpatrzono_at: teraz, rozpatrzyl: kto, notatka_biura: notatka || null, updated_at: teraz }).eq('id', w.id);
+      if (error) { console.error(error); toast('Nie udało się zapisać', 'error'); return; }
+      toast('Zmiany odrzucone; na stronie zostają poprzednie dane');
+      closeModal('wvModal');
+      load();
+    }
+
+    (async () => {
+      if (!await requireAuth()) return;
+      document.getElementById('szukaj').addEventListener('input', render);
+      document.getElementById('fStan').addEventListener('change', e => { filtr = e.target.value; render(); });
+      document.getElementById('btnWyslij').addEventListener('click', () => {
+        const ile = firmy.filter(f => stan(f) === 'brak' && f.email).length;
+        if (!ile) { toast('Wszystkie firmy dostały już prośbę. Użyj „Przypomnij” albo przycisku ↻ przy firmie.'); return; }
+        if (confirm(`Wysłać prośbę o sprawdzenie wizytówki do ${ile} ${ile === 1 ? 'firmy' : 'firm'}, które jeszcze jej nie dostały?\n\nWysyłka potrwa około ${Math.ceil(ile * 0.8)} s.`)) wyslij('wyslij');
+      });
+      document.getElementById('btnPrzypomnij').addEventListener('click', () => {
+        const ile = firmy.filter(f => stan(f) === 'wyslano').length;
+        if (!ile) { toast('Nie ma firm czekających na odpowiedź'); return; }
+        if (confirm(`Wysłać przypomnienie do ${ile} ${ile === 1 ? 'firmy' : 'firm'}, które nie odpowiedziały?`)) wyslij('przypomnienie');
+      });
+      document.getElementById('btnPodglad').addEventListener('click', async () => {
+        try {
+          const w = await wolaj({ tryb: 'podglad' });
+          document.getElementById('wvTytul').textContent = 'Podgląd: ' + w.subject;
+          document.getElementById('wvTresc').innerHTML = '<iframe sandbox style="width:100%;height:70vh;border:1px solid #e6ebef;border-radius:10px;background:#fff;"></iframe>';
+          document.querySelector('#wvTresc iframe').srcdoc = w.html;
+          openModal('wvModal');
+        } catch (e) { toast('Podgląd niedostępny: ' + e.message, 'error'); }
+      });
+      await load();
+      const id = new URLSearchParams(location.search).get('id');
+      if (id) { const w = Object.values(wiz).find(x => x.id === id); if (w) przejrzyj(w.czlonek_id); }
+    })();
+  </script>
+</body>
+</html>

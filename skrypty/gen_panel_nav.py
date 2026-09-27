@@ -29,6 +29,7 @@ MENU = [
     ('Sprawy Izby',         'czlonkowie.html?status=oczekuje', '\U0001f3e2', 'Członkowie',     'navBadgeCzlonkowie'),
     ('Sprawy Izby',         'uchwaly.html',               '⚖',     'Uchwały Rady',        'navBadgeUchwaly'),
     ('Sprawy Izby',         'konsultacje.html',           '\U0001f5f3', 'Konsultacje',         'navBadgeKonsultacje'),
+    ('Sprawy Izby',         'wizytowki.html',             '🪪', 'Wizytówki członków',  'navBadgeWizytowki'),
     ('Sprawy Izby',         'wezel.html',                 '\U0001f4ca', 'Węzeł Jakości',       'navBadgeWezel'),
     ('Treści na stronie',   'artykuly.html',              '\U0001f4f0', 'Artykuły',            None),
     ('Treści na stronie',   'szkolenia.html',             '\U0001f393', 'Szkolenia',           None),

@@ -272,6 +272,23 @@ opinia negatywna, etap 2 głosowanie, sprawa przyjęta), oba PDF-y (pełny rapor
 **Nie testowałem wysyłki `uchwala-wyslij` na żywo** (wymaga sesji panelu z kodem z maila): pierwszą
 prośbę o opinię wyślij do siebie, wybierając w odbiorcach tylko jedną osobę.
 
+### Wizytówki członków: weryfikacja danych w katalogu (`admin/wizytowki.html`, od 27.09.2026)
+Biuro wysyła firmom osobisty link (`/wizytowka/?t=<token>`, Edge Function `wizytowka-wyslij`,
+przerwa 600 ms między mailami przez limit Resend). Członek widzi obecne dane (z bazy, a puste
+opis i linki z `czlonkowie-enrich.js`), poprawia je, dopisuje opis (do 700 znaków) i linki albo
+zaznacza „nie mamy”. Zapis (Edge Function `wizytowka`) to tylko propozycja w
+`wizytowki_weryfikacja` (status `zgloszono`) i mail do biura. **Na stronę trafia dopiero po
+„Zatwierdź i opublikuj”** w panelu: dane idą do `czlonkowie`, a `czlonkowie.zweryfikowano_at`
+wyłącza w katalogu uzupełnianie opisu i linków ze statycznego pliku (inaczej „nie mamy
+LinkedIn” nic by nie dało). Jedna firma = jeden wiersz i jeden token; ponowna wysyłka używa
+tego samego linku. SQL: `backend/supabase_wizytowki.sql` (migracja `wizytowki_weryfikacja`).
+
+### Odpowiedzi na formularz kontaktowy (od 27.09.2026)
+`wyslij-mail` v7 zapisuje każdą odpowiedź z panelu w `kontakt_odpowiedzi` (przy `kontakt_id`),
+a w zakładce Kontakt przycisk „📄 Odpowiedź” pokazuje jej treść. Dla starszych odpowiedzi panel
+raz pyta Resend o historię (`akcja: 'odzyskaj'`); Resend trzyma ją krótko, więc starych maili
+może już nie być.
+
 ### Konsultacje: doraźne zapytania kolegialne (`admin/konsultacje.html`, od 22.09.2026)
 Nie każda sprawa jest uchwałą Rady. Patronat nad konferencją, partnerstwo przy wydarzeniu,
 stanowisko w sprawie bieżącej: Izba odpowiada kolegialnie, ale bez trybu z art. 12 Statutu.

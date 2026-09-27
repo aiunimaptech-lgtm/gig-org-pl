@@ -288,7 +288,10 @@
       var E=window.GIG_ENRICH||{};
       ALL.forEach(function(r){
         var e=E[r.name]; if(!e) return;
-        ['website','facebook','linkedin','description','nip','regon','krs'].forEach(function(k){
+        // wizytówka potwierdzona przez samego członka (panel → Wizytówki): opis i linki
+        // są źródłem prawdy, także gdy są puste („nie mamy LinkedIn"), więc ich nie uzupełniamy
+        var klucze=r.zweryfikowano_at ? ['nip','regon','krs'] : ['website','facebook','linkedin','description','nip','regon','krs'];
+        klucze.forEach(function(k){
           if(!val(r[k]) && e[k]!=null && String(e[k]).toLowerCase()!=='brak') r[k]=e[k];
         });
         // współrzędne: statyczny plik to źródło prawdy dla mapy (dokładny geokoder po adresie)
