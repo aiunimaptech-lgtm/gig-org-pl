@@ -71,6 +71,23 @@ Pola: liczba osób, imiona i nazwiska, nabywca (nazwa/adres/NIP + znacznik JST),
 odbiorca (nazwa/adres/**NIP / ID-wewn.**, domyślnie ukryty), e-mail, telefon, uwagi, RODO.
 Przycisk „Zapisz się" w kalendarzu szkoleń prowadzi tu z `?szkolenie=<tytuł>`.
 
+**Tryb bezpłatny (od 27.09.2026, pierwsze użycie: Forum GIG z GGK 19.11.2026).** Gdy cena
+szkolenia (`szkolenia.price`) jest zerowa albo zawiera „bezpłat”, formularz po tytule sam
+przełącza się na wydarzenie bez płatności: nabywca staje się „Dane firmy lub instytucji”
+(nazwa, adres, NIP **nadal obowiązkowe**, bo trzeba wiedzieć, kto się zgłasza, i wysłać link),
+zamiast pytania o JST jest „Kogo reprezentujesz” (firma / urząd / inna instytucja), odbiorca
+znika, telefon zostaje obowiązkowy. Urząd zapisuje się jako `nabywca_jst = true` (bez
+zachęty do członkostwa). „Reprezentuje: …” i pytanie do prelegentów lądują w `uwagi`.
+`send-confirmation` (v17) stosuje tę samą regułę (`cenaZerowa`): potwierdzenie mówi „Udział
+bezpłatny, bez faktury i wpłaty”, powiadomienie dla biura nie ma bloku odbiorcy ani JST.
+Gdy odczyt ceny się nie uda, formularz zostaje w zwykłym trybie z fakturą.
+
+**Propozycja wartości na stronie (27.09.2026).** Strona główna (sekcja „Co zyskujesz jako
+członek Izby”), `/dolacz-do-nas/` (korzyści, 4 kroki, tabela kosztów, FAQ, statut w
+`<details>`) i mail „Zainteresowanie członkostwem” pokazują składki (40 / 80 / 160 zł
+miesięcznie, wpisowe 75 zł). **Nie obiecujemy porad prawnych ani pomocy w pozyskiwaniu
+zleceń** (Izba tego w praktyce nie robi), usunięte też z listy korzyści na `/zapisy/`.
+
 ### Pułapka: kolejność skryptów a `window.GIG_CFG`
 `gig-config.js` musi być wpięty **przed** każdym skryptem, który czyta `window.GIG_CFG`.
 Na `/wpis/` (widok pojedynczego artykułu z panelu) config stał na końcu `<body>`, za skryptem

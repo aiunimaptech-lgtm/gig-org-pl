@@ -47,9 +47,9 @@
 <section class="z-hero">
   <div class="wrap">
     <span class="z-kicker">Zgłoszenie udziału</span>
-    <h1>Zapis na szkolenie</h1>
-    <p class="lead">Dane nabywcy i odbiorcy zbieramy już teraz, żeby nie dopytywać przed wystawieniem faktury. Pola oznaczone <span style="color:#cc0a2b">*</span> są obowiązkowe.</p>
-    <div class="z-szk" id="zSzk" hidden><small>Szkolenie</small><span id="zSzkNazwa"></span></div>
+    <h1 id="zH1">Zapis na szkolenie</h1>
+    <p class="lead" id="zLead">Dane nabywcy i odbiorcy zbieramy już teraz, żeby nie dopytywać przed wystawieniem faktury. Pola oznaczone <span style="color:#cc0a2b">*</span> są obowiązkowe.</p>
+    <div class="z-szk" id="zSzk" hidden><small id="zSzkEtyk">Szkolenie</small><span id="zSzkNazwa"></span></div>
   </div>
 </section>
 
@@ -67,8 +67,8 @@
     </div>
   </fieldset>
 
-  <fieldset>
-    <legend>Dane nabywcy<span class="opis">Podmiot, na który wystawimy fakturę</span></legend>
+  <fieldset id="zNabywca">
+    <legend><span id="zNabTytul">Dane nabywcy</span><span class="opis" id="zNabOpis">Podmiot, na który wystawimy fakturę</span></legend>
     <div class="pole">
       <label for="nabywca_nazwa">Nazwa firmy / instytucji <span class="wym">*</span></label>
       <input type="text" id="nabywca_nazwa" name="nabywca_nazwa" required>
@@ -82,7 +82,17 @@
         <label for="nabywca_nip">NIP <span class="wym">*</span></label>
         <input type="text" id="nabywca_nip" name="nabywca_nip" required inputmode="numeric" placeholder="0000000000">
       </div>
-      <div class="pole">
+      <!-- Tryb bezplatny (cena w kalendarzu „bezplatne"): dane firmy zostaja obowiazkowe,
+           ale zamiast pytania o JST do faktury pytamy, kogo uczestnik reprezentuje. -->
+      <div class="pole" id="zRepPole" hidden>
+        <label for="reprezentuje">Kogo reprezentujesz? <span class="wym">*</span></label>
+        <select id="reprezentuje" name="reprezentuje">
+          <option value="firma">Firmę geodezyjną</option>
+          <option value="urzad">Urząd lub jednostkę samorządu</option>
+          <option value="instytucja">Inną instytucję lub uczelnię</option>
+        </select>
+      </div>
+      <div class="pole" id="zJstPole">
         <label for="nabywca_jst">Czy nabywca jest jednostką samorządu terytorialnego? <span class="wym">*</span></label>
         <select id="nabywca_jst" name="nabywca_jst" required>
           <option value="">— wybierz —</option>
@@ -94,7 +104,7 @@
     </div>
   </fieldset>
 
-  <fieldset>
+  <fieldset id="zOdbiorcaSet">
     <legend>Dane odbiorcy<span class="opis">Kto figuruje na fakturze jako odbiorca</span></legend>
     <div class="chk">
       <input type="checkbox" id="odbiorca_taki_sam" name="odbiorca_taki_sam" checked>
@@ -129,8 +139,9 @@
       </div>
     </div>
     <div class="pole">
-      <label for="uwagi">Uwagi (opcjonalnie)</label>
+      <label for="uwagi" id="zUwagiEtyk">Uwagi (opcjonalnie)</label>
       <textarea id="uwagi" name="uwagi" style="min-height:80px"></textarea>
+      <p class="hint" id="zUwagiHint" hidden>Zestawimy nadesłane pytania i przekażemy je prelegentom przed spotkaniem, żeby odpowiedzi były konkretne.</p>
     </div>
   </fieldset>
 
@@ -151,7 +162,7 @@
 <div class="z-ok-box" id="zOk">
   <h2>Zgłoszenie przyjęte ✓</h2>
   <p>Dziękujemy. Potwierdzenie wysłaliśmy na podany adres e-mail.</p>
-  <p>Link do logowania na szkolenie prześlemy dzień przed jego terminem. Zasady płatności i numer konta są w potwierdzeniu e-mail.</p>
+  <p id="zOkInfo">Link do logowania na szkolenie prześlemy dzień przed jego terminem. Zasady płatności i numer konta są w potwierdzeniu e-mail.</p>
 
   <!-- Zacheta do czlonkostwa: pokazujemy ja tylko firmom (nie JST) i tylko tym,
        ktorych NIP-u nie ma w katalogu czlonkow. Opcja jest domyslnie zaznaczona,
@@ -160,14 +171,14 @@
     <div class="z-izba-glowa">
       <span class="z-izba-tag">Samorząd gospodarczy branży geodezyjnej</span>
       <h3>Dołącz do największej organizacji przedsiębiorców geodezyjnych w Polsce</h3>
-      <p>Od 1994 roku reprezentujemy i chronimy interesy firm geodezyjnych wobec administracji, ustawodawcy i rynku. Członkowie Izby płacą mniej za szkolenia GIG, także za to, na które właśnie się zapisujesz.</p>
+      <p id="zIzbaLead">Od 1994 roku reprezentujemy i chronimy interesy firm geodezyjnych wobec administracji, ustawodawcy i rynku. Członkowie Izby płacą mniej za szkolenia GIG, także za to, na które właśnie się zapisujesz.</p>
     </div>
     <ul class="z-izba-lista">
       <li><b>01</b>Reprezentacja i ochrona interesów firm</li>
       <li><b>02</b>Specjalistyczne szkolenia w cenie członkowskiej</li>
-      <li><b>03</b>Wsparcie w pozyskiwaniu zleceń</li>
+      <li><b>03</b>Interwencje w sprawach z ośrodkami i nadzorem</li>
       <li><b>04</b>Opiniowanie aktów prawnych</li>
-      <li><b>05</b>Profesjonalne porady prawne</li>
+      <li><b>05</b>Węzeł Jakości: rynkowe stawki prac geodezyjnych</li>
       <li><b>06</b>Współpraca z administracją</li>
     </ul>
     <div class="chk z-izba-chk">
@@ -212,6 +223,7 @@
      wiec biuro dostaje maila jak przy kazdym zgloszeniu, a klient potwierdzenie. */
   async function zachecDoIzby(db, dane) {
     if (dane.nabywca_jst) return;
+    if (bezplatne && reprezentuje !== "firma") return;
     var nip = (dane.nabywca_nip || "").replace(/\D/g, "");
     try {
       if (nip) {
@@ -268,6 +280,7 @@
   }
   var msg  = document.getElementById("zMsg");
   var btn  = document.getElementById("zSend");
+  var bezplatne = false, reprezentuje = "";
 
   /* Tytuł szkolenia przychodzi w ?szkolenie= (z przycisku „Zapisz się" w kalendarzu). */
   var m = location.search.match(/[?&]szkolenie=([^&]+)/);
@@ -276,6 +289,44 @@
     document.getElementById("zSzkNazwa").textContent = szkolenie;
     document.getElementById("zSzk").hidden = false;
     document.title = "Zapis: " + szkolenie + " — GIG";
+  }
+
+  /* Tryb bezplatny. Cene znamy tylko z kalendarza, wiec dociagamy wiersz szkolenia
+     po tytule (jak panel: bez wielkosci liter). Gdy cena dla uczestnikow spoza Izby
+     jest zerowa albo brzmi „bezplatne", chowamy to, co sluzy tylko fakturze (JST,
+     odbiorca), a dane firmy i kontakt zostaja obowiazkowe - potrzebne do listy
+     uczestnikow i do zestawienia pytan dla prelegentow.
+     Gdy sprawdzenie sie nie uda, zostaje zwykly formularz z faktura - bezpieczniej. */
+  function cenaZerowa(txt) {
+    var t = String(txt || "").toLowerCase();
+    if (!t.trim()) return false;
+    if (/bezp[\u0142l]at|nieodp[\u0142l]at|gratis/.test(t)) return true;
+    var n = t.replace(/\s/g, "").match(/\d+(?:[.,]\d+)?/);
+    return !!n && parseFloat(n[0].replace(",", ".")) === 0;
+  }
+  function wlaczBezplatne() {
+    bezplatne = true;
+    document.getElementById("zH1").textContent = "Zapis na bezpłatne wydarzenie";
+    document.getElementById("zLead").innerHTML = "Udział jest bezpłatny i otwarty, także dla osób spoza Izby. Nie wystawiamy faktury, ale prosimy o dane firmy lub instytucji i kontakt. Pola oznaczone <span style=\"color:#cc0a2b\">*</span> są obowiązkowe.";
+    document.getElementById("zSzkEtyk").textContent = "Wydarzenie";
+    document.getElementById("zNabTytul").textContent = "Dane firmy lub instytucji";
+    document.getElementById("zNabOpis").textContent = "Kogo reprezentujesz na spotkaniu";
+    document.getElementById("zJstPole").hidden = true;
+    document.getElementById("zRepPole").hidden = false;
+    document.getElementById("zOdbiorcaSet").hidden = true;
+    document.getElementById("zUwagiEtyk").textContent = "Twój problem z praktyki lub pytanie do prelegentów (opcjonalnie)";
+    document.getElementById("zUwagiHint").hidden = false;
+    document.getElementById("zOkInfo").textContent = "Link do spotkania prześlemy e-mailem dzień przed jego terminem.";
+    document.getElementById("zIzbaLead").textContent = "Od 1994 roku reprezentujemy i chronimy interesy firm geodezyjnych wobec administracji, ustawodawcy i rynku. Członkowie Izby płacą mniej za szkolenia GIG, a część mają bezpłatnie.";
+  }
+  if (szkolenie) {
+    loadSdk().then(function () {
+      var db = window.supabase.createClient(window.GIG_CFG.SUPABASE_URL, window.GIG_CFG.SUPABASE_ANON);
+      return db.from("szkolenia").select("price").eq("status", "published")
+        .ilike("title", szkolenie.replace(/[%_\\]/g, function (x) { return "\\" + x; })).limit(1);
+    }).then(function (r) {
+      if (r && !r.error && r.data && r.data.length && cenaZerowa(r.data[0].price)) wlaczBezplatne();
+    }).catch(function (e) { console.warn("szkolenia:", e); });
   }
 
   /* Dane odbiorcy pokazujemy dopiero, gdy różni się od nabywcy — w samorządzie
@@ -321,19 +372,21 @@
     var ile = parseInt(val("liczba_osob"), 10);
     if (!ile || ile < 1)       return pokaz("Podaj liczbę osób (co najmniej 1).", false);
     if (!val("uczestnicy"))    return pokaz("Podaj imiona i nazwiska uczestników.", false);
-    if (!val("nabywca_nazwa")) return pokaz("Podaj nazwę firmy lub instytucji nabywcy.", false);
-    if (!val("nabywca_adres")) return pokaz("Podaj adres nabywcy.", false);
-    if (!val("nabywca_nip"))   return pokaz("Podaj NIP nabywcy.", false);
-    if (!val("nabywca_jst"))
-      return pokaz("Zaznacz, czy nabywca jest jednostką samorządu terytorialnego.", false);
-    if (!taki.checked && !val("odbiorca_nazwa"))
-      return pokaz("Podaj nazwę odbiorcy albo zaznacz, że jest taki sam jak nabywca.", false);
-    if (!taki.checked && !val("odbiorca_adres"))
-      return pokaz("Podaj adres odbiorcy.", false);
-    /* Osobny odbiorca bez identyfikatora blokuje wystawienie faktury (w JST zwykle
-       ID-wewnętrzny z systemu urzędu), więc wymagamy go razem z nazwą. */
-    if (!taki.checked && !val("odbiorca_nip"))
-      return pokaz("Podaj NIP lub ID-wewnętrzny odbiorcy.", false);
+    if (!val("nabywca_nazwa")) return pokaz("Podaj nazwę firmy lub instytucji.", false);
+    if (!val("nabywca_adres")) return pokaz("Podaj adres firmy lub instytucji.", false);
+    if (!val("nabywca_nip"))   return pokaz("Podaj NIP firmy lub instytucji.", false);
+    if (!bezplatne) {
+      if (!val("nabywca_jst"))
+        return pokaz("Zaznacz, czy nabywca jest jednostką samorządu terytorialnego.", false);
+      if (!taki.checked && !val("odbiorca_nazwa"))
+        return pokaz("Podaj nazwę odbiorcy albo zaznacz, że jest taki sam jak nabywca.", false);
+      if (!taki.checked && !val("odbiorca_adres"))
+        return pokaz("Podaj adres odbiorcy.", false);
+      /* Osobny odbiorca bez identyfikatora blokuje wystawienie faktury (w JST zwykle
+         ID-wewnętrzny z systemu urzędu), więc wymagamy go razem z nazwą. */
+      if (!taki.checked && !val("odbiorca_nip"))
+        return pokaz("Podaj NIP lub ID-wewnętrzny odbiorcy.", false);
+    }
     var email = val("email");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return pokaz("Podaj poprawny adres e-mail.", false);
     if (!val("telefon"))       return pokaz("Podaj numer telefonu.", false);
@@ -363,6 +416,20 @@
       uwagi:             val("uwagi") || null,
       status:            "new"
     };
+
+    /* Bez platnosci: dane firmy zostaja, ale nie ma faktury ani odbiorcy. Urzad
+       oznaczamy jak JST, zeby nie dostal zachety do czlonkostwa dla firm. */
+    if (bezplatne) {
+      reprezentuje = document.getElementById("reprezentuje").value;
+      var REP = { firma: "firma geodezyjna", urzad: "urząd lub jednostka samorządu",
+                  instytucja: "inna instytucja lub uczelnia" };
+      dane.nabywca_jst = reprezentuje === "urzad";
+      dane.faktura_kiedy = null;
+      dane.odbiorca_taki_sam = true;
+      dane.odbiorca_nazwa = dane.odbiorca_adres = dane.odbiorca_nip = null;
+      dane.uwagi = "Reprezentuje: " + (REP[reprezentuje] || reprezentuje) +
+        (val("uwagi") ? "\n\nPytanie / problem: " + val("uwagi") : "");
+    }
 
     try {
       await loadSdk();
