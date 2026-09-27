@@ -41,8 +41,8 @@ window.GIG_WYDARZENIA = [
     ]
   },
   {
-    date: "2026-10-22",
-    dateLabel: "22 października 2026",
+    date: "2027-01-14",
+    dateLabel: "14 stycznia 2027",
     title: "Szkolenie online dla gmin: modernizacja EGiB a dochody i bezpieczeństwo prawne",
     place: "Online",
     teaser: "Szkolenie dla wójtów, burmistrzów, skarbników oraz pracowników referatów podatkowych, gospodarki nieruchomościami i planowania przestrzennego. Modernizacja ewidencji gruntów i budynków jako inwestycja przynosząca gminie wpływy podatkowe, oszczędności i bezpieczeństwo decyzji.",
