@@ -108,7 +108,7 @@
         '<div class="a-crumbs"><a href="/">Strona główna</a> › <a href="' + k.lista + '">' + k.nazwa + '</a> › ' + esc(a.title) + '</div>' +
         '<span class="a-kicker">' + k.etykieta + '</span>' +
         '<h1 class="a-title">' + esc(a.title) + '</h1>' +
-        '<div class="a-byline"><span>Geodezyjna Izba Gospodarcza</span>' +
+        '<div class="a-byline">' + (a.author ? '<span>Autor: <b>' + esc(a.author) + '</b></span>' : '<span>Geodezyjna Izba Gospodarcza</span>') +
           (kiedy ? '<span class="dot"></span><span>' + kiedy + '</span>' : "") +
           '<span class="dot"></span><span>czas czytania: ~' + czasCzytania(a.content) + ' min</span></div>' +
       '</div></section>' +
