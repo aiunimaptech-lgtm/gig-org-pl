@@ -17,6 +17,11 @@
 //
 // Sekrety: RESEND_API_KEY, FROM_EMAIL; SUPABASE_URL, SUPABASE_ANON_KEY,
 // SUPABASE_SERVICE_ROLE_KEY wstrzykiwane. v6: wymaga sesji z listy panel_sesje_ok.
+//
+// v7: odpowiedzi na formularz kontaktowy są archiwizowane w kontakt_odpowiedzi
+// (body.kontakt_id), żeby biuro widziało w panelu, co i kiedy odpisało.
+// Body { akcja: 'odzyskaj', kontakt_id } szuka w historii Resend maili wysłanych
+// do nadawcy po dacie zgłoszenia (dla odpowiedzi sprzed v7) i dopisuje je do archiwum.
 // ============================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -40,6 +45,48 @@ function json(body: unknown, status = 200): Response {
 }
 function esc(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function adminDb() {
+  return createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false, autoRefreshToken: false } });
+}
+
+/* Automatyczne potwierdzenia ze strony (send-confirmation) też idą do nadawcy;
+   przy odzyskiwaniu z Resend pomijamy je, żeby nie udawały odpowiedzi biura. */
+const AUTOMATYCZNE = /^(Otrzymaliśmy Twoją wiadomość|Otrzymaliśmy wniosek o członkostwo|Członkostwo w GIG: dziękujemy|Potwierdzenie zgłoszenia|Potwierdzenie zapisu do newslettera)/i;
+
+async function odzyskaj(kontaktId: string, kto: string): Promise<Response> {
+  const db = adminDb();
+  const k = await db.from("submissions_kontakt").select("id,email,created_at").eq("id", kontaktId).maybeSingle();
+  if (k.error || !k.data) return json({ error: "nie ma takiej wiadomosci" }, 404);
+  const adres = String(k.data.email ?? "").toLowerCase();
+  const od = new Date(k.data.created_at as string).getTime();
+  const naglowki = { "Authorization": `Bearer ${RESEND_API_KEY}` };
+  const lr = await fetch("https://api.resend.com/emails?limit=100", { headers: naglowki });
+  const lj = await lr.json().catch(() => ({})) as Record<string, unknown>;
+  if (!lr.ok) return json({ error: "Resend nie udostepnil historii: " + String(lj.message ?? lr.status) }, 502);
+  const maile = ((lj.data ?? []) as Array<Record<string, unknown>>).filter((m) => {
+    const do_ = (Array.isArray(m.to) ? m.to : [m.to]).map((x) => String(x).toLowerCase());
+    return do_.includes(adres) && new Date(String(m.created_at)).getTime() >= od && !AUTOMATYCZNE.test(String(m.subject ?? ""));
+  });
+  let odzyskane = 0;
+  for (const m of maile) {
+    const juz = await db.from("kontakt_odpowiedzi").select("id").eq("resend_id", String(m.id)).maybeSingle();
+    if (juz.data) continue;
+    const r = await fetch(`https://api.resend.com/emails/${encodeURIComponent(String(m.id))}`, { headers: naglowki });
+    const e = await r.json().catch(() => ({})) as Record<string, unknown>;
+    if (!r.ok) { console.error("Resend (email):", e); continue; }
+    const html = String(e.html ?? "") || `<pre style="white-space:pre-wrap;font-family:inherit">${esc(String(e.text ?? ""))}</pre>`;
+    const ins = await db.from("kontakt_odpowiedzi").insert({
+      kontakt_id: kontaktId, do_email: adres, temat: String(e.subject ?? m.subject ?? ""), html,
+      resend_id: String(m.id), wyslal: null, zrodlo: "resend",
+      wyslano_at: String(e.created_at ?? m.created_at ?? new Date().toISOString()),
+    });
+    if (!ins.error) odzyskane++;
+  }
+  console.log(`wyslij-mail/odzyskaj: ${kto} -> ${kontaktId}: ${odzyskane} z ${maile.length}`);
+  return json({ ok: true, odzyskane, znalezione: maile.length });
 }
 
 /* Ladunek JWT bez weryfikacji podpisu (podpis sprawdzil juz auth.getUser). */
@@ -143,6 +190,13 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "nieprawidlowe dane" }, 400); }
 
+  const kontaktId = String(body.kontakt_id ?? "");
+  const kontaktOk = /^[0-9a-f-]{36}$/i.test(kontaktId);
+  if (body.akcja === "odzyskaj") {
+    if (!kontaktOk) return json({ error: "brak wiadomosci" }, 400);
+    return await odzyskaj(kontaktId, u.user.email);
+  }
+
   const subject = String(body.subject ?? "").trim();
   const html = oczyscHtml(String(body.html ?? "")).trim();
   const rodzaj = String(body.rodzaj ?? "").trim();
@@ -182,6 +236,14 @@ Deno.serve(async (req) => {
     const tresc = layout(subject, html, stopka, unsubUrl);
     const w = await wyslijJeden(r.email, subject, tresc);
     wyniki.push({ email: r.email, ok: w.ok, ...(w.ok ? {} : { blad: w.info }) });
+    // odpowiedź na formularz kontaktowy: zostaje w archiwum przy zgłoszeniu
+    if (w.ok && rodzaj === "kontakt" && kontaktOk) {
+      const ins = await adminDb().from("kontakt_odpowiedzi").insert({
+        kontakt_id: kontaktId, do_email: r.email, temat: subject, html: tresc,
+        resend_id: String((w.info as Record<string, unknown>)?.id ?? "") || null, wyslal: u.user.email, zrodlo: "panel",
+      });
+      if (ins.error) console.error("archiwum odpowiedzi:", ins.error.message);
+    }
   }
   const wyslane = wyniki.filter((w) => w.ok).length;
   console.log(`wyslij-mail: ${u.user.email} -> ${wyslane}/${odb.length} [${rodzaj || "-"}] (${subject})`);

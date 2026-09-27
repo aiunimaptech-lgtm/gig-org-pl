@@ -366,7 +366,7 @@ async function gigMailWyslij() {
     const res = await fetch(SUPABASE_URL + '/functions/v1/wyslij-mail', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
-      body: JSON.stringify({ subject: temat, html, recipients: o.odbiorcy, rodzaj: o.rodzaj || '', szkolenie: o.szkolenie || '' }),
+      body: JSON.stringify({ subject: temat, html, recipients: o.odbiorcy, rodzaj: o.rodzaj || '', szkolenie: o.szkolenie || '', kontakt_id: o.kontaktId || null }),
     });
     const w = await res.json().catch(() => ({}));
     if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
