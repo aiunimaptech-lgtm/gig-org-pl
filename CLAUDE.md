@@ -75,7 +75,7 @@ Jeden projekt Supabase (`zlepwzeyjwpmhyxfnime`) obsługuje: katalog **Członkowi
 Naprawa: Supabase Dashboard → *Restore project* (dane po uśpieniu są zachowane).
 
 - **Katalog Członkowie ma zabezpieczenie offline**: gdy baza nie odpowiada, `/czlonkowie/`
-  renderuje statyczną kopię `strona/_assets/js/czlonkowie-fallback.js` (65 firm) — strona działa
+  renderuje statyczną kopię `strona/_assets/js/czlonkowie-fallback.js` (66 firm) — strona działa
   mimo awarii. Kopia to *snapshot*, więc po zmianach członków w panelu odśwież ją i zacommituj:
   `node skrypty/gen_czlonkowie_fallback.js --from-supabase`
   (bez flagi generuje z `skrypty/_czlonkowie.json`). Pola www/social/opis/współrzędne/NIP

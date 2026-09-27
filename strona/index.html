@@ -1008,7 +1008,7 @@
 <div class="elementor-counter">
 <div class="elementor-counter-number-wrapper">
 <span class="elementor-counter-number-prefix"></span>
-<span class="elementor-counter-number" data-delimiter="," data-duration="2000" data-from-value="64" data-to-value="64">64</span>
+<span class="elementor-counter-number" id="gig-liczba-firm" data-delimiter="," data-duration="2000" data-from-value="66" data-to-value="66">66</span>
 <span class="elementor-counter-number-suffix"></span>
 </div>
 </div>
@@ -1366,7 +1366,8 @@ var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false
 <script data-gig-forms="1" defer="" src="/_assets/js/forms_integration.js"></script>
 <script defer src="/_assets/js/gig-lightbox.js"></script><script defer src="/_assets/js/gig-site.js"></script>
 <script>
-/* GIG: statyczne liczniki — 64 firmy + lata auto od 1994 (bez zależności od animacji Elementora) */
+/* GIG: liczniki bez animacji Elementora. Lata liczone od 1994, liczba firm z katalogu
+   Czlonkow w Supabase (opublikowani); 66 w HTML to zapas na wypadek awarii bazy. */
 (function(){
   var FOUNDED=1994;
   function odmianaLat(n){
@@ -1387,7 +1388,21 @@ var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false
     });
     document.querySelectorAll('.elementor-counter-number-suffix').forEach(function(s){ s.textContent=''; });
   }
+  /* Liczba firm: sam naglowek Content-Range z zapytania o jeden wiersz, bez pobierania
+     katalogu. Blad sieci albo uspiona baza zostawia liczbe z HTML-a. */
+  function liczbaFirm(){
+    var cfg=window.GIG_CFG; if(!cfg||!window.fetch) return;
+    fetch(cfg.SUPABASE_URL+'/rest/v1/czlonkowie?select=id&status=eq.published',{
+      headers:{apikey:cfg.SUPABASE_ANON,Authorization:'Bearer '+cfg.SUPABASE_ANON,Prefer:'count=exact',Range:'0-0'}
+    }).then(function(r){
+      var m=(r.headers.get('content-range')||'').match(/\/(\d+)$/);
+      var n=m?parseInt(m[1],10):0;
+      var el=document.getElementById('gig-liczba-firm');
+      if(el && n>0){ el.textContent=String(n); el.setAttribute('data-from-value',n); el.setAttribute('data-to-value',n); }
+    }).catch(function(){});
+  }
   fix();
+  liczbaFirm();
   document.addEventListener('DOMContentLoaded',fix);
   window.addEventListener('load',function(){ setTimeout(fix,400); setTimeout(fix,1600); });
 })();
