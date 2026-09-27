@@ -68,6 +68,8 @@
     </div>
   </div></footer>
 
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/_assets/js/gig-najnowsze.js"></script>
   <script>
   (function(){
     function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
@@ -82,32 +84,18 @@
         +'<span class="more">Czytaj dalej →</span>'
         +'</div></a>';
     }
-    function load(url, targetId, max){
+    /* Najnowsze wpisy z panelu i z dawnej listy WP, najnowszy pierwszy (od lewej). */
+    function load(kategoria, url, targetId, max){
       var box=document.getElementById(targetId); if(!box) return;
-      fetch(url).then(function(r){return r.text();}).then(function(html){
-        var doc=new DOMParser().parseFromString(html,'text/html');
-        var arts=[].slice.call(doc.querySelectorAll('.posts_group article.post-item')).slice(0,max);
-        if(!arts.length){ box.innerHTML='<div class="bw-loading">Wkrótce nowe wpisy.</div>'; return; }
-        box.innerHTML=arts.map(function(a){
-          var t=a.querySelector('.post-title a')||a.querySelector('.entry-title a');
-          var im=a.querySelector('.image_frame img');
-          return card({
-            date:((a.querySelector('.date_label')||{}).textContent||'').trim(),
-            title:t?t.textContent.trim():'',
-            href:t?t.getAttribute('href'):'#',
-            img:im?im.getAttribute('src'):'',
-            exc:((a.querySelector('.post-excerpt')||{}).textContent||'').trim()
-          });
-        }).join('');
-      }).catch(function(){
-        box.innerHTML='<div class="bw-loading"><a href="'+url+'">Zobacz sekcję →</a></div>';
+      window.gigNajnowsze(kategoria, url, max).then(function(lista){
+        if(!lista.length){ box.innerHTML='<div class="bw-loading"><a href="'+url+'">Zobacz sekcję →</a></div>'; return; }
+        box.innerHTML=lista.map(function(d){ return card({date:d.date,title:d.title,href:d.href,img:d.img,exc:d.excerpt}); }).join('');
       });
     }
-    load('/aktualnosci/','bw-aktualnosci',3);
-    load('/artykuly/','bw-artykuly',3);
+    load('aktualnosci','/aktualnosci/','bw-aktualnosci',3);
+    load('artykuly','/artykuly/','bw-artykuly',3);
   })();
   </script>
-<script src="/_assets/js/gig-config.js"></script>
 <script defer src="/_assets/js/gig-site.js"></script>
 </body>
 </html>

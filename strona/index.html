@@ -1363,6 +1363,7 @@ var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false
 <script id="jquery-numerator-js" src="/wp-content/plugins/elementor/assets/lib/jquery-numerator/jquery-numerator.min.js"></script>
 <script id="mfn-beforeafter-js" src="/wp-content/themes/betheme/js/plugins/beforeafter.min.js"></script>
 <script src="/_assets/js/gig-config.js"></script>
+<script src="/_assets/js/gig-najnowsze.js"></script>
 <script data-gig-forms="1" defer="" src="/_assets/js/forms_integration.js"></script>
 <script defer src="/_assets/js/gig-lightbox.js"></script><script defer src="/_assets/js/gig-site.js"></script>
 <script>
@@ -1425,46 +1426,9 @@ var elementorFrontendConfig = {"environmentMode":{"edit":false,"wpPreview":false
       +'<div class="post-title"><h5 class="entry-title" itemprop="headline"><a href="'+esc(d.href)+'">'+esc(d.title)+'</a></h5></div>'
       +'<div class="post-excerpt">'+esc(d.excerpt)+'</div></div></div></article></div>';
   }
-  /* Dwa zrodla: wpisy z panelu (Supabase, tabela articles) i dawne wpisy z kopii WP
-     (statyczna lista /aktualnosci/). Laczymy je, sortujemy po dacie i bierzemy dwa
-     najnowsze, wiec kazda nowa aktualnosc z panelu sama trafia na strone glowna.
-     Blad ktoregokolwiek zrodla nie psuje sekcji: zostaje to, co sie udalo pobrac. */
-  var MIES=['stycznia','lutego','marca','kwietnia','maja','czerwca','lipca','sierpnia','września','października','listopada','grudnia'];
-  function dataZTekstu(t){ // "7 sierpnia, 2026" -> Date
-    var m=String(t||'').toLowerCase().match(/(\d{1,2})\s+([a-ząćęłńóśźż]+),?\s+(\d{4})/);
-    if(!m) return new Date(0); var i=MIES.indexOf(m[2]); return i<0?new Date(0):new Date(+m[3],i,+m[1]);
-  }
-  function dataNaTekst(d){ return d.getDate()+' '+MIES[d.getMonth()]+', '+d.getFullYear(); }
-  function skroc(t,n){ t=String(t||'').replace(/\s+/g,' ').trim(); return t.length>n?t.slice(0,n).replace(/\s+\S*$/,'')+'…':t; }
-  var FALLBACK_IMG='/wp-content/uploads/2026/04/gig-logo-new-poziom-dark.svg';
-
-  var zPanelu=new Promise(function(res){
-    var cfg=window.GIG_CFG; if(!cfg||!window.fetch) return res([]);
-    fetch(cfg.SUPABASE_URL+'/rest/v1/articles?select=title,slug,excerpt,published_at,created_at,image_url&status=eq.published&category=eq.aktualnosci&order=published_at.desc.nullslast&limit=4',
-      {headers:{apikey:cfg.SUPABASE_ANON,Authorization:'Bearer '+cfg.SUPABASE_ANON}})
-      .then(function(r){return r.ok?r.json():[];})
-      .then(function(rows){ res((rows||[]).filter(function(r){return r.slug;}).map(function(r){
-        var d=new Date(r.published_at||r.created_at);
-        return {kiedy:d,date:dataNaTekst(d),title:r.title,href:'/wpis/'+r.slug+'/',img:r.image_url||FALLBACK_IMG,excerpt:skroc(r.excerpt,240)};
-      })); }).catch(function(){res([]);});
-  });
-  var zeStatycznej=fetch('/aktualnosci/').then(function(r){return r.text();}).then(function(html){
-    var doc=new DOMParser().parseFromString(html,'text/html');
-    return [].slice.call(doc.querySelectorAll('.posts_group article.post-item')).filter(function(a){return !a.hasAttribute('data-gig-src');}).map(function(a){
-      var t=a.querySelector('.post-title a')||a.querySelector('.entry-title a');
-      var im=a.querySelector('.image_frame img');
-      var dt=((a.querySelector('.date_label')||{}).textContent||'').trim();
-      return {kiedy:dataZTekstu(dt),date:dt,title:t?t.textContent.trim():'',href:t?t.getAttribute('href'):'#',
-        img:im?im.getAttribute('src'):'',excerpt:((a.querySelector('.post-excerpt')||{}).textContent||'').trim()};
-    });
-  }).catch(function(){return [];});
-
-  Promise.all([zPanelu,zeStatycznej]).then(function(w){
-    var widziane={}, wszystkie=w[0].concat(w[1]).filter(function(d){
-      if(!d.title||widziane[d.href]) return false; widziane[d.href]=1; return true;
-    });
-    wszystkie.sort(function(a,b){return b.kiedy-a.kiedy;});
-    var out=wszystkie.slice(0,2).map(card).join('');
+  /* Wspolny modul gig-najnowsze.js: wpisy z panelu + dawna lista WP, najnowszy pierwszy. */
+  if(window.gigNajnowsze) window.gigNajnowsze('aktualnosci','/aktualnosci/',2).then(function(lista){
+    var out=lista.map(card).join('');
     if(out) box.innerHTML=out; // pusto = zostaje statyczny fallback z HTML-a
   });
 })();
