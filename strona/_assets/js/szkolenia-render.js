@@ -81,6 +81,14 @@
     var d = new Date(iso + "T00:00:00");
     return d.toLocaleDateString("pl-PL", { day: "2-digit", month: "long", year: "numeric" });
   }
+  /* Ta sama regula co w /zapisy/ i w send-confirmation: cena zerowa albo „bezplatne". */
+  function cenaZerowa(txt) {
+    var t = String(txt || "").toLowerCase();
+    if (!t.trim()) return false;
+    if (/bezp[łl]at|nieodp[łl]at|gratis/.test(t)) return true;
+    var n = t.replace(/\s/g, "").match(/\d+(?:[.,]\d+)?/);
+    return !!n && parseFloat(n[0].replace(",", ".")) === 0;
+  }
   function esc(s) { return (s == null ? "" : String(s)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 
   /* Opis: akapity rozdzielone pustą linią; zwykłe adresy zamieniane w odnośniki. */
@@ -112,10 +120,12 @@
     /* Informacje organizacyjne (harmonogram dnia, materialy, platforma) to nie
        program szkolenia - osobne pole i osobna lista, ta sama szata co program.
        Zaswiadczenie o uczestnictwie Izba wydaje przy KAZDYM szkoleniu, wiec ten
-       punkt doklada sie sam, zawsze na koncu - nie trzeba go wpisywac w panelu. */
+       punkt doklada sie sam, zawsze na koncu - nie trzeba go wpisywac w panelu.
+       Wyjatek: wydarzenia bezplatne (Forum, otwarte spotkania) - przy setkach
+       uczestnikow to zobowiazanie, wiec tam biuro wpisuje je recznie, jesli chce. */
     var ZASWIADCZENIE = "Uczestnicy otrzymuj\u0105 za\u015bwiadczenie o uczestnictwie w szkoleniu";
     var infoPunkty = String(r.informacje || "").split(/\n/).map(function (x) { return x.trim(); }).filter(Boolean);
-    if (!infoPunkty.some(function (p) { return /za\u015bwiadczeni/i.test(p); })) infoPunkty.push(ZASWIADCZENIE);
+    if (!cenaZerowa(r.price) && !infoPunkty.some(function (p) { return /za\u015bwiadczeni/i.test(p); })) infoPunkty.push(ZASWIADCZENIE);
     var info = '<div class="gig-szk-prog-t">Informacje organizacyjne</div><ul class="gig-szk-prog">' +
       infoPunkty.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul>";
 
