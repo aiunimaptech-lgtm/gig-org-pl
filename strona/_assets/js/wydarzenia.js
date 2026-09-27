@@ -68,6 +68,24 @@ window.GIG_WYDARZENIA = [
     ]
   },
   {
+    date: "2026-11-19",
+    dateLabel: "19 listopada 2026",
+    title: "Forum GIG z Głównym Geodetą Kraju: nowelizacja Prawa geodezyjnego i kartograficznego",
+    place: "Online, godz. 10:00-13:00",
+    teaser: "Geodeci pytają, Główny Geodeta Kraju odpowiada. Rozmawiamy z Andrzejem Żylisem i kierownictwem GUGiK o projekcie UD60: kto będzie wykonawcą prac geodezyjnych, co zastąpi kontrole WINGiK, jak zmienią się zgłoszenia prac. Udział bezpłatny i otwarty dla całej branży.",
+    agendaTitle: "Wezmą udział:",
+    agenda: [
+      "Andrzej Żylis, Główny Geodeta Kraju",
+      "Adrianna Berenson i Marek Michalec, Departament Nadzoru i Kontroli GUGiK",
+      "Szymon Szczerba, Departament Informacji o Nieruchomościach GUGiK",
+      "Prezydium GIG: Rafał Kraska, Jerzy Bryk, Dariusz Tomaszewski, Sławomir Zając"
+    ],
+    note: "Przy zapisie wpisz swój problem z praktyki albo pytanie. Zestawimy je i przekażemy GUGiK przed spotkaniem. Zgłoszenia do 12 listopada.",
+    links: [
+      { label: "Program i bezpłatny zapis", url: "/szkolenia/" }
+    ]
+  },
+  {
     date: "2027-06-01",
     dateLabel: "Czerwiec 2027",
     title: "Walne Zebranie Członków GIG",
