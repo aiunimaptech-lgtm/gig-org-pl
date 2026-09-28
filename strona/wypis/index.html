@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rezygnacja z wiadomości: Geodezyjna Izba Gospodarcza</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root{--red:#cc0a2b;--ink:#16202a;--muted:#6b7884;--line:#e6ebef;--bg:#f4f6f8;}
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.65;}
+    a{color:var(--red);text-decoration:none;}a:hover{text-decoration:underline;}
+    .karta{max-width:560px;margin:48px auto;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 4px 18px rgba(22,32,42,.06);}
+    .logo{padding:24px 30px 16px;}.logo img{width:190px;height:auto;display:block;}
+    .pasek{height:3px;background:var(--red);}
+    .tresc{padding:26px 30px 30px;}
+    h1{font-size:22px;line-height:1.3;margin:0 0 12px;}
+    p{margin:0 0 14px;font-size:15px;color:#38444e;}
+    .adres{font-weight:700;color:var(--ink);word-break:break-all;}
+    .powody{margin:16px 0 20px;display:flex;flex-direction:column;gap:9px;}
+    .powody label{display:flex;gap:10px;align-items:flex-start;font-size:14.5px;cursor:pointer;padding:10px 12px;border:1px solid var(--line);border-radius:10px;}
+    .powody label:hover{border-color:#cfd6dc;}
+    .powody input{margin-top:4px;accent-color:var(--red);}
+    button{font:inherit;font-weight:700;font-size:15px;border:0;border-radius:9px;padding:12px 22px;cursor:pointer;background:var(--red);color:#fff;}
+    button:disabled{opacity:.6;cursor:default;}
+    .box{padding:14px 16px;border-radius:10px;font-size:14.5px;margin:0 0 16px;}
+    .box.ok{background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .box.err{background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .stopka{font-size:12.5px;color:#9aa7b2;text-align:center;margin:0 0 40px;}
+    @media(max-width:600px){.karta{margin:16px;}.tresc,.logo{padding-left:20px;padding-right:20px;}}
+  </style>
+</head>
+<body>
+  <main class="karta">
+    <div class="logo"><a href="/"><img src="/_assets/img/gig-logo-email.png" alt="Geodezyjna Izba Gospodarcza"></a></div>
+    <div class="pasek"></div>
+    <div class="tresc" id="tresc"><p>Ładowanie…</p></div>
+  </main>
+  <p class="stopka">Geodezyjna Izba Gospodarcza · ul. Czackiego 3/5, 00-043 Warszawa · <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a></p>
+
+  <script src="/_assets/js/gig-config.js"></script>
+  <script>
+    /* Rezygnacja z wiadomości z Bazy e-mail. Link z maila: /wypis/?id=<uuid wiersza baza_email>.
+       Samo otwarcie strony niczego nie zmienia: filtry pocztowe (Safe Links, Mimecast) otwierają
+       linki z maili automatycznie, więc wypis zapisuje dopiero przycisk. Jednoklikowy wypis
+       z poziomu programu pocztowego (List-Unsubscribe) obsługuje osobno Edge Function baza-wypis. */
+    (function () {
+      var T = document.getElementById('tresc');
+      var q = new URLSearchParams(location.search), id = q.get('id') || '';
+      var demo = q.get('demo') === '1';   // podgląd z testowego maila: nic nie zapisuje
+      var URL_F = window.GIG_CFG.SUPABASE_URL + '/functions/v1/baza-wypis';
+      function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+      function wolaj(dane) {
+        return fetch(URL_F, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': window.GIG_CFG.SUPABASE_ANON },
+          body: JSON.stringify(dane) }).then(function (r) { return r.json().catch(function () { return {}; }); });
+      }
+      function blad(t) { T.innerHTML = '<h1>Nie udało się</h1><div class="box err">' + t + '</div>' +
+        '<p>Napisz do nas na <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>, a usuniemy adres ręcznie.</p>'; }
+
+      if (demo) {
+        wolaj = function (d) { return Promise.resolve(d.tryb === 'info' ? { ok: true, email: 'adres.odbiorcy@przyklad.pl', status: 'active' } : { ok: true, demo: true }); };
+      } else if (!/^[0-9a-f-]{36}$/i.test(id)) { blad('Ten link jest niekompletny.'); return; }
+
+      wolaj({ id: id, tryb: 'info' }).then(function (w) {
+        if (!w.ok) { blad(esc(w.error || 'Nie znaleziono adresu.')); return; }
+        if (w.status === 'unsubscribed') {
+          T.innerHTML = '<h1>Adres jest już wypisany</h1><p>Adres <span class="adres">' + esc(w.email) +
+            '</span> nie otrzymuje od nas wiadomości.</p>';
+          return;
+        }
+        T.innerHTML =
+          '<h1>Rezygnacja z wiadomości od Izby</h1>' +
+          '<p>Adres: <span class="adres">' + esc(w.email) + '</span></p>' +
+          '<p>Po potwierdzeniu nie wyślemy na ten adres kolejnych wiadomości informacyjnych Geodezyjnej Izby Gospodarczej.</p>' +
+          '<div class="powody">' +
+          '<label><input type="radio" name="p" value="wiadomość trafiła przez przypadek"><span>Wiadomość trafiła do mnie przez przypadek</span></label>' +
+          '<label><input type="radio" name="p" value="nie zajmuję się tą tematyką"><span>Nie zajmuję się tą tematyką</span></label>' +
+          '<label><input type="radio" name="p" value="nie chcę wiadomości od Izby"><span>Nie chcę otrzymywać wiadomości od Izby</span></label>' +
+          '</div>' +
+          '<button id="potw">Nie chcę otrzymywać wiadomości</button>';
+        document.getElementById('potw').addEventListener('click', function () {
+          var b = this; b.disabled = true; b.textContent = 'Zapisywanie…';
+          var z = document.querySelector('input[name=p]:checked');
+          wolaj({ id: id, powod: z ? z.value : '' }).then(function (r) {
+            if (!r.ok) { blad(esc(r.error || 'Spróbuj ponownie za chwilę.')); return; }
+            if (r.demo) { T.innerHTML = '<h1>Podgląd</h1><div class="box ok">To był podgląd z testowej wiadomości. Nic nie zostało zapisane. Odbiorca kampanii zobaczy tu swój adres, a kliknięcie go wypisze.</div>'; return; }
+            T.innerHTML = '<h1>Wypisano ✓</h1><div class="box ok">Adres <span class="adres">' + esc(w.email) +
+              '</span> został wypisany. Dziękujemy za informację.</div>' +
+              '<p>Jeśli to pomyłka, napisz na <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</p>';
+          }).catch(function () { blad('Brak połączenia. Spróbuj ponownie za chwilę.'); });
+        });
+      }).catch(function () { blad('Brak połączenia. Spróbuj ponownie za chwilę.'); });
+    })();
+  </script>
+</body>
+</html>

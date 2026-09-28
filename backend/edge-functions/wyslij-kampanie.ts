@@ -1,5 +1,5 @@
 // ============================================================
-// GIG — Edge Function: wyslij-kampanie
+// GIG — Edge Function: wyslij-kampanie (v7: {{WYPIS}} w treści, strona /wypis/, Reply-To kampanii)
 // Wysyła kampanię z kolejki (tabele `wysylki` + `wysylki_odbiorcy`) PORCJAMI.
 // Panel woła ją wielokrotnie, aż zostanie 0 — dzięki temu:
 //   • nie ma limitu czasu Edge Function (każde wywołanie robi kawałek),
@@ -208,13 +208,20 @@ Deno.serve(async (req) => {
           "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         }
         : {};
+      /* Link dla czlowieka (stopka i znacznik {{WYPIS}} w tresci): strona gig.org.pl/wypis/
+         z potwierdzeniem. Samo otwarcie niczego nie zmienia, bo filtry pocztowe klikaja
+         linki automatycznie. Naglowek List-Unsubscribe zostaje przy funkcji (POST jednym klikiem). */
+      const strona = r.baza_email_id
+        ? `https://gig.org.pl/wypis/?id=${encodeURIComponent(String(r.baza_email_id))}`
+        : wypis;
+      const trescOdb = tresc.replace(/\{\{WYPIS\}\}|%7B%7BWYPIS%7D%7D/gi, strona || "https://gig.org.pl/kontakt/");
       return {
         from: FROM_EMAIL,
         to: [r.email as string],
         subject: temat,
         reply_to: replyTo,
         headers: naglowki,
-        html: layout(temat, tresc, wypis, rodzaj),
+        html: layout(temat, trescOdb, strona, rodzaj),
       };
     });
 

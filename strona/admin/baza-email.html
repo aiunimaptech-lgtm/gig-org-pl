@@ -39,6 +39,14 @@
     td.be-firma{max-width:280px;}
     .be-firma .osoba{font-size:12px;color:#6b7f84;}
     .be-www a{font-size:12px;}
+    /* cały wiersz otwiera edycję; kolumna z ołówkiem przyklejona do prawej krawędzi,
+       żeby była widoczna także przy szerokiej tabeli (długie adresy i nazwy) */
+    #rows tr[data-id]{cursor:pointer;}
+    #rows tr[data-id]:hover td{background:#f7f9fb;}
+    .be-tabela th:last-child,.be-tabela td.be-ed{position:sticky;right:0;background:#fff;box-shadow:-8px 0 10px -8px rgba(22,32,42,.12);}
+    #rows tr[data-id]:hover td.be-ed{background:#f7f9fb;}
+    td.be-ed{display:table-cell !important;width:1%;white-space:nowrap;}
+    td.be-ed .btn{font-size:13px;}
     .badge-unsubscribed{background:#f2f4f6;color:#8b98a4;text-decoration:line-through;}
     .badge-bounced{background:#fdecef;color:#a3122c;}
     /* komunikat błędu wewnątrz okna dodawania/edycji adresu */
@@ -149,7 +157,7 @@
             <span class="be-licznik" id="licznik"></span>
           </div>
           <div class="table-wrap">
-            <table class="admin-table">
+            <table class="admin-table be-tabela">
               <thead><tr><th>E-mail</th><th>Firma / instytucja</th><th>Grupa</th><th>Rodzaj / branża</th><th>Adres</th><th>Telefon</th><th>WWW</th><th></th></tr></thead>
               <tbody id="rows"><tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
             </table>
@@ -383,7 +391,7 @@
       const tb = document.getElementById('rows');
       if (!wid.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak adresów spełniających kryteria.</td></tr>'; return; }
       tb.innerHTML = wid.map(r => `
-        <tr>
+        <tr data-id="${r.id}" title="Kliknij, aby edytować">
           <td class="be-email"><strong>${esc(r.email)}</strong>${r.status && r.status !== 'active' ? ` <span class="badge badge-${esc(r.status)}">${STATUS[r.status] || r.status}</span>` : ''}${r.edytowany_panel ? ` <span class="be-tag panel" title="Edytowano w panelu ${esc(fmtDate(r.edytowany_panel))} — import tego wpisu nie nadpisze">✎ panel</span>` : ''}${(r.email2 || r.email3) ? `<div class="be-sub">+ ${[r.email2, r.email3].filter(Boolean).map(esc).join(', ')}</div>` : ''}</td>
           <td class="be-firma">${esc(r.firma || '—')}${r.osoba ? `<div class="osoba">${esc(r.osoba)}${r.stanowisko ? ' · ' + esc(r.stanowisko) : ''}</div>` : ''}</td>
           <td>${tag(r.grupa)}${LISTY_OF(r).map(l => `<div style="margin-top:3px;"><span class="be-tag lista">${esc(l)}</span></div>`).join('')}</td>
@@ -391,9 +399,12 @@
           <td style="max-width:220px;">${esc(r.adres || '—')}${r.nip ? `<div class="be-sub">NIP ${esc(r.nip)}</div>` : ''}</td>
           <td style="white-space:nowrap;">${esc(r.telefon || '—')}</td>
           <td class="be-www">${r.www ? `<a href="${esc(/^https?:/i.test(r.www) ? r.www : 'https://' + r.www)}" target="_blank" rel="noopener">${esc(r.www.replace(/^https?:\/\//i, ''))}</a>` : '—'}</td>
-          <td class="actions"><button class="btn btn-ghost btn-xs" data-edytuj="${r.id}">✎</button></td>
+          <td class="be-ed"><button class="btn btn-outline btn-xs" data-edytuj="${r.id}">✎ Edytuj</button></td>
         </tr>`).join('');
-      tb.querySelectorAll('[data-edytuj]').forEach(b => b.addEventListener('click', () => otworz(b.dataset.edytuj)));
+      tb.querySelectorAll('tr[data-id]').forEach(tr => tr.addEventListener('click', e => {
+        if (e.target.closest('a')) return;            // link do www otwiera stronę, nie edycję
+        otworz(tr.dataset.id);
+      }));
     }
 
     /* ── edycja ── */

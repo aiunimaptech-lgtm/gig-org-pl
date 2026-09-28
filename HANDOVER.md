@@ -835,6 +835,13 @@ kolejki kampanii pomijają adres; log w `maile_zdarzenia` (panel Wysyłki, karta
 **Webhook trzeba dodać w panelu Resend** (Webhooks → Add endpoint, zdarzenia: bounced, complained,
 failed, delivery_delayed).
 
+**Wypis (od 28.09.2026):** link dla człowieka prowadzi na stronę `gig.org.pl/wypis/?id=<baza_email.id>`
+(potwierdzenie + opcjonalny powód, zapis do `baza_email.uwagi`). Samo otwarcie linku nic nie zmienia, bo
+filtry pocztowe (Safe Links, Mimecast) klikają linki automatycznie. `baza-wypis` v2: GET = 302 na stronę,
+POST `List-Unsubscribe=One-Click` = wypis z programu pocztowego, POST JSON = wypis ze strony. Supabase podaje
+HTML z funkcji jako text/plain, dlatego strona jest na gig.org.pl. W treści kampanii znacznik `{{WYPIS}}`
+zamienia się na osobisty link odbiorcy (w teście i podglądzie: `/wypis/?demo=1`, nic nie zapisuje).
+
 **Rezygnacja z maili (unsubscribe):** wysyłki `rodzaj:'baza'` dostają w stopce link „Wypisz się" →
 Edge Function `baza-wypis?id=<uuid wiersza>` (verify_jwt=false), która ustawia `status='unsubscribed'`
 i pokazuje stronę potwierdzenia. `id` bierze się z `baza_email` (panel przekazuje je w `recipients`).

@@ -375,7 +375,7 @@
       const { data, error } = await db.from('wysylki').select('temat,html').eq('id', id).maybeSingle();
       if (error || !data) { toast('Błąd podglądu', 'error'); return; }
       document.getElementById('podgladTytul').textContent = data.temat;
-      document.getElementById('podglad').innerHTML = data.html || '<em>pusta treść</em>';
+      document.getElementById('podglad').innerHTML = podstawWypis(data.html) || '<em>pusta treść</em>';
       openModal('podgladModal');
     }
 
@@ -394,7 +394,7 @@
         const res = await fetch(SUPABASE_URL + '/functions/v1/wyslij-mail', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
-          body: JSON.stringify({ subject: '[TEST] ' + data.temat, html: data.html, recipients: [{ email: adres }], rodzaj: 'baza' }),
+          body: JSON.stringify({ subject: '[TEST] ' + data.temat, html: podstawWypis(data.html), recipients: [{ email: adres }], rodzaj: 'baza' }),
         });
         const w = await res.json().catch(() => ({}));
         if (!res.ok || !w.ok || !w.wyslane) throw new Error(w.error || ('HTTP ' + res.status));
@@ -598,6 +598,12 @@
       }
       btn.disabled = false;
     });
+
+    /* {{WYPIS}} w treści zamienia na link wypisu funkcja wyslij-kampanie (osobny dla każdego
+       odbiorcy). W teście i podglądzie wstawiamy stronę wypisu w trybie podglądu. */
+    function podstawWypis(html) {
+      return String(html || '').replace(/\{\{WYPIS\}\}|%7B%7BWYPIS%7D%7D/gi, 'https://gig.org.pl/wypis/?demo=1');
+    }
 
     async function usun(id) {
       const k = dane.find(x => x.id === id); if (!k) return;
