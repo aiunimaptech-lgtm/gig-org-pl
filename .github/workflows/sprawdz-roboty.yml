@@ -1,0 +1,30 @@
+# GIG: czy roboty wyszukiwarek i agentów AI dostają treść strony (a nie blokadę).
+# Uruchamiany ręcznie: GitHub → Actions → „Sprawdź dostęp robotów” → Run workflow
+# (albo: gh workflow run sprawdz-roboty.yml). Niczego nie zmienia w repozytorium.
+name: Sprawdź dostęp robotów
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sprawdz:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Pobierz strony jako roboty
+        run: |
+          declare -A UA=(
+            [GPTBot]="Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; GPTBot/1.2; +https://openai.com/gptbot)"
+            [ClaudeBot]="Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; ClaudeBot/1.0; +claudebot@anthropic.com)"
+            [PerplexityBot]="Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; PerplexityBot/1.0; +https://perplexity.ai/perplexitybot)"
+            [Googlebot]="Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
+          )
+          for bot in "${!UA[@]}"; do
+            for url in / /szkolenia/ /czlonkowie/ /wpis/detekcja-sieci-podziemnych-gpr-eml-pas-128/ /llms.txt; do
+              kod=$(curl -s -A "${UA[$bot]}" -o strona.html -w '%{http_code}' "https://gig.org.pl$url")
+              blokada=$(grep -c 'Security Checkpoint' strona.html || true)
+              rozmiar=$(wc -c < strona.html)
+              echo "$bot $url -> HTTP $kod, ${rozmiar} B, blokada: $blokada"
+              sleep 2
+            done
+          done
