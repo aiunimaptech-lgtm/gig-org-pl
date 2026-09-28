@@ -21,6 +21,17 @@
     .wy-info{background:#fff8e6;border:1px solid #f3e0b5;color:#7a5b12;border-radius:10px;padding:12px 16px;font-size:13px;line-height:1.6;margin-bottom:18px;}
     .wy-log{font-size:12px;color:var(--text-muted);margin-top:6px;white-space:pre-wrap;}
     #podglad{font-size:15px;line-height:1.65;}
+    /* edytor treści: pole edytowalne zachowuje style maila (przycisk, pogrubienia) */
+    .ed-bar{display:flex;flex-wrap:wrap;gap:4px;padding:6px;border:1px solid #d8e0e7;border-bottom:0;border-radius:8px 8px 0 0;background:#f7f9fb;}
+    .ed-bar button{border:1px solid transparent;background:none;border-radius:6px;padding:4px 9px;font:inherit;font-size:13px;cursor:pointer;color:#2b3a45;}
+    .ed-bar button:hover{background:#fff;border-color:#d8e0e7;}
+    .ed-bar button:disabled{opacity:.4;cursor:default;}
+    .ed-bar button.on{background:#16202a;color:#fff;}
+    .ed-bar .sep{width:1px;background:#d8e0e7;margin:2px 4px;}
+    #edTresc{min-height:340px;max-height:58vh;overflow:auto;border:1px solid #d8e0e7;border-radius:0 0 8px 8px;padding:16px 20px;font-size:15px;line-height:1.65;color:#38444e;outline:none;}
+    #edTresc:focus{border-color:#9aa7b2;}
+    #edHtml{display:none;width:100%;min-height:340px;max-height:58vh;border:1px solid #d8e0e7;border-radius:0 0 8px 8px;padding:12px;font:12.5px/1.5 Consolas,monospace;box-sizing:border-box;}
+    .ed-uwaga{background:#fff8e6;border:1px solid #f3e0b5;color:#7a5b12;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px;}
   </style>
 </head>
 <body>
@@ -103,6 +114,45 @@
     </div>
   </div>
 
+  <!-- MODAL: edycja treści kampanii -->
+  <div class="modal-overlay" id="edModal">
+    <div class="modal-box" style="max-width:860px;">
+      <div class="modal-header">
+        <div class="modal-title">Edycja kampanii</div>
+        <button class="modal-close" data-modal-close="edModal">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edId">
+        <div class="ed-uwaga" id="edUwaga" hidden></div>
+        <div class="form-group"><label>Temat (jest też nagłówkiem w treści maila)</label>
+          <input type="text" id="edTemat" class="form-control" maxlength="200"></div>
+        <div class="form-group" style="margin-bottom:0;"><label>Treść</label>
+          <div class="ed-bar" id="edBar">
+            <button type="button" data-cmd="bold" title="Pogrubienie"><b>B</b></button>
+            <button type="button" data-cmd="italic" title="Kursywa"><i>I</i></button>
+            <button type="button" data-cmd="underline" title="Podkreślenie"><u>U</u></button>
+            <span class="sep"></span>
+            <button type="button" data-cmd="insertUnorderedList" title="Lista punktowana">• lista</button>
+            <button type="button" data-cmd="insertOrderedList" title="Lista numerowana">1. lista</button>
+            <span class="sep"></span>
+            <button type="button" data-akcja="link" title="Wstaw lub zmień link">🔗 link</button>
+            <button type="button" data-cmd="unlink" title="Usuń link">usuń link</button>
+            <button type="button" data-akcja="przycisk" title="Czerwony przycisk z linkiem">▭ przycisk</button>
+            <button type="button" data-cmd="removeFormat" title="Wyczyść formatowanie zaznaczenia">⌫ format</button>
+            <span class="sep"></span>
+            <button type="button" data-akcja="html" id="edTrybHtml" title="Edycja kodu HTML">&lt;/&gt; HTML</button>
+          </div>
+          <div id="edTresc" contenteditable="true"></div>
+          <textarea id="edHtml" spellcheck="false"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-modal-close="edModal">Anuluj</button>
+        <button class="btn btn-primary" id="edZapisz">Zapisz zmiany</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/_assets/js/gig-config.js"></script>
   <script src="/admin/_admin.js"></script>
@@ -147,6 +197,7 @@
             ${k.czeka > 0 && k.status !== 'wstrzymana' ? `<button class="btn btn-primary btn-xs" data-start="${k.id}">▶ Wyślij</button>` : ''}
             ${k.status === 'w_toku' || k.status === 'robocza' ? `<button class="btn btn-outline btn-xs" data-pauza="${k.id}">⏸ Wstrzymaj</button>` : ''}
             ${k.status === 'wstrzymana' ? `<button class="btn btn-outline btn-xs" data-wznow="${k.id}">▶ Wznów</button>` : ''}
+            ${k.status !== 'zakonczona' ? `<button class="btn btn-outline btn-xs" data-edytuj="${k.id}" title="Zmień temat i treść">✎ Edytuj</button>` : ''}
             <button class="btn btn-outline btn-xs" data-test="${k.id}" title="Wyślij tę treść na jeden adres, bez ruszania kolejki">✉ Test</button>
             <button class="btn btn-ghost btn-xs" data-podglad="${k.id}">👁</button>
             <button class="btn btn-danger btn-xs" data-usun="${k.id}">🗑</button>
@@ -158,6 +209,7 @@
       tb.querySelectorAll('[data-pauza]').forEach(b => b.addEventListener('click', () => zmienStatus(b.dataset.pauza, 'wstrzymana')));
       tb.querySelectorAll('[data-wznow]').forEach(b => b.addEventListener('click', () => zmienStatus(b.dataset.wznow, 'w_toku')));
       tb.querySelectorAll('[data-podglad]').forEach(b => b.addEventListener('click', () => podglad(b.dataset.podglad)));
+      tb.querySelectorAll('[data-edytuj]').forEach(b => b.addEventListener('click', () => edytuj(b.dataset.edytuj)));
       tb.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => wyslijTest(b.dataset.test, b)));
       tb.querySelectorAll('[data-usun]').forEach(b => b.addEventListener('click', () => usun(b.dataset.usun)));
       tb.querySelectorAll('[data-limit]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); zmienLimit(a.dataset.limit); }));
@@ -213,6 +265,80 @@
       } catch (e) { console.error(e); toast('Nie udało się wysłać testu: ' + e.message, 'error', 6000); }
       btn.disabled = false;
     }
+
+    /* ── edycja treści ──
+       Pole contenteditable zamiast Quilla: Quill wycina style inline, a mail ma
+       czerwony przycisk i własne odstępy. Tryb HTML do precyzyjnych poprawek. */
+    const edTresc = document.getElementById('edTresc'), edHtml = document.getElementById('edHtml');
+    let edTrybHtml = false;
+    function edUstawTryb(html) {
+      if (html === edTrybHtml) return;
+      if (html) edHtml.value = edTresc.innerHTML;
+      else edTresc.innerHTML = edHtml.value;
+      edTrybHtml = html;
+      edTresc.style.display = html ? 'none' : '';
+      edHtml.style.display = html ? 'block' : 'none';
+      document.getElementById('edTrybHtml').classList.toggle('on', html);
+      document.querySelectorAll('#edBar button:not(#edTrybHtml)').forEach(b => b.disabled = html);
+    }
+    async function edytuj(id) {
+      const k = dane.find(x => x.id === id);
+      const { data, error } = await db.from('wysylki').select('temat,html').eq('id', id).maybeSingle();
+      if (error || !data) { toast('Błąd odczytu kampanii', 'error'); return; }
+      document.getElementById('edId').value = id;
+      document.getElementById('edTemat').value = data.temat || '';
+      edTrybHtml = true; edHtml.value = data.html || ''; edUstawTryb(false);
+      const uw = document.getElementById('edUwaga');
+      uw.hidden = !(k && k.wyslane > 0);
+      if (k && k.wyslane > 0) uw.textContent = `Wysłano już ${k.wyslane} z ${k.razem} maili. Zmiana obejmie tylko adresy, które jeszcze czekają.`;
+      openModal('edModal');
+    }
+    function edZaznaczenieWPolu() {
+      const sel = window.getSelection();
+      return sel.rangeCount && edTresc.contains(sel.getRangeAt(0).commonAncestorContainer);
+    }
+    /* mousedown bez domyślnej akcji: klik w pasek nie zabiera zaznaczenia z treści */
+    document.getElementById('edBar').addEventListener('mousedown', e => { if (e.target.closest('button')) e.preventDefault(); });
+    document.getElementById('edBar').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b || b.disabled) return;
+      if (b.dataset.akcja === 'html') { edUstawTryb(!edTrybHtml); return; }
+      if (!edZaznaczenieWPolu()) edTresc.focus();
+      if (b.dataset.cmd) { document.execCommand(b.dataset.cmd, false, null); return; }
+      if (b.dataset.akcja === 'link') {
+        const a = window.getSelection().anchorNode;
+        const stary = a && (a.nodeType === 1 ? a : a.parentElement).closest('a');
+        const url = prompt('Adres linku (https://…):', stary ? stary.getAttribute('href') : 'https://');
+        if (!url || url === 'https://') return;
+        if (stary && edTresc.contains(stary)) { stary.setAttribute('href', url); return; }
+        if (window.getSelection().isCollapsed) document.execCommand('insertHTML', false, `<a href="${esc(url)}" style="color:#cc0a2b;">${esc(url)}</a>`);
+        else document.execCommand('createLink', false, url);
+        return;
+      }
+      if (b.dataset.akcja === 'przycisk') {
+        const tekst = prompt('Tekst na przycisku:', 'Zapisz się'); if (!tekst) return;
+        const url = prompt('Link przycisku (https://…):', 'https://gig.org.pl/'); if (!url) return;
+        document.execCommand('insertHTML', false,
+          `<p style="margin:22px 0;"><a href="${esc(url)}" style="display:inline-block;background:#cc0a2b;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 26px;border-radius:8px;">${esc(tekst)}</a></p><p><br></p>`);
+      }
+    });
+    /* wklejanie jako zwykły tekst: bez śmieci z Worda i stron www */
+    edTresc.addEventListener('paste', e => {
+      e.preventDefault();
+      const t = (e.clipboardData || window.clipboardData).getData('text/plain');
+      document.execCommand('insertText', false, t);
+    });
+    document.getElementById('edZapisz').addEventListener('click', async () => {
+      const id = document.getElementById('edId').value;
+      const temat = document.getElementById('edTemat').value.trim();
+      const html = (edTrybHtml ? edHtml.value : edTresc.innerHTML).trim();
+      if (!temat) { toast('Podaj temat', 'error'); return; }
+      if (!html.replace(/<[^>]*>|&nbsp;|\s/g, '')) { toast('Treść jest pusta', 'error'); return; }
+      const btn = document.getElementById('edZapisz'); btn.disabled = true;
+      const { error } = await db.from('wysylki').update({ temat, html, updated_at: new Date().toISOString() }).eq('id', id);
+      btn.disabled = false;
+      if (error) { console.error(error); toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
+      toast('Zapisano zmiany', 'success'); closeModal('edModal'); load();
+    });
 
     async function usun(id) {
       const k = dane.find(x => x.id === id); if (!k) return;
