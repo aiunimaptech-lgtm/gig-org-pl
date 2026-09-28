@@ -21,6 +21,13 @@
     .zap-dane dd{margin:3px 0 0;font-size:15px;color:#16202a;}
     .zap-dane dd.pusto{color:#9aa7b2;font-style:italic;}
     .zap-blok{background:#f7f9fb;border-radius:10px;padding:14px 16px;margin-top:12px;}
+    .zap-ed label{display:block;font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin:12px 0 4px;}
+    .zap-ed input[type=text],.zap-ed input[type=email],.zap-ed input[type=number],.zap-ed textarea,.zap-ed select{width:100%;padding:8px 10px;border:1px solid #d6dde3;border-radius:8px;font:inherit;font-size:14.5px;background:#fff;}
+    .zap-ed textarea{min-height:70px;resize:vertical;}
+    .zap-ed .rz{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+    .zap-ed .chk{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:14px;text-transform:none;letter-spacing:0;color:#16202a;font-weight:600;}
+    .zap-ed .chk input{width:auto;}
+    @media(max-width:600px){.zap-ed .rz{grid-template-columns:1fr;}}
     .zap-blok h4{margin:0 0 4px;font-size:14px;color:#16202a;}
     .zap-sum .k.kwota{border-color:#cfe1d4;background:#f6fbf7;}
     .zap-uwaga{margin:-6px 0 18px;padding:9px 13px;font-size:12.5px;line-height:1.6;color:#7a5c14;
@@ -78,6 +85,7 @@
       <header class="admin-topbar">
         <div class="topbar-title">Zapisy na szkolenia</div>
         <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" id="expPytania" title="Pytania z pola Uwagi, z pytającym i instytucją: do przekazania prowadzącemu">📄 Pytania uczestników (PDF)</button>
           <button class="btn btn-outline btn-sm" id="expRaport" title="Jeden wiersz na uczestnika — układ jak w arkuszu „Opłaty / Faktury / Zaświadczenia”">↓ Raport szkolenia (CSV)</button>
           <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do zgłaszających z bieżącego filtra">✉ Wyślij e-mail</button>
         </div>
@@ -135,6 +143,8 @@
   <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
   <script src="/_assets/js/gig-config.js"></script>
   <script src="/admin/_admin.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
   <script>
     let dane = [], biezacy = null;
     /* ?szkolenie=<tytuł> — wejście z listy szkoleń w panelu; ustawia filtr przy pierwszym ładowaniu */
@@ -427,6 +437,7 @@
           </dl>`:''}
         </div>
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" id="zapEdytuj">✎ Edytuj dane</button>
           <button type="button" class="btn btn-outline btn-sm" id="zapOdpowiedz">↩ Odpowiedz</button>
           ${r.telefon?`<a class="btn btn-ghost btn-sm" href="tel:${esc((r.telefon||'').replace(/\s/g,''))}">☎ Zadzwoń</a>`:''}
           <button type="button" class="btn btn-danger btn-sm" id="zapUsun" style="margin-left:auto;">🗑 Usuń zgłoszenie</button>
@@ -438,6 +449,7 @@
       document.getElementById('zapUsun').addEventListener('click', async () => {
         if (await usunZgloszenie(r.id)) { closeModal('zapModal'); load(); }
       });
+      document.getElementById('zapEdytuj').addEventListener('click', () => edytuj(r));
       /* Odpowiedź: kreator maila do tego jednego zgłaszającego, z tematem szkolenia */
       document.getElementById('zapOdpowiedz').addEventListener('click', () => {
         closeModal('zapModal');
@@ -449,6 +461,157 @@
         });
       });
       openModal('zapModal');
+    }
+
+    /* Edycja zgłoszenia przez biuro: literówka w nazwisku, zmiana uczestnika, pytanie
+       przysłane mailem, poprawka danych do faktury. Szkolenie wybieramy z kalendarza,
+       żeby zgłoszenie dalej łączyło się z cennikiem i raportem. */
+    function edytuj(r){
+      const v = x => esc(x == null ? '' : String(x));
+      const tytuly = [...new Set(Object.values(SZKOLENIA).map(x => x.title).concat(r.szkolenie ? [r.szkolenie] : []))]
+        .sort((a, b) => a.localeCompare(b, 'pl'));
+      const takiSam = r.odbiorca_taki_sam !== false;
+      document.getElementById('zapTresc').innerHTML = `
+        <div class="zap-ed">
+          <label>Szkolenie</label>
+          <select id="edSzk">${tytuly.map(t => `<option${kluczSzk(t) === kluczSzk(r.szkolenie) ? ' selected' : ''}>${esc(t)}</option>`).join('')}</select>
+          <div class="rz">
+            <div><label>Liczba osób</label><input type="number" id="edIle" min="1" max="99" value="${v(r.liczba_osob || 1)}"></div>
+            <div><label>Status</label><select id="edStatus">${Object.entries(ETYK).map(([k, n]) => `<option value="${k}"${(r.status || 'new') === k ? ' selected' : ''}>${n}</option>`).join('')}</select></div>
+          </div>
+          <label>Uczestnicy (każda osoba w osobnej linii)</label><textarea id="edUcz">${v(r.uczestnicy)}</textarea>
+          <div class="rz">
+            <div><label>E-mail</label><input type="email" id="edEmail" value="${v(r.email)}"></div>
+            <div><label>Telefon</label><input type="text" id="edTel" value="${v(r.telefon)}"></div>
+          </div>
+          <label>Uwagi i pytania</label><textarea id="edUwagi" style="min-height:110px">${v(r.uwagi)}</textarea>
+          <div class="zap-blok">
+            <h4 style="margin:0;">Nabywca</h4>
+            <label>Nazwa</label><input type="text" id="edNNazwa" value="${v(r.nabywca_nazwa)}">
+            <label>Adres</label><input type="text" id="edNAdres" value="${v(r.nabywca_adres)}">
+            <div class="rz">
+              <div><label>NIP</label><input type="text" id="edNNip" value="${v(r.nabywca_nip)}"></div>
+              <div><label>Faktura</label><select id="edFakt">
+                <option value=""${!r.faktura_kiedy ? ' selected' : ''}>bez faktury</option>
+                <option value="przed"${r.faktura_kiedy === 'przed' ? ' selected' : ''}>przed szkoleniem</option>
+                <option value="po"${r.faktura_kiedy === 'po' ? ' selected' : ''}>po szkoleniu</option></select></div>
+            </div>
+            <label class="chk"><input type="checkbox" id="edJst"${r.nabywca_jst ? ' checked' : ''}> jednostka samorządu terytorialnego</label>
+          </div>
+          <div class="zap-blok">
+            <h4 style="margin:0;">Odbiorca</h4>
+            <label class="chk"><input type="checkbox" id="edTaki"${takiSam ? ' checked' : ''}> taki sam jak nabywca</label>
+            <div id="edOdb"${takiSam ? ' hidden' : ''}>
+              <label>Nazwa</label><input type="text" id="edONazwa" value="${v(r.odbiorca_nazwa)}">
+              <label>Adres</label><input type="text" id="edOAdres" value="${v(r.odbiorca_adres)}">
+              <label>NIP / ID wewn.</label><input type="text" id="edONip" value="${v(r.odbiorca_nip)}">
+            </div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end;">
+            <button type="button" class="btn btn-ghost btn-sm" id="edAnuluj">Anuluj</button>
+            <button type="button" class="btn btn-primary btn-sm" id="edZapisz">✓ Zapisz zmiany</button>
+          </div>
+        </div>`;
+      const $ = id => document.getElementById(id);
+      $('edTaki').addEventListener('change', () => { $('edOdb').hidden = $('edTaki').checked; });
+      $('edAnuluj').addEventListener('click', () => pokaz(r.id));
+      $('edZapisz').addEventListener('click', async () => {
+        const t = id => $(id).value.trim();
+        const email = t('edEmail').toLowerCase();
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Podaj poprawny adres e-mail', 'error'); return; }
+        const ile = parseInt(t('edIle'), 10);
+        if (!ile || ile < 1) { toast('Liczba osób musi być co najmniej 1', 'error'); return; }
+        const taki = $('edTaki').checked;
+        const zmiany = {
+          szkolenie: t('edSzk') || null, liczba_osob: ile, status: $('edStatus').value,
+          uczestnicy: $('edUcz').value.split(/\n/).map(x => x.trim()).filter(Boolean).join('\n') || null,
+          email, telefon: t('edTel') || null, uwagi: $('edUwagi').value.trim() || null,
+          nabywca_nazwa: t('edNNazwa') || null, nabywca_adres: t('edNAdres') || null, nabywca_nip: t('edNNip') || null,
+          nabywca_jst: $('edJst').checked, faktura_kiedy: $('edFakt').value || null,
+          odbiorca_taki_sam: taki,
+          odbiorca_nazwa: taki ? null : (t('edONazwa') || null),
+          odbiorca_adres: taki ? null : (t('edOAdres') || null),
+          odbiorca_nip: taki ? null : (t('edONip') || null),
+        };
+        const btn = $('edZapisz'); btn.disabled = true;
+        const { error } = await db.from('zapisy_szkolenia').update(zmiany).eq('id', r.id);
+        btn.disabled = false;
+        if (error) { console.error(error); toast('Nie udało się zapisać zmian', 'error'); return; }
+        toast('Zgłoszenie zaktualizowane', 'success');
+        await load();
+        pokaz(r.id);
+      });
+    }
+
+    /* Raport PDF z pytaniami uczestników (pole „Uwagi”), do przekazania prowadzącemu.
+       Bierzemy zgłoszenia z bieżącego filtra bez rezygnacji; przy kilku szkoleniach
+       pytania grupujemy po szkoleniu. Bez e-maili i telefonów: raport ma wyjść poza biuro.
+       W trybie bezpłatnym formularz dopisuje „Reprezentuje: …” i „Pytanie / problem:”,
+       więc rozdzielamy to na opis pytającego i samą treść pytania. */
+    function rozbierzUwagi(u){
+      let rep = '', t = String(u || '').trim();
+      const m = t.match(/^Reprezentuje:\s*(.+?)(?:\n|$)/);
+      if (m) { rep = m[1].trim(); t = t.slice(m[0].length).trim(); }
+      t = t.replace(/^Pytanie \/ problem:\s*/, '').trim();
+      return { rep, tresc: t };
+    }
+    function pytaniaPdf(){
+      if (!window.pdfMake) { toast('Moduł PDF się nie załadował, odśwież stronę', 'error'); return; }
+      const lista = filtruj().filter(r => r.status !== 'cancelled')
+        .map(r => ({ r, ...rozbierzUwagi(r.uwagi) })).filter(x => x.tresc);
+      if (!lista.length) { toast('W wybranych zgłoszeniach nie ma pytań'); return; }
+      const grupy = {};
+      lista.forEach(x => { const k = kluczSzk(x.r.szkolenie); (grupy[k] = grupy[k] || []).push(x); });
+      const klucze = Object.keys(grupy).sort((a, b) => nazwaSzk(a).localeCompare(nazwaSzk(b), 'pl'));
+      const kiedy = new Date().toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const tresc = [{ text: 'GEODEZYJNA IZBA GOSPODARCZA', style: 'h0' }, { text: 'Pytania uczestników', style: 'h1' }];
+      klucze.forEach((k, gi) => {
+        const szk = SZKOLENIA[k] || {};
+        const pozycje = grupy[k].sort((a, b) => (a.r.created_at || '').localeCompare(b.r.created_at || ''));
+        const wszystkich = dane.filter(r => kluczSzk(r.szkolenie) === k && r.status !== 'cancelled').length;
+        tresc.push({ text: nazwaSzk(k), style: 'h2', pageBreak: gi ? 'before' : undefined });
+        tresc.push({ text: (szk.date_start ? 'Termin: ' + fmtDay(szk.date_start) + ' · ' : '') +
+          'pytań: ' + pozycje.length + ' (ze zgłoszeń: ' + wszystkich + ')', style: 'meta' });
+        pozycje.forEach((x, i) => {
+          const osoby = (x.r.uczestnicy || '').split(/\n/).map(s => s.trim()).filter(Boolean);
+          const kto = [osoby.join(', ') || '(nie podano)', x.r.nabywca_nazwa || '', x.rep].filter(Boolean).join(' · ');
+          tresc.push({ unbreakable: true, margin: [0, 0, 0, 10], table: { widths: [22, '*'], body: [[
+            { text: String(i + 1), style: 'nr', rowSpan: 1 },
+            { stack: [
+              { text: kto, style: 'kto' },
+              { text: 'zgłoszono ' + fmtDate(x.r.created_at), style: 'kiedy' },
+              { text: x.tresc, style: 'pyt' },
+            ] },
+          ]] }, layout: { hLineWidth: () => 0, vLineWidth: (i) => i === 1 ? 2 : 0, vLineColor: () => '#cc0a2b',
+            paddingLeft: (i) => i === 1 ? 10 : 0, paddingTop: () => 4, paddingBottom: () => 6 } });
+        });
+      });
+      tresc.push({ text: 'Zestawienie wygenerowano ' + kiedy + ' w panelu GIG na podstawie pola „Uwagi” w zgłoszeniach.', style: 'foot' });
+      const dd = {
+        pageSize: 'A4', pageMargins: [42, 48, 42, 56],
+        info: { title: 'Pytania uczestników', author: 'Panel GIG' },
+        footer: (page, pages) => ({ margin: [42, 14, 42, 0], fontSize: 8, color: '#7a8b97',
+          columns: [{ text: 'Geodezyjna Izba Gospodarcza · gig.org.pl' }, { text: 'Strona ' + page + ' z ' + pages, alignment: 'right' }] }),
+        content: tresc,
+        styles: {
+          h0: { fontSize: 9, bold: true, color: '#cc0a2b', characterSpacing: 1, margin: [0, 0, 0, 4] },
+          h1: { fontSize: 18, bold: true, color: '#16202a', margin: [0, 0, 0, 10] },
+          h2: { fontSize: 13, bold: true, color: '#16202a', margin: [0, 6, 0, 3] },
+          meta: { fontSize: 9, color: '#6b7f84', margin: [0, 0, 0, 12] },
+          nr: { fontSize: 14, bold: true, color: '#cc0a2b' },
+          kto: { fontSize: 10, bold: true, color: '#16202a' },
+          kiedy: { fontSize: 8, color: '#7a8b97', margin: [0, 1, 0, 4] },
+          pyt: { fontSize: 10.5, lineHeight: 1.3 },
+          foot: { fontSize: 8.5, color: '#7a8b97', margin: [0, 12, 0, 0] },
+        },
+        defaultStyle: { font: 'Roboto', fontSize: 10, color: '#2b3a45' },
+      };
+      const wybrane = nazwaSzk(document.getElementById('fSzkolenie').value);
+      const nazwa = 'pytania-' + (wybrane || 'uczestnikow').toLowerCase()
+        .replace(/[ąćęłńóśźż]/g, c => 'acelnoszz'['ąćęłńóśźż'.indexOf(c)])
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) + '.pdf';
+      try { pdfMake.createPdf(dd).download(nazwa); }
+      catch (e) { console.error(e); toast('Nie udało się zbudować PDF: ' + e.message, 'error'); }
     }
 
     function tekstFaktury(r){
@@ -533,6 +696,7 @@
          osobno, dalej, jako informację.
          Rezygnacje zostają w pliku ze słowem REZYGNACJA w kolumnie „Data" —
          tak samo jak w arkuszu wzorcowym. */
+      document.getElementById('expPytania').addEventListener('click', pytaniaPdf);
       document.getElementById('expRaport').addEventListener('click', () => {
         const wiersze = [];
         filtruj().forEach(r => {
