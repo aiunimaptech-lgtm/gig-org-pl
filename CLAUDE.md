@@ -43,9 +43,11 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   Definicje triggerów: `backend/supabase_webhooki_maile.sql`, `backend/supabase_zapisy.sql`.
 
 - **Baza e-mail: listy** (`backend/supabase_baza_listy.sql`): `baza_email.listy` to znaczniki
-  „Członkowie GIG” i „Newsletter”, niezależne od grupy. Prowadzą je triggery z `czlonkowie`
-  (opublikowani) i `submissions_newsletter` (poza wypisanymi): dopisują adres albo znacznik,
-  uzupełniają puste pola, zdejmują znacznik po ukryciu członka lub wypisie. W panelu
+  „Członkowie GIG”, „Newsletter” i „Uczestnicy szkoleń”, niezależne od grupy. Prowadzą je triggery
+  z `czlonkowie` (opublikowani), `submissions_newsletter` (poza wypisanymi) i `zapisy_szkolenia`:
+  dopisują adres albo znacznik, uzupełniają puste pola (firma, NIP, telefon, osoba, grupa; zgłoszenie
+  na szkolenie wzbogaca też adresy z newslettera), zdejmują znacznik po ukryciu członka, wypisie
+  albo usunięciu zgłoszenia. Wypełnionych pól nie nadpisują. W panelu
   `/admin/baza-email.html` kafelki i filtr „Lista” → „Wyślij e-mail” / „Kampania z filtra”.
 
 ## SEO, agenci AI i prerender (od 28.09.2026)
