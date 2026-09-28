@@ -147,6 +147,7 @@
             ${k.czeka > 0 && k.status !== 'wstrzymana' ? `<button class="btn btn-primary btn-xs" data-start="${k.id}">▶ Wyślij</button>` : ''}
             ${k.status === 'w_toku' || k.status === 'robocza' ? `<button class="btn btn-outline btn-xs" data-pauza="${k.id}">⏸ Wstrzymaj</button>` : ''}
             ${k.status === 'wstrzymana' ? `<button class="btn btn-outline btn-xs" data-wznow="${k.id}">▶ Wznów</button>` : ''}
+            <button class="btn btn-outline btn-xs" data-test="${k.id}" title="Wyślij tę treść na jeden adres, bez ruszania kolejki">✉ Test</button>
             <button class="btn btn-ghost btn-xs" data-podglad="${k.id}">👁</button>
             <button class="btn btn-danger btn-xs" data-usun="${k.id}">🗑</button>
           </td>
@@ -157,6 +158,7 @@
       tb.querySelectorAll('[data-pauza]').forEach(b => b.addEventListener('click', () => zmienStatus(b.dataset.pauza, 'wstrzymana')));
       tb.querySelectorAll('[data-wznow]').forEach(b => b.addEventListener('click', () => zmienStatus(b.dataset.wznow, 'w_toku')));
       tb.querySelectorAll('[data-podglad]').forEach(b => b.addEventListener('click', () => podglad(b.dataset.podglad)));
+      tb.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => wyslijTest(b.dataset.test, b)));
       tb.querySelectorAll('[data-usun]').forEach(b => b.addEventListener('click', () => usun(b.dataset.usun)));
       tb.querySelectorAll('[data-limit]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); zmienLimit(a.dataset.limit); }));
     }
@@ -186,6 +188,30 @@
       document.getElementById('podgladTytul').textContent = data.temat;
       document.getElementById('podglad').innerHTML = data.html || '<em>pusta treść</em>';
       openModal('podgladModal');
+    }
+
+    /* Test: ta sama treść i szata co w kampanii, na jeden adres (domyślnie zalogowanego),
+       z dopiskiem [TEST] w temacie. Kolejka odbiorców i statystyki zostają nietknięte. */
+    async function wyslijTest(id, btn) {
+      const { data, error } = await db.from('wysylki').select('temat,html').eq('id', id).maybeSingle();
+      if (error || !data) { toast('Błąd odczytu kampanii', 'error'); return; }
+      const sesja = await getSession();
+      if (!sesja) { toast('Sesja wygasła, zaloguj się ponownie', 'error'); return; }
+      const adres = (prompt('Na jaki adres wysłać wersję testową?', (sesja.user && sesja.user.email) || '') || '').trim().toLowerCase();
+      if (!adres) return;
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(adres)) { toast('Niepoprawny adres e-mail', 'error'); return; }
+      btn.disabled = true;
+      try {
+        const res = await fetch(SUPABASE_URL + '/functions/v1/wyslij-mail', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
+          body: JSON.stringify({ subject: '[TEST] ' + data.temat, html: data.html, recipients: [{ email: adres }], rodzaj: 'baza' }),
+        });
+        const w = await res.json().catch(() => ({}));
+        if (!res.ok || !w.ok || !w.wyslane) throw new Error(w.error || ('HTTP ' + res.status));
+        toast('Test wysłany na ' + adres, 'success');
+      } catch (e) { console.error(e); toast('Nie udało się wysłać testu: ' + e.message, 'error', 6000); }
+      btn.disabled = false;
     }
 
     async function usun(id) {
