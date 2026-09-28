@@ -1,0 +1,38 @@
+# Geodezyjna Izba Gospodarcza (GIG)
+
+> Samorząd gospodarczy firm geodezyjnych w Polsce, działający od 1994 roku. Zrzesza 66 firm geodezyjnych, reprezentuje je wobec administracji (m.in. Głównego Geodety Kraju i ośrodków dokumentacji), opiniuje projekty przepisów, prowadzi szkolenia i Węzeł Jakości (rynkowe stawki prac geodezyjnych w układzie SEKOCENBUD). Hasło: „Silni wiedzą, zjednoczeni działaniem”.
+
+Dane: ul. Czackiego 3/5, 00-043 Warszawa · tel. 22 827 38 43 · biuro@gig.org.pl · NIP 525-20-34-024 · REGON 010753536.
+Składka członkowska: 40 zł miesięcznie (firma jednoosobowa), 80 zł (do 5 osób), 160 zł (powyżej 5 osób); wpisowe 75 zł.
+
+## Najważniejsze strony
+- [O Izbie](https://gig.org.pl/o-nas/): historia, organy, statut
+- [Dołącz do Izby](https://gig.org.pl/dolacz-do-nas/): korzyści, koszty, procedura przyjęcia
+- [Katalog Członków](https://gig.org.pl/czlonkowie/): 66 firm geodezyjnych wg województw
+- [Kalendarz szkoleń](https://gig.org.pl/szkolenia/)
+- [Węzeł Jakości: ankieta cenowa](https://gig.org.pl/wezel-jakosci/)
+- [Baza wiedzy](https://gig.org.pl/baza-wiedzy/)
+- [Kontakt](https://gig.org.pl/kontakt/)
+
+## Nadchodzące szkolenia i wydarzenia
+- [Procedury geodezyjno-prawne określania granic gruntów - warsztaty](https://gig.org.pl/szkolenia/): 8 października 2026, 09:00–14:00, online, cena 400 zł, dla członków 250 zł
+- [Forum GIG z Głównym Geodetą Kraju: nowelizacja Prawa geodezyjnego i kartograficznego](https://gig.org.pl/szkolenia/): 19 listopada 2026, 10:00-13:00, online, cena bezpłatne, udział otwarty
+- [Modernizacja EGiB jako narzędzie zwiększania dochodów i bezpiecznego zarządzania gminą](https://gig.org.pl/szkolenia/): 14 stycznia 2027, online, cena 200 zł, dla członków 0 zł (bezpłatne)
+
+## Artykuły i aktualności
+- [Detekcja sieci podziemnych: jak mierzyć to, czego nie widać, i wiedzieć, na ile temu ufać](https://gig.org.pl/wpis/detekcja-sieci-podziemnych-gpr-eml-pas-128/): 27 września, 2026
+- [Geodeci pytają, Główny Geodeta Kraju odpowiada: Forum GIG o zmianach w prawie geodezyjnym, 19 listopada](https://gig.org.pl/wpis/forum-gig-z-glownym-geodeta-kraju-19-listopada/): 27 września, 2026
+- [Węzeł Jakości: ruszyła ankieta cenowa prac geodezyjnych](https://gig.org.pl/wpis/wezel-jakosci-ankieta-cenowa/): 17 września, 2026
+- [Zmiany w planowaniu przestrzennym w Polsce — co przynosi reforma 2026](https://gig.org.pl/zmiany-w-planowaniu-przestrzennym-2026/): 9 sierpnia, 2026
+- [Zintegrowany Plan Inwestycyjny (ZPI) — nowe narzędzie planowania przestrzennego](https://gig.org.pl/zintegrowany-plan-inwestycyjny-zpi/): 9 sierpnia, 2026
+- [GIG patronem 29. Konferencji Naukowo-Technicznej SEKOCENBUD](https://gig.org.pl/patronat-gig-29-konferencja-sekocenbud/): 7 sierpnia, 2026
+- [Węzeł Jakości w Geodezji — GIG podpisała list intencyjny z Fundacją Galicea](https://gig.org.pl/wezel-jakosci-w-geodezji/): 4 sierpnia, 2026
+- [Scalenie i podział nieruchomości — korzystny mechanizm dla właścicieli działek i gmin](https://gig.org.pl/scalenie-i-podzial-nieruchomosci-korzystny-mechanizm/): 16 czerwca, 2026
+- [XXXIII Walne Zgromadzenie Członków GIG: nowy Prezes i program zmian w geodezji](https://gig.org.pl/relacja-z-xxxiii-walnego-zgromadzenia-czlonkow-gig/): 16 czerwca, 2026
+- [Żegnamy Alfonsa Jacko](https://gig.org.pl/zegnamy-alfonsa-jacko/): 3 kwietnia, 2026
+- [Zawiłości geodezyjne: Rozumienie procedury przyjęcia granic przy podziale nieruchomości](https://gig.org.pl/zawilosci-geodezyjne-rozumienie-procedury-przyjecia-granic-przy-podziale-nieruchomosci/): 24 stycznia, 2025
+- [XXXII Walne Sprawozdawczo – Wyborcze Zgromadzenie Członków GIG](https://gig.org.pl/xxxii-walne-sprawozdawczo-wyborcze-zgromadzenie-czlonkow-gig/): 24 stycznia, 2025
+
+## Opcjonalnie
+- [Mapa strony](https://gig.org.pl/sitemap.xml)
+- [Polityka prywatności](https://gig.org.pl/polityka-prywatnosci-rodo/)

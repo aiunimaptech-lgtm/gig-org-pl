@@ -1,0 +1,50 @@
+/* Style kalendarza szkoleń. Wyciągnięte z szkolenia-render.js, żeby karty wygenerowane w HTML (skrypty/prerender.mjs) miały wygląd od razu, zanim wczyta się skrypt. Skrypt wstrzykuje te same style, więc zmiany rób w obu miejscach albo tylko tutaj. */
+.gig-szk{max-width:1100px;margin:0 auto;padding:46px 22px;font-family:inherit;}
+.gig-szk h2{font-size:30px;color:#16202a;margin:0 0 6px;text-align:center;}
+.gig-szk .lead{text-align:center;color:#5b6b78;margin:0 auto 30px;max-width:60ch;}
+.gig-szk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+.gig-szk-card{display:flex;gap:16px;background:#fff;border:1px solid #e7ebef;border-radius:14px;padding:20px;box-shadow:0 6px 22px rgba(20,40,60,.06);transition:transform .18s,box-shadow .18s;}
+.gig-szk-card:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(20,40,60,.12);}
+.gig-szk-date{flex:0 0 64px;height:72px;border-radius:10px;background:#cc0a2b;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;}
+.gig-szk-date .d{font-size:24px;font-weight:800;}
+.gig-szk-date .m{font-size:11px;text-transform:uppercase;letter-spacing:.5px;margin-top:3px;}
+.gig-szk-date.opisowy{height:auto;min-height:72px;padding:10px 8px;text-align:center;}
+.gig-szk-date.opisowy .t{font-size:13px;font-weight:800;line-height:1.25;}
+.gig-szk-body{flex:1;min-width:0;}
+.gig-szk-body h3{font-size:17px;color:#16202a;margin:0 0 6px;line-height:1.3;}
+.gig-szk-meta{font-size:13px;color:#7a8794;margin:0 0 8px;}
+.gig-szk-desc{font-size:14px;color:#46535f;margin:0 0 14px;line-height:1.55;}
+.gig-szk-btn{display:inline-block;background:#cc0a2b;color:#fff;text-decoration:none;font-weight:700;font-size:13px;padding:9px 18px;border-radius:8px;}
+.gig-szk-btn:hover{filter:brightness(.92);color:#fff;}
+.gig-szk-zgoda{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:#46535f;line-height:1.45;margin:14px 0 10px;cursor:pointer;}
+.gig-szk-zgoda input{margin:2px 0 0;flex:none;width:16px;height:16px;accent-color:#cc0a2b;cursor:pointer;}
+.gig-szk-zgoda a{color:#cc0a2b;}
+.gig-szk-btn.wylaczony{background:#c9ced4;pointer-events:none;cursor:not-allowed;}
+.gig-szk-btn.wylaczony:hover{filter:none;}
+.gig-szk-empty{text-align:center;color:#7a8794;background:#f5f7f9;border:1px dashed #d6dde3;border-radius:12px;padding:30px;}
+.gig-szk-arch{margin-top:34px;}
+.gig-szk-arch summary{cursor:pointer;font-weight:700;color:#16202a;font-size:16px;padding:10px 0;}
+.gig-szk-arch .gig-szk-card{opacity:.78;}
+.gig-szk-loading{text-align:center;color:#7a8794;padding:20px;}
+.gig-szk-grid{grid-template-columns:1fr;}
+.gig-szk-card{align-items:flex-start;}
+.gig-szk-time{font-size:13px;color:#5b6b78;margin:0 0 10px;}
+.gig-szk-time b{color:#16202a;}
+.gig-szk-prog-t{font-size:14px;font-weight:700;color:#16202a;margin:14px 0 7px;}
+.gig-szk-prog{margin:0 0 14px;padding:0 !important;list-style:none !important;}
+.gig-szk-prog li{list-style:none !important;position:relative;padding:0 0 0 22px !important;margin:0 0 7px !important;font-size:14.5px;color:#46535f;line-height:1.55;background:none !important;}
+.gig-szk-prog li::marker{content:'';}
+.gig-szk-prog li::before{content:'';position:absolute;left:4px;top:.62em;width:7px;height:7px;border-radius:50%;background:#cc0a2b;box-shadow:0 0 0 2px #fbe3e8;}
+.gig-szk-ceny{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0 4px;}
+.gig-szk-cena{background:#f4f6f8;border:1px solid #e3e9ee;border-radius:9px;padding:8px 14px;font-size:14px;color:#46535f;}
+.gig-szk-cena b{color:#16202a;font-size:16px;}
+.gig-szk-cena.czlonek{background:#fff5f6;border-color:#f3ccd4;}
+.gig-szk-cena.czlonek b{color:#cc0a2b;}
+.gig-szk-info{margin:9px 0 0;font-size:13.5px;color:#16202a;line-height:1.5;font-weight:600;}
+.gig-szk-info.ukryta{display:none;}
+.gig-szk-platnosc{margin:12px 0 4px;padding:12px 15px;background:#f7f9fb;border:1px dashed #d8e0e7;border-radius:10px;font-size:13.5px;color:#16202a;line-height:1.65;font-weight:700;}
+.gig-szk-zgldo{margin:14px 0 2px;font-size:14px;font-weight:700;color:#cc0a2b;line-height:1.5;}
+.gig-szk-wyk{margin:16px 0 4px;padding:14px 16px;background:#f7f9fb;border-left:3px solid #cc0a2b;border-radius:0 10px 10px 0;}
+.gig-szk-wyk .kto{font-size:15px;font-weight:700;color:#16202a;}
+.gig-szk-wyk .bio{font-size:14px;color:#5b6b78;margin-top:5px;line-height:1.55;}
+.gig-szk-wyk a{font-size:13.5px;font-weight:600;display:inline-block;margin-top:7px;}

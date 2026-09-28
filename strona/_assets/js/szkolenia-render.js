@@ -192,6 +192,9 @@
       '<div class="gig-szk-grid" id="gigSzkUpcoming" style="display:none"></div>' +
       '<div id="gigSzkArchWrap"></div>';
     var host = document.getElementById("gig-szkolenia");
+    /* Sekcja wygenerowana w HTML (skrypty/prerender.mjs) zostaje widoczna, dopóki
+       nie przyjdą świeże dane z bazy; przy awarii bazy nie znika. */
+    if (host && host.querySelector('[data-prerender]')) sec.style.display = "none";
     if (host) {
       host.appendChild(sec);
     } else {
@@ -228,6 +231,8 @@
       past.reverse();
 
       document.getElementById("gigSzkLoading").style.display = "none";
+      var pre = document.querySelector('#gig-szkolenia [data-prerender]');
+      if (pre) { pre.remove(); document.querySelector("section.gig-szk:not([data-prerender])").style.display = ""; }
       var up = document.getElementById("gigSzkUpcoming");
       if (upcoming.length) { up.innerHTML = upcoming.map(function (x) { return card(x, false); }).join(""); up.style.display = ""; }
       else { up.style.display = "none";
@@ -240,6 +245,10 @@
       }
     } catch (e) {
       console.error(e);
+      if (document.querySelector('#gig-szkolenia [data-prerender]')) {   // zostaje wersja z HTML-a
+        var nowa = document.querySelector("section.gig-szk:not([data-prerender])"); if (nowa) nowa.remove();
+        return;
+      }
       var l = document.getElementById("gigSzkLoading");
       if (l) l.outerHTML = '<div class="gig-szk-empty">Lista szkoleń jest właśnie aktualizowana. Zapraszamy wkrótce — lub <a href="/kontakt/">napisz do nas</a> po informacje o najbliższych terminach.</div>';
     }
