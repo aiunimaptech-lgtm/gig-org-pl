@@ -25,7 +25,7 @@
         <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
         <a href="zapisy.html"><span class="nav-icon">📝</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
         <div class="nav-section">Sprawy Izby</div>
-        <a href="czlonkowie.html?status=oczekuje" class="active"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
+        <a href="czlonkowie.html" class="active"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
         <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
         <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
         <a href="wizytowki.html"><span class="nav-icon">🪪</span> Wizytówki członków <span class="nav-badge" id="navBadgeWizytowki" style="display:none">0</span></a>
@@ -163,7 +163,9 @@
         Zgłoszenia z formularza „Dołącz do nas" trafiają tu automatycznie i nie są widoczne na stronie,
         dopóki ich nie zatwierdzisz. Uchwałę Rady w tej sprawie prowadzisz w zakładce
         <a href="uchwaly.html" style="color:#7a5c14;text-decoration:underline;">Uchwały Rady</a>.`;
-      if(!rows.length){tb.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak. Uruchom supabase_czlonkowie.sql albo dodaj firmę.</td></tr>';return;}
+      if(!rows.length){tb.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">${data.length
+        ? 'Brak firm dla wybranego filtra. Zmień status na „Wszystkie” albo wyczyść wyszukiwanie.'
+        : 'Brak. Uruchom supabase_czlonkowie.sql albo dodaj firmę.'}</td></tr>`;return;}
       tb.innerHTML=rows.map(r=>`
         <tr>
           <td>${r.website
@@ -244,7 +246,13 @@
     async function load(){
       const {data:d,error}=await db.from('czlonkowie').select('*').order('region').order('name');
       if(error){toast('Błąd ładowania (uruchom supabase_czlonkowie.sql?)','error');console.error(error);return;}
-      data=d||[];render(document.getElementById('search').value);
+      data=d||[];
+      /* Filtr z adresu (?status=oczekuje) nie może dać pustej listy: gdy nie ma
+         takich wpisów, pokazujemy wszystkie firmy. */
+      const fs=document.getElementById('fStatus');
+      if(fs.value && fs.value===new URLSearchParams(location.search).get('status')
+         && !data.some(r=>r.status===fs.value)) fs.value='';
+      render(document.getElementById('search').value);
     }
     (async()=>{
       if(!await requireAuth())return;
@@ -252,7 +260,7 @@
       document.getElementById('saveBtn').addEventListener('click',save);
       document.getElementById('search').addEventListener('input',e=>render(e.target.value));
       document.getElementById('fStatus').addEventListener('change',()=>render(document.getElementById('search').value));
-      /* ?status=oczekuje — wejście z plakietki w menu prosto do zgłoszeń */
+      /* ?status=oczekuje: wejście z zadania na pulpicie prosto do zgłoszeń */
       const stUrl=new URLSearchParams(location.search).get('status');
       if(stUrl) document.getElementById('fStatus').value=stUrl;
 
