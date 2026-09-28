@@ -434,7 +434,7 @@ chronionych, filtr „Edycja", kolumna w CSV. Zweryfikowane na żywej bazie (edy
 nowy adres wchodzi).
 
 ### Sekrety w Supabase (Edge Functions → Secrets)
-`RESEND_API_KEY`, `FROM_EMAIL`, `NOTIFY_EMAILS`, `NOTIFY_NEWSLETTER_EMAILS`, `SITE_URL`.
+`RESEND_API_KEY`, `FROM_EMAIL`, `NOTIFY_EMAILS`, `SITE_URL` (`NOTIFY_NEWSLETTER_EMAILS` już nieużywany).
 `SUPABASE_URL` / `ANON_KEY` / `SERVICE_ROLE_KEY` Supabase wstrzykuje **automatycznie** — nie ustawiać.
 
 ### DNS / Resend
@@ -805,8 +805,9 @@ Trzeci argument `zacheta=false` wyłącza stopkę zachęcającą do zapisu na ne
 w potwierdzeniu newslettera (adresat już jest zapisany) i we wszystkich powiadomieniach wewnętrznych.
 
 **Adresaci powiadomień:** kontakt i zapisy → `NOTIFY_EMAILS` (domyślnie `biuro@gig.org.pl` +
-`jerzy.bryk@gmail.com`); newsletter → osobna `NOTIFY_NEWSLETTER_EMAILS` (domyślnie tylko
-`jerzy.bryk@gmail.com`), żeby nie zasypywać biura przy masowych zapisach. **Tak ma zostać.**
+`jerzy.bryk@gmail.com`). **Newsletter: od 28.09.2026 bez powiadomień** (decyzja użytkownika: za dużo
+maili, niepotrzebne). Idzie tylko potwierdzenie do zapisującego się; zapisy widać w panelu i w Bazie
+e-mail (lista „Newsletter”). Sekret `NOTIFY_NEWSLETTER_EMAILS` nie jest już używany.
 
 ### Kampanie mailowe (`admin/wysylki.html`, tabele `wysylki` + `wysylki_odbiorcy`)
 Do wysyłek masowych (tysiące adresów), bo `wyslij-mail` ma limit 200 i wysyła po jednym.

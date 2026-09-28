@@ -7,14 +7,14 @@
 //   RESEND_API_KEY = re_xxxxxxxx
 //   FROM_EMAIL     = Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>  (domena zweryfikowana w Resend)
 //   NOTIFY_EMAILS  = biuro@gig.org.pl,jerzy.bryk@gmail.com   (opcjonalny; adresy po przecinku)
-//   NOTIFY_NEWSLETTER_EMAILS = jerzy.bryk@gmail.com           (opcjonalny; osobna lista)
 //   GIG_HOOK_TOKEN = <wartosc z private.gig_sekrety>          (opcjonalny; wlacza brame)
 //
 // Przy zgloszeniu z formularza kontaktowego ida DWA maile:
 //   1. powiadomienie do GIG (NOTIFY_EMAILS) z trescia zgloszenia, Reply-To = nadawca,
 //   2. potwierdzenie do nadawcy.
-// Przy zapisie do newslettera tak samo, ale powiadomienie idzie na OSOBNA liste
-// (NOTIFY_NEWSLETTER_EMAILS) - zapisow bywa duzo i nie musza trafiac do biura.
+// Przy zapisie do newslettera idzie TYLKO potwierdzenie do zapisujacego sie.
+// Powiadomien o zapisach nie wysylamy: bylo ich za duzo, a lista jest w panelu
+// (Newsletter) i w Bazie e-mail (lista „Newsletter”).
 // ============================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -26,11 +26,6 @@ const FUNCTIONS_BASE = (Deno.env.get("SUPABASE_URL") ?? "") + "/functions/v1";
 // Adresy, na ktore ida powiadomienia o nowych zgloszeniach. Trzymane w sekrecie,
 // zeby dodanie/zmiana odbiorcy nie wymagala ponownego wdrozenia funkcji.
 const NOTIFY_EMAILS = (Deno.env.get("NOTIFY_EMAILS") ?? "biuro@gig.org.pl,jerzy.bryk@gmail.com")
-  .split(",").map((x) => x.trim()).filter(Boolean);
-
-// Powiadomienia o zapisach do newslettera - osobna lista, bo to inny rodzaj ruchu
-// niz zapytania z formularza i zwykle interesuje wezsze grono.
-const NOTIFY_NEWSLETTER = (Deno.env.get("NOTIFY_NEWSLETTER_EMAILS") ?? "jerzy.bryk@gmail.com")
   .split(",").map((x) => x.trim()).filter(Boolean);
 
 // Wspolny sekret miedzy triggerem w bazie a ta funkcja.
@@ -254,29 +249,6 @@ function notifyMail(rec: Record<string, unknown>) {
     subject: `[GIG] ${typ}${name && name !== "-" ? ": " + name : ""}`,
     html: layout("Nowe zgłoszenie", body, false),
   };
-}
-
-/* Powiadomienie o nowym zapisie do newslettera. Krotkie - liczy sie sam fakt
-   i adres; Reply-To ustawiamy na zapisujacego sie, zeby dalo sie odpisac wprost. */
-function notifyNewsletterMail(rec: Record<string, unknown>) {
-  const adres = (rec.email as string) || "-";
-  const kiedy = new Date().toLocaleString("pl-PL", { timeZone: "Europe/Warsaw" });
-  const body = `
-    <p style="margin:0 0 18px;font-size:15px;line-height:1.65;">Nowy zapis do newslettera <strong>gig.org.pl</strong>.</p>
-    <table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 18px;">
-      <tr>
-        <td style="padding:6px 12px 6px 0;font-size:13px;color:#6b7c8c;white-space:nowrap;">E-mail</td>
-        <td style="padding:6px 0;font-size:14px;color:${C.dark};"><a href="mailto:${esc(adres)}" style="color:${C.mid};">${esc(adres)}</a></td>
-      </tr>
-      <tr>
-        <td style="padding:6px 12px 6px 0;font-size:13px;color:#6b7c8c;white-space:nowrap;">Zapisano</td>
-        <td style="padding:6px 0;font-size:14px;color:${C.dark};">${esc(kiedy)}</td>
-      </tr>
-    </table>
-    <p style="margin:0;font-size:13px;color:#6b7c8c;">
-      Pełna lista zapisów jest w <a href="https://gig.org.pl/admin/" style="color:${C.mid};">panelu GIG</a>.
-    </p>`;
-  return { subject: `[GIG] Nowy zapis do newslettera: ${adres}`, html: layout("Nowy zapis do newslettera", body, false) };
 }
 
 /* --- ZAPISY NA SZKOLENIA (tabela zapisy_szkolenia) --------------------- */
@@ -559,12 +531,7 @@ Deno.serve(async (req) => {
       wyniki.potwierdzenie = p.ok ? "wyslane" : p.info;
 
     } else if (table === "submissions_newsletter") {
-      // 1) powiadomienie o nowym zapisie — osobna lista odbiorcow
-      if (NOTIFY_NEWSLETTER.length) {
-        const r = await wyslij(NOTIFY_NEWSLETTER, notifyNewsletterMail(rec), nadawca);
-        wyniki.powiadomienie = r.ok ? "wyslane" : r.info;
-      }
-      // 2) potwierdzenie dla zapisujacego sie
+      // tylko potwierdzenie dla zapisujacego sie; powiadomien do GIG nie wysylamy
       const p = await wyslij([nadawca], newsletterMail(rec));
       wyniki.potwierdzenie = p.ok ? "wyslane" : p.info;
 
