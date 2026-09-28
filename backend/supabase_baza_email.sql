@@ -82,7 +82,7 @@ begin
   on conflict (email) do update set
     email2      = coalesce(excluded.email2,      baza_email.email2),
     email3      = coalesce(excluded.email3,      baza_email.email3),
-    pochodzenie = coalesce(excluded.pochodzenie, baza_email.pochodzenie),
+    pochodzenie = coalesce(baza_email.pochodzenie, excluded.pochodzenie),   -- pierwsze źródło adresu zostaje (od 28.09.2026)
     grupa       = coalesce(excluded.grupa,       baza_email.grupa),
     rodzaj      = coalesce(excluded.rodzaj,      baza_email.rodzaj),
     firma       = coalesce(excluded.firma,       baza_email.firma),
