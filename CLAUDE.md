@@ -42,6 +42,12 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   powiadomienie do GIG (`Reply-To` = zgłaszający) i potwierdzenie do zgłaszającego.
   Definicje triggerów: `backend/supabase_webhooki_maile.sql`, `backend/supabase_zapisy.sql`.
 
+- **Baza e-mail: listy** (`backend/supabase_baza_listy.sql`): `baza_email.listy` to znaczniki
+  „Członkowie GIG” i „Newsletter”, niezależne od grupy. Prowadzą je triggery z `czlonkowie`
+  (opublikowani) i `submissions_newsletter` (poza wypisanymi): dopisują adres albo znacznik,
+  uzupełniają puste pola, zdejmują znacznik po ukryciu członka lub wypisie. W panelu
+  `/admin/baza-email.html` kafelki i filtr „Lista” → „Wyślij e-mail” / „Kampania z filtra”.
+
 ## SEO, agenci AI i prerender (od 28.09.2026)
 - **Treść z bazy jest też w HTML-u**: `skrypty/prerender.mjs` zapisuje szkolenia, katalog Członków,
   najnowsze wpisy i pełne strony `/wpis/<slug>/` (z JSON-LD), a także `sitemap.xml` i `llms.txt`.

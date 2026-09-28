@@ -46,6 +46,9 @@
     .ed-err.show{display:block;}
     /* znacznik: wpis edytowany w panelu — chroniony przed nadpisaniem przy imporcie */
     .be-tag.panel{background:#eaf3ff;color:#1558b0;}
+    .be-tag.lista{background:#fdecef;color:#a3081f;}
+    .be-sum .k.lista{border-color:#f3c6cf;}
+    .be-sum .k.lista .t{color:#a3081f;}
     /* filtry wielokrotnego wyboru (checkbox-dropdown) */
     .ms{position:relative;}
     .ms-btn{cursor:pointer;text-align:left;background:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:230px;padding-right:26px;}
@@ -122,6 +125,7 @@
             <div class="search-box"><span class="search-icon">⌕</span>
               <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: e-mail, firma, osoba, adres, NIP, www…"></div>
             <!-- filtry wielokrotnego wyboru: każdy przyjmuje dowolną kombinację wartości -->
+            <div class="ms" id="msLista"></div>
             <div class="ms" id="msPochodzenie"></div>
             <div class="ms" id="msGrupa"></div>
             <div class="ms" id="msRodzaj"></div>
@@ -226,8 +230,13 @@
     const POCHODZENIA = ['MailerLite', 'prospecting', 'formularz', 'ręcznie'];
     const KLASA_GRUPY = { 'JST':'jst', 'Firma':'firma', 'Nauka':'nauka', 'Administracja rządowa':'adm', 'Spółki komunalne':'kom' };
     const STATUS = { active:'aktywny', unsubscribed:'wypisany', bounced:'odbity' };
+    /* Listy (baza_email.listy) prowadzi baza: triggery z tabel czlonkowie i
+       submissions_newsletter (backend/supabase_baza_listy.sql). Adres może być
+       na kilku listach naraz, niezależnie od grupy. */
+    const LISTY = ['Członkowie GIG', 'Newsletter'];
 
     let dane = [], strona = 1, kafelekGrupa = '';
+    const LISTY_OF = r => Array.isArray(r.listy) ? r.listy : [];
 
     /* PostgREST zwraca maks. 1000 wierszy na zapytanie — pobieramy stronami. */
     async function pobierzWszystko() {
@@ -293,7 +302,7 @@
     }
     document.addEventListener('click', () => document.querySelectorAll('.ms-menu').forEach(m => m.hidden = true));
 
-    let msPochodzenie, msGrupa, msRodzaj;
+    let msLista, msPochodzenie, msGrupa, msRodzaj;
     /* Dopasowanie wiersza do multi-selecta: pusty wybór = wszystko; „(puste)" łapie brak wartości. */
     function msPasuje(ms, val) {
       if (ms.size() === 0) return true;
@@ -307,6 +316,7 @@
       const fd = document.getElementById('fDane').value;
       const fe = document.getElementById('fEdyt').value;
       return dane.filter(r => {
+        if (msLista.size() && !LISTY_OF(r).some(l => msLista.values().includes(l))) return false;
         if (msGrupa.size() && !msGrupa.values().includes(GRUPA_OF(r))) return false;   // pusta grupa = „Nieustalone”
         if (!msPasuje(msPochodzenie, r.pochodzenie) || !msPasuje(msRodzaj, r.rodzaj)) return false;
         if (fs && (r.status || 'active') !== fs) return false;
@@ -325,6 +335,10 @@
       dane.forEach(r => { const k = GRUPA_OF(r); wg[k] = (wg[k] || 0) + 1; });
       const zDanymi = dane.filter(maDane).length;
       let html = `<div class="k ${kafelekGrupa === '' ? 'on' : ''}" data-grupa=""><div class="t">Wszystkie adresy</div><div class="v">${dane.length} <small>· ${zDanymi} z danymi firmy</small></div></div>`;
+      LISTY.forEach(l => {
+        const n = dane.filter(r => LISTY_OF(r).includes(l)).length;
+        html += `<div class="k lista" data-lista="${esc(l)}" title="Filtruj listę: ${esc(l)}"><div class="t">${esc(l)}</div><div class="v">${n}</div></div>`;
+      });
       Object.entries(wg).sort((a, b) => b[1] - a[1]).forEach(([g, n]) => {
         html += `<div class="k ${kafelekGrupa === g ? 'on' : ''}" data-grupa="${esc(g)}" title="Filtruj: ${esc(g)}"><div class="t">${esc(g)}</div><div class="v">${n}</div></div>`;
       });
@@ -332,6 +346,8 @@
       box.innerHTML = html;
       /* Klik w kafelek = filtr grupy na tę jedną wartość (albo „Wszystkie” czyści grupę). */
       box.querySelectorAll('.k').forEach(k => k.addEventListener('click', () => {
+        if (k.dataset.lista) { msGrupa.clear(); msLista.only(k.dataset.lista); return; }
+        msLista.clear();
         if (k.dataset.grupa === '') msGrupa.only(''); else msGrupa.only(k.dataset.grupa);
       }));
     }
@@ -339,9 +355,11 @@
     /* Podświetlenie kafelków wg wyboru grupy (multi-select). */
     function odswiezKafelki() {
       const g = msGrupa ? msGrupa.values() : [];
+      const l = msLista ? msLista.values() : [];
       document.querySelectorAll('#podsumowanie .k').forEach(k => {
         const dg = k.dataset.grupa;
-        const on = dg === '' ? g.length === 0 : (g.length === 1 && g[0] === dg);
+        const on = k.dataset.lista ? (l.length === 1 && l[0] === k.dataset.lista && g.length === 0)
+          : dg === '' ? g.length === 0 && l.length === 0 : (g.length === 1 && g[0] === dg && l.length === 0);
         k.classList.toggle('on', on);
       });
     }
@@ -368,7 +386,7 @@
         <tr>
           <td class="be-email"><strong>${esc(r.email)}</strong>${r.status && r.status !== 'active' ? ` <span class="badge badge-${esc(r.status)}">${STATUS[r.status] || r.status}</span>` : ''}${r.edytowany_panel ? ` <span class="be-tag panel" title="Edytowano w panelu ${esc(fmtDate(r.edytowany_panel))} — import tego wpisu nie nadpisze">✎ panel</span>` : ''}${(r.email2 || r.email3) ? `<div class="be-sub">+ ${[r.email2, r.email3].filter(Boolean).map(esc).join(', ')}</div>` : ''}</td>
           <td class="be-firma">${esc(r.firma || '—')}${r.osoba ? `<div class="osoba">${esc(r.osoba)}${r.stanowisko ? ' · ' + esc(r.stanowisko) : ''}</div>` : ''}</td>
-          <td>${tag(r.grupa)}</td>
+          <td>${tag(r.grupa)}${LISTY_OF(r).map(l => `<div style="margin-top:3px;"><span class="be-tag lista">${esc(l)}</span></div>`).join('')}</td>
           <td>${esc(r.rodzaj || '—')}</td>
           <td style="max-width:220px;">${esc(r.adres || '—')}${r.nip ? `<div class="be-sub">NIP ${esc(r.nip)}</div>` : ''}</td>
           <td style="white-space:nowrap;">${esc(r.telefon || '—')}</td>
@@ -397,7 +415,8 @@
       edOsoba.value = v('osoba'); edStanowisko.value = v('stanowisko'); edWww.value = v('www'); edUwagi.value = v('uwagi');
       edStatus.value = (r && r.status) || 'active';
       document.getElementById('edMeta').textContent = r
-        ? [r.pewnosc ? 'pewność danych: ' + r.pewnosc : '', r.zrodlo ? 'źródło: ' + r.zrodlo : '',
+        ? [LISTY_OF(r).length ? 'listy: ' + LISTY_OF(r).join(', ') + ' (prowadzone automatycznie)' : '',
+           r.pewnosc ? 'pewność danych: ' + r.pewnosc : '', r.zrodlo ? 'źródło: ' + r.zrodlo : '',
            'dodano ' + fmtDate(r.created_at), r.edytowany_panel ? 'edytowano w panelu ' + fmtDate(r.edytowany_panel) + ' — chroniony przed importem' : '']
           .filter(Boolean).join(' · ')
         : '';
@@ -448,6 +467,8 @@
     async function load() {
       try { dane = await pobierzWszystko(); }
       catch (e) { console.error(e); toast('Błąd ładowania bazy (czy uruchomiono supabase_baza_email.sql?)', 'error'); return; }
+      msLista.setOptions([...LISTY, ...new Set(dane.flatMap(LISTY_OF))].filter((v, i, a) => a.indexOf(v) === i)
+        .map(v => ({ value: v, count: dane.filter(r => LISTY_OF(r).includes(v)).length })));
       msPochodzenie.setOptions(pary(dane.map(r => r.pochodzenie)));
       msGrupa.setOptions(pary(dane.map(GRUPA_OF)));
       msRodzaj.setOptions(pary(dane.map(r => r.rodzaj)));
@@ -458,13 +479,14 @@
     (async () => {
       if (!await requireAuth()) return;
       const przefiltruj = () => { strona = 1; render(); };
+      msLista       = multiSelect('msLista', 'Lista', przefiltruj);
       msPochodzenie = multiSelect('msPochodzenie', 'Pochodzenie', przefiltruj);
       msGrupa       = multiSelect('msGrupa', 'Grupa', przefiltruj);
       msRodzaj      = multiSelect('msRodzaj', 'Rodzaj/branża', przefiltruj);
       document.getElementById('szukaj').addEventListener('input', przefiltruj);
       ['fStatus', 'fDane', 'fEdyt', 'pagRozmiar'].forEach(id => document.getElementById(id).addEventListener('change', przefiltruj));
       document.getElementById('btnClear').addEventListener('click', () => {
-        msPochodzenie.clear(); msGrupa.clear(); msRodzaj.clear();
+        msLista.clear(); msPochodzenie.clear(); msGrupa.clear(); msRodzaj.clear();
         ['szukaj', 'fStatus', 'fDane', 'fEdyt'].forEach(id => document.getElementById(id).value = '');
         przefiltruj();
       });
@@ -477,9 +499,9 @@
       document.getElementById('btnCsv').addEventListener('click', () => {
         const rows = filtruj();
         if (!rows.length) { toast('Brak danych do eksportu'); return; }
-        exportCSV(rows.map(r => ({ ...r, status: STATUS[r.status] || r.status,
+        exportCSV(rows.map(r => ({ ...r, status: STATUS[r.status] || r.status, listy: LISTY_OF(r).join(', '),
                                    edytowany_panel: r.edytowany_panel ? fmtDate(r.edytowany_panel) : '' })), [
-          { key:'email', label:'E-mail' }, { key:'email2', label:'E-mail 2' }, { key:'email3', label:'E-mail 3' }, { key:'pochodzenie', label:'Pochodzenie' }, { key:'grupa', label:'Grupa' },
+          { key:'email', label:'E-mail' }, { key:'email2', label:'E-mail 2' }, { key:'email3', label:'E-mail 3' }, { key:'listy', label:'Listy' }, { key:'pochodzenie', label:'Pochodzenie' }, { key:'grupa', label:'Grupa' },
           { key:'rodzaj', label:'Rodzaj/branża' }, { key:'firma', label:'Firma / instytucja' }, { key:'adres', label:'Adres' },
           { key:'nip', label:'NIP' }, { key:'telefon', label:'Telefon' }, { key:'osoba', label:'Osoba kontaktowa' },
           { key:'stanowisko', label:'Stanowisko' }, { key:'www', label:'WWW' }, { key:'pewnosc', label:'Pewność' },
@@ -496,6 +518,7 @@
         if (!odb.length) { toast('Brak aktywnych odbiorców w bieżącym filtrze'); return; }
         if (odb.length > 200) { toast(`Za dużo odbiorców (${odb.length}). Zawęź filtr do maks. 200 adresów — masowe wysyłki rób w MailerLite.`, 'error', 7000); return; }
         const opisy = [];
+        if (msLista.size()) opisy.push('lista: <strong>' + esc(msLista.values().join(', ')) + '</strong>');
         if (msPochodzenie.size()) opisy.push('źródło: <strong>' + esc(msPochodzenie.values().join(', ')) + '</strong>');
         if (msGrupa.size()) opisy.push('grupa: <strong>' + esc(msGrupa.values().join(', ')) + '</strong>');
         if (msRodzaj.size()) opisy.push('branża: <strong>' + esc(msRodzaj.values().join(', ')) + '</strong>');
@@ -510,6 +533,7 @@
         if (!odb.length) { toast('Brak aktywnych odbiorców w bieżącym filtrze'); return; }
 
         const czesci = [];
+        if (msLista.size())       czesci.push('lista: ' + msLista.values().join(', '));
         if (msPochodzenie.size()) czesci.push('źródło: ' + msPochodzenie.values().join(', '));
         if (msGrupa.size())       czesci.push('grupa: ' + msGrupa.values().join(', '));
         if (msRodzaj.size())      czesci.push('branża: ' + msRodzaj.values().join(', '));
