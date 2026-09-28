@@ -72,7 +72,7 @@ Skrypty są **idempotentne** — można powtórzyć (np. po aktualizacji treści
 
 ## Dane GIG (z mirrora)
 - Geodezyjna Izba Gospodarcza, ul. Czackiego 3/5, 00-043 Warszawa
-- tel. 22 827 38 43 · biuro@gig.org.pl · NIP 525-20-34-024 · REGON 010753536
+- tel. 22 827 38 43 · biuro@gig.org.pl · KRS 0000090356 · NIP 525-20-34-024 · REGON 010753536
 - Menu: O nas / Baza wiedzy (Aktualności, Artykuły, Biuletyn) / Szkolenia / Dołącz do nas / Kontakt
 
 ## ⚠️ Konfiguracja Supabase

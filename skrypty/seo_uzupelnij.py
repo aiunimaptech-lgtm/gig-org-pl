@@ -116,7 +116,7 @@ def main():
                 {'@type': 'Organization', '@id': SITE + '/#organizacja', 'name': 'Geodezyjna Izba Gospodarcza', 'alternateName': 'GIG',
                  'url': SITE + '/', 'logo': SITE + '/_assets/img/gig-logo-email.png', 'image': OG_DOMYSLNY,
                  'description': OPISY[''][0], 'foundingDate': '1994', 'slogan': 'Silni wiedzą, zjednoczeni działaniem',
-                 'email': 'biuro@gig.org.pl', 'telephone': '+48 22 827 38 43', 'taxID': '5252034024', 'identifier': 'REGON 010753536',
+                 'email': 'biuro@gig.org.pl', 'telephone': '+48 22 827 38 43', 'taxID': '5252034024', 'identifier': ['KRS 0000090356', 'REGON 010753536'],
                  'address': {'@type': 'PostalAddress', 'streetAddress': 'ul. Czackiego 3/5', 'postalCode': '00-043', 'addressLocality': 'Warszawa', 'addressCountry': 'PL'},
                  'areaServed': 'PL', 'knowsAbout': ['geodezja', 'prawo geodezyjne i kartograficzne', 'ewidencja gruntów i budynków', 'GESUT', 'granice nieruchomości', 'szkolenia geodezyjne'],
                  'sameAs': ['https://www.facebook.com/gigorgpl', 'https://www.linkedin.com/company/gig-geodezyjna-izba-gospodarcza']},
