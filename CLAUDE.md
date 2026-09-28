@@ -42,6 +42,20 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   powiadomienie do GIG (`Reply-To` = zgłaszający) i potwierdzenie do zgłaszającego.
   Definicje triggerów: `backend/supabase_webhooki_maile.sql`, `backend/supabase_zapisy.sql`.
 
+## SEO, agenci AI i prerender (od 28.09.2026)
+- **Treść z bazy jest też w HTML-u**: `skrypty/prerender.mjs` zapisuje szkolenia, katalog Członków,
+  najnowsze wpisy i pełne strony `/wpis/<slug>/` (z JSON-LD), a także `sitemap.xml` i `llms.txt`.
+  Pisze tylko między znacznikami `<!--PRERENDER:…-->`; wszystko albo nic (awaria bazy = brak zmian).
+  Skrypty w przeglądarce dalej odświeżają treść; przy awarii bazy zostawiają wersję z HTML-a.
+- **Automat**: `.github/workflows/prerender.yml` co godzinę (i ręcznie: `gh workflow run prerender.yml`);
+  commit tylko przy zmianie treści. **Przed `git push` zawsze `git pull --rebase`**, bo bot też commituje.
+- Mapę strony generuje teraz prerender (dawne `gen_sitemap.py` nie uruchamiaj, nadpisałby wpisy).
+- `skrypty/seo_uzupelnij.py`: opisy meta, Open Graph, ukryty H1 i JSON-LD na stronach z mapy
+  (idempotentny; uruchom po dodaniu nowej strony statycznej). `skrypty/wydajnosc_porzadki.py`:
+  usuwa martwe Turnstile/CF7 z kopii WP. Test robotów: `gh workflow run sprawdz-roboty.yml`.
+- Zbyt wiele szybkich zapytań z jednego IP (testy curl) włącza „Vercel Security Checkpoint” (403)
+  tylko dla tego adresu; prawdziwe roboty z innych IP dostają 200.
+
 ## Jak powstał mirror (skrypty w `skrypty/`, POZA deployem)
 1. `crawl.py` — pobrał strony + zasoby, zlokalizował URL-e (root-relative), zachował strukturę.
 2. `clean.py` — usunął cruft WP (emoji, oEmbed, REST, generator), ustawił canonical, wstrzyknął `forms_integration.js`.

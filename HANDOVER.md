@@ -466,6 +466,16 @@ sprawdź w biurze, czy ktoś nie loguje się do poczty przez `webmail.gig.org.pl
 
 ## 2. Pułapki — przeczytaj, zanim stracisz na nie godzinę
 
+### Bot prerendera commituje co godzinę: najpierw `git pull --rebase`
+`.github/workflows/prerender.yml` zapisuje treść z bazy do HTML (szkolenia, członkowie, wpisy,
+sitemap, llms.txt). Commit tylko przy zmianie. Lokalne zmiany w tych plikach mogą kolidować z
+blokami `<!--PRERENDER:…-->`: edytuj poza znacznikami, a przed pushem pobierz zmiany bota.
+Style kalendarza szkoleń są w `_assets/css/gig-szkolenia.css` ORAZ wstrzykiwane przez
+`szkolenia-render.js`: zmieniając wygląd kart, popraw oba miejsca.
+Elementor w kopii WP próbuje doczytać pliki, których nie skopiowano (`*.bundle.min.js` → 403,
+„ChunkLoadError” w konsoli). To stary problem, nie wpływa na treść; naprawa wymaga plików
+z tej samej wersji wtyczki Elementor.
+
 **Jest konektor MCP do Supabase w Claude Code** (projekt `zlepwzeyjwpmhyxfnime`): `execute_sql`,
 `list_tables`, `get_edge_function`, `deploy_edge_function`, `apply_migration`. Zapytania SQL,
 podgląd wdrożonego kodu funkcji i wdrożenie nowej wersji idą **bez panelu Supabase i bez schowka**
