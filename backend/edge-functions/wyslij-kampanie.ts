@@ -147,11 +147,11 @@ Deno.serve(async (req) => {
   }
 
   const ile = Math.min(porcja, dzisiajZostalo);
-  const { data: odbiorcy, error: oErr } = await admin.from("wysylki_odbiorcy")
+  const { data: kolejka, error: oErr } = await admin.from("wysylki_odbiorcy")
     .select("id,email,baza_email_id,newsletter_id").eq("wysylka_id", wysylkaId).eq("status", "czeka").limit(ile);
   if (oErr) return json({ error: "blad odczytu kolejki: " + oErr.message }, 500);
 
-  if (!odbiorcy || odbiorcy.length === 0) {
+  if (!kolejka || kolejka.length === 0) {
     await admin.from("wysylki").update({ status: "zakonczona", updated_at: new Date().toISOString() }).eq("id", wysylkaId);
     return json({ ok: true, wyslane: 0, bledy: 0, zostalo: 0, dzisiaj_zostalo: dzisiajZostalo, status: "zakonczona" });
   }
@@ -160,10 +160,33 @@ Deno.serve(async (req) => {
     await admin.from("wysylki").update({ status: "w_toku", updated_at: new Date().toISOString() }).eq("id", wysylkaId);
   }
 
+  /* Adres mogl zostac wypisany albo odbic sie juz po zbudowaniu kolejki
+     (link wypisu, webhook Resend -> resend-webhook). Sprawdzamy stan tuz przed wysylka. */
+  const nieaktywne = new Set<string>();
+  const bazaIds = kolejka.map((r) => r.baza_email_id as string).filter(Boolean);
+  for (let i = 0; i < bazaIds.length; i += 150) {
+    const { data: st } = await admin.from("baza_email").select("id,status,usuniety_panel").in("id", bazaIds.slice(i, i + 150));
+    for (const r of st ?? []) if ((r.status && r.status !== "active") || r.usuniety_panel) nieaktywne.add("b:" + r.id);
+  }
+  const nlIds = kolejka.map((r) => r.newsletter_id as string).filter(Boolean);
+  for (let i = 0; i < nlIds.length; i += 150) {
+    const { data: st } = await admin.from("submissions_newsletter").select("id,status").in("id", nlIds.slice(i, i + 150));
+    for (const r of st ?? []) if (r.status === "unsubscribed") nieaktywne.add("n:" + r.id);
+  }
+  const pomin = (r: Record<string, unknown>) =>
+    (r.baza_email_id && nieaktywne.has("b:" + r.baza_email_id)) || (r.newsletter_id && nieaktywne.has("n:" + r.newsletter_id));
+  const pominiete = kolejka.filter(pomin);
+  if (pominiete.length) {
+    await admin.from("wysylki_odbiorcy").update({ status: "blad", blad: "pominiety: adres wypisany lub odbity" }).in("id", pominiete.map((r) => r.id as string));
+  }
+  const odbiorcy = kolejka.filter((r) => !pomin(r));
+  // Reply-To z kampanii (panel: Edytuj -> „Odpowiedzi na adres”), inaczej REPLY_TO_EMAIL
+  const replyTo = (kampania.reply_to && String(kampania.reply_to).trim()) || REPLY_TO;
+
   const tresc = oczyscHtml(String(kampania.html ?? ""));
   const temat = String(kampania.temat ?? "").trim();
   const rodzaj = kampania.rodzaj === "newsletter" ? "newsletter" : "baza";
-  let wyslane = 0, bledy = 0;
+  let wyslane = 0, bledy = pominiete.length;
 
   for (let i = 0; i < odbiorcy.length; i += BATCH) {
     const paczka = odbiorcy.slice(i, i + BATCH);
@@ -189,7 +212,7 @@ Deno.serve(async (req) => {
         from: FROM_EMAIL,
         to: [r.email as string],
         subject: temat,
-        reply_to: REPLY_TO,
+        reply_to: replyTo,
         headers: naglowki,
         html: layout(temat, tresc, wypis, rodzaj),
       };
@@ -224,6 +247,6 @@ Deno.serve(async (req) => {
   const nowyStatus = zostalo === 0 ? "zakonczona" : "w_toku";
   await admin.from("wysylki").update({ status: nowyStatus, updated_at: new Date().toISOString() }).eq("id", wysylkaId);
 
-  console.log(`wyslij-kampanie: ${u.user.email} kampania=${wysylkaId} wyslane=${wyslane} bledy=${bledy} zostalo=${zostalo}`);
-  return json({ ok: true, wyslane, bledy, zostalo, dzisiaj_zostalo: Math.max(0, dzisiajZostalo - wyslane), status: nowyStatus });
+  console.log(`wyslij-kampanie: ${u.user.email} kampania=${wysylkaId} wyslane=${wyslane} bledy=${bledy} (pominiete=${pominiete.length}) zostalo=${zostalo}`);
+  return json({ ok: true, wyslane, bledy, pominiete: pominiete.length, zostalo, dzisiaj_zostalo: Math.max(0, dzisiajZostalo - wyslane), status: nowyStatus });
 });

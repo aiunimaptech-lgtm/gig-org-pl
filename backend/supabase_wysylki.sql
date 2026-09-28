@@ -99,3 +99,11 @@ create or replace view public.wysylki_postep with (security_invoker = true) as
    FROM wysylki w
      LEFT JOIN wysylki_odbiorcy o ON o.wysylka_id = w.id
   GROUP BY w.id;
+
+-- ── Odbicia i skargi z Resend (28.09.2026) ──────────────────────────────
+-- Webhook Resend -> Edge Function resend-webhook?t=<private.gig_sekrety 'resend_webhook'>
+-- -> gig_mail_zdarzenie(): twarde odbicie = baza_email.status 'bounced', skarga = 'unsubscribed',
+-- kolejki kampanii pomijają adres; każde zdarzenie w maile_zdarzenia (panel: Wysyłki).
+-- Pełna definicja: migracje maile_zdarzenia_resend i resend_webhook_token_fn w Supabase.
+-- Reply-To kampanii: wysylki.reply_to (null = REPLY_TO_EMAIL, czyli biuro@gig.org.pl).
+alter table public.wysylki add column if not exists reply_to text;

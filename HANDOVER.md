@@ -826,6 +826,15 @@ zapytania (np. ponowna próba dla błędów): `backend/supabase_wysylki.sql`.
 Plan Resend: płatny ($20/mies., 50 tys./mies., bez dziennego limitu); na Free (100/dobę)
 kampania do 3,8 tys. adresów szłaby ponad miesiąc.
 
+**Odbicia (od 28.09.2026):** Return-Path to `send.gig.org.pl` (MX Resend), więc odbicia NIE trafiają na
+biuro@. Resend zgłasza je webhookiem do Edge Function `resend-webhook?t=<token>` (token w
+`private.gig_sekrety` klucz `resend_webhook`; opcjonalnie sekret `RESEND_WEBHOOK_SECRET` = podpis Svix).
+Funkcja SQL `gig_mail_zdarzenie`: twarde odbicie → `baza_email.status='bounced'`, skarga → `'unsubscribed'`,
+kolejki kampanii pomijają adres; log w `maile_zdarzenia` (panel Wysyłki, karta „Odbicia i zgłoszenia spamu”).
+`wyslij-kampanie` v6 sprawdza status adresu tuż przed każdą paczką. Reply-To kampanii: `wysylki.reply_to`.
+**Webhook trzeba dodać w panelu Resend** (Webhooks → Add endpoint, zdarzenia: bounced, complained,
+failed, delivery_delayed).
+
 **Rezygnacja z maili (unsubscribe):** wysyłki `rodzaj:'baza'` dostają w stopce link „Wypisz się" →
 Edge Function `baza-wypis?id=<uuid wiersza>` (verify_jwt=false), która ustawia `status='unsubscribed'`
 i pokazuje stronę potwierdzenia. `id` bierze się z `baza_email` (panel przekazuje je w `recipients`).

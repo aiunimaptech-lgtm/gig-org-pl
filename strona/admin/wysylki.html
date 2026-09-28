@@ -106,6 +106,21 @@
             </table>
           </div>
         </div></div>
+
+        <!-- Zdarzenia z Resend (webhook resend-webhook): odbicia, skargi, opóźnienia -->
+        <div class="card" style="margin-top:18px;"><div class="card-body">
+          <div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:10px;">
+            <h3 style="margin:0;font-size:17px;">Odbicia i zgłoszenia spamu</h3>
+            <div class="wy-sub" id="zdPodsum"></div>
+          </div>
+          <div class="wy-sub" style="margin-bottom:12px;">Resend zgłasza je automatycznie. Adres odbity na stałe dostaje w Bazie e-mail status „odbity”, zgłaszający spam „wypisany”; obie grupy wypadają z kolejnych wysyłek.</div>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead><tr><th>Kiedy</th><th>Adres</th><th>Zdarzenie</th><th>Powód</th><th>Co zrobiono</th></tr></thead>
+              <tbody id="zdRows"><tr><td colspan="5" style="text-align:center;padding:18px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table>
+          </div>
+        </div></div>
       </main>
     </div>
   </div>
@@ -134,6 +149,9 @@
         <div class="ed-uwaga" id="edUwaga" hidden></div>
         <div class="form-group"><label>Temat (jest też nagłówkiem w treści maila)</label>
           <input type="text" id="edTemat" class="form-control" maxlength="200"></div>
+        <div class="form-group"><label>Odpowiedzi na adres (Reply-To)</label>
+          <input type="email" id="edReplyTo" class="form-control" placeholder="biuro@gig.org.pl (domyślnie)">
+          <div class="wy-sub" style="margin-top:4px;">Tu trafią odpowiedzi odbiorców i autoodpowiedzi („jestem na urlopie”). Odbicia („adres nie istnieje”) i tak trafiają do Resend, nie do skrzynki.</div></div>
         <div class="form-group" style="margin-bottom:0;"><label>Treść</label>
           <div class="ed-bar" id="edBar">
             <button type="button" data-cmd="bold" title="Pogrubienie"><b>B</b></button>
@@ -222,6 +240,25 @@
       if (error) { console.error(error); toast('Błąd ładowania kampanii', 'error'); return; }
       dane = data || [];
       render();
+      zdarzenia();
+    }
+
+    const ZD_TYP = { 'email.bounced': 'odbicie', 'email.complained': 'zgłoszenie spamu', 'email.failed': 'błąd wysyłki', 'email.delivery_delayed': 'opóźnienie' };
+    async function zdarzenia() {
+      const tb = document.getElementById('zdRows');
+      const { data, error } = await db.from('maile_zdarzenia').select('created_at,typ,rodzaj_odbicia,email,opis,skutek').order('created_at', { ascending: false }).limit(200);
+      if (error) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:18px;color:#6b7f84;">Brak dostępu do zdarzeń.</td></tr>'; return; }
+      const z = data || [];
+      const twarde = z.filter(r => r.typ === 'email.bounced' && r.rodzaj_odbicia === 'Permanent').length;
+      const spam = z.filter(r => r.typ === 'email.complained').length;
+      document.getElementById('zdPodsum').textContent = z.length ? `ostatnie ${z.length}: odbite na stałe ${twarde}, spam ${spam}` : '';
+      if (!z.length) { tb.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:18px;color:#6b7f84;">Na razie brak odbić i zgłoszeń.</td></tr>'; return; }
+      tb.innerHTML = z.map(r => `<tr>
+        <td style="white-space:nowrap;">${esc(fmtDate(r.created_at))}</td>
+        <td>${esc(r.email || '—')}</td>
+        <td>${esc(ZD_TYP[r.typ] || r.typ)}${r.rodzaj_odbicia ? `<div class="wy-sub">${r.rodzaj_odbicia === 'Permanent' ? 'na stałe' : r.rodzaj_odbicia === 'Transient' ? 'chwilowe' : esc(r.rodzaj_odbicia)}</div>` : ''}</td>
+        <td style="max-width:320px;" class="wy-sub">${esc(r.opis || '')}</td>
+        <td class="wy-sub">${esc(r.skutek || '')}</td></tr>`).join('');
     }
 
     function render() {
@@ -383,9 +420,10 @@
     }
     async function edytuj(id) {
       const k = dane.find(x => x.id === id);
-      const { data, error } = await db.from('wysylki').select('temat,html').eq('id', id).maybeSingle();
+      const { data, error } = await db.from('wysylki').select('temat,html,reply_to').eq('id', id).maybeSingle();
       if (error || !data) { toast('Błąd odczytu kampanii', 'error'); return; }
       document.getElementById('edId').value = id;
+      document.getElementById('edReplyTo').value = data.reply_to || '';
       document.getElementById('edTemat').value = data.temat || '';
       edTrybHtml = true; edHtml.value = data.html || ''; edUstawTryb(false);
       const uw = document.getElementById('edUwaga');
@@ -433,8 +471,10 @@
       const html = (edTrybHtml ? edHtml.value : edTresc.innerHTML).trim();
       if (!temat) { toast('Podaj temat', 'error'); return; }
       if (!html.replace(/<[^>]*>|&nbsp;|\s/g, '')) { toast('Treść jest pusta', 'error'); return; }
+      const reply_to = document.getElementById('edReplyTo').value.trim().toLowerCase() || null;
+      if (reply_to && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(reply_to)) { toast('Niepoprawny adres do odpowiedzi', 'error'); return; }
       const btn = document.getElementById('edZapisz'); btn.disabled = true;
-      const { error } = await db.from('wysylki').update({ temat, html, updated_at: new Date().toISOString() }).eq('id', id);
+      const { error } = await db.from('wysylki').update({ temat, html, reply_to, updated_at: new Date().toISOString() }).eq('id', id);
       btn.disabled = false;
       if (error) { console.error(error); toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
       toast('Zapisano zmiany', 'success'); closeModal('edModal'); load();
