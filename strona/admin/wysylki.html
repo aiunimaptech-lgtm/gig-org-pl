@@ -31,6 +31,12 @@
     #edTresc{min-height:340px;max-height:58vh;overflow:auto;border:1px solid #d8e0e7;border-radius:0 0 8px 8px;padding:16px 20px;font-size:15px;line-height:1.65;color:#38444e;outline:none;}
     #edTresc:focus{border-color:#9aa7b2;}
     #edHtml{display:none;width:100%;min-height:340px;max-height:58vh;border:1px solid #d8e0e7;border-radius:0 0 8px 8px;padding:12px;font:12.5px/1.5 Consolas,monospace;box-sizing:border-box;}
+    #adTekst{width:100%;min-height:170px;font:13px/1.5 Consolas,monospace;box-sizing:border-box;}
+    .ad-info{font-size:13px;color:var(--text-muted);margin-top:6px;min-height:18px;}
+    .ad-info b{color:#16202a;}
+    .ad-tryb label{display:flex;gap:8px;align-items:flex-start;font-weight:600;font-size:14px;margin:6px 0;cursor:pointer;}
+    .ad-tryb small{display:block;font-weight:400;color:var(--text-muted);}
+    .ad-wynik{background:#e6f5ec;border:1px solid #bfe3cc;color:#1d5a36;border-radius:8px;padding:10px 14px;font-size:13.5px;line-height:1.6;margin-top:12px;}
     .ed-uwaga{background:#fff8e6;border:1px solid #f3e0b5;color:#7a5b12;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px;}
   </style>
 </head>
@@ -153,6 +159,31 @@
     </div>
   </div>
 
+  <!-- MODAL: adresy wpisane ręcznie -->
+  <div class="modal-overlay" id="adModal">
+    <div class="modal-box" style="max-width:640px;">
+      <div class="modal-header">
+        <div class="modal-title" id="adTytul">Dodaj adresy</div>
+        <button class="modal-close" data-modal-close="adModal">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="adId">
+        <div class="form-group"><label>Adresy e-mail</label>
+          <textarea id="adTekst" class="form-control" placeholder="Wklej lub wpisz adresy: jeden pod drugim, po przecinku albo średniku. Mogą być też w formie „Jan Kowalski &lt;jan@firma.pl&gt;”."></textarea>
+          <div class="ad-info" id="adInfo"></div></div>
+        <div class="form-group ad-tryb" style="margin-bottom:0;">
+          <label><input type="radio" name="adTryb" value="dopisz" checked><span>Dopisz do tej kampanii<small>Adresy trafią do kolejki razem z dotychczasowymi odbiorcami.</small></span></label>
+          <label><input type="radio" name="adTryb" value="nowa"><span>Osobna kampania tylko do tych adresów<small>Kopia tej samej treści, z własną kolejką. Dotychczasowi odbiorcy bez zmian.</small></span></label>
+        </div>
+        <div class="ad-wynik" id="adWynik" hidden></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-modal-close="adModal">Zamknij</button>
+        <button class="btn btn-primary" id="adDodaj">Dodaj adresy</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/_assets/js/gig-config.js"></script>
   <script src="/admin/_admin.js"></script>
@@ -198,6 +229,7 @@
             ${k.status === 'w_toku' || k.status === 'robocza' ? `<button class="btn btn-outline btn-xs" data-pauza="${k.id}">⏸ Wstrzymaj</button>` : ''}
             ${k.status === 'wstrzymana' ? `<button class="btn btn-outline btn-xs" data-wznow="${k.id}">▶ Wznów</button>` : ''}
             ${k.status !== 'zakonczona' ? `<button class="btn btn-outline btn-xs" data-edytuj="${k.id}" title="Zmień temat i treść">✎ Edytuj</button>` : ''}
+            <button class="btn btn-outline btn-xs" data-adresy="${k.id}" title="Wpisz adresy ręcznie: trafią do kolejki i do Bazy e-mail">+ Adresy</button>
             <button class="btn btn-outline btn-xs" data-test="${k.id}" title="Wyślij tę treść na jeden adres, bez ruszania kolejki">✉ Test</button>
             <button class="btn btn-ghost btn-xs" data-podglad="${k.id}">👁</button>
             <button class="btn btn-danger btn-xs" data-usun="${k.id}">🗑</button>
@@ -210,6 +242,7 @@
       tb.querySelectorAll('[data-wznow]').forEach(b => b.addEventListener('click', () => zmienStatus(b.dataset.wznow, 'w_toku')));
       tb.querySelectorAll('[data-podglad]').forEach(b => b.addEventListener('click', () => podglad(b.dataset.podglad)));
       tb.querySelectorAll('[data-edytuj]').forEach(b => b.addEventListener('click', () => edytuj(b.dataset.edytuj)));
+      tb.querySelectorAll('[data-adresy]').forEach(b => b.addEventListener('click', () => adOtworz(b.dataset.adresy)));
       tb.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => wyslijTest(b.dataset.test, b)));
       tb.querySelectorAll('[data-usun]').forEach(b => b.addEventListener('click', () => usun(b.dataset.usun)));
       tb.querySelectorAll('[data-limit]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); zmienLimit(a.dataset.limit); }));
@@ -338,6 +371,125 @@
       btn.disabled = false;
       if (error) { console.error(error); toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
       toast('Zapisano zmiany', 'success'); closeModal('edModal'); load();
+    });
+
+    /* ── adresy wpisane ręcznie ──
+       Każdy adres ląduje w Bazie e-mail (pochodzenie „ręcznie”, chroniony przed importem)
+       i w kolejce kampanii. Wypisanych i odbitych nie dodajemy do kolejki: to ich decyzja
+       albo martwa skrzynka. Adres usunięty wcześniej w panelu wraca, bo wpisano go celowo. */
+    const AD_RE = /[a-z0-9._%+'-]+@[a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,}/gi;
+    function adParsuj(t) {
+      const ok = [...new Set((t.match(AD_RE) || []).map(e => e.toLowerCase().replace(/^[.'-]+|[.'-]+$/g, '')))];
+      /* fragmenty z „@”, których nie da się odczytać jako adresu: pokazujemy do poprawki */
+      const zle = t.split(/[\s,;<>()"]+/).filter(x => x.includes('@') && !(x.match(AD_RE) || []).length);
+      return { ok, zle };
+    }
+    function adPokazInfo() {
+      const { ok, zle } = adParsuj(document.getElementById('adTekst').value);
+      document.getElementById('adInfo').innerHTML = ok.length || zle.length
+        ? `Rozpoznane adresy: <b>${ok.length}</b>` + (zle.length ? ` · nie do odczytania: <span style="color:#b3261e;">${zle.map(esc).join(', ')}</span>` : '')
+        : '';
+    }
+    document.getElementById('adTekst').addEventListener('input', adPokazInfo);
+    function adOtworz(id) {
+      const k = dane.find(x => x.id === id); if (!k) return;
+      document.getElementById('adId').value = id;
+      document.getElementById('adTytul').textContent = 'Dodaj adresy: ' + k.temat;
+      document.getElementById('adTekst').value = '';
+      document.querySelector('input[name="adTryb"][value="dopisz"]').checked = true;
+      document.getElementById('adWynik').hidden = true;
+      document.getElementById('adDodaj').disabled = false;
+      adPokazInfo();
+      openModal('adModal');
+      setTimeout(() => document.getElementById('adTekst').focus(), 50);
+    }
+    async function adIstniejace(emaile) {
+      const out = [];
+      for (let i = 0; i < emaile.length; i += 80) {
+        const lista = emaile.slice(i, i + 80).map(e => '"' + e.replace(/"/g, '') + '"').join(',');
+        const { data, error } = await db.from('baza_email').select('id,email,email2,email3,status,usuniety_panel')
+          .or(`email.in.(${lista}),email2.in.(${lista}),email3.in.(${lista})`);
+        if (error) throw error;
+        out.push(...(data || []));
+      }
+      return out;
+    }
+    document.getElementById('adDodaj').addEventListener('click', async () => {
+      const id = document.getElementById('adId').value;
+      const k = dane.find(x => x.id === id); if (!k) return;
+      const { ok: emaile, zle } = adParsuj(document.getElementById('adTekst').value);
+      if (!emaile.length) { toast('Nie rozpoznano żadnego adresu e-mail', 'error'); return; }
+      if (zle.length && !confirm(`Części wpisów nie da się odczytać jako adres:\n${zle.join('\n')}\n\nDodać tylko ${emaile.length} poprawnych adresów?`)) return;
+      const nowa = document.querySelector('input[name="adTryb"]:checked').value === 'nowa';
+      if (!confirm(nowa
+        ? `Utworzyć osobną kampanię „${k.temat}” dla ${emaile.length} adresów?\n\nNic nie zostanie wysłane, dopóki nie klikniesz „▶ Wyślij”.`
+        : `Dopisać ${emaile.length} adresów do kampanii „${k.temat}”?\n\nNic nie zostanie wysłane, dopóki nie klikniesz „▶ Wyślij”.`)) return;
+
+      const btn = document.getElementById('adDodaj'); btn.disabled = true;
+      try {
+        const teraz = new Date().toISOString();
+        const znane = await adIstniejace(emaile);
+        const wiersz = e => znane.find(r => [r.email, r.email2, r.email3].some(x => (x || '').toLowerCase() === e));
+        const pominiete = [], przywrocone = [], doKolejki = [];
+        const nowe = emaile.filter(e => !wiersz(e));
+        for (const e of emaile) {
+          const r = wiersz(e); if (!r) continue;
+          if (r.status && r.status !== 'active') { pominiete.push(`${e} (${r.status === 'unsubscribed' ? 'wypisany' : 'odbity'})`); continue; }
+          if (r.usuniety_panel) {
+            const { error } = await db.from('baza_email').update({ usuniety_panel: null, edytowany_panel: teraz, updated_at: teraz }).eq('id', r.id);
+            if (error) throw error;
+            przywrocone.push(e);
+          }
+          doKolejki.push({ email: e, baza_email_id: r.id });
+        }
+        if (nowe.length) {
+          const { data, error } = await db.from('baza_email').insert(nowe.map(e => ({
+            email: e, pochodzenie: 'ręcznie', status: 'active', edytowany_panel: teraz,
+            zrodlo: 'wpisany w Wysyłkach do kampanii „' + k.temat + '”' }))).select('id,email');
+          if (error) throw error;
+          (data || []).forEach(r => doKolejki.push({ email: r.email, baza_email_id: r.id }));
+        }
+
+        let celId = id;
+        if (nowa) {
+          const { data: zrodlo, error: e0 } = await db.from('wysylki').select('temat,html,rodzaj,limit_dzienny').eq('id', id).single();
+          if (e0) throw e0;
+          const sesja = await getSession();
+          const { data: kamp, error: e1 } = await db.from('wysylki').insert({
+            temat: zrodlo.temat, html: zrodlo.html, rodzaj: zrodlo.rodzaj, limit_dzienny: zrodlo.limit_dzienny,
+            status: 'robocza', opis_filtra: 'adresy wpisane ręcznie',
+            utworzyl: sesja && sesja.user ? sesja.user.email : null }).select('id').single();
+          if (e1) throw e1;
+          celId = kamp.id;
+        }
+        const { data: juz, error: e2 } = await db.from('wysylki_odbiorcy').select('email').eq('wysylka_id', celId);
+        if (e2) throw e2;
+        const byly = new Set((juz || []).map(r => (r.email || '').toLowerCase()));
+        const dodawane = doKolejki.filter(o => !byly.has(o.email));
+        for (let i = 0; i < dodawane.length; i += 500) {
+          const { error } = await db.from('wysylki_odbiorcy')
+            .insert(dodawane.slice(i, i + 500).map(o => ({ wysylka_id: celId, email: o.email, baza_email_id: o.baza_email_id })));
+          if (error) throw error;
+        }
+
+        const w = document.getElementById('adWynik');
+        w.innerHTML = [
+          `<strong>${nowa ? 'Utworzono osobną kampanię.' : 'Gotowe.'}</strong> Dodano do kolejki: <strong>${dodawane.length}</strong>.`,
+          `Nowe adresy w Bazie e-mail (pochodzenie „ręcznie”): <strong>${nowe.length}</strong>.`,
+          doKolejki.length - dodawane.length ? `Już były w kolejce: ${doKolejki.length - dodawane.length}.` : '',
+          przywrocone.length ? `Przywrócone w bazie (wcześniej usunięte): ${przywrocone.map(esc).join(', ')}.` : '',
+          pominiete.length ? `<span style="color:#b3261e;">Pominięte: ${pominiete.map(esc).join(', ')}.</span>` : '',
+          'Wysyłka ruszy dopiero po kliknięciu „▶ Wyślij”.',
+        ].filter(Boolean).join('<br>');
+        w.hidden = false;
+        document.getElementById('adTekst').value = ''; adPokazInfo();
+        toast('Dodano ' + dodawane.length + ' adresów', 'success');
+        load();
+      } catch (e) {
+        console.error(e);
+        toast('Nie udało się dodać adresów: ' + (e.message || e), 'error', 7000);
+      }
+      btn.disabled = false;
     });
 
     async function usun(id) {
