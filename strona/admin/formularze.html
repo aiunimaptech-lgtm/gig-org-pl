@@ -314,7 +314,7 @@
             const { data: kamp, error: e1 } = await db.from('wysylki').insert({
               temat, html, rodzaj: 'newsletter',
               opis_filtra: 'newsletter — ' + odbiorcy.length + ' adresów',
-              status: 'robocza', limit_dzienny: 100,
+              status: 'robocza', limit_dzienny: 250,
               utworzyl: sesja && sesja.user ? sesja.user.email : null
             }).select('id').single();
             if (e1) throw e1;

@@ -91,9 +91,10 @@
       <main class="admin-content">
         <div class="wy-info">
           <strong>Rozgrzewka domeny.</strong> Kampania wysyła się porcjami i nigdy nie przekroczy
-          <strong>limitu dziennego</strong>. Przy nowej domenie zacznij od ~200/dobę i zwiększaj co kilka dni
-          (200 → 500 → 1000 → 2000). Nagły strzał kilku tysięcy maili z „zimnej” domeny kończy się filtrem
-          spamu — i psuje też maile transakcyjne (potwierdzenia zapisów), bo idą z tej samej domeny.
+          <strong>limitu dziennego</strong>. Płatny plan Resend nie ma limitu dobowego (50 tys. maili miesięcznie),
+          ale domenę rozgrzewaj stopniowo: 250 → 500 → 1000 → 2000 na dobę co kilka dni. Nagły strzał kilku tysięcy
+          maili z „zimnej” domeny kończy się filtrem spamu i psuje też maile transakcyjne (potwierdzenia zapisów),
+          bo idą z tej samej domeny.
         </div>
 
         <div class="card"><div class="card-body">
@@ -258,7 +259,7 @@
 
     async function zmienLimit(id) {
       const k = dane.find(x => x.id === id); if (!k) return;
-      const v = prompt('Ile maksymalnie maili na dobę dla tej kampanii?\n\nDarmowy plan Resend to 100 maili na dobę — wyżej wysyłka i tak zacznie zwracać błędy.\nPo wykupieniu Resend Pro rozgrzewaj domenę stopniowo: 100 → 250 → 500 → 1000 → 2000 co kilka dni.', k.limit_dzienny);
+      const v = prompt('Ile maksymalnie maili na dobę dla tej kampanii?\n\nPłatny plan Resend: 50 tys. maili miesięcznie, bez limitu dobowego.\nDomenę rozgrzewaj stopniowo: 250 → 500 → 1000 → 2000 co kilka dni, żeby maile nie trafiały do spamu.', k.limit_dzienny);
       if (v === null) return;
       const n = parseInt(v, 10);
       if (!n || n < 1 || n > 20000) { toast('Podaj liczbę 1–20000', 'error'); return; }

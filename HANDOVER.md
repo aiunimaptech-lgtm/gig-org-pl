@@ -36,7 +36,7 @@ na szkolenie), `uchwala-wyslij` v2 i `glosuj` v2 (oba z obsługą etapu `opinia`
 
 **Otwarte zadania** (szczegóły w sekcji 3):
 1. `GIG_HOOK_TOKEN` w sekretach Supabase — brama `send-confirmation` czeka bezczynnie (punkt C).
-2. Resend Pro przed pierwszą masową kampanią (Free = 100 maili/dobę).
+2. ~~Resend Pro przed pierwszą masową kampanią~~ zrobione 28.09.2026 (plan płatny, 50 tys./mies.).
 3. Biuletyn nr 8 PDF — pliku nie ma nigdzie, musi dostarczyć GIG (punkt E).
 4. Opcjonalnie: RLS zawężone do listy adresów e-mail jako trzecia warstwa (punkt F).
 
@@ -815,11 +815,12 @@ Powstaje kampania i **kolejka** (jeden wiersz na adres, `UNIQUE(wysylka_id,email
 Wysyłka: zakładka **Wysyłki** → „▶ Wyślij" — panel woła Edge Function `wyslij-kampanie`
 w pętli; każde wywołanie bierze porcję (300), wysyła **batchem Resend po 100** i zapisuje status.
 Przerwanie niczego nie psuje — wznawia od miejsca przerwania, bez dubletów.
-**`limit_dzienny` (domyślnie 100) = rozgrzewka domeny** — funkcja nigdy nie wyśle dziś więcej.
-100 to zarazem limit darmowego Resend. Po wykupieniu Pro: 100 → 250 → 500 → 1000 → 2000 co kilka dni; nagły strzał tysięcy maili z „zimnej" domeny
+**`limit_dzienny` (domyślnie 250) = rozgrzewka domeny**: funkcja nigdy nie wyśle dziś więcej.
+Resend jest na planie płatnym od 28.09.2026 (bez limitu dobowego), ale domenę rozgrzewamy:
+250 → 500 → 1000 → 2000 co kilka dni; nagły strzał tysięcy maili z „zimnej" domeny
 to spam-filtr **i popsute maile transakcyjne** (idą z tej samej domeny). Schemat i przydatne
 zapytania (np. ponowna próba dla błędów): `backend/supabase_wysylki.sql`.
-**Wymaga Resend Pro** ($20/mies., 50 tys./mies., bez dziennego limitu) — na Free (100/dobę)
+Plan Resend: płatny ($20/mies., 50 tys./mies., bez dziennego limitu); na Free (100/dobę)
 kampania do 3,8 tys. adresów szłaby ponad miesiąc.
 
 **Rezygnacja z maili (unsubscribe):** wysyłki `rodzaj:'baza'` dostają w stopce link „Wypisz się" →
