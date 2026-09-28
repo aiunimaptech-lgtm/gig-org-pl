@@ -162,17 +162,35 @@ returns void language plpgsql security definer set search_path = public as $$
 declare
   osoba text;
   grupa text;
+  rodzaj text;
+  nazwa text := coalesce(z.nabywca_nazwa, '');
 begin
   -- osoba tylko przy zgłoszeniu jednej osoby; dopiski w nawiasach odcinamy
   if coalesce(z.liczba_osob, 1) = 1 then
     osoba := nullif(trim(regexp_replace(split_part(split_part(coalesce(z.uczestnicy, ''), E'\n', 1), ',', 1), '\s*\(.*$', '')), '');
   end if;
+  -- rodzaj/branża wg nazwy nabywcy (słownik z panelu Baza e-mail); miasto na prawach
+  -- powiatu wychodzi jako „urząd miasta/gminy”, PODGiK w mieście trzeba poprawić ręcznie
+  rodzaj := case
+    when nazwa ~* '(wojew[oó]dzki inspektor|wingik)' then 'WINGiK'
+    when nazwa ~* 'urz[aą]d wojew[oó]dzki' then 'urząd wojewódzki'
+    when nazwa ~* 'marsza[lł]kowsk' then 'urząd marszałkowski'
+    when nazwa ~* '(g[lł][oó]wny urz[aą]d geodezji|gugik)' then 'GUGiK'
+    when nazwa ~* '(powiat|starostwo|podgik)' then 'PODGiK'
+    when nazwa ~* '(gmina|miasto|urz[aą]d miasta|urz[aą]d gminy)' then 'urząd miasta/gminy'
+    when nazwa ~* '(uniwersytet|politechnika|akademia|uczelnia|\magh\M)' then 'uczelnia wyższa'
+    when nazwa ~* '(geodez|kartograf|geo)' then 'geodezja'
+    else null end;
   grupa := case
     when z.nabywca_jst then 'JST'
-    when z.nabywca_nazwa ~* '(urz[aą]d|starostwo|powiat|gmina|ministerstw|inspektorat|wojew[oó]dz)' then null
+    when rodzaj in ('WINGiK', 'urząd wojewódzki', 'GUGiK') then 'Administracja rządowa'
+    when rodzaj = 'uczelnia wyższa' then 'Nauka'
+    when nazwa ~* '(urz[aą]d|starostwo|powiat|gmina|ministerstw|inspektorat|wojew[oó]dz)' then null
     else 'Firma' end;
+  -- firma na szkoleniu Izby to w praktyce zawsze firma geodezyjna, także gdy nazwa tego nie mówi
+  if rodzaj is null and grupa = 'Firma' then rodzaj := 'geodezja'; end if;
   perform gig_baza_dopisz(z.email, 'Uczestnicy szkoleń', 'zapisy na szkolenia',
-    z.nabywca_nazwa, osoba, z.telefon, z.nabywca_adres, null, z.nabywca_nip, grupa, null);
+    z.nabywca_nazwa, osoba, z.telefon, z.nabywca_adres, null, z.nabywca_nip, grupa, rodzaj);
 end $$;
 
 create or replace function public.gig_zapisy_do_bazy()
