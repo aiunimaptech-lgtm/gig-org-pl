@@ -289,6 +289,31 @@ async function main() {
   }
   doZapisu.push(["baza-wiedzy/index.html", hb]);
 
+  // 3b) Listy Aktualności i Artykułów: wpisy z panelu na górze, jak robi artykuly-render.js
+  //     (klon pierwszej karty z WordPressa, oznaczony data-gig-src="db", żeby skrypt ich nie dublował)
+  const kartaListy = (tpl, d) => tpl
+    .replace(/^<article /, '<article data-gig-src="db" ')
+    .replace(/<a ([^>]*)>/g, (m, at) => /class="zoom/.test(at)
+      ? `<a ${at.replace(/href="[^"]*"/, `href="${esc(d.img)}"`)}>`
+      : `<a ${at.replace(/href="[^"]*"/, `href="${esc(d.href)}"`).replace(/\s*rel="[^"]*"/, "")}>`)
+    .replace(/<img ([^>]*?)\/?>/g, (m, at) => `<img ${at.replace(/\s*(srcset|sizes|width|height|loading)="[^"]*"/g, "")
+      .replace(/src="[^"]*"/, `src="${esc(d.img)}"`).replace(/alt="[^"]*"/, `alt="${esc(d.title)}"`)} loading="lazy"/>`)
+    .replace(/(<div class="date_label">)[^<]*(<\/div>)/, `$1${esc(d.date)}$2`)
+    .replace(/(<span class="post-date[^"]*">)[^<]*(<\/span>)/g, `$1${esc(d.date)}$2`)
+    .replace(/(<h[345] class="entry-title"[^>]*><a [^>]*>)[^<]*(<\/a>)/, `$1${esc(d.title)}$2`)
+    .replace(/(<div class="post-excerpt">)[\s\S]*?(<\/div>)/, `$1${esc(d.excerpt)} $2`);
+  const listy = [["aktualnosci/index.html", "aktualnosci"], ["baza-wiedzy/aktualnosci-gig/index.html", "aktualnosci"],
+    ["artykuly/index.html", "artykuly"], ["baza-wiedzy/artykuly/index.html", "artykuly"]];
+  for (const [rel, kat] of listy) {
+    let hl = await czytaj(rel);
+    const bezNaszych = hl.replace(/<!--PRERENDER:lista-->[\s\S]*?<!--\/PRERENDER:lista-->/, "");
+    const tpl = (bezNaszych.match(/<article[^>]*post-item[\s\S]*?<\/article>/) || [])[0];
+    if (!tpl) throw new Error(`brak karty-wzorca na liście ${rel}`);
+    const karty = zPanelu(kat).slice(0, 50).map((d) => kartaListy(tpl, d)).join("");
+    hl = blok(hl, "lista", karty, (h, c) => h.replace(/(<div class="posts_group[^"]*"[^>]*>)/, `$1${c}`));
+    doZapisu.push([rel, hl]);
+  }
+
   // 4) Strony wpisów
   const szablon = await czytaj("wpis/index.html");
   const slugi = new Set();
