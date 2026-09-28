@@ -77,3 +77,25 @@ group by w.id;
 -- Ponowna próba dla błędnych (wróci do kolejki):
 --   update wysylki_odbiorcy set status = 'czeka', blad = null
 --   where wysylka_id = '<uuid>' and status = 'blad';
+
+-- ── Paczki (28.09.2026) ─────────────────────────────────────────────────
+-- „▶ Wyślij” w panelu wysyła paczkę `paczka` maili, czeka `przerwa_min` minut
+-- (odlicza karta przeglądarki) i bierze następną, w granicach `limit_dzienny`.
+alter table public.wysylki add column if not exists paczka int not null default 100;
+alter table public.wysylki add column if not exists przerwa_min int not null default 0;
+alter table public.wysylki drop constraint if exists wysylki_paczka_check;
+alter table public.wysylki add constraint wysylki_paczka_check check (paczka between 1 and 1000);
+alter table public.wysylki drop constraint if exists wysylki_przerwa_check;
+alter table public.wysylki add constraint wysylki_przerwa_check check (przerwa_min between 0 and 1440);
+
+create or replace view public.wysylki_postep with (security_invoker = true) as
+ SELECT w.id, w.temat, w.opis_filtra, w.status, w.limit_dzienny, w.utworzyl, w.created_at, w.updated_at, w.rodzaj,
+    count(o.*) AS razem,
+    count(o.*) FILTER (WHERE o.status = 'wyslany'::text) AS wyslane,
+    count(o.*) FILTER (WHERE o.status = 'blad'::text) AS bledy,
+    count(o.*) FILTER (WHERE o.status = 'czeka'::text) AS czeka,
+    count(o.*) FILTER (WHERE o.status = 'wyslany'::text AND o.wyslano_at >= date_trunc('day'::text, now())) AS wyslane_dzis,
+    w.paczka, w.przerwa_min
+   FROM wysylki w
+     LEFT JOIN wysylki_odbiorcy o ON o.wysylka_id = w.id
+  GROUP BY w.id;

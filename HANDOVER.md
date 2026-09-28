@@ -813,7 +813,9 @@ Do wysyłek masowych (tysiące adresów), bo `wyslij-mail` ma limit 200 i wysył
 Kampanię tworzy się w **Bazie e-mail** → ustaw filtr → **„📣 Kampania z filtra"** → temat + treść.
 Powstaje kampania i **kolejka** (jeden wiersz na adres, `UNIQUE(wysylka_id,email)`).
 Wysyłka: zakładka **Wysyłki** → „▶ Wyślij" — panel woła Edge Function `wyslij-kampanie`
-w pętli; każde wywołanie bierze porcję (300), wysyła **batchem Resend po 100** i zapisuje status.
+w pętli; każde wywołanie bierze **paczkę** (`wysylki.paczka`, domyślnie 100), wysyła **batchem Resend po 100**
+i zapisuje status. Między paczkami panel odlicza `przerwa_min` (karta musi zostać otwarta; zamknięcie
+przerywa bez szkody). Paczkę, przerwę i limit ustawia się w Wysyłkach: „ustaw paczki i limit”.
 Przerwanie niczego nie psuje — wznawia od miejsca przerwania, bez dubletów.
 **`limit_dzienny` (domyślnie 250) = rozgrzewka domeny**: funkcja nigdy nie wyśle dziś więcej.
 Resend jest na planie płatnym od 28.09.2026 (bez limitu dobowego), ale domenę rozgrzewamy:

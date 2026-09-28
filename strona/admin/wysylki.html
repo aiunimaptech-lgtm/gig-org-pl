@@ -37,6 +37,7 @@
     .ad-tryb label{display:flex;gap:8px;align-items:flex-start;font-weight:600;font-size:14px;margin:6px 0;cursor:pointer;}
     .ad-tryb small{display:block;font-weight:400;color:var(--text-muted);}
     .ad-wynik{background:#e6f5ec;border:1px solid #bfe3cc;color:#1d5a36;border-radius:8px;padding:10px 14px;font-size:13.5px;line-height:1.6;margin-top:12px;}
+    .pk-szac{background:#f5f8fa;border:1px solid #e6ebef;border-radius:8px;padding:10px 14px;font-size:13px;line-height:1.6;color:#46535f;}
     .ed-uwaga{background:#fff8e6;border:1px solid #f3e0b5;color:#7a5b12;border-radius:8px;padding:8px 12px;font-size:13px;margin-bottom:12px;}
   </style>
 </head>
@@ -160,6 +161,30 @@
     </div>
   </div>
 
+  <!-- MODAL: paczki -->
+  <div class="modal-overlay" id="pkModal">
+    <div class="modal-box" style="max-width:520px;">
+      <div class="modal-header">
+        <div class="modal-title">Paczki wysyłki</div>
+        <button class="modal-close" data-modal-close="pkModal">×</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="pkId">
+        <div class="form-group"><label>Wielkość paczki (maili naraz, 1-1000)</label>
+          <input type="number" id="pkPaczka" class="form-control" min="1" max="1000" step="1"></div>
+        <div class="form-group"><label>Przerwa między paczkami (minuty, 0 = bez przerwy)</label>
+          <input type="number" id="pkPrzerwa" class="form-control" min="0" max="1440" step="1"></div>
+        <div class="form-group"><label>Limit dzienny (maili na dobę)</label>
+          <input type="number" id="pkLimit" class="form-control" min="1" max="20000" step="1"></div>
+        <div class="pk-szac" id="pkSzac"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-modal-close="pkModal">Anuluj</button>
+        <button class="btn btn-primary" id="pkZapisz">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: adresy wpisane ręcznie -->
   <div class="modal-overlay" id="adModal">
     <div class="modal-box" style="max-width:640px;">
@@ -222,7 +247,8 @@
           </td>
           <td style="white-space:nowrap;">
             <strong>${k.wyslane_dzis}</strong> / ${k.limit_dzienny}
-            <div class="wy-sub"><a href="#" data-limit="${k.id}">zmień limit</a></div>
+            <div class="wy-sub">paczki: ${k.paczka || 100}${k.przerwa_min ? ` co ${k.przerwa_min} min` : ', bez przerw'}</div>
+            <div class="wy-sub"><a href="#" data-paczki="${k.id}">ustaw paczki i limit</a></div>
           </td>
           <td><span class="badge badge-${esc(k.status)}">${ETYK[k.status] || k.status}</span></td>
           <td class="actions" style="white-space:nowrap;">
@@ -246,7 +272,7 @@
       tb.querySelectorAll('[data-adresy]').forEach(b => b.addEventListener('click', () => adOtworz(b.dataset.adresy)));
       tb.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => wyslijTest(b.dataset.test, b)));
       tb.querySelectorAll('[data-usun]').forEach(b => b.addEventListener('click', () => usun(b.dataset.usun)));
-      tb.querySelectorAll('[data-limit]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); zmienLimit(a.dataset.limit); }));
+      tb.querySelectorAll('[data-paczki]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); pkOtworz(a.dataset.paczki); }));
     }
 
     async function zmienStatus(id, status) {
@@ -257,16 +283,56 @@
       load();
     }
 
-    async function zmienLimit(id) {
-      const k = dane.find(x => x.id === id); if (!k) return;
-      const v = prompt('Ile maksymalnie maili na dobę dla tej kampanii?\n\nPłatny plan Resend: 50 tys. maili miesięcznie, bez limitu dobowego.\nDomenę rozgrzewaj stopniowo: 250 → 500 → 1000 → 2000 co kilka dni, żeby maile nie trafiały do spamu.', k.limit_dzienny);
-      if (v === null) return;
-      const n = parseInt(v, 10);
-      if (!n || n < 1 || n > 20000) { toast('Podaj liczbę 1–20000', 'error'); return; }
-      const { error } = await db.from('wysylki').update({ limit_dzienny: n }).eq('id', id);
-      if (error) { toast('Błąd zapisu limitu', 'error'); return; }
-      toast('Limit dzienny: ' + n, 'success'); load();
+    /* ── paczki ──
+       „▶ Wyślij” wysyła jedną paczkę, czeka ustaloną przerwę i bierze następną, aż skończy
+       się kolejka albo limit dzienny. Odliczanie idzie w tej karcie przeglądarki: zamknięcie
+       karty przerywa wysyłkę (bez szkody, „▶ Wyślij” wznawia od miejsca przerwania). */
+    function czas(min) {
+      if (min < 60) return Math.round(min) + ' min';
+      const h = Math.floor(min / 60), m = Math.round(min % 60);
+      return h + ' h' + (m ? ' ' + m + ' min' : '');
     }
+    function pkSzacuj() {
+      const k = dane.find(x => x.id === document.getElementById('pkId').value); if (!k) return;
+      const paczka = parseInt(document.getElementById('pkPaczka').value, 10) || 0;
+      const przerwa = parseInt(document.getElementById('pkPrzerwa').value, 10) || 0;
+      const limit = parseInt(document.getElementById('pkLimit').value, 10) || 0;
+      const box = document.getElementById('pkSzac');
+      if (paczka < 1 || limit < 1) { box.textContent = ''; return; }
+      const czeka = k.czeka || 0;
+      const naDzis = Math.min(czeka, Math.max(0, limit - (k.wyslane_dzis || 0)));
+      const paczekDzis = Math.ceil(naDzis / paczka);
+      const dni = czeka ? Math.max(1, Math.ceil((czeka - naDzis) / limit) + (naDzis ? 1 : 0)) : 0;
+      box.innerHTML = czeka
+        ? `Czeka <b>${czeka}</b> adresów. Dziś pójdzie <b>${naDzis}</b> w <b>${paczekDzis}</b> ${paczekDzis === 1 ? 'paczce' : 'paczkach'}` +
+          (paczekDzis > 1 && przerwa ? `, co zajmie ok. <b>${czas((paczekDzis - 1) * przerwa)}</b>` : '') + '.' +
+          (dni > 1 ? ` Całość przy tym limicie: ok. <b>${dni}</b> dni.` : '') +
+          (przerwa ? '<br>Przerwy odlicza panel: karta musi zostać otwarta.' : '')
+        : 'Kolejka jest pusta.';
+    }
+    ['pkPaczka', 'pkPrzerwa', 'pkLimit'].forEach(id => document.getElementById(id).addEventListener('input', pkSzacuj));
+    function pkOtworz(id) {
+      const k = dane.find(x => x.id === id); if (!k) return;
+      document.getElementById('pkId').value = id;
+      document.getElementById('pkPaczka').value = k.paczka || 100;
+      document.getElementById('pkPrzerwa').value = k.przerwa_min || 0;
+      document.getElementById('pkLimit').value = k.limit_dzienny || 250;
+      pkSzacuj();
+      openModal('pkModal');
+    }
+    document.getElementById('pkZapisz').addEventListener('click', async () => {
+      const id = document.getElementById('pkId').value;
+      const paczka = parseInt(document.getElementById('pkPaczka').value, 10);
+      const przerwa = parseInt(document.getElementById('pkPrzerwa').value, 10);
+      const limit = parseInt(document.getElementById('pkLimit').value, 10);
+      if (!(paczka >= 1 && paczka <= 1000)) { toast('Paczka: od 1 do 1000 maili', 'error'); return; }
+      if (!(przerwa >= 0 && przerwa <= 1440)) { toast('Przerwa: od 0 do 1440 minut', 'error'); return; }
+      if (!(limit >= 1 && limit <= 20000)) { toast('Limit dzienny: od 1 do 20000', 'error'); return; }
+      const { error } = await db.from('wysylki').update({ paczka, przerwa_min: przerwa, limit_dzienny: limit, updated_at: new Date().toISOString() }).eq('id', id);
+      if (error) { console.error(error); toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
+      toast('Zapisano: paczki po ' + paczka + (przerwa ? ' co ' + przerwa + ' min' : '') + ', limit ' + limit + '/dobę', 'success');
+      closeModal('pkModal'); load();
+    });
 
     async function podglad(id) {
       const { data, error } = await db.from('wysylki').select('temat,html').eq('id', id).maybeSingle();
@@ -505,7 +571,8 @@
        Każde wywołanie wysyła porcję i zapisuje statusy — przerwanie nic nie psuje. */
     async function wyslij(id, btn) {
       const k = dane.find(x => x.id === id); if (!k) return;
-      if (!confirm(`Wysłać kampanię „${k.temat}”?\n\nDo wysłania: ${k.czeka} adresów.\nDziś maksymalnie: ${Math.max(0, k.limit_dzienny - k.wyslane_dzis)}.`)) return;
+      const paczka = k.paczka || 100, przerwa = k.przerwa_min || 0;
+      if (!confirm(`Wysłać kampanię „${k.temat}”?\n\nDo wysłania: ${k.czeka} adresów.\nDziś maksymalnie: ${Math.max(0, k.limit_dzienny - k.wyslane_dzis)}.\nPaczki po ${paczka}${przerwa ? ', przerwa ' + przerwa + ' min (nie zamykaj tej karty)' : ', bez przerw'}.`)) return;
 
       stop = false;
       const log = document.getElementById('log-' + id);
@@ -518,7 +585,7 @@
           const res = await fetch(SUPABASE_URL + '/functions/v1/wyslij-kampanie', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
-            body: JSON.stringify({ wysylka_id: id, porcja: 300 })
+            body: JSON.stringify({ wysylka_id: id, porcja: paczka })
           });
           const w = await res.json().catch(() => ({}));
           if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
@@ -526,7 +593,15 @@
           if (log) log.textContent = `wysłano ${razemWyslane}, zostało ${w.zostalo}, dziś jeszcze ${w.dzisiaj_zostalo}`;
           if (w.zostalo === 0) { toast('Kampania zakończona', 'success'); break; }
           if (w.dzisiaj_zostalo === 0) { toast('Limit dzienny wyczerpany — dokończ jutro', 'success', 6000); break; }
-          if (w.wyslane === 0 && w.bledy === 0) break;   // nic się nie ruszyło — nie kręć w kółko
+          if (w.wyslane === 0 && w.bledy === 0) break;   // nic się nie ruszyło, nie kręć w kółko
+          if (przerwa > 0) {
+            const koniec = Date.now() + przerwa * 60000;
+            while (!stop && Date.now() < koniec) {
+              const zost = Math.ceil((koniec - Date.now()) / 1000);
+              if (log) log.textContent = `wysłano ${razemWyslane}, zostało ${w.zostalo}, dziś jeszcze ${w.dzisiaj_zostalo}\nnastępna paczka za ${Math.floor(zost / 60)}:${String(zost % 60).padStart(2, '0')} (nie zamykaj tej karty)`;
+              await new Promise(r => setTimeout(r, 1000));
+            }
+          }
         }
       } catch (e) {
         console.error(e);
