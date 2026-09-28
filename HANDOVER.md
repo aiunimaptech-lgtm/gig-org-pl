@@ -472,9 +472,11 @@ sitemap, llms.txt). Commit tylko przy zmianie. Lokalne zmiany w tych plikach mog
 blokami `<!--PRERENDER:…-->`: edytuj poza znacznikami, a przed pushem pobierz zmiany bota.
 Style kalendarza szkoleń są w `_assets/css/gig-szkolenia.css` ORAZ wstrzykiwane przez
 `szkolenia-render.js`: zmieniając wygląd kart, popraw oba miejsca.
-Elementor w kopii WP próbuje doczytać pliki, których nie skopiowano (`*.bundle.min.js` → 403,
-„ChunkLoadError” w konsoli). To stary problem, nie wpływa na treść; naprawa wymaga plików
-z tej samej wersji wtyczki Elementor.
+Elementor 3.35.7 ma komplet plików frontendu (moduły `*.bundle.min.js`, style `css/*.min.css`,
+biblioteki `lib/` dialog, share-link, swiper, animations, e-gallery), dograne z oficjalnej paczki
+wordpress.org bez nadpisywania istniejących. Wcześniej w konsoli był „ChunkLoadError” i 403.
+Przy sprawdzaniu układu mierz w karcie z prawdziwym oknem (`innerWidth` > 0). Karta w tle ma
+szerokość 0 i pokazuje fałszywie „rozjechane” listy (karty o szerokości 0).
 
 **Jest konektor MCP do Supabase w Claude Code** (projekt `zlepwzeyjwpmhyxfnime`): `execute_sql`,
 `list_tables`, `get_edge_function`, `deploy_edge_function`, `apply_migration`. Zapytania SQL,
