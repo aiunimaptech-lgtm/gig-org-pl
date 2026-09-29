@@ -91,11 +91,10 @@
 
       <main class="admin-content">
         <div class="wy-info">
-          <strong>Rozgrzewka domeny.</strong> Kampania wysyła się porcjami i nigdy nie przekroczy
-          <strong>limitu dziennego</strong>. Płatny plan Resend nie ma limitu dobowego (50 tys. maili miesięcznie),
-          ale domenę rozgrzewaj stopniowo: 250 → 500 → 1000 → 2000 na dobę co kilka dni. Nagły strzał kilku tysięcy
-          maili z „zimnej” domeny kończy się filtrem spamu i psuje też maile transakcyjne (potwierdzenia zapisów),
-          bo idą z tej samej domeny.
+          <strong>Wysyła serwer.</strong> „▶ Wyślij” uruchamia kampanię, a dalej paczki idą same, co ustaloną przerwę,
+          w granicach <strong>limitu dziennego</strong>: przeglądarkę i komputer można wyłączyć. Domyślnie tylko w dni
+          robocze 7:00-19:00. Kampanie idą po kolei, w kolejności uruchomienia. Nowe, zimne adresy wysyłaj stopniowo
+          i patrz na odbicia: reputacja domeny jest wspólna z MailerLite i potwierdzeniami zapisów.
         </div>
 
         <div class="card"><div class="card-body">
@@ -217,6 +216,8 @@
           <input type="number" id="pkPrzerwa" class="form-control" min="0" max="1440" step="1"></div>
         <div class="form-group"><label>Limit dzienny (maili na dobę)</label>
           <input type="number" id="pkLimit" class="form-control" min="1" max="20000" step="1"></div>
+        <label style="display:flex;gap:9px;align-items:center;font-size:14px;font-weight:600;margin:0 0 14px;cursor:pointer;">
+          <input type="checkbox" id="pkGodziny"> Wysyłaj tylko w dni robocze, 7:00-19:00</label>
         <div class="pk-szac" id="pkSzac"></div>
       </div>
       <div class="modal-footer">
@@ -310,9 +311,9 @@
             <div class="wy-sub">paczki: ${k.paczka || 100}${k.przerwa_min ? ` co ${k.przerwa_min} min` : ', bez przerw'}</div>
             <div class="wy-sub"><a href="#" data-paczki="${k.id}">ustaw paczki i limit</a></div>
           </td>
-          <td><span class="badge badge-${esc(k.status)}">${ETYK[k.status] || k.status}</span></td>
+          <td><span class="badge badge-${esc(k.status)}">${ETYK[k.status] || k.status}</span>${stanSerwera(k)}</td>
           <td class="actions" style="white-space:nowrap;">
-            ${k.czeka > 0 && k.status !== 'wstrzymana' ? `<button class="btn btn-primary btn-xs" data-start="${k.id}">▶ Wyślij</button>` : ''}
+            ${k.czeka > 0 && k.status !== 'wstrzymana' && !(k.auto && k.status === 'w_toku') ? `<button class="btn btn-primary btn-xs" data-start="${k.id}">▶ Wyślij</button>` : ''}
             ${k.status === 'w_toku' || k.status === 'robocza' ? `<button class="btn btn-outline btn-xs" data-pauza="${k.id}">⏸ Wstrzymaj</button>` : ''}
             ${k.status === 'wstrzymana' ? `<button class="btn btn-outline btn-xs" data-wznow="${k.id}">▶ Wznów</button>` : ''}
             ${k.status !== 'zakonczona' ? `<button class="btn btn-outline btn-xs" data-edytuj="${k.id}" title="Zmień temat i treść">✎ Edytuj</button>` : ''}
@@ -336,9 +337,29 @@
       tb.querySelectorAll('[data-paczki]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); pkOtworz(a.dataset.paczki); }));
     }
 
+    /* Co zrobi serwer z kampanią (auto = true): kiedy następna paczka i dlaczego czeka. */
+    function wGodzinachPracy(d) {
+      const pl = new Date(d.toLocaleString('en-US', { timeZone: 'Europe/Warsaw' }));
+      const dz = pl.getDay(), h = pl.getHours();
+      return dz >= 1 && dz <= 5 && h >= 7 && h < 19;
+    }
+    function stanSerwera(k) {
+      if (!k.auto || k.status !== 'w_toku') return '';
+      let t;
+      if (k.czeka === 0) t = 'kończy ostatnią paczkę';
+      else if (k.wyslane_dzis >= k.limit_dzienny) t = 'dzienny limit wyczerpany, wznowi jutro';
+      else if (k.godziny_pracy !== false && !wGodzinachPracy(new Date())) t = 'poza godzinami pracy, wznowi w dzień roboczy o 7:00';
+      else if (k.nastepna_paczka_at && new Date(k.nastepna_paczka_at) > new Date())
+        t = 'następna paczka ok. ' + new Date(new Date(k.nastepna_paczka_at).getTime() + 60000).toLocaleTimeString('pl-PL', { hour: '2-digit', minute: '2-digit' });
+      else t = 'paczka w ciągu minuty';
+      return `<div class="wy-sub" style="margin-top:4px;">🖥 wysyła serwer<br>${esc(t)}</div>`;
+    }
+
     async function zmienStatus(id, status) {
       if (status === 'wstrzymana') stop = true;
-      const { error } = await db.from('wysylki').update({ status, updated_at: new Date().toISOString() }).eq('id', id);
+      const zm = { status, updated_at: new Date().toISOString() };
+      if (status === 'w_toku') zm.nastepna_paczka_at = new Date().toISOString();   // wznowienie: paczka od razu
+      const { error } = await db.from('wysylki').update(zm).eq('id', id);
       if (error) { toast('Błąd zmiany statusu', 'error'); return; }
       toast(status === 'wstrzymana' ? 'Wstrzymano' : 'Wznowiono', 'success');
       load();
@@ -368,7 +389,7 @@
         ? `Czeka <b>${czeka}</b> adresów. Dziś pójdzie <b>${naDzis}</b> w <b>${paczekDzis}</b> ${paczekDzis === 1 ? 'paczce' : 'paczkach'}` +
           (paczekDzis > 1 && przerwa ? `, co zajmie ok. <b>${czas((paczekDzis - 1) * przerwa)}</b>` : '') + '.' +
           (dni > 1 ? ` Całość przy tym limicie: ok. <b>${dni}</b> dni.` : '') +
-          (przerwa ? '<br>Przerwy odlicza panel: karta musi zostać otwarta.' : '')
+          '<br>Wysyła serwer: przeglądarka nie musi być otwarta.'
         : 'Kolejka jest pusta.';
     }
     ['pkPaczka', 'pkPrzerwa', 'pkLimit'].forEach(id => document.getElementById(id).addEventListener('input', pkSzacuj));
@@ -378,6 +399,7 @@
       document.getElementById('pkPaczka').value = k.paczka || 100;
       document.getElementById('pkPrzerwa').value = k.przerwa_min || 0;
       document.getElementById('pkLimit').value = k.limit_dzienny || 250;
+      document.getElementById('pkGodziny').checked = k.godziny_pracy !== false;
       pkSzacuj();
       openModal('pkModal');
     }
@@ -389,7 +411,8 @@
       if (!(paczka >= 1 && paczka <= 1000)) { toast('Paczka: od 1 do 1000 maili', 'error'); return; }
       if (!(przerwa >= 0 && przerwa <= 1440)) { toast('Przerwa: od 0 do 1440 minut', 'error'); return; }
       if (!(limit >= 1 && limit <= 20000)) { toast('Limit dzienny: od 1 do 20000', 'error'); return; }
-      const { error } = await db.from('wysylki').update({ paczka, przerwa_min: przerwa, limit_dzienny: limit, updated_at: new Date().toISOString() }).eq('id', id);
+      const godziny_pracy = document.getElementById('pkGodziny').checked;
+      const { error } = await db.from('wysylki').update({ paczka, przerwa_min: przerwa, limit_dzienny: limit, godziny_pracy, updated_at: new Date().toISOString() }).eq('id', id);
       if (error) { console.error(error); toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
       toast('Zapisano: paczki po ' + paczka + (przerwa ? ' co ' + przerwa + ' min' : '') + ', limit ' + limit + '/dobę', 'success');
       closeModal('pkModal'); load();
@@ -689,50 +712,32 @@
       toast('Usunięto', 'success'); load();
     }
 
-    /* Wysyłka: wołamy funkcję w pętli, aż skończy się kolejka albo limit dzienny.
-       Każde wywołanie wysyła porcję i zapisuje statusy — przerwanie nic nie psuje. */
+    /* Wysyłka na serwerze: ustawiamy auto = true, a harmonogram w bazie (pg_cron,
+       gig_kampanie_tick co minutę) wysyła kolejne paczki przez Edge Function wyslij-kampanie.
+       Przeglądarka nie musi być otwarta; „⏸ Wstrzymaj” zatrzymuje, „▶ Wznów” wznawia. */
     async function wyslij(id, btn) {
       const k = dane.find(x => x.id === id); if (!k) return;
       const paczka = k.paczka || 100, przerwa = k.przerwa_min || 0;
-      if (!confirm(`Wysłać kampanię „${k.temat}”?\n\nDo wysłania: ${k.czeka} adresów.\nDziś maksymalnie: ${Math.max(0, k.limit_dzienny - k.wyslane_dzis)}.\nPaczki po ${paczka}${przerwa ? ', przerwa ' + przerwa + ' min (nie zamykaj tej karty)' : ', bez przerw'}.`)) return;
-
-      stop = false;
-      const log = document.getElementById('log-' + id);
-      btn.disabled = true; btn.textContent = 'Wysyłanie…';
-      let razemWyslane = 0;
-      try {
-        const sesja = await getSession();
-        if (!sesja) throw new Error('sesja wygasła — zaloguj się ponownie');
-        while (!stop) {
-          const res = await fetch(SUPABASE_URL + '/functions/v1/wyslij-kampanie', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
-            body: JSON.stringify({ wysylka_id: id, porcja: paczka })
-          });
-          const w = await res.json().catch(() => ({}));
-          if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
-          razemWyslane += w.wyslane;
-          if (log) log.textContent = `wysłano ${razemWyslane}, zostało ${w.zostalo}, dziś jeszcze ${w.dzisiaj_zostalo}`;
-          if (w.zostalo === 0) { toast('Kampania zakończona', 'success'); break; }
-          if (w.dzisiaj_zostalo === 0) { toast('Limit dzienny wyczerpany — dokończ jutro', 'success', 6000); break; }
-          if (w.wyslane === 0 && w.bledy === 0) break;   // nic się nie ruszyło, nie kręć w kółko
-          if (przerwa > 0) {
-            const koniec = Date.now() + przerwa * 60000;
-            while (!stop && Date.now() < koniec) {
-              const zost = Math.ceil((koniec - Date.now()) / 1000);
-              if (log) log.textContent = `wysłano ${razemWyslane}, zostało ${w.zostalo}, dziś jeszcze ${w.dzisiaj_zostalo}\nnastępna paczka za ${Math.floor(zost / 60)}:${String(zost % 60).padStart(2, '0')} (nie zamykaj tej karty)`;
-              await new Promise(r => setTimeout(r, 1000));
-            }
-          }
-        }
-      } catch (e) {
-        console.error(e);
-        toast('Wysyłka przerwana: ' + e.message, 'error', 7000);
-      } finally {
-        btn.disabled = false; btn.textContent = '▶ Wyślij';
-        load();
-      }
+      const godz = k.godziny_pracy !== false;
+      if (!confirm(`Uruchomić wysyłkę kampanii „${k.temat}”?\n\nDo wysłania: ${k.czeka} adresów.\n` +
+        `Paczki po ${paczka}, ${przerwa ? 'co ' + przerwa + ' min' : 'co minutę'}; limit ${k.limit_dzienny} na dobę.\n` +
+        (godz ? 'Tylko w dni robocze 7:00-19:00.\n' : 'Także wieczorem i w weekendy.\n') +
+        `\nWysyła serwer: przeglądarkę można zamknąć.`)) return;
+      btn.disabled = true;
+      const teraz = new Date().toISOString();
+      const { error } = await db.from('wysylki').update({ auto: true, status: 'w_toku', start_at: k.start_at || teraz,
+        nastepna_paczka_at: teraz, updated_at: teraz }).eq('id', id);
+      btn.disabled = false;
+      if (error) { console.error(error); toast('Nie udało się uruchomić: ' + error.message, 'error'); return; }
+      toast('Wysyłka uruchomiona na serwerze. Pierwsza paczka w ciągu minuty.', 'success', 6000);
+      load();
     }
+
+    /* Odświeżanie listy co 30 s, gdy serwer coś wysyła. */
+    setInterval(() => {
+      if (document.hidden) return;
+      if (dane.some(k => k.auto && k.status === 'w_toku') && !document.querySelector('.modal-overlay.open')) load();
+    }, 30000);
 
     (async () => {
       if (!await requireAuth()) return;

@@ -107,3 +107,15 @@ create or replace view public.wysylki_postep with (security_invoker = true) as
 -- Pełna definicja: migracje maile_zdarzenia_resend i resend_webhook_token_fn w Supabase.
 -- Reply-To kampanii: wysylki.reply_to (null = REPLY_TO_EMAIL, czyli biuro@gig.org.pl).
 alter table public.wysylki add column if not exists reply_to text;
+
+-- ── Wysyłka na serwerze (29.09.2026) ────────────────────────────────────
+-- pg_cron: job 'gig-kampanie' co minutę -> public.gig_kampanie_tick():
+--   * zwalnia paczki 'w_trakcie' starsze niż 15 min, domyka kampanie bez kolejki,
+--   * wybiera JEDNĄ kampanię (auto, w_toku/robocza, nastepna_paczka_at <= now(),
+--     limit dzienny niewyczerpany, godziny_pracy -> pn-pt 7-19 Warszawa), kolejno wg start_at,
+--   * ustawia nastepna_paczka_at = now() + przerwa_min (min. 1) i woła net.http_post
+--     wyslij-kampanie z nagłówkiem x-gig-cron (private.gig_sekrety 'kampanie_cron').
+-- gig_wysylka_pobierz(): atomowa rezerwacja paczki (status 'w_trakcie', FOR UPDATE SKIP LOCKED).
+-- Kolumny: wysylki.auto, start_at, nastepna_paczka_at, ostatnia_paczka_at, godziny_pracy;
+-- wysylki_odbiorcy.pobrano_at; status odbiorcy także 'w_trakcie'.
+-- Pełne definicje: migracje wysylki_serwer_cron i wysylki_rezerwacja_paczki w Supabase.

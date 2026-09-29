@@ -1,5 +1,5 @@
 // ============================================================
-// GIG — Edge Function: wyslij-kampanie (v7: {{WYPIS}} w treści, strona /wypis/, Reply-To kampanii)
+// GIG — Edge Function: wyslij-kampanie (v8: wysyłka z serwera przez pg_cron, {{WYPIS}}, Reply-To kampanii)
 // Wysyła kampanię z kolejki (tabele `wysylki` + `wysylki_odbiorcy`) PORCJAMI.
 // Panel woła ją wielokrotnie, aż zostanie 0 — dzięki temu:
 //   • nie ma limitu czasu Edge Function (każde wywołanie robi kawałek),
@@ -8,7 +8,9 @@
 // Limit dzienny kampanii (`limit_dzienny`) służy rozgrzewce domeny — funkcja
 // nigdy nie wyśle dziś więcej, niż on pozwala.
 //
-// Autoryzacja: Authorization: Bearer <access_token zalogowanego admina>.
+// Autoryzacja: Authorization: Bearer <access_token zalogowanego admina>
+//   albo naglowek x-gig-cron = private.gig_sekrety 'kampanie_cron' (harmonogram w bazie:
+//   gig_kampanie_tick() co minute wola te funkcje dla jednej kampanii z auto = true).
 // Body: { wysylka_id: uuid, porcja?: number }  (porcja: ile maks. w tym wywołaniu)
 // Zwraca: { ok, wyslane, bledy, zostalo, dzisiaj_zostalo, status }
 //
@@ -101,25 +103,33 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "tylko POST" }, 405);
 
-  // ── tylko zalogowany administrator panelu ──
-  const auth = req.headers.get("authorization") ?? "";
-  const jwt = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  if (!jwt) return json({ error: "brak uprawnien" }, 401);
-  const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!,
-    { auth: { persistSession: false, autoRefreshToken: false } });
-  const { data: u, error: uErr } = await sb.auth.getUser(jwt);
-  if (uErr || !u?.user?.email) return json({ error: "brak uprawnien" }, 401);
-
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     { auth: { persistSession: false, autoRefreshToken: false } });
 
-  /* Audyt 8.09.2026: sesja musi byc na liscie panel_sesje_ok (przeszla kod z maila);
-     sam poprawny JWT z publicznego grantu haslem to za malo. */
-  const sid = String(jwtClaims(jwt).session_id ?? "");
-  const s2 = /^[0-9a-f-]{36}$/i.test(sid)
-    ? await admin.from("panel_sesje_ok").select("session_id").eq("session_id", sid).gt("wygasa", new Date().toISOString()).maybeSingle()
-    : { data: null, error: null };
-  if (s2.error || !s2.data) return json({ error: "sesja bez potwierdzenia kodem z e-maila - zaloguj sie ponownie" }, 401);
+  // ── harmonogram w bazie (pg_cron) albo zalogowany administrator panelu ──
+  let kto = "";
+  const cronTok = req.headers.get("x-gig-cron") ?? "";
+  if (cronTok) {
+    const { data: ok } = await admin.rpc("gig_cron_token_ok", { p_token: cronTok });
+    if (ok !== true) return json({ error: "brak uprawnien" }, 401);
+    kto = "serwer (harmonogram)";
+  } else {
+    const auth = req.headers.get("authorization") ?? "";
+    const jwt = auth.startsWith("Bearer ") ? auth.slice(7) : "";
+    if (!jwt) return json({ error: "brak uprawnien" }, 401);
+    const sb = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_ANON_KEY")!,
+      { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: u, error: uErr } = await sb.auth.getUser(jwt);
+    if (uErr || !u?.user?.email) return json({ error: "brak uprawnien" }, 401);
+    /* Audyt 8.09.2026: sesja musi byc na liscie panel_sesje_ok (przeszla kod z maila);
+       sam poprawny JWT z publicznego grantu haslem to za malo. */
+    const sid = String(jwtClaims(jwt).session_id ?? "");
+    const s2 = /^[0-9a-f-]{36}$/i.test(sid)
+      ? await admin.from("panel_sesje_ok").select("session_id").eq("session_id", sid).gt("wygasa", new Date().toISOString()).maybeSingle()
+      : { data: null, error: null };
+    if (s2.error || !s2.data) return json({ error: "sesja bez potwierdzenia kodem z e-maila - zaloguj sie ponownie" }, 401);
+    kto = u.user.email;
+  }
 
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ error: "nieprawidlowe dane" }, 400); }
@@ -133,7 +143,7 @@ Deno.serve(async (req) => {
 
   const zostaloCzeka = async () => {
     const { count } = await admin.from("wysylki_odbiorcy").select("id", { count: "exact", head: true })
-      .eq("wysylka_id", wysylkaId).eq("status", "czeka");
+      .eq("wysylka_id", wysylkaId).in("status", ["czeka", "w_trakcie"]);
     return count ?? 0;
   };
 
@@ -147,13 +157,17 @@ Deno.serve(async (req) => {
   }
 
   const ile = Math.min(porcja, dzisiajZostalo);
-  const { data: kolejka, error: oErr } = await admin.from("wysylki_odbiorcy")
-    .select("id,email,baza_email_id,newsletter_id").eq("wysylka_id", wysylkaId).eq("status", "czeka").limit(ile);
+  /* Rezerwacja paczki w bazie (status 'w_trakcie', FOR UPDATE SKIP LOCKED): dwa równoległe
+     wywołania (harmonogram i panel) nigdy nie dostaną tych samych adresów. */
+  const { data: kolejka, error: oErr } = await admin.rpc("gig_wysylka_pobierz", { p_wysylka: wysylkaId, p_ile: ile });
   if (oErr) return json({ error: "blad odczytu kolejki: " + oErr.message }, 500);
 
   if (!kolejka || kolejka.length === 0) {
-    await admin.from("wysylki").update({ status: "zakonczona", updated_at: new Date().toISOString() }).eq("id", wysylkaId);
-    return json({ ok: true, wyslane: 0, bledy: 0, zostalo: 0, dzisiaj_zostalo: dzisiajZostalo, status: "zakonczona" });
+    const zost = await zostaloCzeka();
+    if (zost === 0) {
+      await admin.from("wysylki").update({ status: "zakonczona", updated_at: new Date().toISOString() }).eq("id", wysylkaId).neq("status", "wstrzymana");
+    }
+    return json({ ok: true, wyslane: 0, bledy: 0, zostalo: zost, dzisiaj_zostalo: dzisiajZostalo, status: zost === 0 ? "zakonczona" : kampania.status });
   }
 
   if (kampania.status !== "w_toku") {
@@ -226,14 +240,20 @@ Deno.serve(async (req) => {
     });
 
     let ok = false, komunikat = "";
+    if (i > 0) await new Promise((r) => setTimeout(r, 600));   // Resend: 2 zapytania na sekunde
     try {
-      const res = await fetch("https://api.resend.com/emails/batch", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const wynik = await res.json().catch(() => ({}));
-      ok = res.ok;
+      let res: Response | null = null;
+      for (let proba = 0; proba < 3; proba++) {
+        res = await fetch("https://api.resend.com/emails/batch", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        if (res.status !== 429) break;                          // chwilowa odmowa: odczekaj i ponow
+        await new Promise((r) => setTimeout(r, 1500 * (proba + 1)));
+      }
+      const wynik = await res!.json().catch(() => ({}));
+      ok = res!.ok;
       if (!ok) { komunikat = JSON.stringify(wynik).slice(0, 300); console.error("Resend batch:", komunikat); }
     } catch (err) {
       komunikat = String(err).slice(0, 300);
@@ -252,8 +272,9 @@ Deno.serve(async (req) => {
 
   const zostalo = await zostaloCzeka();
   const nowyStatus = zostalo === 0 ? "zakonczona" : "w_toku";
-  await admin.from("wysylki").update({ status: nowyStatus, updated_at: new Date().toISOString() }).eq("id", wysylkaId);
+  // .neq: pauza kliknięta w trakcie paczki zostaje pauzą
+  await admin.from("wysylki").update({ status: nowyStatus, updated_at: new Date().toISOString() }).eq("id", wysylkaId).neq("status", "wstrzymana");
 
-  console.log(`wyslij-kampanie: ${u.user.email} kampania=${wysylkaId} wyslane=${wyslane} bledy=${bledy} (pominiete=${pominiete.length}) zostalo=${zostalo}`);
+  console.log(`wyslij-kampanie: ${kto} kampania=${wysylkaId} wyslane=${wyslane} bledy=${bledy} (pominiete=${pominiete.length}) zostalo=${zostalo}`);
   return json({ ok: true, wyslane, bledy, pominiete: pominiete.length, zostalo, dzisiaj_zostalo: Math.max(0, dzisiajZostalo - wyslane), status: nowyStatus });
 });

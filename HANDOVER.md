@@ -826,6 +826,13 @@ zapytania (np. ponowna próba dla błędów): `backend/supabase_wysylki.sql`.
 Plan Resend: płatny ($20/mies., 50 tys./mies., bez dziennego limitu); na Free (100/dobę)
 kampania do 3,8 tys. adresów szłaby ponad miesiąc.
 
+**Wysyłka na serwerze (od 29.09.2026):** „▶ Wyślij” w panelu ustawia `wysylki.auto = true`; dalej paczki
+wysyła harmonogram w bazie (pg_cron `gig-kampanie`, co minutę `gig_kampanie_tick()` → `wyslij-kampanie` v8
+z nagłówkiem `x-gig-cron`). Jedna paczka jednej kampanii na minutę, kampanie po kolei wg `start_at`,
+przerwa `przerwa_min`, limit dzienny, domyślnie tylko pn-pt 7-19 (`godziny_pracy`). Adresy rezerwowane atomowo
+(`gig_wysylka_pobierz`, status `w_trakcie`), więc panel i serwer nie wyślą podwójnie. Przeglądarka nie musi
+być otwarta. Podgląd zadań: `select * from cron.job_run_details order by start_time desc limit 20;`.
+
 **Odbicia (od 28.09.2026):** Return-Path to `send.gig.org.pl` (MX Resend), więc odbicia NIE trafiają na
 biuro@. Resend zgłasza je webhookiem do Edge Function `resend-webhook?t=<token>` (token w
 `private.gig_sekrety` klucz `resend_webhook`; opcjonalnie sekret `RESEND_WEBHOOK_SECRET` = podpis Svix).
