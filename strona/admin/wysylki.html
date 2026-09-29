@@ -216,6 +216,8 @@
           <input type="number" id="pkPrzerwa" class="form-control" min="0" max="1440" step="1"></div>
         <div class="form-group"><label>Limit dzienny (maili na dobę)</label>
           <input type="number" id="pkLimit" class="form-control" min="1" max="20000" step="1"></div>
+        <div class="form-group"><label>Nie wysyłaj przed (puste = od razu)</label>
+          <input type="datetime-local" id="pkOd" class="form-control"></div>
         <label style="display:flex;gap:9px;align-items:center;font-size:14px;font-weight:600;margin:0 0 14px;cursor:pointer;">
           <input type="checkbox" id="pkGodziny"> Wysyłaj tylko w dni robocze, 7:00-19:00</label>
         <div class="pk-szac" id="pkSzac"></div>
@@ -343,10 +345,18 @@
       const dz = pl.getDay(), h = pl.getHours();
       return dz >= 1 && dz <= 5 && h >= 7 && h < 19;
     }
+    /* datetime-local chce „YYYY-MM-DDTHH:MM” w czasie lokalnym */
+    function lokalnyCzas(iso) {
+      const d = new Date(iso), z = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${z(d.getMonth() + 1)}-${z(d.getDate())}T${z(d.getHours())}:${z(d.getMinutes())}`;
+    }
     function stanSerwera(k) {
+      if (k.status === 'wstrzymana' && k.uwaga) return `<div class="wy-sub" style="margin-top:4px;color:#b3261e;max-width:220px;">⚠ ${esc(k.uwaga)}</div>`;
       if (!k.auto || k.status !== 'w_toku') return '';
       let t;
-      if (k.czeka === 0) t = 'kończy ostatnią paczkę';
+      const od = k.wysylaj_od ? new Date(k.wysylaj_od) : null;
+      if (od && od > new Date()) t = 'zaplanowana od ' + od.toLocaleString('pl-PL', { weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+      else if (k.czeka === 0) t = 'kończy ostatnią paczkę';
       else if (k.wyslane_dzis >= k.limit_dzienny) t = 'dzienny limit wyczerpany, wznowi jutro';
       else if (k.godziny_pracy !== false && !wGodzinachPracy(new Date())) t = 'poza godzinami pracy, wznowi w dzień roboczy o 7:00';
       else if (k.nastepna_paczka_at && new Date(k.nastepna_paczka_at) > new Date())
@@ -358,7 +368,7 @@
     async function zmienStatus(id, status) {
       if (status === 'wstrzymana') stop = true;
       const zm = { status, updated_at: new Date().toISOString() };
-      if (status === 'w_toku') zm.nastepna_paczka_at = new Date().toISOString();   // wznowienie: paczka od razu
+      if (status === 'w_toku') { zm.nastepna_paczka_at = new Date().toISOString(); zm.uwaga = null; }   // wznowienie: paczka od razu
       const { error } = await db.from('wysylki').update(zm).eq('id', id);
       if (error) { toast('Błąd zmiany statusu', 'error'); return; }
       toast(status === 'wstrzymana' ? 'Wstrzymano' : 'Wznowiono', 'success');
@@ -400,6 +410,7 @@
       document.getElementById('pkPrzerwa').value = k.przerwa_min || 0;
       document.getElementById('pkLimit').value = k.limit_dzienny || 250;
       document.getElementById('pkGodziny').checked = k.godziny_pracy !== false;
+      document.getElementById('pkOd').value = k.wysylaj_od ? lokalnyCzas(k.wysylaj_od) : '';
       pkSzacuj();
       openModal('pkModal');
     }
@@ -412,7 +423,9 @@
       if (!(przerwa >= 0 && przerwa <= 1440)) { toast('Przerwa: od 0 do 1440 minut', 'error'); return; }
       if (!(limit >= 1 && limit <= 20000)) { toast('Limit dzienny: od 1 do 20000', 'error'); return; }
       const godziny_pracy = document.getElementById('pkGodziny').checked;
-      const { error } = await db.from('wysylki').update({ paczka, przerwa_min: przerwa, limit_dzienny: limit, godziny_pracy, updated_at: new Date().toISOString() }).eq('id', id);
+      const odV = document.getElementById('pkOd').value;            // czas lokalny przeglądarki
+      const wysylaj_od = odV ? new Date(odV).toISOString() : null;
+      const { error } = await db.from('wysylki').update({ paczka, przerwa_min: przerwa, limit_dzienny: limit, godziny_pracy, wysylaj_od, updated_at: new Date().toISOString() }).eq('id', id);
       if (error) { console.error(error); toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
       toast('Zapisano: paczki po ' + paczka + (przerwa ? ' co ' + przerwa + ' min' : '') + ', limit ' + limit + '/dobę', 'success');
       closeModal('pkModal'); load();

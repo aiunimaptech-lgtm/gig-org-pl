@@ -119,3 +119,6 @@ alter table public.wysylki add column if not exists reply_to text;
 -- Kolumny: wysylki.auto, start_at, nastepna_paczka_at, ostatnia_paczka_at, godziny_pracy;
 -- wysylki_odbiorcy.pobrano_at; status odbiorcy także 'w_trakcie'.
 -- Pełne definicje: migracje wysylki_serwer_cron i wysylki_rezerwacja_paczki w Supabase.
+-- 29.09.2026: wysylki.wysylaj_od (nie wysyłaj przed), wysylki.uwaga (powód auto-wstrzymania),
+-- hamulec w gig_kampanie_tick: >= 300 wysłanych i > 5% twardych odbić -> status 'wstrzymana'.
+-- Migracja: wysylki_termin_hamulec.
