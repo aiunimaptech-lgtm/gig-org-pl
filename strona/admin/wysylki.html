@@ -179,6 +179,29 @@
     </div>
   </div>
 
+  <!-- MODAL: błędy kampanii -->
+  <div class="modal-overlay" id="blModal">
+    <div class="modal-box" style="max-width:860px;">
+      <div class="modal-header">
+        <div class="modal-title" id="blTytul">Błędy kampanii</div>
+        <button class="modal-close" data-modal-close="blModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="wy-sub" id="blPodsum" style="margin-bottom:12px;"></div>
+        <div class="table-wrap" style="max-height:60vh;overflow:auto;">
+          <table class="admin-table">
+            <thead><tr><th>Adres</th><th>Rodzaj</th><th>Przyczyna</th><th>Wysłano</th></tr></thead>
+            <tbody id="blRows"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="blPonow" hidden>↻ Wyślij ponownie błędy techniczne</button>
+        <button class="btn btn-ghost" data-modal-close="blModal">Zamknij</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: paczki -->
   <div class="modal-overlay" id="pkModal">
     <div class="modal-box" style="max-width:520px;">
@@ -279,7 +302,7 @@
           </td>
           <td class="wy-post">
             <div class="wy-bar"><i style="width:${proc}%"></i></div>
-            <div class="wy-sub"><strong>${k.wyslane}</strong> / ${k.razem} wysłanych${k.bledy ? ` · <span style="color:#cc0a2b;">${k.bledy} błędów</span>` : ''}${k.czeka ? ` · czeka ${k.czeka}` : ''}</div>
+            <div class="wy-sub"><strong>${k.wyslane}</strong> / ${k.razem} wysłanych${k.bledy ? ` · <a href="#" data-bledy="${k.id}" style="color:#cc0a2b;text-decoration:underline;" title="Pokaż adresy i przyczyny">${k.bledy} ${k.bledy === 1 ? 'błąd' : (k.bledy % 10 >= 2 && k.bledy % 10 <= 4 && (k.bledy % 100 < 10 || k.bledy % 100 >= 20) ? 'błędy' : 'błędów')}</a>` : ''}${k.czeka ? ` · czeka ${k.czeka}` : ''}</div>
             <div class="wy-log" id="log-${k.id}"></div>
           </td>
           <td style="white-space:nowrap;">
@@ -305,6 +328,7 @@
       tb.querySelectorAll('[data-pauza]').forEach(b => b.addEventListener('click', () => zmienStatus(b.dataset.pauza, 'wstrzymana')));
       tb.querySelectorAll('[data-wznow]').forEach(b => b.addEventListener('click', () => zmienStatus(b.dataset.wznow, 'w_toku')));
       tb.querySelectorAll('[data-podglad]').forEach(b => b.addEventListener('click', () => podglad(b.dataset.podglad)));
+      tb.querySelectorAll('[data-bledy]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); pokazBledy(a.dataset.bledy); }));
       tb.querySelectorAll('[data-edytuj]').forEach(b => b.addEventListener('click', () => edytuj(b.dataset.edytuj)));
       tb.querySelectorAll('[data-adresy]').forEach(b => b.addEventListener('click', () => adOtworz(b.dataset.adresy)));
       tb.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => wyslijTest(b.dataset.test, b)));
@@ -604,6 +628,58 @@
     function podstawWypis(html) {
       return String(html || '').replace(/\{\{WYPIS\}\}|%7B%7BWYPIS%7D%7D/gi, 'https://gig.org.pl/wypis/?demo=1');
     }
+
+    /* ── lista błędów kampanii ──
+       Rodzaj z treści błędu: odbicie i wypis/skarga to decyzja odbiorcy albo martwa skrzynka
+       (nie ponawiamy), błąd techniczny (np. odmowa Resend, brak sieci) można wysłać ponownie. */
+    function rodzajBledu(t) {
+      t = String(t || '').toLowerCase();
+      if (t.startsWith('odbity')) return ['odbity', 'adres nie przyjmuje poczty'];
+      if (t.startsWith('pominiety') || t.startsWith('pominięty')) return ['pominięty', 'wypisany lub odbity przed wysyłką'];
+      if (t.startsWith('wypisany')) return ['wypisany', 'odbiorca zrezygnował'];
+      if (t.startsWith('zgłoszenie spamu')) return ['spam', 'odbiorca zgłosił wiadomość jako spam'];
+      return ['techniczny', ''];
+    }
+    let blKampania = null;
+    async function pokazBledy(id) {
+      const k = dane.find(x => x.id === id); if (!k) return;
+      blKampania = id;
+      document.getElementById('blTytul').textContent = 'Błędy: ' + k.temat;
+      const tb = document.getElementById('blRows');
+      tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px;color:#6b7f84;">Ładowanie…</td></tr>';
+      openModal('blModal');
+      const { data, error } = await db.from('wysylki_odbiorcy').select('id,email,blad,wyslano_at')
+        .eq('wysylka_id', id).eq('status', 'blad').order('wyslano_at', { ascending: false, nullsFirst: false }).limit(2000);
+      if (error) { tb.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:18px;color:#cc0a2b;">Błąd odczytu.</td></tr>'; return; }
+      const rows = (data || []).map(r => ({ ...r, rodz: rodzajBledu(r.blad) }));
+      const licz = {}; rows.forEach(r => { licz[r.rodz[0]] = (licz[r.rodz[0]] || 0) + 1; });
+      document.getElementById('blPodsum').textContent = rows.length
+        ? Object.entries(licz).map(([n, c]) => `${n}: ${c}`).join(' · ') + '. Odbitych i wypisanych nie ponawiamy; mają już odpowiedni status w Bazie e-mail.'
+        : 'Brak błędów.';
+      const tech = rows.filter(r => r.rodz[0] === 'techniczny');
+      const bp = document.getElementById('blPonow');
+      bp.hidden = !tech.length; bp.textContent = `↻ Wyślij ponownie błędy techniczne (${tech.length})`;
+      bp.dataset.ids = tech.map(r => r.id).join(',');
+      tb.innerHTML = rows.length ? rows.map(r => `<tr>
+          <td><strong>${esc(r.email)}</strong></td>
+          <td style="white-space:nowrap;">${esc(r.rodz[0])}${r.rodz[1] ? `<div class="wy-sub">${esc(r.rodz[1])}</div>` : ''}</td>
+          <td class="wy-sub" style="max-width:380px;">${esc(r.blad || '')}</td>
+          <td class="wy-sub" style="white-space:nowrap;">${r.wyslano_at ? esc(fmtDate(r.wyslano_at)) : '—'}</td></tr>`).join('')
+        : '<tr><td colspan="4" style="text-align:center;padding:18px;color:#6b7f84;">Brak błędów.</td></tr>';
+    }
+    document.getElementById('blPonow').addEventListener('click', async function () {
+      const ids = (this.dataset.ids || '').split(',').filter(Boolean);
+      if (!ids.length) return;
+      if (!confirm(`Przywrócić ${ids.length} adresów do kolejki? Pójdą przy następnym „▶ Wyślij”.`)) return;
+      this.disabled = true;
+      for (let i = 0; i < ids.length; i += 200) {
+        const { error } = await db.from('wysylki_odbiorcy').update({ status: 'czeka', blad: null }).in('id', ids.slice(i, i + 200));
+        if (error) { console.error(error); toast('Nie udało się: ' + error.message, 'error'); this.disabled = false; return; }
+      }
+      this.disabled = false;
+      toast('Przywrócono do kolejki: ' + ids.length, 'success');
+      closeModal('blModal'); load();
+    });
 
     async function usun(id) {
       const k = dane.find(x => x.id === id); if (!k) return;
