@@ -92,8 +92,8 @@
     <legend><span id="zNabTytul">Dane nabywcy</span><span class="opis" id="zNabOpis">Podmiot, na który wystawimy fakturę</span></legend>
     <!-- Kto płaci: firma/instytucja (faktura) albo osoba prywatna (rachunek). -->
     <div class="z-typ" id="zTypPole" role="radiogroup" aria-label="Kto płaci za szkolenie">
-      <label><input type="radio" name="nabywca_typ" value="firma" checked><span>Firma lub instytucja<small>wystawimy fakturę</small></span></label>
-      <label><input type="radio" name="nabywca_typ" value="osoba"><span>Osoba prywatna<small>wystawimy rachunek</small></span></label>
+      <label><input type="radio" name="nabywca_typ" value="firma" checked><span>Firma lub instytucja<small id="zTypFirmaOpis">wystawimy fakturę</small></span></label>
+      <label><input type="radio" name="nabywca_typ" value="osoba"><span>Osoba prywatna<small id="zTypOsobaOpis">wystawimy rachunek</small></span></label>
     </div>
     <div class="pole">
       <label for="nabywca_nazwa" id="zNazwaEtyk">Nazwa firmy / instytucji <span class="wym">*</span></label>
@@ -352,7 +352,6 @@
   }
   function zl(x) { return x.toLocaleString("pl-PL", { maximumFractionDigits: 2 }) + " zł"; }
   function rysujOsoby() {
-    if (bezplatne) return;
     var ile = Math.max(1, Math.min(MAX_OSOB, parseInt(val("liczba_osob"), 10) || 1));
     var stare = [].map.call(boxOsoby.querySelectorAll(".z-osoba"), function (w) {
       return { imie: w.querySelector(".uImie").value, email: w.querySelector(".uEmail").value };
@@ -361,7 +360,7 @@
     for (var i = 0; i < ile; i++) {
       html += '<div class="z-osoba"><p class="z-osoba-nr">Uczestnik ' + (i + 1) + '</p><div class="row">' +
         '<div class="pole"><label>Imię i nazwisko <span class="wym">*</span></label><input type="text" class="uImie" autocomplete="off"></div>' +
-        '<div class="pole"><label>E-mail uczestnika <span class="wym">*</span></label><input type="email" class="uEmail" placeholder="tu wyślemy link do szkolenia" autocomplete="off"></div>' +
+        '<div class="pole"><label>E-mail uczestnika <span class="wym">*</span></label><input type="email" class="uEmail" placeholder="' + (bezplatne ? 'tu wyślemy link do spotkania' : 'tu wyślemy link do szkolenia') + '" autocomplete="off"></div>' +
         '</div></div>';
     }
     boxOsoby.innerHTML = html;
@@ -373,14 +372,17 @@
   /* Osoba prywatna: rachunek zamiast faktury, bez NIP-u, JST, odbiorcy i ceny członkowskiej. */
   function osobaPrywatna() {
     var z = document.querySelector('input[name="nabywca_typ"]:checked');
-    return !bezplatne && !!z && z.value === "osoba";
+    return !!z && z.value === "osoba";
   }
   function ustawTyp() {
     var os = osobaPrywatna();
-    document.getElementById("zNabTytul").textContent = os ? "Dane do rachunku" : "Dane nabywcy";
-    document.getElementById("zNabOpis").textContent = os ? "Osoba prywatna, na którą wystawimy rachunek" : "Podmiot, na który wystawimy fakturę";
+    document.getElementById("zNabTytul").textContent = bezplatne ? (os ? "Twoje dane" : "Dane firmy lub instytucji")
+      : (os ? "Dane do rachunku" : "Dane nabywcy");
+    document.getElementById("zNabOpis").textContent = bezplatne ? (os ? "Zgłaszasz się prywatnie" : "Kogo reprezentujesz na spotkaniu")
+      : (os ? "Osoba prywatna, na którą wystawimy rachunek" : "Podmiot, na który wystawimy fakturę");
     document.getElementById("zNazwaEtyk").innerHTML = (os ? "Imię i nazwisko" : "Nazwa firmy / instytucji") + ' <span class="wym">*</span>';
     document.getElementById("zNipRow").hidden = os;
+    if (bezplatne) { document.getElementById("zJstPole").hidden = true; document.getElementById("zRepPole").hidden = os; }
     document.getElementById("zOdbiorcaSet").hidden = os || bezplatne;
     document.getElementById("zCzlPole").hidden = os || bezplatne;
     if (os) { chkCzl.checked = false; czlonek = null; komCzl("", ""); }
@@ -389,7 +391,12 @@
 
   function rysujOplate() {
     var box = document.getElementById("zOplata");
-    if (bezplatne) { box.hidden = true; return; }
+    if (bezplatne) {
+      box.innerHTML = "<b>Udział jest bezpłatny.</b> Nie wystawiamy faktury ani rachunku i nie prosimy o żadną wpłatę. " +
+        "Każdy uczestnik podaje własny e-mail: na niego wyślemy link do spotkania.";
+      box.hidden = false;
+      return;
+    }
     var ile = Math.max(1, parseInt(val("liczba_osob"), 10) || 1);
     var kwoty = "";
     var jestCzl = !!(czlonek && cenaCzl) && !osobaPrywatna();
@@ -467,17 +474,14 @@
 
   function wlaczBezplatne() {
     bezplatne = true;
-    document.getElementById("zOsoby").hidden = true;
-    document.getElementById("zOsobyHint").hidden = true;
-    document.getElementById("zOplata").hidden = true;
-    document.getElementById("zUczPole").hidden = false;
+    document.getElementById("zOsobyHint").textContent = "Na adres uczestnika wyślemy link do spotkania. Sprawy zgłoszenia prowadzimy z adresem kontaktowym podanym niżej, w części „Kontakt”.";
     document.getElementById("zCzlPole").hidden = true;
-    document.getElementById("zTypPole").hidden = true;
-    document.getElementById("zNipRow").hidden = false;
+    document.getElementById("zTypFirmaOpis").textContent = "reprezentuję firmę, urząd lub uczelnię";
+    document.getElementById("zTypOsobaOpis").textContent = "zgłaszam się prywatnie";
     document.getElementById("zKontaktOpis").textContent = "Na te dane odezwiemy się w sprawie wydarzenia";
     document.getElementById("zEmailEtyk").innerHTML = 'Adres e-mail <span class="wym">*</span>';
     document.getElementById("zH1").textContent = "Zapis na bezpłatne wydarzenie";
-    document.getElementById("zLead").innerHTML = "Udział jest bezpłatny i otwarty, także dla osób spoza Izby. Nie wystawiamy faktury, ale prosimy o dane firmy lub instytucji i kontakt. Pola oznaczone <span style=\"color:#cc0a2b\">*</span> są obowiązkowe.";
+    document.getElementById("zLead").innerHTML = "Udział jest bezpłatny i otwarty, także dla osób spoza Izby. Nie wystawiamy faktury ani rachunku; prosimy o dane uczestników i kontakt. Pola oznaczone <span style=\"color:#cc0a2b\">*</span> są obowiązkowe.";
     document.getElementById("zSzkEtyk").textContent = "Wydarzenie";
     document.getElementById("zNabTytul").textContent = "Dane firmy lub instytucji";
     document.getElementById("zNabOpis").textContent = "Kogo reprezentujesz na spotkaniu";
@@ -486,8 +490,10 @@
     document.getElementById("zOdbiorcaSet").hidden = true;
     document.getElementById("zUwagiEtyk").textContent = "Twój problem z praktyki lub pytanie do prelegentów (opcjonalnie)";
     document.getElementById("zUwagiHint").hidden = false;
-    document.getElementById("zOkInfo").textContent = "Link do spotkania prześlemy e-mailem dzień przed jego terminem.";
+    document.getElementById("zOkInfo").textContent = "Link do spotkania prześlemy dzień przed jego terminem, każdemu uczestnikowi na jego adres e-mail.";
     document.getElementById("zIzbaLead").textContent = "Od 1994 roku reprezentujemy i chronimy interesy firm geodezyjnych wobec administracji, ustawodawcy i rynku. Członkowie Izby płacą mniej za szkolenia GIG, a część mają bezpłatnie.";
+    rysujOsoby();
+    ustawTyp();
   }
   if (szkolenie) {
     loadSdk().then(function () {
@@ -572,9 +578,8 @@
     var ile = parseInt(val("liczba_osob"), 10);
     if (!ile || ile < 1)       return pokaz("Podaj liczbę osób (co najmniej 1).", false);
     var lista = null;
-    if (bezplatne) {
-      if (!val("uczestnicy"))  return pokaz("Podaj imiona i nazwiska uczestników.", false);
-    } else {
+    var linkDo = bezplatne ? "spotkania" : "szkolenia";
+    {
       if (ile > MAX_OSOB)      return pokaz("Przy więcej niż " + MAX_OSOB + " osobach napisz do nas na biuro@gig.org.pl.", false);
       lista = [].map.call(boxOsoby.querySelectorAll(".z-osoba"), function (w) {
         return { imie: w.querySelector(".uImie").value.trim(), email: w.querySelector(".uEmail").value.trim().toLowerCase() };
@@ -582,14 +587,14 @@
       for (var i = 0; i < lista.length; i++) {
         if (!lista[i].imie) return pokaz("Podaj imię i nazwisko uczestnika " + (i + 1) + ".", false);
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(lista[i].email))
-          return pokaz("Podaj poprawny e-mail uczestnika " + (i + 1) + ". Na ten adres wyślemy link do szkolenia.", false);
+          return pokaz("Podaj poprawny e-mail uczestnika " + (i + 1) + ". Na ten adres wyślemy link do " + linkDo + ".", false);
         for (var j = 0; j < i; j++) if (lista[j].email === lista[i].email)
-          return pokaz("Uczestnicy " + (j + 1) + " i " + (i + 1) + " mają ten sam e-mail. Każda osoba potrzebuje własnego adresu, bo link do szkolenia jest imienny.", false);
+          return pokaz("Uczestnicy " + (j + 1) + " i " + (i + 1) + " mają ten sam e-mail. Każda osoba potrzebuje własnego adresu, bo link do " + linkDo + " jest imienny.", false);
       }
     }
     var os = osobaPrywatna();
-    if (!val("nabywca_nazwa")) return pokaz(os ? "Podaj imię i nazwisko osoby, na którą wystawimy rachunek." : "Podaj nazwę firmy lub instytucji.", false);
-    if (!val("nabywca_adres")) return pokaz(os ? "Podaj adres do rachunku." : "Podaj adres firmy lub instytucji.", false);
+    if (!val("nabywca_nazwa")) return pokaz(os ? (bezplatne ? "Podaj swoje imię i nazwisko." : "Podaj imię i nazwisko osoby, na którą wystawimy rachunek.") : "Podaj nazwę firmy lub instytucji.", false);
+    if (!val("nabywca_adres")) return pokaz(os ? (bezplatne ? "Podaj adres (wystarczy miejscowość)." : "Podaj adres do rachunku.") : "Podaj adres firmy lub instytucji.", false);
     if (!os && !val("nabywca_nip")) return pokaz("Podaj NIP firmy lub instytucji.", false);
     if (!bezplatne && !os) {
       if (!val("nabywca_jst"))
@@ -619,7 +624,7 @@
       uczestnicy_lista:  lista,
       nabywca_nazwa:     val("nabywca_nazwa"),
       nabywca_adres:     val("nabywca_adres"),
-      nabywca_typ:       bezplatne ? null : (os ? "osoba" : "firma"),
+      nabywca_typ:       os ? "osoba" : "firma",
       nabywca_nip:       os ? null : val("nabywca_nip"),
       nabywca_jst:       !os && document.getElementById("nabywca_jst").value === "tak",
       /* Moment faktury nie jest juz wyborem w formularzu: firmy i osoby prywatne
@@ -638,9 +643,9 @@
     /* Bez platnosci: dane firmy zostaja, ale nie ma faktury ani odbiorcy. Urzad
        oznaczamy jak JST, zeby nie dostal zachety do czlonkostwa dla firm. */
     if (bezplatne) {
-      reprezentuje = document.getElementById("reprezentuje").value;
+      reprezentuje = os ? "prywatnie" : document.getElementById("reprezentuje").value;
       var REP = { firma: "firma geodezyjna", urzad: "urząd lub jednostka samorządu",
-                  instytucja: "inna instytucja lub uczelnia" };
+                  instytucja: "inna instytucja lub uczelnia", prywatnie: "osoba prywatna" };
       dane.nabywca_jst = reprezentuje === "urzad";
       dane.faktura_kiedy = null;
       dane.odbiorca_taki_sam = true;

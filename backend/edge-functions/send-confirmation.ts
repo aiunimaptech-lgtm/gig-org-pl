@@ -315,7 +315,11 @@ function zapisNotifyMail(rec: Record<string, unknown>, szk: Szkolenie | null) {
       wierszTabeli(Array.isArray(rec.uczestnicy_lista) ? "Uczestnicy (e-mail do linku)" : "Imiona i nazwiska", listaUczestnikow(rec)) +
       (bezpl ? "" : wierszTabeli("Kwota", kwota(rec, szk))))}
 
-    ${osoba
+    ${osoba && bezpl
+      ? blok("Osoba prywatna (udział bezpłatny)",
+          wierszTabeli("Imię i nazwisko", esc(s("nabywca_nazwa"))) +
+          wierszTabeli("Adres", esc(s("nabywca_adres"))))
+      : osoba
       ? blok("Osoba prywatna: RACHUNEK (nie faktura)",
           wierszTabeli("Imię i nazwisko", esc(s("nabywca_nazwa"))) +
           wierszTabeli("Adres", esc(s("nabywca_adres"))) +
@@ -426,10 +430,10 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>, szk: Szkolenie | n
   const termin = dataSzk ? ` w dniu ${dataSzk}${szk?.time_range ? `, godz. ${esc(szk.time_range)}` : ""}` : "";
   const online = szk?.is_online !== false;
   const kazdy = Array.isArray(rec.uczestnicy_lista) && (rec.uczestnicy_lista as unknown[]).length > 0;
-  const linkInfo = online && kazdy && !bezpl
+  const linkInfo = online && kazdy
     ? (start
-        ? `Link do logowania prześlemy <strong>${dataPL(start)}</strong>, czyli dzień przed terminem, <strong>każdemu uczestnikowi na jego adres e-mail</strong> podany w zgłoszeniu.`
-        : `Link do logowania prześlemy dzień przed terminem każdemu uczestnikowi na jego adres e-mail podany w zgłoszeniu.`)
+        ? `Link do ${bezpl ? "spotkania" : "logowania"} prześlemy <strong>${dataPL(start)}</strong>, czyli dzień przed terminem, <strong>każdemu uczestnikowi na jego adres e-mail</strong> podany w zgłoszeniu.`
+        : `Link do ${bezpl ? "spotkania" : "logowania"} prześlemy dzień przed terminem każdemu uczestnikowi na jego adres e-mail podany w zgłoszeniu.`)
     : online
     ? (start
         ? `Link do ${bezpl ? "spotkania" : "logowania na szkolenie"} prześlemy <strong>${dataPL(start)}</strong>, czyli dzień przed terminem.`
@@ -473,7 +477,7 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>, szk: Szkolenie | n
       wierszTabeli(kazdy ? "Uczestnicy (e-mail do linku)" : "Imiona i nazwiska", listaUczestnikow(rec)))}
 
     ${osoba
-      ? blok("Dane do rachunku",
+      ? blok(bezpl ? "Twoje dane" : "Dane do rachunku",
           wierszTabeli("Imię i nazwisko", esc(s("nabywca_nazwa"))) +
           wierszTabeli("Adres", esc(s("nabywca_adres"))))
       : blok(bezpl ? "Firma lub instytucja" : "Nabywca (dane do faktury)",
