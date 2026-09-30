@@ -87,7 +87,8 @@
         <div class="topbar-actions">
           <button class="btn btn-outline btn-sm" id="expPytania" title="Pytania z pola Uwagi, z pytającym i instytucją: do przekazania prowadzącemu">📄 Pytania uczestników (PDF)</button>
           <button class="btn btn-outline btn-sm" id="expRaport" title="Jeden wiersz na uczestnika — układ jak w arkuszu „Opłaty / Faktury / Zaświadczenia”">↓ Raport szkolenia (CSV)</button>
-          <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do zgłaszających z bieżącego filtra">✉ Wyślij e-mail</button>
+          <button class="btn btn-outline btn-sm" id="btnMailUcz" title="Wiadomość do uczestników (np. link do szkolenia) na ich własne adresy">✉ Do uczestników</button>
+          <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do zgłaszających organizacji z bieżącego filtra (sprawy zgłoszenia, faktura)">✉ Do organizacji</button>
         </div>
       </header>
 
@@ -414,13 +415,15 @@
             <button type="button" class="btn btn-ghost btn-xs" id="zapCzlonek" style="margin-left:8px;">${r.czlonek_gig===true ? 'Zmień na: nie członek' : 'Zmień na: członek GIG'}</button></dd>
           ${wiersz('Liczba osób', String(osoby(r)))}
           <dt>Uczestnicy</dt>
-          <dd class="${ucz.length?'':'pusto'}">${ucz.length?ucz.map(x=>esc(x)).join('<br>'):'nie podano'}</dd>
-          ${wiersz('E-mail', r.email)}
+          <dd class="${ucz.length?'':'pusto'}">${Array.isArray(r.uczestnicy_lista) && r.uczestnicy_lista.length
+            ? r.uczestnicy_lista.map(o => esc(o.imie || '') + (o.email ? ` <span style="color:#6b7f84;">· ${esc(o.email)}</span>` : '')).join('<br>')
+            : (ucz.length ? ucz.map(x=>esc(x)).join('<br>') : 'nie podano')}</dd>
+          ${wiersz('E-mail organizacji', r.email)}
           ${wiersz('Telefon', r.telefon)}
           ${wiersz('Uwagi', r.uwagi)}
         </dl>
         <div class="zap-blok">
-          <h4>Nabywca${r.nabywca_jst?' <span class="badge badge-read">jednostka samorządu</span>':''}</h4>
+          <h4>${r.nabywca_typ === 'osoba' ? 'Osoba prywatna <span class="badge badge-new">rachunek</span>' : 'Nabywca'}${r.nabywca_jst?' <span class="badge badge-read">jednostka samorządu</span>':''}</h4>
           <dl class="zap-dane" style="margin:0;">
             ${wiersz('Nazwa', r.nabywca_nazwa)}
             ${wiersz('Adres', r.nabywca_adres)}
@@ -479,7 +482,8 @@
             <div><label>Liczba osób</label><input type="number" id="edIle" min="1" max="99" value="${v(r.liczba_osob || 1)}"></div>
             <div><label>Status</label><select id="edStatus">${Object.entries(ETYK).map(([k, n]) => `<option value="${k}"${(r.status || 'new') === k ? ' selected' : ''}>${n}</option>`).join('')}</select></div>
           </div>
-          <label>Uczestnicy (każda osoba w osobnej linii)</label><textarea id="edUcz">${v(r.uczestnicy)}</textarea>
+          <label>Uczestnicy: każda osoba w osobnej linii, po przecinku e-mail uczestnika (na niego idzie link)</label><textarea id="edUcz">${v(Array.isArray(r.uczestnicy_lista) && r.uczestnicy_lista.length
+            ? r.uczestnicy_lista.map(o => (o.imie || '') + (o.email ? ', ' + o.email : '')).join('\n') : r.uczestnicy)}</textarea>
           <div class="rz">
             <div><label>E-mail</label><input type="email" id="edEmail" value="${v(r.email)}"></div>
             <div><label>Telefon</label><input type="text" id="edTel" value="${v(r.telefon)}"></div>
@@ -487,6 +491,9 @@
           <label>Uwagi i pytania</label><textarea id="edUwagi" style="min-height:110px">${v(r.uwagi)}</textarea>
           <div class="zap-blok">
             <h4 style="margin:0;">Nabywca</h4>
+            <label>Rodzaj</label><select id="edTyp">
+              <option value="firma"${r.nabywca_typ !== 'osoba' ? ' selected' : ''}>firma lub instytucja (faktura)</option>
+              <option value="osoba"${r.nabywca_typ === 'osoba' ? ' selected' : ''}>osoba prywatna (rachunek)</option></select>
             <label>Nazwa</label><input type="text" id="edNNazwa" value="${v(r.nabywca_nazwa)}">
             <label>Adres</label><input type="text" id="edNAdres" value="${v(r.nabywca_adres)}">
             <div class="rz">
@@ -524,7 +531,16 @@
         const taki = $('edTaki').checked;
         const zmiany = {
           szkolenie: t('edSzk') || null, liczba_osob: ile, status: $('edStatus').value,
-          uczestnicy: $('edUcz').value.split(/\n/).map(x => x.trim()).filter(Boolean).join('\n') || null,
+          ...(() => {
+            /* „Jan Kowalski, jan@firma.pl” -> imię + e-mail; linia bez adresu = samo nazwisko */
+            const osoby = $('edUcz').value.split(/\n/).map(x => x.trim()).filter(Boolean).map(x => {
+              const m = x.match(/^(.*?)[,;\s]+([^\s,;<>]+@[^\s,;<>]+\.[^\s,;<>]+)\s*$/);
+              return m ? { imie: m[1].trim(), email: m[2].toLowerCase() } : { imie: x, email: null };
+            });
+            return { uczestnicy: osoby.map(o => o.imie).join('\n') || null,
+                     uczestnicy_lista: osoby.some(o => o.email) ? osoby : null };
+          })(),
+          nabywca_typ: $('edTyp').value,
           email, telefon: t('edTel') || null, uwagi: $('edUwagi').value.trim() || null,
           nabywca_nazwa: t('edNNazwa') || null, nabywca_adres: t('edNAdres') || null, nabywca_nip: t('edNNip') || null,
           nabywca_jst: $('edJst').checked, faktura_kiedy: $('edFakt').value || null,
@@ -674,6 +690,27 @@
         catch (_) { toast('Przeglądarka nie pozwoliła skopiować', 'error'); }
       });
 
+      /* Wiadomość do UCZESTNIKÓW (np. link do szkolenia): własne adresy z uczestnicy_lista;
+         przy starszych zgłoszeniach bez listy zostaje adres organizacji. Duplikaty usuwamy. */
+      document.getElementById('btnMailUcz').addEventListener('click', () => {
+        const szk = nazwaSzk(document.getElementById('fSzkolenie').value);
+        const widziane = new Set(); let zOrganizacji = 0;
+        const odbiorcy = [];
+        filtruj().filter(r => r.status !== 'cancelled').forEach(r => {
+          const lista = Array.isArray(r.uczestnicy_lista) ? r.uczestnicy_lista.filter(o => o && o.email) : [];
+          const osoby = lista.length ? lista.map(o => ({ email: o.email, name: o.imie || '' }))
+            : [{ email: r.email, name: ((r.uczestnicy || '').split(/\n/)[0] || r.nabywca_nazwa || '').trim() }];
+          if (!lista.length) zOrganizacji++;
+          osoby.forEach(o => { const k = (o.email || '').toLowerCase(); if (k && !widziane.has(k)) { widziane.add(k); odbiorcy.push(o); } });
+        });
+        if (!odbiorcy.length) { toast('Brak odbiorców: zmień filtr albo poczekaj na zgłoszenia'); return; }
+        gigKreatorMaila({
+          odbiorcy, rodzaj: 'szkolenie', szkolenie: szk,
+          opis: 'uczestnicy' + (szk ? ' szkolenia <strong>' + esc(szk) + '</strong>' : ' <strong>wszystkich szkoleń</strong>') +
+            (zOrganizacji ? ` · ${zOrganizacji} starszych zgłoszeń bez adresów uczestników: tam wysyłamy na adres organizacji` : '')
+        });
+      });
+
       /* Wiadomość do wszystkich zgłaszających z bieżącego filtra (bez anulowanych) — kreator w _admin.js */
       document.getElementById('btnMail').addEventListener('click', () => {
         const szk = nazwaSzk(document.getElementById('fSzkolenie').value);
@@ -703,10 +740,15 @@
           const odb = odbiorca(r);
           const szk = SZKOLENIA[kluczSzk(r.szkolenie)] || {};
           const anulowane = r.status === 'cancelled';
-          const ucz = (r.uczestnicy || '').split(/\n/).map(x => x.trim()).filter(Boolean);
-          (ucz.length ? ucz : ['(nie podano)']).forEach(osoba => wiersze.push({
-            email: r.email || '',
+          /* nowe zgłoszenia: każdy uczestnik ze swoim e-mailem (uczestnicy_lista) */
+          const lista = Array.isArray(r.uczestnicy_lista) && r.uczestnicy_lista.length
+            ? r.uczestnicy_lista.map(o => ({ osoba: o.imie || '', email: o.email || r.email || '' }))
+            : ((r.uczestnicy || '').split(/\n/).map(x => x.trim()).filter(Boolean).map(osoba => ({ osoba, email: r.email || '' })));
+          (lista.length ? lista : [{ osoba: '(nie podano)', email: r.email || '' }]).forEach(({ osoba, email }) => wiersze.push({
+            email,
             osoba,
+            email_org: r.email || '',
+            dokument: r.nabywca_typ === 'osoba' ? 'rachunek (osoba prywatna)' : 'faktura',
             oplata: '',
             data: anulowane ? 'REZYGNACJA' : '',
             faktura_nr: '',
@@ -763,6 +805,8 @@
           { key:'odb_nazwa',      label:'Odbiorca' },
           { key:'odb_adres',      label:'Adres odbiorcy' },
           { key:'odb_nip',        label:'NIP/ID odbiorcy' },
+          { key:'email_org',      label:'E-mail organizacji' },
+          { key:'dokument',       label:'Dokument' },
           { key:'status',         label:'Status zgłoszenia' },
           { key:'zgloszono',      label:'Zgłoszono' },
           { key:'uwagi',          label:'Uwagi' },

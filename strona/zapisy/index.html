@@ -36,6 +36,21 @@
 .z-izba-dzieki{padding:22px 24px;font-size:15px;line-height:1.6;color:var(--ink);}
 .z-izba-dzieki p{color:var(--ink);margin:0 0 8px;max-width:none;text-align:left;}
 @media (max-width:560px){.z-izba-lista{grid-template-columns:1fr;}.z-izba-glowa h3{font-size:18px;}}/* footer — spójny z pozostałymi podstronami autorskimi */
+    .z-oplata{background:#fff8e6;border:1px solid #f0e2b6;color:#6b4f10;border-radius:10px;padding:12px 16px;font-size:14px;line-height:1.6;margin:0 0 18px;}
+    .z-oplata b{color:#4a360a;}
+    .z-osoba{border-top:1px solid #eef1f4;padding-top:12px;margin-top:4px;}
+    .z-osoba:first-child{border-top:0;padding-top:0;margin-top:0;}
+    .z-typ{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 18px;}
+    .z-typ label{display:flex;gap:10px;align-items:flex-start;border:1px solid #d6dde3;border-radius:10px;padding:12px 14px;cursor:pointer;font-weight:700;font-size:14.5px;line-height:1.35;}
+    .z-typ label small{display:block;font-weight:500;color:#6b7884;font-size:12.5px;margin-top:2px;}
+    .z-typ input{margin-top:3px;accent-color:var(--red);}
+    .z-typ label:has(input:checked){border-color:var(--red);background:#fdf5f6;}
+    @media(max-width:560px){.z-typ{grid-template-columns:1fr;}}
+    .z-czl{margin:4px 0 14px;padding:12px 14px;border:1px solid var(--line,#e6ebef);border-radius:10px;background:#fafbfc;}
+    .z-czl .chk{margin:0;}
+    .z-czl-msg{margin:8px 0 0;font-size:13.5px;line-height:1.5;}
+    .z-czl-msg.ok{color:#1c6b39;}.z-czl-msg.err{color:#a3122c;}.z-czl-msg.info{color:#6b7884;}
+    .z-osoba-nr{font-weight:800;font-size:12.5px;letter-spacing:.4px;text-transform:uppercase;color:var(--red);margin:0 0 8px;}
     .site-foot{background:var(--ink);color:rgba(255,255,255,.75);margin-top:0;padding:40px 0 26px;}.foot-in{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;}.site-foot strong{color:#fff;}.site-foot a{color:#fff;}.foot-soc a{display:inline-block;margin-left:14px;}
   </style>
   <link rel="stylesheet" href="/_assets/css/gig-subhead.css">
@@ -57,27 +72,38 @@
   <fieldset>
     <legend>Uczestnicy<span class="opis">Kogo zgłaszasz na szkolenie</span></legend>
     <div class="pole" style="max-width:220px">
-      <label for="liczba_osob">Liczba osób z organizacji <span class="wym">*</span></label>
+      <label for="liczba_osob">Liczba uczestników <span class="wym">*</span></label>
       <input type="number" id="liczba_osob" name="liczba_osob" min="1" max="99" step="1" value="1" required>
     </div>
-    <div class="pole">
+    <!-- Szkolenie płatne: każdy uczestnik osobno, z własnym e-mailem (na niego idzie link do szkolenia).
+         Wydarzenie bezpłatne: jedno pole z nazwiskami (poniżej, pokazywane przez wlaczBezplatne). -->
+    <div class="z-oplata" id="zOplata"></div>
+    <div id="zOsoby"></div>
+    <p class="hint" id="zOsobyHint">Na adres uczestnika wyślemy link do szkolenia. Zgłoszenie, fakturę i płatność prowadzimy
+      z adresem kontaktowym organizacji podanym niżej, w części „Kontakt”.</p>
+    <div class="pole" id="zUczPole" hidden>
       <label for="uczestnicy">Imiona i nazwiska <span class="wym">*</span></label>
-      <textarea id="uczestnicy" name="uczestnicy" required placeholder="Jan Kowalski&#10;Anna Nowak"></textarea>
+      <textarea id="uczestnicy" name="uczestnicy" placeholder="Jan Kowalski&#10;Anna Nowak"></textarea>
       <p class="hint">Każda osoba w osobnej linii.</p>
     </div>
   </fieldset>
 
   <fieldset id="zNabywca">
     <legend><span id="zNabTytul">Dane nabywcy</span><span class="opis" id="zNabOpis">Podmiot, na który wystawimy fakturę</span></legend>
+    <!-- Kto płaci: firma/instytucja (faktura) albo osoba prywatna (rachunek). -->
+    <div class="z-typ" id="zTypPole" role="radiogroup" aria-label="Kto płaci za szkolenie">
+      <label><input type="radio" name="nabywca_typ" value="firma" checked><span>Firma lub instytucja<small>wystawimy fakturę</small></span></label>
+      <label><input type="radio" name="nabywca_typ" value="osoba"><span>Osoba prywatna<small>wystawimy rachunek</small></span></label>
+    </div>
     <div class="pole">
-      <label for="nabywca_nazwa">Nazwa firmy / instytucji <span class="wym">*</span></label>
+      <label for="nabywca_nazwa" id="zNazwaEtyk">Nazwa firmy / instytucji <span class="wym">*</span></label>
       <input type="text" id="nabywca_nazwa" name="nabywca_nazwa" required>
     </div>
     <div class="pole">
       <label for="nabywca_adres">Adres <span class="wym">*</span></label>
       <input type="text" id="nabywca_adres" name="nabywca_adres" required placeholder="ul. Przykładowa 1, 00-000 Miasto">
     </div>
-    <div class="row">
+    <div class="row" id="zNipRow">
       <div class="pole">
         <label for="nabywca_nip">NIP <span class="wym">*</span></label>
         <input type="text" id="nabywca_nip" name="nabywca_nip" required inputmode="numeric" placeholder="0000000000">
@@ -104,6 +130,15 @@
         <p class="hint">W samorządzie nabywcą jest zwykle gmina lub powiat, a odbiorcą urząd albo jednostka podległa — po wybraniu „Tak" otworzymy pola odbiorcy.</p>
       </div>
     </div>
+    <!-- Cena członkowska: zaznaczenie sprawdzamy w katalogu Członków (po NIP-ie, e-mailu, nazwie),
+         tą samą funkcją co baza przy zapisie (gig_dopasuj_czlonka), i od razu przeliczamy kwotę. -->
+    <div class="z-czl" id="zCzlPole">
+      <div class="chk">
+        <input type="checkbox" id="czlonek">
+        <label for="czlonek">Firma jest członkiem Geodezyjnej Izby Gospodarczej (cena członkowska)</label>
+      </div>
+      <p class="z-czl-msg" id="czlMsg" hidden></p>
+    </div>
   </fieldset>
 
   <fieldset id="zOdbiorcaSet">
@@ -129,10 +164,10 @@
   </fieldset>
 
   <fieldset>
-    <legend>Kontakt<span class="opis">Na te dane odezwiemy się w sprawie szkolenia</span></legend>
+    <legend>Kontakt<span class="opis" id="zKontaktOpis">Osoba kontaktowa organizacji: potwierdzenie zgłoszenia, faktura i płatność</span></legend>
     <div class="row">
       <div class="pole">
-        <label for="email">Adres e-mail <span class="wym">*</span></label>
+        <label for="email" id="zEmailEtyk">E-mail do obsługi zgłoszenia i faktury <span class="wym">*</span></label>
         <input type="email" id="email" name="email" required>
       </div>
       <div class="pole">
@@ -224,7 +259,7 @@
      trafia do submissions_kontakt jako "Zainteresowanie czlonkostwem: <firma>",
      wiec biuro dostaje maila jak przy kazdym zgloszeniu, a klient potwierdzenie. */
   async function zachecDoIzby(db, dane) {
-    if (dane.nabywca_jst) return;
+    if (dane.nabywca_jst || dane.nabywca_typ === "osoba") return;   // zachęta tylko dla firm
     if (bezplatne && reprezentuje !== "firma") return;
     var nip = (dane.nabywca_nip || "").replace(/\D/g, "");
     try {
@@ -306,8 +341,141 @@
     var n = t.replace(/\s/g, "").match(/\d+(?:[.,]\d+)?/);
     return !!n && parseFloat(n[0].replace(",", ".")) === 0;
   }
+  /* Uczestnicy szkolenia płatnego: wiersz na osobę (imię i nazwisko + własny e-mail).
+     Liczba wierszy idzie za polem „Liczba osób”; wpisane dane zostają przy zmianie liczby. */
+  var MAX_OSOB = 30, cena = null, cenaCzl = null;
+  var czlonek = null;          // null = nie sprawdzano, {nazwa, sposob} = potwierdzony, false = brak w katalogu
+  var boxOsoby = document.getElementById("zOsoby");
+  function liczba(txt) {
+    var n = String(txt || "").replace(/\s/g, "").match(/\d+(?:[.,]\d+)?/);
+    return n ? parseFloat(n[0].replace(",", ".")) : null;
+  }
+  function zl(x) { return x.toLocaleString("pl-PL", { maximumFractionDigits: 2 }) + " zł"; }
+  function rysujOsoby() {
+    if (bezplatne) return;
+    var ile = Math.max(1, Math.min(MAX_OSOB, parseInt(val("liczba_osob"), 10) || 1));
+    var stare = [].map.call(boxOsoby.querySelectorAll(".z-osoba"), function (w) {
+      return { imie: w.querySelector(".uImie").value, email: w.querySelector(".uEmail").value };
+    });
+    var html = "";
+    for (var i = 0; i < ile; i++) {
+      html += '<div class="z-osoba"><p class="z-osoba-nr">Uczestnik ' + (i + 1) + '</p><div class="row">' +
+        '<div class="pole"><label>Imię i nazwisko <span class="wym">*</span></label><input type="text" class="uImie" autocomplete="off"></div>' +
+        '<div class="pole"><label>E-mail uczestnika <span class="wym">*</span></label><input type="email" class="uEmail" placeholder="tu wyślemy link do szkolenia" autocomplete="off"></div>' +
+        '</div></div>';
+    }
+    boxOsoby.innerHTML = html;
+    [].forEach.call(boxOsoby.querySelectorAll(".z-osoba"), function (w, i) {
+      if (stare[i]) { w.querySelector(".uImie").value = stare[i].imie; w.querySelector(".uEmail").value = stare[i].email; }
+    });
+    rysujOplate();
+  }
+  /* Osoba prywatna: rachunek zamiast faktury, bez NIP-u, JST, odbiorcy i ceny członkowskiej. */
+  function osobaPrywatna() {
+    var z = document.querySelector('input[name="nabywca_typ"]:checked');
+    return !bezplatne && !!z && z.value === "osoba";
+  }
+  function ustawTyp() {
+    var os = osobaPrywatna();
+    document.getElementById("zNabTytul").textContent = os ? "Dane do rachunku" : "Dane nabywcy";
+    document.getElementById("zNabOpis").textContent = os ? "Osoba prywatna, na którą wystawimy rachunek" : "Podmiot, na który wystawimy fakturę";
+    document.getElementById("zNazwaEtyk").innerHTML = (os ? "Imię i nazwisko" : "Nazwa firmy / instytucji") + ' <span class="wym">*</span>';
+    document.getElementById("zNipRow").hidden = os;
+    document.getElementById("zOdbiorcaSet").hidden = os || bezplatne;
+    document.getElementById("zCzlPole").hidden = os || bezplatne;
+    if (os) { chkCzl.checked = false; czlonek = null; komCzl("", ""); }
+    rysujOplate();
+  }
+
+  function rysujOplate() {
+    var box = document.getElementById("zOplata");
+    if (bezplatne) { box.hidden = true; return; }
+    var ile = Math.max(1, parseInt(val("liczba_osob"), 10) || 1);
+    var kwoty = "";
+    var jestCzl = !!(czlonek && cenaCzl) && !osobaPrywatna();
+    var c = jestCzl ? cenaCzl : cena;
+    if (c) {
+      kwoty = "<br>Do zapłaty" + (jestCzl ? " (cena członkowska)" : "") + ": <b>" + ile + " × " + zl(c) + " = " + zl(ile * c) + "</b>." +
+        (!jestCzl && cenaCzl && !osobaPrywatna() ? " Członkowie GIG płacą " + zl(cenaCzl) + " za osobę: zaznacz członkostwo w danych nabywcy." : "");
+    }
+    box.innerHTML = "<b>Opłata dotyczy każdego uczestnika osobno.</b>" + kwoty +
+      (osobaPrywatna()
+        ? " Wszystkich uczestników ujmiemy na <b>jednym rachunku</b> wystawionym na osobę podaną niżej."
+        : " Wszystkich uczestników ujmiemy na <b>jednej fakturze</b> wystawionej na organizację podaną niżej.") +
+      (ile > MAX_OSOB ? "<br>Przy więcej niż " + MAX_OSOB + " osobach napisz do nas na biuro@gig.org.pl." : "");
+    box.hidden = false;
+  }
+  document.getElementById("liczba_osob").addEventListener("input", rysujOsoby);
+  rysujOsoby();
+
+  /* Członkostwo: sprawdzamy w katalogu tą samą funkcją, której używa baza przy zapisie,
+     więc cena na stronie zgadza się z tym, co potem widzi biuro w panelu. Zgodny NIP
+     zaznacza pole sam; zaznaczenie bez dopasowania nie daje ceny członkowskiej. */
+  var chkCzl = document.getElementById("czlonek"), msgCzl = document.getElementById("czlMsg");
+  var sprawdzanieCzl = 0;
+  function komCzl(t, klasa) { msgCzl.innerHTML = t; msgCzl.className = "z-czl-msg " + klasa; msgCzl.hidden = !t; }
+  async function sprawdzCzlonka(zRecznego) {
+    var nip = val("nabywca_nip").replace(/\D/g, ""), odbNip = val("odbiorca_nip").replace(/\D/g, "");
+    var mail = val("email"), nazwa = val("nabywca_nazwa");
+    if (!nip && !mail && !nazwa) {
+      czlonek = null; rysujOplate();
+      if (chkCzl.checked) komCzl("Wpisz NIP firmy, a sprawdzimy członkostwo w katalogu Izby.", "info"); else komCzl("", "");
+      return;
+    }
+    var nr = ++sprawdzanieCzl;
+    if (chkCzl.checked || zRecznego) komCzl("Sprawdzam w katalogu Członków…", "info");
+    try {
+      await loadSdk();
+      var db = window.supabase.createClient(window.GIG_CFG.SUPABASE_URL, window.GIG_CFG.SUPABASE_ANON);
+      var r = await db.rpc("gig_dopasuj_czlonka", { p_nip: nip || null, p_email: mail || null, p_nazwa: nazwa || null, p_nip2: odbNip || null });
+      if (nr !== sprawdzanieCzl) return;              // nowsze sprawdzenie w toku
+      if (r.error) throw r.error;
+      var d = (r.data || [])[0];
+      if (d && d.id) {
+        var c = await db.from("czlonkowie").select("name").eq("id", d.id).maybeSingle();
+        czlonek = { nazwa: (c.data && c.data.name) || "", sposob: d.sposob };
+        chkCzl.checked = true;
+        komCzl("✓ Potwierdzone: <b>" + (czlonek.nazwa || "firma").replace(/[<>&]/g, "") + "</b> jest członkiem GIG" +
+          (d.sposob !== "NIP" ? " (rozpoznane po: " + d.sposob + "; biuro potwierdzi przy fakturze)" : "") +
+          ". Liczymy cenę członkowską.", "ok");
+      } else {
+        czlonek = false;
+        if (chkCzl.checked)
+          komCzl("Nie znaleźliśmy tej firmy w katalogu Członków (sprawdzamy NIP, e-mail i nazwę). Liczymy cenę standardową. " +
+            'Jeśli firma jest członkiem, napisz do nas: <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.', "err");
+        else komCzl("", "");
+      }
+    } catch (e) {
+      console.warn("czlonek:", e);
+      czlonek = null;
+      if (chkCzl.checked) komCzl("Nie udało się teraz sprawdzić członkostwa. Biuro zweryfikuje je przy fakturze.", "info");
+    }
+    rysujOplate();
+  }
+  chkCzl.addEventListener("change", function () {
+    if (chkCzl.checked) sprawdzCzlonka(true);
+    else { czlonek = null; komCzl("", ""); rysujOplate(); }
+  });
+  var czasCzl = null;
+  function pozniejCzl() { clearTimeout(czasCzl); czasCzl = setTimeout(function () { sprawdzCzlonka(false); }, 500); }
+  document.getElementById("nabywca_nip").addEventListener("input", function () {
+    if (val("nabywca_nip").replace(/\D/g, "").length === 10) pozniejCzl();
+  });
+  document.getElementById("odbiorca_nip").addEventListener("change", pozniejCzl);
+  [].forEach.call(document.querySelectorAll('input[name="nabywca_typ"]'), function (r) { r.addEventListener("change", ustawTyp); });
+  document.getElementById("email").addEventListener("change", pozniejCzl);
+
   function wlaczBezplatne() {
     bezplatne = true;
+    document.getElementById("zOsoby").hidden = true;
+    document.getElementById("zOsobyHint").hidden = true;
+    document.getElementById("zOplata").hidden = true;
+    document.getElementById("zUczPole").hidden = false;
+    document.getElementById("zCzlPole").hidden = true;
+    document.getElementById("zTypPole").hidden = true;
+    document.getElementById("zNipRow").hidden = false;
+    document.getElementById("zKontaktOpis").textContent = "Na te dane odezwiemy się w sprawie wydarzenia";
+    document.getElementById("zEmailEtyk").innerHTML = 'Adres e-mail <span class="wym">*</span>';
     document.getElementById("zH1").textContent = "Zapis na bezpłatne wydarzenie";
     document.getElementById("zLead").innerHTML = "Udział jest bezpłatny i otwarty, także dla osób spoza Izby. Nie wystawiamy faktury, ale prosimy o dane firmy lub instytucji i kontakt. Pola oznaczone <span style=\"color:#cc0a2b\">*</span> są obowiązkowe.";
     document.getElementById("zSzkEtyk").textContent = "Wydarzenie";
@@ -324,10 +492,13 @@
   if (szkolenie) {
     loadSdk().then(function () {
       var db = window.supabase.createClient(window.GIG_CFG.SUPABASE_URL, window.GIG_CFG.SUPABASE_ANON);
-      return db.from("szkolenia").select("price").eq("status", "published")
+      return db.from("szkolenia").select("price,price_member").eq("status", "published")
         .ilike("title", szkolenie.replace(/[%_\\]/g, function (x) { return "\\" + x; })).limit(1);
     }).then(function (r) {
-      if (r && !r.error && r.data && r.data.length && cenaZerowa(r.data[0].price)) wlaczBezplatne();
+      if (!r || r.error || !r.data || !r.data.length) return;
+      if (cenaZerowa(r.data[0].price)) { wlaczBezplatne(); return; }
+      cena = liczba(r.data[0].price); cenaCzl = liczba(r.data[0].price_member);
+      rysujOplate();
     }).catch(function (e) { console.warn("szkolenia:", e); });
   }
 
@@ -370,6 +541,7 @@
       var adres = [d.ulica, [d.kod, d.miejscowosc].filter(Boolean).join(" ")].filter(Boolean).join(", ");
       if (adres) document.getElementById("nabywca_adres").value = adres;
       pokazG("Wczytano z rejestru: " + (d.nazwa || "") + ". Sprawdź, czy dane się zgadzają.", true);
+      if (!bezplatne) sprawdzCzlonka(false);
     } catch (e) {
       pokazG((e.message || "Nie udało się pobrać danych.") + " Wpisz je ręcznie.", false);
     } finally {
@@ -399,11 +571,27 @@
        jeden na raz, zawsze widoczne w tym samym miejscu pod przyciskiem. */
     var ile = parseInt(val("liczba_osob"), 10);
     if (!ile || ile < 1)       return pokaz("Podaj liczbę osób (co najmniej 1).", false);
-    if (!val("uczestnicy"))    return pokaz("Podaj imiona i nazwiska uczestników.", false);
-    if (!val("nabywca_nazwa")) return pokaz("Podaj nazwę firmy lub instytucji.", false);
-    if (!val("nabywca_adres")) return pokaz("Podaj adres firmy lub instytucji.", false);
-    if (!val("nabywca_nip"))   return pokaz("Podaj NIP firmy lub instytucji.", false);
-    if (!bezplatne) {
+    var lista = null;
+    if (bezplatne) {
+      if (!val("uczestnicy"))  return pokaz("Podaj imiona i nazwiska uczestników.", false);
+    } else {
+      if (ile > MAX_OSOB)      return pokaz("Przy więcej niż " + MAX_OSOB + " osobach napisz do nas na biuro@gig.org.pl.", false);
+      lista = [].map.call(boxOsoby.querySelectorAll(".z-osoba"), function (w) {
+        return { imie: w.querySelector(".uImie").value.trim(), email: w.querySelector(".uEmail").value.trim().toLowerCase() };
+      });
+      for (var i = 0; i < lista.length; i++) {
+        if (!lista[i].imie) return pokaz("Podaj imię i nazwisko uczestnika " + (i + 1) + ".", false);
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(lista[i].email))
+          return pokaz("Podaj poprawny e-mail uczestnika " + (i + 1) + ". Na ten adres wyślemy link do szkolenia.", false);
+        for (var j = 0; j < i; j++) if (lista[j].email === lista[i].email)
+          return pokaz("Uczestnicy " + (j + 1) + " i " + (i + 1) + " mają ten sam e-mail. Każda osoba potrzebuje własnego adresu, bo link do szkolenia jest imienny.", false);
+      }
+    }
+    var os = osobaPrywatna();
+    if (!val("nabywca_nazwa")) return pokaz(os ? "Podaj imię i nazwisko osoby, na którą wystawimy rachunek." : "Podaj nazwę firmy lub instytucji.", false);
+    if (!val("nabywca_adres")) return pokaz(os ? "Podaj adres do rachunku." : "Podaj adres firmy lub instytucji.", false);
+    if (!os && !val("nabywca_nip")) return pokaz("Podaj NIP firmy lub instytucji.", false);
+    if (!bezplatne && !os) {
       if (!val("nabywca_jst"))
         return pokaz("Zaznacz, czy nabywca jest jednostką samorządu terytorialnego.", false);
       if (!taki.checked && !val("odbiorca_nazwa"))
@@ -427,18 +615,20 @@
     var dane = {
       szkolenie:         szkolenie || null,
       liczba_osob:       parseInt(val("liczba_osob"), 10) || null,
-      uczestnicy:        val("uczestnicy"),
+      uczestnicy:        lista ? lista.map(function (o) { return o.imie; }).join("\n") : val("uczestnicy"),
+      uczestnicy_lista:  lista,
       nabywca_nazwa:     val("nabywca_nazwa"),
       nabywca_adres:     val("nabywca_adres"),
-      nabywca_nip:       val("nabywca_nip"),
-      nabywca_jst:       document.getElementById("nabywca_jst").value === "tak",
+      nabywca_typ:       bezplatne ? null : (os ? "osoba" : "firma"),
+      nabywca_nip:       os ? null : val("nabywca_nip"),
+      nabywca_jst:       !os && document.getElementById("nabywca_jst").value === "tak",
       /* Moment faktury nie jest juz wyborem w formularzu: firmy i osoby prywatne
          placa przed szkoleniem, jednostki rzadowe i samorzadowe po, wg faktury. */
-      faktura_kiedy:     document.getElementById("nabywca_jst").value === "tak" ? "po" : "przed",
-      odbiorca_taki_sam: taki.checked,
-      odbiorca_nazwa:    taki.checked ? null : val("odbiorca_nazwa"),
-      odbiorca_adres:    taki.checked ? null : val("odbiorca_adres"),
-      odbiorca_nip:      taki.checked ? null : val("odbiorca_nip"),
+      faktura_kiedy:     !os && document.getElementById("nabywca_jst").value === "tak" ? "po" : "przed",
+      odbiorca_taki_sam: os || taki.checked,
+      odbiorca_nazwa:    os || taki.checked ? null : val("odbiorca_nazwa"),
+      odbiorca_adres:    os || taki.checked ? null : val("odbiorca_adres"),
+      odbiorca_nip:      os || taki.checked ? null : val("odbiorca_nip"),
       email:             email,
       telefon:           val("telefon"),
       uwagi:             val("uwagi") || null,

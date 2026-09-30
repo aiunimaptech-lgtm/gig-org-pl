@@ -13,7 +13,10 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
 - **Panel**: `/admin/` — login, pulpit, formularze (newsletter+kontakt), artykuły (CRUD, edytor Quill).
 - Formularze CF7 przechwytywane przez `_assets/js/forms_integration.js` → Supabase (fallback `mailto:`).
 - **Zapisy na szkolenia**: osobna strona `/zapisy/` (ręczna, nie mirror) → tabela `zapisy_szkolenia`.
-  Zbiera uczestników i dane do faktury (nabywca + odbiorca, znacznik JST). Przycisk „Zapisz się”
+  Zbiera uczestników i dane do faktury (nabywca + odbiorca, znacznik JST). Szkolenie płatne: każdy
+  uczestnik z własnym e-mailem (`uczestnicy_lista` jsonb; na niego idzie link), `email` = kontakt organizacji
+  (potwierdzenie, faktura); `nabywca_typ` firma/osoba (osoba prywatna = rachunek, bez NIP/JST/ceny
+  członkowskiej); członkostwo sprawdzane na żywo `gig_dopasuj_czlonka` i kwota przeliczana w formularzu. Przycisk „Zapisz się”
   w kalendarzu prowadzi tam z `?szkolenie=<tytuł>`.
 - **Przyjęcie członka — dwa etapy wg art. 12 pkt 1 Statutu** (`backend/supabase_uchwaly.sql`
   + `backend/supabase_uchwaly_opinia.sql`, tabele `uchwaly`, `uchwaly_glosy`, `rada_izby`):

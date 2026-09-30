@@ -261,13 +261,43 @@ function wierszTabeli(etykieta: string, wartosc: string): string {
     </tr>`;
 }
 
+/* Uczestnicy: przy szkoleniu płatnym formularz zbiera imię i e-mail każdej osoby
+   (uczestnicy_lista), bo link do szkolenia idzie do uczestnika, a sprawy zgłoszenia
+   i faktura do kontaktu organizacji (rec.email). Starsze zgłoszenia mają same nazwiska. */
+function listaUczestnikow(rec: Record<string, unknown>): string {
+  const l = rec.uczestnicy_lista;
+  if (Array.isArray(l) && l.length) {
+    return l.map((o: Record<string, unknown>) =>
+      `${esc(String(o.imie ?? "").trim())}${o.email ? ` &middot; <a href="mailto:${esc(String(o.email))}" style="color:${C.mid};">${esc(String(o.email))}</a>` : ""}`)
+      .join("<br>");
+  }
+  return esc(String(rec.uczestnicy ?? "").trim()).replace(/\n/g, "<br>");
+}
+function liczbaZ(txt: string | null | undefined): number | null {
+  const n = String(txt ?? "").replace(/\s/g, "").match(/\d+(?:[.,]\d+)?/);
+  return n ? parseFloat(n[0].replace(",", ".")) : null;
+}
+function zl(x: number): string {
+  return x.toLocaleString("pl-PL", { maximumFractionDigits: 2 }) + " zł";
+}
+/* Kwota: liczba osób × cena; członek Izby (rozpoznany przez bazę przy zapisie) płaci cenę członkowską. */
+function kwota(rec: Record<string, unknown>, szk: Szkolenie | null): string {
+  const ile = Number(rec.liczba_osob) || 1;
+  const czl = rec.czlonek_gig === true && !!liczbaZ(szk?.price_member);
+  const c = czl ? liczbaZ(szk?.price_member) : liczbaZ(szk?.price);
+  if (!c) return "";
+  return `${ile} × ${zl(c)} = <strong>${zl(ile * c)}</strong>${czl ? " (cena członkowska)" : ""}`;
+}
+
 /* Powiadomienie dla GIG: komplet danych potrzebnych do wystawienia faktury,
    zeby nie trzeba bylo wchodzic do panelu przy kazdym zgloszeniu. */
-function zapisNotifyMail(rec: Record<string, unknown>, bezpl = false) {
+function zapisNotifyMail(rec: Record<string, unknown>, szk: Szkolenie | null) {
+  const bezpl = cenaZerowa(szk?.price);
   const s = (k: string) => String(rec[k] ?? "").trim();
   const szkolenie = s("szkolenie") || "(nie podano)";
   const takiSam = rec.odbiorca_taki_sam !== false;
   const jst = rec.nabywca_jst === true;
+  const osoba = rec.nabywca_typ === "osoba";   // osoba prywatna: rachunek zamiast faktury
   const faktura = rec.faktura_kiedy === "po" ? "po szkoleniu"
     : (rec.faktura_kiedy === "przed" ? "przed szkoleniem" : "");
 
@@ -282,9 +312,15 @@ function zapisNotifyMail(rec: Record<string, unknown>, bezpl = false) {
 
     ${blok("Uczestnicy",
       wierszTabeli("Liczba osób", esc(s("liczba_osob"))) +
-      wierszTabeli("Imiona i nazwiska", esc(s("uczestnicy")).replace(/\n/g, "<br>")))}
+      wierszTabeli(Array.isArray(rec.uczestnicy_lista) ? "Uczestnicy (e-mail do linku)" : "Imiona i nazwiska", listaUczestnikow(rec)) +
+      (bezpl ? "" : wierszTabeli("Kwota", kwota(rec, szk))))}
 
-    ${blok(bezpl ? "Firma lub instytucja (bez faktury)" : "Nabywca",
+    ${osoba
+      ? blok("Osoba prywatna: RACHUNEK (nie faktura)",
+          wierszTabeli("Imię i nazwisko", esc(s("nabywca_nazwa"))) +
+          wierszTabeli("Adres", esc(s("nabywca_adres"))) +
+          wierszTabeli("Dokument", "<strong>rachunek</strong>, płatność przed szkoleniem"))
+      : blok(bezpl ? "Firma lub instytucja (bez faktury)" : "Nabywca",
       wierszTabeli("Nazwa", esc(s("nabywca_nazwa"))) +
       wierszTabeli("Adres", esc(s("nabywca_adres"))) +
       wierszTabeli("NIP", esc(s("nabywca_nip"))) +
@@ -294,7 +330,7 @@ function zapisNotifyMail(rec: Record<string, unknown>, bezpl = false) {
         : (rec.czlonek_gig === false ? "nie" : "")) +
       wierszTabeli("Faktura", bezpl ? "nie (udział bezpłatny)" : faktura))}
 
-    ${bezpl ? "" : takiSam
+    ${bezpl || osoba ? "" : takiSam
       ? blok("Odbiorca", wierszTabeli("Odbiorca", "taki sam jak nabywca"))
       : blok("Odbiorca",
           wierszTabeli("Nazwa", esc(s("odbiorca_nazwa"))) +
@@ -331,7 +367,7 @@ function dzienPrzed(dateStart: string): Date | null {
   return d;
 }
 
-type Szkolenie = { date_start: string | null; time_range: string | null; is_online: boolean | null; platnosc: string | null; price: string | null };
+type Szkolenie = { date_start: string | null; time_range: string | null; is_online: boolean | null; platnosc: string | null; price: string | null; price_member: string | null };
 
 /* Wydarzenie bezplatne (np. Forum z GUGiK): cena dla uczestnikow spoza Izby jest
    zerowa albo brzmi „bezplatne". Wtedy nie ma faktury ani przelewu - ta sama
@@ -357,7 +393,7 @@ async function pobierzSzkolenie(tytul: string): Promise<Szkolenie | null> {
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
     const r = await db.from("szkolenia")
-      .select("date_start,time_range,is_online,platnosc,price")
+      .select("date_start,time_range,is_online,platnosc,price,price_member")
       .ilike("title", t.replace(/[%_]/g, (m) => "\\" + m))
       .limit(1).maybeSingle();
     if (r.error) { console.error("szkolenia:", r.error.message); return null; }
@@ -380,6 +416,7 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>, szk: Szkolenie | n
   const szkolenie = s("szkolenie");
   const takiSam = rec.odbiorca_taki_sam !== false;
   const jst = rec.nabywca_jst === true;
+  const osoba = rec.nabywca_typ === "osoba";   // osoba prywatna: rachunek zamiast faktury
   const faktura = rec.faktura_kiedy === "po" ? "po szkoleniu"
     : (rec.faktura_kiedy === "przed" ? "przed szkoleniem" : "");
 
@@ -388,7 +425,12 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>, szk: Szkolenie | n
   const dataSzk = szk?.date_start ? dataPL(new Date(szk.date_start + "T12:00:00Z")) : "";
   const termin = dataSzk ? ` w dniu ${dataSzk}${szk?.time_range ? `, godz. ${esc(szk.time_range)}` : ""}` : "";
   const online = szk?.is_online !== false;
-  const linkInfo = online
+  const kazdy = Array.isArray(rec.uczestnicy_lista) && (rec.uczestnicy_lista as unknown[]).length > 0;
+  const linkInfo = online && kazdy && !bezpl
+    ? (start
+        ? `Link do logowania prześlemy <strong>${dataPL(start)}</strong>, czyli dzień przed terminem, <strong>każdemu uczestnikowi na jego adres e-mail</strong> podany w zgłoszeniu.`
+        : `Link do logowania prześlemy dzień przed terminem każdemu uczestnikowi na jego adres e-mail podany w zgłoszeniu.`)
+    : online
     ? (start
         ? `Link do ${bezpl ? "spotkania" : "logowania na szkolenie"} prześlemy <strong>${dataPL(start)}</strong>, czyli dzień przed terminem.`
         : `Link do ${bezpl ? "spotkania" : "logowania na szkolenie"} prześlemy dzień przed jego terminem.`)
@@ -421,23 +463,27 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>, szk: Szkolenie | n
 
     ${bezpl
       ? blok("Udział", `<tr><td colspan="2" style="padding:2px 0;color:${C.dark};"><p style="margin:0;font-size:14px;line-height:1.7;">Udział jest <strong>bezpłatny</strong>. Nie wystawiamy faktury i nie prosimy o żadną wpłatę.</p></td></tr>`)
-      : blok("Płatność", `<tr><td colspan="2" style="padding:2px 0;color:${C.dark};">${platnosc}
-      <p style="margin:10px 0 0;font-size:14px;line-height:1.7;">Faktura zostanie wysłana do <strong>KSeF</strong>.</p></td></tr>`)}
+      : blok("Płatność", `<tr><td colspan="2" style="padding:2px 0;color:${C.dark};">${kwota(rec, szk) ? `<p style="margin:0 0 10px;font-size:14px;line-height:1.7;">Do zapłaty: ${kwota(rec, szk)}. Opłata dotyczy każdego uczestnika; wszystkich ujmujemy na ${osoba ? "jednym rachunku wystawionym na osobę podaną w zgłoszeniu" : "jednej fakturze wystawionej na nabywcę"}.</p>` : ""}${platnosc}
+      <p style="margin:10px 0 0;font-size:14px;line-height:1.7;">${osoba ? "Wystawimy <strong>rachunek</strong> na osobę prywatną podaną w zgłoszeniu." : "Faktura zostanie wysłana do <strong>KSeF</strong>."}</p></td></tr>`)}
 
     <p style="margin:0 0 16px;font-size:14px;line-height:1.6;">Poniżej dane, które otrzymaliśmy. Prosimy o ich sprawdzenie:</p>
 
     ${blok("Uczestnicy",
       wierszTabeli("Liczba osób", esc(s("liczba_osob"))) +
-      wierszTabeli("Imiona i nazwiska", esc(s("uczestnicy")).replace(/\n/g, "<br>")))}
+      wierszTabeli(kazdy ? "Uczestnicy (e-mail do linku)" : "Imiona i nazwiska", listaUczestnikow(rec)))}
 
-    ${blok(bezpl ? "Firma lub instytucja" : "Nabywca (dane do faktury)",
+    ${osoba
+      ? blok("Dane do rachunku",
+          wierszTabeli("Imię i nazwisko", esc(s("nabywca_nazwa"))) +
+          wierszTabeli("Adres", esc(s("nabywca_adres"))))
+      : blok(bezpl ? "Firma lub instytucja" : "Nabywca (dane do faktury)",
       wierszTabeli("Nazwa", esc(s("nabywca_nazwa"))) +
       wierszTabeli("Adres", esc(s("nabywca_adres"))) +
       wierszTabeli("NIP", esc(s("nabywca_nip"))) +
       (bezpl ? "" : wierszTabeli("Jednostka samorządu", jst ? "TAK" : "nie") +
       wierszTabeli("Faktura", faktura)))}
 
-    ${bezpl ? "" : takiSam
+    ${bezpl || osoba ? "" : takiSam
       ? blok("Odbiorca", wierszTabeli("Odbiorca", "taki sam jak nabywca"))
       : blok("Odbiorca",
           wierszTabeli("Nazwa", esc(s("odbiorca_nazwa"))) +
@@ -451,7 +497,7 @@ function zapisPotwierdzenieMail(rec: Record<string, unknown>, szk: Szkolenie | n
 
     <p style="margin:18px 0 0;font-size:13px;color:#6b7c8c;line-height:1.6;">
       ${bezpl ? "Jeśli któraś dana jest niepoprawna, odpisz na tę wiadomość, a poprawimy ją."
-        : "Jeśli któraś dana jest niepoprawna, odpisz na tę wiadomość, a poprawimy ją przed wystawieniem faktury."}</p>`;
+        : `Jeśli któraś dana jest niepoprawna, odpisz na tę wiadomość, a poprawimy ją przed wystawieniem ${osoba ? "rachunku" : "faktury"}.`}</p>`;
   return { subject: bezpl ? "Potwierdzenie zgłoszenia - GIG" : "Potwierdzenie zgłoszenia na szkolenie - GIG", html: layout("Zgłoszenie przyjęte ✓", body) };
 }
 
@@ -523,7 +569,7 @@ Deno.serve(async (req) => {
       const szk = await pobierzSzkolenie(String(rec.szkolenie ?? ""));
       // 1) powiadomienie do GIG z kompletem danych do faktury (albo bez, gdy udzial bezplatny)
       if (NOTIFY_EMAILS.length) {
-        const r = await wyslij(NOTIFY_EMAILS, zapisNotifyMail(rec, cenaZerowa(szk?.price)), nadawca);
+        const r = await wyslij(NOTIFY_EMAILS, zapisNotifyMail(rec, szk), nadawca);
         wyniki.powiadomienie = r.ok ? "wyslane" : r.info;
       }
       // 2) potwierdzenie dla zglaszajacego — z terminem linku i platnoscia ze szkolenia
