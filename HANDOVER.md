@@ -93,10 +93,10 @@ liczba × cena, jedna faktura; online: e-mail każdej osoby = osobny link) z oso
 **Jednorazowość:** prośba rezerwowana w bazie przed wysyłką (`uczestnicy_prosba_at`, UPDATE z warunkiem
 `is null`), więc drugi raz nie wyjdzie; formularz zapisuje się raz (`uczestnicy_uzupelnione_at`, też
 warunkowy UPDATE), potem link pokazuje tylko zapisaną listę, a zmiany robi biuro („Edytuj dane”).
-Poprzednia lista trafia do `uczestnicy_historia`. **Potwierdzenie zapoznania się z informacją** (drugi przycisk
-w mailu → `/uczestnicy/?t=..&potwierdz=1` → przycisk na stronie, bo skanery linków same otwierają adresy):
-`uczestnicy_zapoznano_at`, zapis raz; formularz listy wymaga zaznaczenia tego samego potwierdzenia.
-Panel pokazuje stan (⧗ prośba / ✓ zapoznano / ✓ lista) i liczniki w oknie prośby (bez odpowiedzi itd.). Po zapisie: mail do biura (zmiana liczby osób i kwoty)
+Poprzednia lista trafia do `uczestnicy_historia`. W mailu organizacja widzi zgłoszone osoby jako imię i pierwszą literę
+nazwiska (mail bywa przekazywany dalej); formularz ma pełne nazwiska i trzeba tylko dopisać e-maile.
+Panel pokazuje stan (⧗ prośba / ✓ lista) i liczniki w oknie prośby (wysłane, przesłane, bez odpowiedzi).
+(Potwierdzenie „zapoznałem się z informacją” było dodane i usunięte 30.09.2026 na prośbę użytkownika.) Po zapisie: mail do biura (zmiana liczby osób i kwoty)
 i potwierdzenie do organizacji; adresy uczestników nie dostają nic (nie da się tym spamować obcych).
 Trigger `trg_zapis_czysc_prosbe` czyści te pola przy każdym INSERT (publiczny formularz nie podstawi
 tokenu). `&test=1` w linku (z „Test do mnie” w panelu): walidacja bez zapisu. Kolumny i trigger:

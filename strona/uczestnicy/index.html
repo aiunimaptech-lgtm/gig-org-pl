@@ -49,10 +49,6 @@
     .lista li{padding:8px 14px;border-top:1px solid #f0f3f5;font-size:14.5px;}.lista li:first-child{border-top:0;}
     .lista .m{color:var(--muted);}
     .drobne{font-size:13px;color:var(--muted);}
-    .zgoda{display:flex;gap:10px;align-items:flex-start;margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:14.5px;cursor:pointer;}
-    .zgoda input{margin-top:4px;accent-color:var(--red);width:17px;height:17px;flex:none;}
-    .zgoda.zle{border-color:var(--red);background:#fff6f7;}
-    .wyslij.jasny{background:#fff;color:var(--red);border:2px solid var(--red);}
     .stopka{font-size:12.5px;color:#9aa7b2;text-align:center;margin:0 16px 40px;}
     @media(max-width:640px){
       .karta{margin:16px;}.tresc,.logo{padding-left:18px;padding-right:18px;}
@@ -78,14 +74,11 @@
     /* Lista uczestników zgłoszenia wieloosobowego. Link z maila: /uczestnicy/?t=<token>.
        Dane i zapis obsługuje Edge Function zapis-uczestnicy (token = jedyny klucz).
        Formularz przesyła się JEDEN raz; potem strona pokazuje zapisaną listę.
-       &test=1 (link z testowej wiadomości do biura): walidacja działa, zapis nie.
-       &potwierdz=1 (drugi przycisk w mailu): widok z informacją i przyciskiem „Potwierdzam zapoznanie
-       się z informacją”. Zapis dopiero po kliknięciu, bo filtry pocztowe same otwierają linki. */
+       &test=1 (link z testowej wiadomości do biura): walidacja działa, zapis nie. */
     (function () {
       var T = document.getElementById('tresc');
       var q = new URLSearchParams(location.search), t = q.get('t') || '';
       var test = q.get('test') === '1';
-      var trybPotwierdz = q.get('potwierdz') === '1';
       var URL_F = window.GIG_CFG.SUPABASE_URL + '/functions/v1/zapis-uczestnicy';
       var RE_MAIL = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
       var D = null;
@@ -106,7 +99,6 @@
           return '<li>' + (i + 1) + '. ' + esc(o.imie) + ' <span class="m">· ' + (o.email ? esc(o.email) : 'bez e-maila') + '</span></li>';
         }).join('') + '</ul>';
       }
-      function dataPl(ts) { try { return new Date(ts).toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { return ''; } }
       var TEST_BANER = '<div class="test"><strong>Podgląd z testowej wiadomości.</strong> Formularz sprawdza dane, ale niczego nie zapisuje i nie wysyła.</div>';
       /* te same informacje co w mailu: zaświadczenie i opłata (płatne), osobne stanowiska (online) */
       function infoBloki() {
@@ -133,7 +125,6 @@
       wolaj({ t: t, tryb: 'info' }).then(function (d) {
         if (!d.ok) { blad(d.error || 'Nie znaleziono zgłoszenia.'); return; }
         D = d;
-        if (trybPotwierdz) { potwierdzenie(); return; }
         if (d.uzupelniono && !test) {
           T.innerHTML = naglowek() + '<div class="box ok">Lista uczestników została już przesłana. Dziękujemy.</div>' +
             listaHtml(d.osoby) + '<p class="drobne">Formularz przesyła się jeden raz. Jeśli trzeba coś zmienić, napisz na <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</p>';
@@ -145,35 +136,6 @@
         }
         formularz();
       }).catch(function () { blad('Brak połączenia. Spróbuj ponownie za chwilę.'); });
-
-      function potwierdzenie() {
-        var html = naglowek() + (test ? TEST_BANER : '') + infoBloki() +
-          '<p style="margin-top:18px;">Obecna lista w zgłoszeniu:</p>' + listaHtml(D.osoby) + '<div id="potwBox"></div>';
-        var mozeLista = !D.uzupelniono && !D.zamkniete;
-        if (mozeLista) html += '<p class="drobne" style="margin-top:14px;">Chcesz podać adresy e-mail uczestników albo zmienić listę? <a href="#" id="doFormularza">Przejdź do formularza</a>.</p>';
-        T.innerHTML = html;
-        var box = document.getElementById('potwBox');
-        function zrobione(ts, juz) {
-          box.innerHTML = '<div class="box ok"><strong>Dziękujemy.</strong> ' + (juz ? 'Potwierdzenie zapoznania się z informacją mamy już zapisane' : 'Zapisaliśmy potwierdzenie zapoznania się z informacją') +
-            (ts ? ' (' + esc(dataPl(ts)) + ')' : '') + '.</div>';
-        }
-        if (D.zapoznano && !test) zrobione(D.zapoznano, true);
-        else {
-          box.innerHTML = '<button type="button" class="wyslij" id="potw">Potwierdzam zapoznanie się z informacją</button><div id="potwMsg" style="margin-top:12px;"></div>';
-          document.getElementById('potw').addEventListener('click', function () {
-            var b = this; b.disabled = true; b.textContent = 'Zapisywanie…';
-            wolaj({ t: t, tryb: 'zapoznano', test: test }).then(function (r) {
-              if (!r.ok) { b.disabled = false; b.textContent = 'Potwierdzam zapoznanie się z informacją';
-                document.getElementById('potwMsg').innerHTML = '<div class="box err">' + esc(r.error || 'Nie udało się zapisać.') + '</div>'; return; }
-              if (r.test) { box.innerHTML = '<div class="box ok">Test: przycisk działa. Nic nie zapisano.</div>'; return; }
-              D.zapoznano = r.zapoznano || D.zapoznano; zrobione(r.zapoznano, r.juz);
-            }).catch(function () { b.disabled = false; b.textContent = 'Potwierdzam zapoznanie się z informacją';
-              document.getElementById('potwMsg').innerHTML = '<div class="box err">Brak połączenia. Spróbuj ponownie za chwilę.</div>'; });
-          });
-        }
-        var df = document.getElementById('doFormularza');
-        if (df) df.addEventListener('click', function (e) { e.preventDefault(); formularz(); window.scrollTo(0, 0); });
-      }
 
       function formularz() {
         var platne = !D.bezplatne && D.cena !== null && D.cena !== undefined;
@@ -189,8 +151,6 @@
           '<table><thead><tr><th></th><th>Imię i nazwisko</th><th>E-mail uczestnika' + (D.online ? ' (na niego wyślemy link)' : '') + '</th><th></th></tr></thead><tbody id="wiersze"></tbody></table>' +
           '<button type="button" class="dodaj" id="dodaj">+ Dodaj osobę</button>' +
           '<div class="suma" id="suma"></div>' +
-          '<label class="zgoda" id="zgodaPole"><input type="checkbox" id="zgoda"' + (D.zapoznano ? ' checked' : '') + '><span>Potwierdzam zapoznanie się z powyższą informacją' +
-            (!D.bezplatne ? ' (zaświadczenie tylko za opłaconą osobę, opłata za każdego uczestnika)' : '') + '.</span></label>' +
           '<div id="komunikat"></div>' +
           '<button type="button" class="wyslij" id="wyslij">Prześlij listę uczestników</button>' +
           '<p class="drobne" style="margin-top:12px;">Formularz przesyła się <strong>jeden raz</strong>. Po przesłaniu zmiany zgłaszaj na <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</p>';
@@ -235,7 +195,6 @@
           wiersz({}); numeruj(); licz(); tb.lastChild.querySelector('.imie').focus();
         });
 
-        document.getElementById('zgoda').addEventListener('change', function () { document.getElementById('zgodaPole').classList.remove('zle'); });
         var K = document.getElementById('komunikat');
         function komunikat(txt, ok) { K.innerHTML = '<div class="box ' + (ok ? 'ok' : 'err') + '">' + esc(txt) + '</div>'; }
         document.getElementById('wyslij').addEventListener('click', function () {
@@ -252,13 +211,11 @@
               widziane[o.email] = i;
             }
           }
-          var zg = document.getElementById('zgoda');
-          if (!zg.checked) { document.getElementById('zgodaPole').classList.add('zle'); komunikat('Zaznacz potwierdzenie zapoznania się z informacją.'); return; }
           var n = l.length;
           if (!test && !confirm('Przesłać listę ' + n + ' ' + (n === 1 ? 'osoby' : 'osób') + (platne && D.cena > 0 ? ' (do zapłaty ' + zl(n * D.cena) + ')' : '') +
             '?\n\nFormularz przesyła się jeden raz. Późniejsze zmiany tylko przez biuro@gig.org.pl.')) return;
           b.disabled = true; b.textContent = 'Przesyłanie…';
-          wolaj({ t: t, tryb: 'zapisz', test: test, zapoznano: true, osoby: l.map(function (o) { return { imie: o.imie, email: o.email || null }; }) })
+          wolaj({ t: t, tryb: 'zapisz', test: test, osoby: l.map(function (o) { return { imie: o.imie, email: o.email || null }; }) })
             .then(function (r) {
               if (!r.ok) {
                 if (r.juz && !test) { location.reload(); return; }
