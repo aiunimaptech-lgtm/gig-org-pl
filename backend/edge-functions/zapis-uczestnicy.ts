@@ -183,14 +183,22 @@ function blok(nr: string, tytul: string, tresc: string): string {
       <p style="margin:0;font-size:14.5px;line-height:1.65;color:${C.dark};">${tresc}</p>
     </div>`;
 }
-function tabelaOsob(osoby: Array<{ imie: string; email: string | null }>): string {
+function tabelaOsob(osoby: Array<{ imie: string; email: string | null }>, pusty = "brak"): string {
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="width:100%;margin:0 0 18px;border:1px solid #e6ebef;border-radius:8px;border-collapse:separate;overflow:hidden;">
     <tr><td style="padding:8px 12px;background:#f5f8fa;font-size:12px;color:#6b7c8c;font-weight:700;">Imię i nazwisko</td>
         <td style="padding:8px 12px;background:#f5f8fa;font-size:12px;color:#6b7c8c;font-weight:700;">E-mail uczestnika</td></tr>
     ${osoby.map((o, i) => `<tr>
         <td style="padding:7px 12px;border-top:1px solid #edf1f4;font-size:14px;color:${C.dark};">${i + 1}. ${esc(o.imie || "(bez nazwiska)")}</td>
-        <td style="padding:7px 12px;border-top:1px solid #edf1f4;font-size:14px;color:${o.email ? C.dark : "#9aa7b2"};">${o.email ? esc(o.email) : "brak"}</td></tr>`).join("")}
+        <td style="padding:7px 12px;border-top:1px solid #edf1f4;font-size:14px;color:${o.email ? C.dark : (pusty === "brak" ? "#9aa7b2" : C.mid)};${o.email || pusty === "brak" ? "" : "font-style:italic;"}">${o.email ? esc(o.email) : pusty}</td></tr>`).join("")}
   </table>`;
+}
+// w mailach do organizacji: imię i pierwsza litera nazwiska (mail bywa przekazywany dalej);
+// pełne nazwiska zostają w bazie i w formularzu (zaświadczenia, faktura)
+function skrocOsobe(o: { imie: string; email: string | null }): { imie: string; email: string | null } {
+  const cz = String(o.imie ?? "").trim().split(/\s+/).filter(Boolean);
+  if (cz.length < 2) return o;
+  const nazw = cz[cz.length - 1].replace(/^[^\p{L}]+/u, "");
+  return { ...o, imie: nazw ? `${cz[0]} ${nazw.charAt(0).toUpperCase()}.` : cz[0] };
 }
 function termin(s: Szkolenie | null): string {
   if (!s?.date_start) return "";
@@ -232,16 +240,22 @@ function mailProsba(z: Zapis, s: Szkolenie | null, link: string): { subject: str
   // dwa przyciski jeden pod drugim (na telefonie obok siebie się nie mieszczą)
   const linkOk = link + (link.includes("?") ? "&" : "?") + "potwierdz=1";
   const przycisk = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 10px;"><tr><td style="border-radius:30px;background:${C.mid};">
-      <a href="${link}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-weight:700;font-size:15px;text-decoration:none;border-radius:30px;">Uzupełnij listę uczestników</a>
+      <a href="${link}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-weight:700;font-size:15px;text-decoration:none;border-radius:30px;">Dopisz adresy e-mail uczestników</a>
     </td></tr></table>
     <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 18px;"><tr><td style="border-radius:30px;border:2px solid ${C.mid};background:#ffffff;">
       <a href="${linkOk}" style="display:inline-block;padding:11px 26px;color:${C.mid};font-weight:700;font-size:15px;text-decoration:none;border-radius:30px;">Potwierdzam zapoznanie się z informacją</a>
     </td></tr></table>`;
 
   const body = wstep + bloki
-    + P(`W zgłoszeniu mamy obecnie ${osoby.length === n ? "takie osoby" : `${osoby.length} z ${n} nazwisk`}:`)
-    + tabelaOsob(osoby.length ? osoby : [{ imie: "(nie podano nazwisk)", email: null }])
-    + P(`Prosimy o sprawdzenie listy i uzupełnienie adresów e-mail w formularzu${doDnia ? `, najlepiej do <strong>${doDnia}</strong>` : "."} Można w nim także dopisać lub usunąć osobę${bezpl ? "" : "; kwota do zapłaty przeliczy się automatycznie"}. Formularz przesyła się <strong>jeden raz</strong>, dlatego prosimy o podanie od razu wszystkich osób z Państwa organizacji.`)
+    + P(osoby.length === n && bezEmaila === 0
+      ? `Osoby zgłoszone przez Państwa, razem z adresami e-mail, <strong>są już wpisane w formularzu</strong>. Prosimy tylko sprawdzić dane:`
+      : osoby.length === n
+      ? `Osoby zgłoszone przez Państwa <strong>są już wpisane w formularzu</strong>. Wystarczy dopisać adres e-mail przy każdej z nich:`
+      : osoby.length
+        ? `W zgłoszeniu mamy ${osoby.length} z ${n} nazwisk; są już wpisane w formularzu. Prosimy dopisać adres e-mail przy każdej osobie i uzupełnić brakujące nazwiska:`
+        : `W zgłoszeniu nie ma jeszcze nazwisk. Prosimy wpisać w formularzu imię, nazwisko i adres e-mail każdej osoby:`)
+    + tabelaOsob(osoby.length ? osoby.map(skrocOsobe) : [{ imie: "(nie podano nazwisk)", email: null }], "dopisz e-mail")
+    + P(`Formularz otworzy się z tą listą${doDnia ? `; prosimy o uzupełnienie najlepiej do <strong>${doDnia}</strong>` : "."} W razie potrzeby można w nim także dopisać lub usunąć osobę${bezpl ? "" : ", a kwota do zapłaty przeliczy się automatycznie"}. Formularz przesyła się <strong>jeden raz</strong>, dlatego prosimy o podanie od razu wszystkich osób z Państwa organizacji.`)
     + przycisk
     + `<p style="margin:0 0 10px;font-size:13px;color:#6b7c8c;line-height:1.6;">${bezEmaila === 0 && osoby.length === n
         ? "Jeśli lista i adresy się zgadzają"
@@ -263,7 +277,7 @@ function mailPotwierdzenie(z: Zapis, s: Szkolenie | null, osoby: Array<{ imie: s
   const zMailem = osoby.filter((o) => o.email).length;
   const body = P("Dzień dobry,")
     + P(`zapisaliśmy listę uczestników ${bezpl ? "wydarzenia" : "szkolenia"} <strong>${esc(tytul)}</strong>${termin(s) ? ` (${termin(s)})` : ""}. Obecnie zgłoszonych: <strong>${n} ${mianOsob(n)}</strong>.`)
-    + tabelaOsob(osoby)
+    + tabelaOsob(osoby.map(skrocOsobe))
     + (!bezpl && cena !== null && cena > 0
       ? blok("", "Opłata", `Do zapłaty: <strong>${n} × ${zl(cena)} = ${zl(n * cena)}</strong>${czlonkowska ? " (cena dla członków GIG)" : ""}. Zaświadczenie o ukończeniu szkolenia otrzyma każda osoba, za którą wniesiono opłatę. Wszystkie osoby ujmiemy na jednej fakturze.`)
       : "")

@@ -180,7 +180,12 @@
         var html = naglowek();
         if (test) html += TEST_BANER;
         html += infoBloki();
-        html += '<p style="margin-top:18px;">Wpisz <strong>wszystkie osoby</strong> z Twojej organizacji, które wezmą udział.</p>' +
+        var sq = D.osoby && D.osoby.length;
+        html += (sq
+            ? '<div class="box ok" style="margin-top:18px;"><strong>Zgłoszone osoby są już wpisane.</strong> Wystarczy dopisać adres e-mail przy każdej z nich' +
+              (D.liczba_osob && D.osoby.length < D.liczba_osob ? ' i uzupełnić brakujące nazwiska (w zgłoszeniu było ' + D.liczba_osob + ' ' + osob(D.liczba_osob) + ')' : '') +
+              '. W razie potrzeby możesz też dopisać lub usunąć osobę.</div>'
+            : '<p style="margin-top:18px;">Wpisz <strong>wszystkie osoby</strong> z Twojej organizacji, które wezmą udział.</p>') +
           '<table><thead><tr><th></th><th>Imię i nazwisko</th><th>E-mail uczestnika' + (D.online ? ' (na niego wyślemy link)' : '') + '</th><th></th></tr></thead><tbody id="wiersze"></tbody></table>' +
           '<button type="button" class="dodaj" id="dodaj">+ Dodaj osobę</button>' +
           '<div class="suma" id="suma"></div>' +
@@ -196,7 +201,7 @@
           var tr = document.createElement('tr');
           tr.innerHTML = '<td class="nr"></td>' +
             '<td><input type="text" class="imie" maxlength="120" placeholder="Imię i nazwisko" autocomplete="off"></td>' +
-            '<td><input type="email" class="email" maxlength="160" placeholder="' + (D.online ? 'adres do linku (opcjonalnie)' : 'adres e-mail (opcjonalnie)') + '" autocomplete="off"></td>' +
+            '<td><input type="email" class="email" maxlength="160" placeholder="' + (D.online ? 'dopisz e-mail (tu wyślemy link)' : 'dopisz adres e-mail') + '" autocomplete="off"></td>' +
             '<td class="x"><button type="button" class="usun" title="Usuń osobę" aria-label="Usuń osobę">×</button></td>';
           tr.querySelector('.imie').value = o && o.imie || '';
           tr.querySelector('.email').value = o && o.email || '';
@@ -223,6 +228,8 @@
         }
         (D.osoby && D.osoby.length ? D.osoby : [{}]).forEach(wiersz);
         numeruj(); licz();
+        var pierwszyPusty = Array.prototype.find.call(tb.querySelectorAll('.email'), function (i) { return !i.value; });
+        if (pierwszyPusty && D.osoby && D.osoby.length) { try { pierwszyPusty.focus({ preventScroll: true }); } catch (e) { pierwszyPusty.focus(); } }
         document.getElementById('dodaj').addEventListener('click', function () {
           if (tb.children.length >= (D.max || 60)) return;
           wiersz({}); numeruj(); licz(); tb.lastChild.querySelector('.imie').focus();
