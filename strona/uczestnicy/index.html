@@ -30,11 +30,15 @@
     th{font-size:12px;color:var(--muted);text-align:left;font-weight:700;padding:6px 6px;border-bottom:1px solid var(--line);}
     td{padding:6px;vertical-align:middle;border-bottom:1px solid #f0f3f5;}
     td.nr{width:28px;color:var(--muted);font-size:13px;text-align:right;}
-    td.x{width:40px;text-align:center;}
+    td.x{width:78px;text-align:right;padding-right:0;}
     input[type=text],input[type=email]{width:100%;font:inherit;font-size:14.5px;padding:9px 11px;border:1px solid #cfd6dc;border-radius:8px;background:#fff;}
     input:focus{outline:2px solid rgba(204,10,43,.25);border-color:var(--red);}
     input.zle{border-color:var(--red);background:#fff6f7;}
-    .usun{border:0;background:none;color:#9aa7b2;font-size:20px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px;}
+    .usun{border:1px solid var(--line);background:#fff;color:var(--muted);font:inherit;font-size:13px;font-weight:600;cursor:pointer;line-height:1;padding:8px 10px;border-radius:7px;white-space:nowrap;}
+    .usun:hover{color:var(--red);border-color:var(--red);}
+    .zgoda{display:flex;gap:10px;align-items:flex-start;margin:0 0 16px;padding:12px 14px;border:1px solid var(--line);border-radius:10px;font-size:15px;cursor:pointer;background:#fff;}
+    .zgoda input{margin-top:4px;accent-color:var(--red);width:18px;height:18px;flex:none;}
+    .zgoda.zle{border-color:var(--red);background:#fff6f7;}
     .usun:hover{color:var(--red);background:#fdf0f2;}
     .dodaj{font:inherit;font-size:14px;font-weight:600;border:1px dashed #cfd6dc;background:#fff;color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer;}
     .dodaj:hover{border-color:var(--red);color:var(--red);}
@@ -146,11 +150,12 @@
         html += (sq
             ? '<div class="box ok" style="margin-top:18px;"><strong>Zgłoszone osoby są już wpisane.</strong> Wystarczy dopisać adres e-mail przy każdej z nich' +
               (D.liczba_osob && D.osoby.length < D.liczba_osob ? ' i uzupełnić brakujące nazwiska (w zgłoszeniu było ' + D.liczba_osob + ' ' + osob(D.liczba_osob) + ')' : '') +
-              '. W razie potrzeby możesz też dopisać lub usunąć osobę.</div>'
+              '. Możesz też dopisać nową osobę („+ Dodaj osobę”) albo usunąć osobę, która nie weźmie udziału. Na końcu potwierdź ostateczną liczbę uczestników.</div>'
             : '<p style="margin-top:18px;">Wpisz <strong>wszystkie osoby</strong> z Twojej organizacji, które wezmą udział.</p>') +
           '<table><thead><tr><th></th><th>Imię i nazwisko</th><th>E-mail uczestnika' + (D.online ? ' (na niego wyślemy link)' : '') + '</th><th></th></tr></thead><tbody id="wiersze"></tbody></table>' +
           '<button type="button" class="dodaj" id="dodaj">+ Dodaj osobę</button>' +
           '<div class="suma" id="suma"></div>' +
+          '<label class="zgoda" id="liczbaPole"><input type="checkbox" id="liczbaOk"><span id="liczbaTxt"></span></label>' +
           '<div id="komunikat"></div>' +
           '<button type="button" class="wyslij" id="wyslij">Prześlij listę uczestników</button>' +
           '<p class="drobne" style="margin-top:12px;">Formularz przesyła się <strong>jeden raz</strong>. Po przesłaniu zmiany zgłaszaj na <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</p>';
@@ -162,7 +167,7 @@
           tr.innerHTML = '<td class="nr"></td>' +
             '<td><input type="text" class="imie" maxlength="120" placeholder="Imię i nazwisko" autocomplete="off"></td>' +
             '<td><input type="email" class="email" maxlength="160" placeholder="' + (D.online ? 'dopisz e-mail (tu wyślemy link)' : 'dopisz adres e-mail') + '" autocomplete="off"></td>' +
-            '<td class="x"><button type="button" class="usun" title="Usuń osobę" aria-label="Usuń osobę">×</button></td>';
+            '<td class="x"><button type="button" class="usun" title="Usuń tę osobę z listy">Usuń</button></td>';
           tr.querySelector('.imie').value = o && o.imie || '';
           tr.querySelector('.email').value = o && o.email || '';
           tr.querySelector('.usun').addEventListener('click', function () {
@@ -185,6 +190,13 @@
           if (platne && D.cena > 0 && n) s += '<br>Do zapłaty: <strong>' + n + ' × ' + zl(D.cena) + ' = ' + zl(n * D.cena) + '</strong>' + (D.czlonkowska ? ' (cena dla członków GIG)' : '');
           if (D.liczba_osob && n && n !== D.liczba_osob) s += '<br><span style="color:#7a5c14;">W zgłoszeniu było ' + D.liczba_osob + ' ' + osob(D.liczba_osob) + '; po przesłaniu będzie ' + n + ' ' + osob(n) + '.</span>';
           document.getElementById('suma').innerHTML = s;
+          /* potwierdzenie ostatecznej liczby: po każdej zmianie liczby osób trzeba je zaznaczyć od nowa */
+          var ok = document.getElementById('liczbaOk');
+          if (ok && ok.dataset.n && Number(ok.dataset.n) !== n) ok.checked = false;
+          if (ok) ok.dataset.n = n;
+          var lt = document.getElementById('liczbaTxt');
+          if (lt) lt.innerHTML = 'Potwierdzam <strong>ostateczną liczbę uczestników: ' + n + ' ' + osob(n) + '</strong>' +
+            (platne && D.cena > 0 && n ? ', do zapłaty ' + zl(n * D.cena) : '') + '.';
         }
         (D.osoby && D.osoby.length ? D.osoby : [{}]).forEach(wiersz);
         numeruj(); licz();
@@ -195,6 +207,7 @@
           wiersz({}); numeruj(); licz(); tb.lastChild.querySelector('.imie').focus();
         });
 
+        document.getElementById('liczbaOk').addEventListener('change', function () { document.getElementById('liczbaPole').classList.remove('zle'); });
         var K = document.getElementById('komunikat');
         function komunikat(txt, ok) { K.innerHTML = '<div class="box ' + (ok ? 'ok' : 'err') + '">' + esc(txt) + '</div>'; }
         document.getElementById('wyslij').addEventListener('click', function () {
@@ -212,10 +225,13 @@
             }
           }
           var n = l.length;
+          if (!document.getElementById('liczbaOk').checked) {
+            document.getElementById('liczbaPole').classList.add('zle'); komunikat('Potwierdź ostateczną liczbę uczestników (' + n + ').'); return;
+          }
           if (!test && !confirm('Przesłać listę ' + n + ' ' + (n === 1 ? 'osoby' : 'osób') + (platne && D.cena > 0 ? ' (do zapłaty ' + zl(n * D.cena) + ')' : '') +
             '?\n\nFormularz przesyła się jeden raz. Późniejsze zmiany tylko przez biuro@gig.org.pl.')) return;
           b.disabled = true; b.textContent = 'Przesyłanie…';
-          wolaj({ t: t, tryb: 'zapisz', test: test, osoby: l.map(function (o) { return { imie: o.imie, email: o.email || null }; }) })
+          wolaj({ t: t, tryb: 'zapisz', test: test, liczba_potwierdzona: n, osoby: l.map(function (o) { return { imie: o.imie, email: o.email || null }; }) })
             .then(function (r) {
               if (!r.ok) {
                 if (r.juz && !test) { location.reload(); return; }

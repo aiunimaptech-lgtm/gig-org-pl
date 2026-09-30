@@ -14,7 +14,8 @@
 // Tryby (POST JSON):
 //   publiczne (bez logowania, klucz = token z linku):
 //     { t, tryb: 'info' }                   -> dane zgłoszenia do formularza
-//     { t, tryb: 'zapisz', osoby: [{imie, email}] }
+//     { t, tryb: 'zapisz', liczba_potwierdzona: N, osoby: [{imie, email}] }
+//       (N = ostateczna liczba uczestników zaznaczona w formularzu; musi się zgadzać z listą)
 //   panel (Authorization: Bearer <access_token admina>, sesja z kodem e-mail):
 //     { tryb: 'podglad', id }               -> { subject, html } bez wysyłki
 //     { tryb: 'wyslij', ids: [...], test? } -> test: mail pierwszego zgłoszenia na adres admina
@@ -236,7 +237,7 @@ function mailProsba(z: Zapis, s: Szkolenie | null, link: string): { subject: str
   }
 
   const przycisk = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 18px;"><tr><td style="border-radius:30px;background:${C.mid};">
-      <a href="${link}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-weight:700;font-size:15px;text-decoration:none;border-radius:30px;">Dopisz adresy e-mail uczestników</a>
+      <a href="${link}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-weight:700;font-size:15px;text-decoration:none;border-radius:30px;">Dopisz e-maile i potwierdź liczbę osób</a>
     </td></tr></table>`;
 
   const body = wstep + bloki
@@ -248,11 +249,12 @@ function mailProsba(z: Zapis, s: Szkolenie | null, link: string): { subject: str
         ? `W zgłoszeniu mamy ${osoby.length} z ${n} nazwisk; są już wpisane w formularzu. Prosimy dopisać adres e-mail przy każdej osobie i uzupełnić brakujące nazwiska:`
         : `W zgłoszeniu nie ma jeszcze nazwisk. Prosimy wpisać w formularzu imię, nazwisko i adres e-mail każdej osoby:`)
     + tabelaOsob(osoby.length ? osoby.map(skrocOsobe) : [{ imie: "(nie podano nazwisk)", email: null }], "dopisz e-mail")
-    + P(`Formularz otworzy się z tą listą${doDnia ? `; prosimy o uzupełnienie najlepiej do <strong>${doDnia}</strong>` : "."} W razie potrzeby można w nim także dopisać lub usunąć osobę${bezpl ? "" : ", a kwota do zapłaty przeliczy się automatycznie"}. Formularz przesyła się <strong>jeden raz</strong>, dlatego prosimy o podanie od razu wszystkich osób z Państwa organizacji.`)
+    + P(`Formularz otworzy się z tą listą. Można w nim <strong>dopisać nową osobę albo usunąć osobę</strong>, która nie weźmie udziału${bezpl ? "" : " (kwota do zapłaty przeliczy się automatycznie)"}.`)
+    + P(`Na koniec prosimy <strong>potwierdzić ostateczną liczbę uczestników</strong>${bezpl ? "" : ", od której zależy kwota na fakturze,"} i przesłać formularz${doDnia ? `, najlepiej do <strong>${doDnia}</strong>` : "."} Formularz przesyła się <strong>jeden raz</strong>, dlatego prosimy o podanie od razu wszystkich osób z Państwa organizacji.`)
     + przycisk
     + `<p style="margin:0 0 10px;font-size:13px;color:#6b7c8c;line-height:1.6;">${bezEmaila === 0 && osoby.length === n
-        ? "Jeśli lista i adresy się zgadzają, nie trzeba nic robić."
-        : "Jeśli wszyscy będą uczestniczyć przy jednym stanowisku, a lista nazwisk jest pełna, nie trzeba nic robić."}
+        ? "Prosimy o przesłanie formularza także wtedy, gdy lista i adresy się zgadzają: będzie to potwierdzenie ostatecznej liczby uczestników."
+        : "Prosimy o przesłanie formularza także wtedy, gdy lista się nie zmienia (np. wszyscy przy jednym stanowisku): będzie to potwierdzenie ostatecznej liczby uczestników."}
        Link jest przeznaczony dla osoby prowadzącej zgłoszenie. Późniejsze zmiany prosimy zgłaszać w odpowiedzi na tę wiadomość. Jeśli przycisk nie działa, skopiuj adres: <span style="word-break:break-all;">${esc(link)}</span></p>`
     + `<p style="margin:0;font-size:13px;color:#6b7c8c;line-height:1.6;">W razie pytań wystarczy odpisać na tę wiadomość.</p>`;
 
@@ -269,7 +271,7 @@ function mailPotwierdzenie(z: Zapis, s: Szkolenie | null, osoby: Array<{ imie: s
   const tytul = (s?.title ?? z.szkolenie ?? "").trim();
   const zMailem = osoby.filter((o) => o.email).length;
   const body = P("Dzień dobry,")
-    + P(`zapisaliśmy listę uczestników ${bezpl ? "wydarzenia" : "szkolenia"} <strong>${esc(tytul)}</strong>${termin(s) ? ` (${termin(s)})` : ""}. Obecnie zgłoszonych: <strong>${n} ${mianOsob(n)}</strong>.`)
+    + P(`zapisaliśmy listę uczestników ${bezpl ? "wydarzenia" : "szkolenia"} <strong>${esc(tytul)}</strong>${termin(s) ? ` (${termin(s)})` : ""}. Potwierdzona ostateczna liczba uczestników: <strong>${n}</strong>.`)
     + tabelaOsob(osoby.map(skrocOsobe))
     + (!bezpl && cena !== null && cena > 0
       ? blok("", "Opłata", `Do zapłaty: <strong>${n} × ${zl(cena)} = ${zl(n * cena)}</strong>${czlonkowska ? " (cena dla członków GIG)" : ""}. Zaświadczenie o ukończeniu szkolenia otrzyma każda osoba, za którą wniesiono opłatę. Wszystkie osoby ujmiemy na jednej fakturze.`)
@@ -290,6 +292,7 @@ function mailDoBiura(z: Zapis, s: Szkolenie | null, poprz: Array<{ imie: string;
     ? `<p style="margin:0 0 14px;padding:10px 14px;background:#fff8e6;border:1px solid #f0e2b6;border-radius:8px;font-size:14px;color:#7a5c14;"><strong>Zmiana liczby osób: ${poprzN} → ${n}.</strong>${!bezpl && cena ? ` Kwota: ${zl(poprzN * cena)} → <strong>${zl(n * cena)}</strong> (sprawdź fakturę).` : ""}</p>`
     : "";
   const body = P(`Zgłaszający <strong>${esc(z.nabywca_nazwa ?? z.email)}</strong> przesłał listę uczestników przez formularz. ${bezpl ? "Wydarzenie" : "Szkolenie"}: <strong>${esc(z.szkolenie)}</strong>.`)
+    + P(`Potwierdzona ostateczna liczba uczestników: <strong>${n}</strong>${!bezpl && cena ? `, do zapłaty <strong>${zl(n * cena)}</strong>` : ""}.`)
     + zmiana
     + `<p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Nowa lista</p>` + tabelaOsob(osoby)
     + `<p style="margin:0 0 6px;font-size:12px;font-weight:700;color:#6b7c8c;text-transform:uppercase;">Poprzednio</p>` + tabelaOsob(poprz.length ? poprz : [{ imie: "(brak)", email: null }])
@@ -358,6 +361,10 @@ async function publiczny(body: Record<string, unknown>): Promise<Response> {
       widziane.set(o.email, i);
     }
   }
+
+  // ostateczna liczba uczestników potwierdzona w formularzu musi się zgadzać z przesłaną listą
+  if (Number(body.liczba_potwierdzona) !== osoby.length)
+    return json({ ok: false, error: `Potwierdź ostateczną liczbę uczestników (${osoby.length}).` }, 400);
 
   const { cena: c1 } = cenaOsoby(z, s);
   // link z testowej wiadomości do biura: pełna walidacja, ale bez zapisu i bez maili

@@ -94,7 +94,9 @@ liczba × cena, jedna faktura; online: e-mail każdej osoby = osobny link) z oso
 `is null`), więc drugi raz nie wyjdzie; formularz zapisuje się raz (`uczestnicy_uzupelnione_at`, też
 warunkowy UPDATE), potem link pokazuje tylko zapisaną listę, a zmiany robi biuro („Edytuj dane”).
 Poprzednia lista trafia do `uczestnicy_historia`. W mailu organizacja widzi zgłoszone osoby jako imię i pierwszą literę
-nazwiska (mail bywa przekazywany dalej); formularz ma pełne nazwiska i trzeba tylko dopisać e-maile.
+nazwiska (mail bywa przekazywany dalej); formularz ma pełne nazwiska i trzeba tylko dopisać e-maile. Można dopisać / usunąć osobę; przed przesłaniem
+obowiązkowe „Potwierdzam ostateczną liczbę uczestników: N” (odznacza się przy zmianie listy; serwer sprawdza
+`liczba_potwierdzona` = liczba osób). Mail prosi o przesłanie formularza także bez zmian (potwierdzenie liczby).
 Panel pokazuje stan (⧗ prośba / ✓ lista) i liczniki w oknie prośby (wysłane, przesłane, bez odpowiedzi).
 (Potwierdzenie „zapoznałem się z informacją” było dodane i usunięte 30.09.2026 na prośbę użytkownika.) Po zapisie: mail do biura (zmiana liczby osób i kwoty)
 i potwierdzenie do organizacji; adresy uczestników nie dostają nic (nie da się tym spamować obcych).
