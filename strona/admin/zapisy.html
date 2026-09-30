@@ -29,6 +29,11 @@
     .zap-ed .chk input{width:auto;}
     @media(max-width:600px){.zap-ed .rz{grid-template-columns:1fr;}}
     .zap-blok h4{margin:0 0 4px;font-size:14px;color:#16202a;}
+    .pr-znak{display:block;margin-top:3px;font-size:11px;font-weight:600;white-space:nowrap;}
+    .pr-znak.lista{color:#1d7a45;}.pr-znak.wyslana{color:#8a6d1f;}
+    #prosbaRows td{vertical-align:middle;}
+    #prosbaRows tr.nieaktywny td{color:#9aa7b2;}
+    .pr-hist{margin:6px 0 0;padding-left:18px;font-size:13px;color:#4b5a66;}
     .zap-sum .k.kwota{border-color:#cfe1d4;background:#f6fbf7;}
     .zap-uwaga{margin:-6px 0 18px;padding:9px 13px;font-size:12.5px;line-height:1.6;color:#7a5c14;
       background:#fff8e6;border:1px solid #f0e2b6;border-radius:10px;}
@@ -87,6 +92,7 @@
         <div class="topbar-actions">
           <button class="btn btn-outline btn-sm" id="expPytania" title="Pytania z pola Uwagi, z pytającym i instytucją: do przekazania prowadzącemu">📄 Pytania uczestników (PDF)</button>
           <button class="btn btn-outline btn-sm" id="expRaport" title="Jeden wiersz na uczestnika — układ jak w arkuszu „Opłaty / Faktury / Zaświadczenia”">↓ Raport szkolenia (CSV)</button>
+          <button class="btn btn-outline btn-sm" id="btnProsba" title="Mail do zgłaszających kilka osób: formularz do podania imienia, nazwiska i e-maila każdego uczestnika (jedna prośba na zgłoszenie)">👥 Prośba o listę uczestników</button>
           <button class="btn btn-outline btn-sm" id="btnMailUcz" title="Wiadomość do uczestników (np. link do szkolenia) na ich własne adresy">✉ Do uczestników</button>
           <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do zgłaszających organizacji z bieżącego filtra (sprawy zgłoszenia, faktura)">✉ Do organizacji</button>
         </div>
@@ -122,6 +128,43 @@
           </div>
         </div></div>
       </main>
+    </div>
+  </div>
+
+  <!-- MODAL: prośba o listę uczestników (Edge Function zapis-uczestnicy) -->
+  <div class="modal-overlay" id="prosbaModal">
+    <div class="modal-box" style="max-width:1000px;">
+      <div class="modal-header">
+        <div class="modal-title">Prośba o listę uczestników</div>
+        <button class="modal-close" data-modal-close="prosbaModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0 0 12px;font-size:14px;color:#4b5a66;line-height:1.6;">
+          Zgłoszenia z bieżącego filtra, w których podano <strong>więcej niż jedną osobę</strong>, a termin jeszcze nie minął.
+          Organizacja dostaje mail z informacją (przy szkoleniu płatnym: zaświadczenie tylko za opłaconą osobę, kwota za każdą osobę;
+          przy każdym szkoleniu online: e-mail każdej osoby do osobnego linku) i przycisk do formularza.
+          <strong>Każde zgłoszenie dostaje prośbę tylko raz</strong>, a organizacja może przesłać formularz tylko raz.
+        </p>
+        <div class="table-wrap">
+          <table class="admin-table">
+            <thead><tr><th style="width:34px;"><input type="checkbox" id="prosbaWszystkie" title="Zaznacz wszystkie możliwe"></th><th>Zgłaszający</th><th>Szkolenie</th><th>Osób</th><th>E-maile uczestników</th><th>Stan</th></tr></thead>
+            <tbody id="prosbaRows"></tbody>
+          </table>
+        </div>
+        <div id="prosbaPodglad" hidden style="margin-top:16px;">
+          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:13.5px;">
+            <span id="prosbaTemat"></span>
+            <a class="btn btn-ghost btn-xs" id="prosbaFormularz" target="_blank" rel="noopener" style="margin-left:auto;">Otwórz formularz (tryb testowy) ↗</a>
+          </div>
+          <iframe id="prosbaIframe" title="Podgląd wiadomości" style="width:100%;height:620px;border:1px solid #e6ebef;border-radius:10px;background:#eef1f4;"></iframe>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <span id="prosbaInfo" style="margin-right:auto;font-size:13px;color:#6b7f84;"></span>
+        <button class="btn btn-ghost" id="prosbaPodgladBtn">👁 Podgląd</button>
+        <button class="btn btn-outline" id="prosbaTest" title="Wiadomość pierwszego zaznaczonego zgłoszenia na Twój adres; link otwiera formularz w trybie testowym (nic nie zapisuje)">✉ Test do mnie</button>
+        <button class="btn btn-primary" id="prosbaWyslij">Wyślij prośbę</button>
+      </div>
     </div>
   </div>
 
@@ -346,7 +389,7 @@
             <strong>${esc(ucz[0] || r.email)}</strong>
             <div class="zap-osoby">${esc(r.email)}${r.telefon?' · '+esc(r.telefon):''}</div>
           </td>
-          <td style="text-align:center;"><strong>${osoby(r)}</strong></td>
+          <td style="text-align:center;"><strong>${osoby(r)}</strong>${prosbaZnak(r)}</td>
           <td style="max-width:220px;">
             ${esc(r.nabywca_nazwa||'—')}
             <div class="zap-osoby">${r.nabywca_nip?'NIP '+esc(r.nabywca_nip):''}${odb.wlasny?' · inny odbiorca':''}</div>
@@ -386,6 +429,126 @@
       }));
     }
 
+    /* ── PROŚBA O LISTĘ UCZESTNIKÓW ─────────────────────────────────────
+       Mail do zgłaszających kilka osób z formularzem /uczestnicy/?t=<token>.
+       Wysyła Edge Function zapis-uczestnicy: jedna prośba na zgłoszenie (rezerwacja
+       w bazie przed wysyłką), formularz przesyłany raz, adresy wyłącznie z bazy. */
+    const dzisWaw = () => new Date().toLocaleDateString('sv-SE', { timeZone:'Europe/Warsaw' });
+    const dzien = ts => ts ? new Date(ts).toLocaleDateString('pl-PL', { day:'2-digit', month:'2-digit' }) : '';
+    function mailiUczestnikow(r){
+      if (Array.isArray(r.uczestnicy_lista) && r.uczestnicy_lista.length) return r.uczestnicy_lista.filter(o => o && o.email).length;
+      return (String(r.uczestnicy || '').match(/[^\s,;<>()]+@[^\s,;<>()]+\.[a-z]{2,}/gi) || []).length;
+    }
+    function prosbaStan(r){
+      if (r.uczestnicy_uzupelnione_at) return { kod:'lista', txt:'lista przesłana ' + dzien(r.uczestnicy_uzupelnione_at) };
+      if (r.uczestnicy_prosba_at) return { kod:'wyslana', txt:'prośba wysłana ' + dzien(r.uczestnicy_prosba_at) };
+      return null;
+    }
+    function prosbaZnak(r){
+      const st = prosbaStan(r);
+      return st ? `<span class="pr-znak ${st.kod}" title="Prośba o listę uczestników">${st.kod === 'lista' ? '✓ lista' : '⧗ prośba'}</span>` : '';
+    }
+    function prosbaSzczegoly(r){
+      const st = prosbaStan(r);
+      const hist = Array.isArray(r.uczestnicy_historia) ? r.uczestnicy_historia : [];
+      if (!st && !hist.length) return '';
+      return `<div class="zap-blok">
+          <h4>Lista uczestników od organizacji</h4>
+          <div style="font-size:14px;">
+            ${r.uczestnicy_prosba_at ? 'Prośba wysłana: <strong>' + esc(fmtDate(r.uczestnicy_prosba_at)) + '</strong>' : 'Prośby nie wysłano.'}
+            ${r.uczestnicy_uzupelnione_at ? '<br>Lista przesłana formularzem: <strong>' + esc(fmtDate(r.uczestnicy_uzupelnione_at)) + '</strong> (formularz jest już zamknięty; zmiany przez „Edytuj dane”)' : (r.uczestnicy_prosba_at ? '<br>Organizacja jeszcze nie przesłała listy.' : '')}
+          </div>
+          ${r.uczestnicy_token && !r.uczestnicy_uzupelnione_at ? '<button type="button" class="btn btn-ghost btn-xs" id="zapLinkListy" style="margin-top:8px;">⧉ Kopiuj link do formularza</button>' : ''}
+          ${hist.length ? '<div style="margin-top:8px;font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;">Poprzednie wersje listy</div><ul class="pr-hist">' +
+            hist.slice().reverse().map(h => '<li>do ' + esc(fmtDate(h.at)) + ': ' + esc(String(h.liczba_osob || '?')) + ' os. · ' +
+              esc(String(h.uczestnicy || '').split(/\n/).filter(Boolean).join(', ')) + '</li>').join('') + '</ul>' : ''}
+        </div>`;
+    }
+    function doProsby(){
+      const dzis = dzisWaw();
+      return filtruj().filter(r => {
+        if (r.status === 'cancelled' || osoby(r) < 2) return false;
+        const s = SZKOLENIA[kluczSzk(r.szkolenie)];
+        return !s || !s.date_start || s.date_start >= dzis;
+      });
+    }
+    async function wolajFunkcje(nazwa, body){
+      const sesja = await getSession();
+      if (!sesja) throw new Error('sesja wygasła, zaloguj się ponownie');
+      const res = await fetch(SUPABASE_URL + '/functions/v1/' + nazwa, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
+        body: JSON.stringify(body),
+      });
+      const w = await res.json().catch(() => ({}));
+      if (!res.ok || !w.ok) throw new Error(w.error || ('HTTP ' + res.status));
+      return w;
+    }
+    function prosbaZaznaczone(){
+      return [...document.querySelectorAll('#prosbaRows input[data-id]:checked')].map(c => c.dataset.id);
+    }
+    function prosbaLicz(){
+      const n = prosbaZaznaczone().length;
+      document.getElementById('prosbaWyslij').textContent = n ? `Wyślij prośbę (${n})` : 'Wyślij prośbę';
+      document.getElementById('prosbaWyslij').disabled = !n;
+      document.getElementById('prosbaTest').disabled = !n;
+      document.getElementById('prosbaPodgladBtn').disabled = !n;
+      document.getElementById('prosbaInfo').textContent = n ? `zaznaczono ${n}` : 'zaznacz zgłoszenia';
+    }
+    function prosbaRysuj(){
+      const lista = doProsby();
+      const tb = document.getElementById('prosbaRows');
+      if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:18px;color:#6b7f84;">Brak zgłoszeń wieloosobowych w bieżącym filtrze.</td></tr>'; prosbaLicz(); return; }
+      tb.innerHTML = lista.map(r => {
+        const st = prosbaStan(r), n = osoby(r), m = mailiUczestnikow(r);
+        const s = SZKOLENIA[kluczSzk(r.szkolenie)];
+        const bezpl = s ? cenaLiczba(s.price) === 0 : false;
+        const domyslnie = !st && m < n;
+        return `<tr class="${st ? 'nieaktywny' : ''}">
+          <td><input type="checkbox" data-id="${r.id}"${st ? ' disabled' : ''}${domyslnie ? ' checked' : ''}></td>
+          <td><strong>${esc(r.nabywca_nazwa || '—')}</strong><div class="zap-osoby">${esc(r.email)}</div></td>
+          <td style="max-width:260px;"><span class="zap-tytul">${esc(nazwaSzk(kluczSzk(r.szkolenie)))}</span>
+            <span class="badge ${bezpl ? 'badge-read' : 'badge-new'}" style="margin-top:3px;">${bezpl ? 'bezpłatne' : 'płatne'}</span></td>
+          <td style="text-align:center;"><strong>${n}</strong></td>
+          <td style="text-align:center;">${m} z ${n}</td>
+          <td style="white-space:nowrap;">${st ? esc(st.txt) : '<span style="color:#9aa7b2;">nie wysłano</span>'}</td>
+        </tr>`;
+      }).join('');
+      tb.querySelectorAll('input[data-id]').forEach(c => c.addEventListener('change', prosbaLicz));
+      document.getElementById('prosbaWszystkie').checked = false;
+      prosbaLicz();
+    }
+    let prosbaZajete = false;
+    async function prosbaPodglad(){
+      const ids = prosbaZaznaczone(); if (!ids.length) return;
+      try {
+        const w = await wolajFunkcje('zapis-uczestnicy', { tryb:'podglad', id: ids[0] });
+        document.getElementById('prosbaTemat').innerHTML = 'Do: <strong>' + esc(w.do) + '</strong> · Temat: <strong>' + esc(w.subject) + '</strong>' + (ids.length > 1 ? ' <span style="color:#6b7f84;">(podgląd pierwszego zaznaczonego)</span>' : '');
+        document.getElementById('prosbaFormularz').href = w.link;
+        document.getElementById('prosbaIframe').srcdoc = w.html;
+        document.getElementById('prosbaPodglad').hidden = false;
+        document.getElementById('prosbaPodglad').scrollIntoView({ behavior:'smooth', block:'start' });
+      } catch (e) { toast('Podgląd: ' + e.message, 'error'); }
+    }
+    async function prosbaWyslij(test){
+      const ids = prosbaZaznaczone(); if (!ids.length || prosbaZajete) return;
+      if (!test && !confirm(`Wysłać prośbę o listę uczestników do ${ids.length} ${ids.length === 1 ? 'zgłaszającego' : 'zgłaszających'}?\n\nKażde zgłoszenie dostaje ją tylko raz; ponowne wysłanie nie będzie możliwe.`)) return;
+      prosbaZajete = true;
+      const bt = document.getElementById(test ? 'prosbaTest' : 'prosbaWyslij');
+      const napis = bt.textContent; bt.disabled = true; bt.textContent = 'Wysyłanie…';
+      try {
+        const w = await wolajFunkcje('zapis-uczestnicy', { tryb:'wyslij', ids: test ? ids.slice(0, 1) : ids, test });
+        if (test) toast(w.wyslane ? 'Test wysłany na Twój adres' : 'Test nie wyszedł: ' + JSON.stringify(w.bledy), w.wyslane ? 'success' : 'error');
+        else {
+          const pom = (w.pominiete || []).length, bl = (w.bledy || []).length;
+          toast(`Wysłano: ${w.wyslane}` + (pom ? ` · pominięto: ${pom}` : '') + (bl ? ` · błędy: ${bl}` : ''), bl ? 'error' : 'success');
+          if (bl) console.error('Błędy wysyłki prośby:', w.bledy);
+          await load(); prosbaRysuj();
+        }
+      } catch (e) { toast('Wysyłka: ' + e.message, 'error'); }
+      finally { prosbaZajete = false; bt.textContent = napis; prosbaLicz(); }
+    }
+
     function wiersz(etykieta, wartosc){
       return `<dt>${esc(etykieta)}</dt><dd class="${wartosc?'':'pusto'}">${wartosc?esc(wartosc):'nie podano'}</dd>`;
     }
@@ -422,6 +585,7 @@
           ${wiersz('Telefon', r.telefon)}
           ${wiersz('Uwagi', r.uwagi)}
         </dl>
+        ${prosbaSzczegoly(r)}
         <div class="zap-blok">
           <h4>${r.nabywca_typ === 'osoba' ? 'Osoba prywatna <span class="badge badge-new">rachunek</span>' : 'Nabywca'}${r.nabywca_jst?' <span class="badge badge-read">jednostka samorządu</span>':''}</h4>
           <dl class="zap-dane" style="margin:0;">
@@ -453,6 +617,11 @@
         if (await usunZgloszenie(r.id)) { closeModal('zapModal'); load(); }
       });
       document.getElementById('zapEdytuj').addEventListener('click', () => edytuj(r));
+      const kl = document.getElementById('zapLinkListy');
+      if (kl) kl.addEventListener('click', async () => {
+        try { await navigator.clipboard.writeText(location.origin + '/uczestnicy/?t=' + encodeURIComponent(r.uczestnicy_token)); toast('Skopiowano link do formularza', 'success'); }
+        catch (_) { toast('Przeglądarka nie pozwoliła skopiować', 'error'); }
+      });
       /* Odpowiedź: kreator maila do tego jednego zgłaszającego, z tematem szkolenia */
       document.getElementById('zapOdpowiedz').addEventListener('click', () => {
         closeModal('zapModal');
@@ -658,7 +827,7 @@
       dane = data || [];
 
       /* Ceny i terminy — tylko do raportu; brak tabeli nie może psuć widoku zapisów. */
-      const szk = await db.from('szkolenia').select('title,date_start,price,price_member');
+      const szk = await db.from('szkolenia').select('title,date_start,price,price_member,is_online');
       if (szk.error) console.error(szk.error);
       (szk.data || []).forEach(x => { SZKOLENIA[kluczSzk(x.title)] = x; zapamietajNazwe(x.title, true); });
       dane.forEach(r => zapamietajNazwe(r.szkolenie, false));
@@ -690,6 +859,18 @@
         catch (_) { toast('Przeglądarka nie pozwoliła skopiować', 'error'); }
       });
 
+      document.getElementById('btnProsba').addEventListener('click', () => {
+        document.getElementById('prosbaPodglad').hidden = true;
+        prosbaRysuj(); openModal('prosbaModal');
+      });
+      document.getElementById('prosbaWszystkie').addEventListener('change', e => {
+        document.querySelectorAll('#prosbaRows input[data-id]:not(:disabled)').forEach(c => { c.checked = e.target.checked; });
+        prosbaLicz();
+      });
+      document.getElementById('prosbaPodgladBtn').addEventListener('click', prosbaPodglad);
+      document.getElementById('prosbaTest').addEventListener('click', () => prosbaWyslij(true));
+      document.getElementById('prosbaWyslij').addEventListener('click', () => prosbaWyslij(false));
+
       /* Wiadomość do UCZESTNIKÓW (np. link do szkolenia): własne adresy z uczestnicy_lista;
          przy starszych zgłoszeniach bez listy zostaje adres organizacji. Duplikaty usuwamy. */
       document.getElementById('btnMailUcz').addEventListener('click', () => {
@@ -698,7 +879,10 @@
         const odbiorcy = [];
         filtruj().filter(r => r.status !== 'cancelled').forEach(r => {
           const lista = Array.isArray(r.uczestnicy_lista) ? r.uczestnicy_lista.filter(o => o && o.email) : [];
-          const osoby = lista.length ? lista.map(o => ({ email: o.email, name: o.imie || '' }))
+          /* osoby bez własnego adresu uczestniczą przy wspólnym stanowisku: link idzie też na adres zgłoszenia */
+          const bezAdresu = Array.isArray(r.uczestnicy_lista) && r.uczestnicy_lista.some(o => o && !o.email);
+          const osoby = lista.length
+            ? lista.map(o => ({ email: o.email, name: o.imie || '' })).concat(bezAdresu ? [{ email: r.email, name: r.nabywca_nazwa || '' }] : [])
             : [{ email: r.email, name: ((r.uczestnicy || '').split(/\n/)[0] || r.nabywca_nazwa || '').trim() }];
           if (!lista.length) zOrganizacji++;
           osoby.forEach(o => { const k = (o.email || '').toLowerCase(); if (k && !widziane.has(k)) { widziane.add(k); odbiorcy.push(o); } });

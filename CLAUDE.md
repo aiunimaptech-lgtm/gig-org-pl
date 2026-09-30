@@ -18,6 +18,9 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   (potwierdzenie, faktura); `nabywca_typ` firma/osoba (osoba prywatna = rachunek, bez NIP/JST/ceny
   członkowskiej); członkostwo sprawdzane na żywo `gig_dopasuj_czlonka` i kwota przeliczana w formularzu. Przycisk „Zapisz się”
   w kalendarzu prowadzi tam z `?szkolenie=<tytuł>`.
+  Bezpłatne wydarzenia mają te same wiersze uczestników (bez faktury). Zgłoszenia wieloosobowe bez adresów:
+  panel „Prośba o listę uczestników” → Edge Function `zapis-uczestnicy` → formularz `/uczestnicy/?t=<token>`;
+  prośba idzie raz na zgłoszenie, formularz przesyła się raz (szczegóły w HANDOVER.md).
 - **Przyjęcie członka — dwa etapy wg art. 12 pkt 1 Statutu** (`backend/supabase_uchwaly.sql`
   + `backend/supabase_uchwaly_opinia.sql`, tabele `uchwaly`, `uchwaly_glosy`, `rada_izby`):
   zgłoszenie „Dołącz do nas" → mail do kandydata z prośbą o wydruk CEIDG/KRS **i** potwierdzenie

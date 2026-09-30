@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lista uczestników: Geodezyjna Izba Gospodarcza</title>
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root{--red:#cc0a2b;--ink:#16202a;--muted:#6b7884;--line:#e6ebef;--bg:#f4f6f8;--soft:#fdecef;}
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;}
+    a{color:var(--red);text-decoration:none;}a:hover{text-decoration:underline;}
+    .karta{max-width:760px;margin:40px auto;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 4px 18px rgba(22,32,42,.06);}
+    .logo{padding:24px 30px 16px;}.logo img{width:190px;height:auto;display:block;}
+    .pasek{height:3px;background:var(--red);}
+    .tresc{padding:26px 30px 30px;}
+    .nadtytul{margin:0 0 4px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--red);font-weight:700;}
+    h1{font-size:22px;line-height:1.3;margin:0 0 6px;}
+    .meta{margin:0 0 18px;color:var(--muted);font-size:14.5px;}
+    p{margin:0 0 14px;font-size:15px;color:#38444e;}
+    .info{margin:0 0 14px;padding:13px 16px;background:var(--soft);border-left:4px solid var(--red);border-radius:6px;font-size:14.5px;}
+    .info b.t{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.3px;color:var(--red);margin-bottom:3px;}
+    .test{margin:0 0 16px;padding:10px 14px;background:#fff8e6;border:1px solid #f0e2b6;border-radius:8px;color:#7a5c14;font-size:14px;}
+    table{width:100%;border-collapse:collapse;margin:8px 0 10px;}
+    th{font-size:12px;color:var(--muted);text-align:left;font-weight:700;padding:6px 6px;border-bottom:1px solid var(--line);}
+    td{padding:6px;vertical-align:middle;border-bottom:1px solid #f0f3f5;}
+    td.nr{width:28px;color:var(--muted);font-size:13px;text-align:right;}
+    td.x{width:40px;text-align:center;}
+    input[type=text],input[type=email]{width:100%;font:inherit;font-size:14.5px;padding:9px 11px;border:1px solid #cfd6dc;border-radius:8px;background:#fff;}
+    input:focus{outline:2px solid rgba(204,10,43,.25);border-color:var(--red);}
+    input.zle{border-color:var(--red);background:#fff6f7;}
+    .usun{border:0;background:none;color:#9aa7b2;font-size:20px;cursor:pointer;line-height:1;padding:4px 8px;border-radius:6px;}
+    .usun:hover{color:var(--red);background:#fdf0f2;}
+    .dodaj{font:inherit;font-size:14px;font-weight:600;border:1px dashed #cfd6dc;background:#fff;color:var(--ink);border-radius:8px;padding:8px 14px;cursor:pointer;}
+    .dodaj:hover{border-color:var(--red);color:var(--red);}
+    .suma{margin:16px 0 18px;padding:12px 16px;border:1px solid var(--line);border-radius:10px;background:#f8fafb;font-size:14.5px;}
+    .suma strong{color:var(--ink);}
+    .wyslij{font:inherit;font-weight:700;font-size:15px;border:0;border-radius:9px;padding:12px 24px;cursor:pointer;background:var(--red);color:#fff;}
+    .wyslij:disabled{opacity:.6;cursor:default;}
+    .box{padding:13px 16px;border-radius:10px;font-size:14.5px;margin:0 0 16px;}
+    .box.ok{background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .box.err{background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .lista{margin:0 0 16px;padding:0;list-style:none;border:1px solid var(--line);border-radius:10px;}
+    .lista li{padding:8px 14px;border-top:1px solid #f0f3f5;font-size:14.5px;}.lista li:first-child{border-top:0;}
+    .lista .m{color:var(--muted);}
+    .drobne{font-size:13px;color:var(--muted);}
+    .stopka{font-size:12.5px;color:#9aa7b2;text-align:center;margin:0 16px 40px;}
+    @media(max-width:640px){
+      .karta{margin:16px;}.tresc,.logo{padding-left:18px;padding-right:18px;}
+      thead{display:none;}
+      table,tbody,tr,td{display:block;width:100%;}
+      tr{position:relative;border:1px solid var(--line);border-radius:10px;padding:8px 44px 8px 10px;margin-bottom:10px;}
+      td{border:0;padding:4px 0;}
+      td.nr{width:auto;text-align:left;}
+      td.x{position:absolute;top:6px;right:4px;width:auto;}
+    }
+  </style>
+</head>
+<body>
+  <main class="karta">
+    <div class="logo"><a href="/"><img src="/_assets/img/gig-logo-email.png" alt="Geodezyjna Izba Gospodarcza"></a></div>
+    <div class="pasek"></div>
+    <div class="tresc" id="tresc"><p>Ładowanie…</p></div>
+  </main>
+  <p class="stopka">Geodezyjna Izba Gospodarcza · ul. Czackiego 3/5, 00-043 Warszawa · <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a></p>
+
+  <script src="/_assets/js/gig-config.js"></script>
+  <script>
+    /* Lista uczestników zgłoszenia wieloosobowego. Link z maila: /uczestnicy/?t=<token>.
+       Dane i zapis obsługuje Edge Function zapis-uczestnicy (token = jedyny klucz).
+       Formularz przesyła się JEDEN raz; potem strona pokazuje zapisaną listę.
+       &test=1 (link z testowej wiadomości do biura): walidacja działa, zapis nie. */
+    (function () {
+      var T = document.getElementById('tresc');
+      var q = new URLSearchParams(location.search), t = q.get('t') || '';
+      var test = q.get('test') === '1';
+      var URL_F = window.GIG_CFG.SUPABASE_URL + '/functions/v1/zapis-uczestnicy';
+      var RE_MAIL = /^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/;
+      var D = null;
+
+      function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+      function zl(x) { return x.toLocaleString('pl-PL', { maximumFractionDigits: 2 }) + ' zł'; }
+      function osob(n) { var d = n % 10, s = n % 100; if (n === 1) return 'osoba'; return (d >= 2 && d <= 4 && (s < 12 || s > 14)) ? 'osoby' : 'osób'; }
+      function wolaj(dane) {
+        return fetch(URL_F, { method: 'POST', headers: { 'Content-Type': 'application/json', 'apikey': window.GIG_CFG.SUPABASE_ANON },
+          body: JSON.stringify(dane) }).then(function (r) { return r.json().catch(function () { return {}; }); });
+      }
+      function blad(tekst) {
+        T.innerHTML = '<h1>Nie udało się otworzyć formularza</h1><div class="box err">' + esc(tekst) + '</div>' +
+          '<p>Napisz do nas na <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a> albo zadzwoń: 22 827 38 43.</p>';
+      }
+      function listaHtml(osoby) {
+        return '<ul class="lista">' + osoby.map(function (o, i) {
+          return '<li>' + (i + 1) + '. ' + esc(o.imie) + ' <span class="m">· ' + (o.email ? esc(o.email) : 'bez e-maila') + '</span></li>';
+        }).join('') + '</ul>';
+      }
+      function naglowek() {
+        return '<p class="nadtytul">' + (D.bezplatne ? 'Wydarzenie bezpłatne' : 'Szkolenie') + ' · lista uczestników</p>' +
+          '<h1>' + esc(D.szkolenie) + '</h1>' +
+          '<p class="meta">' + esc(D.termin) + (D.organizacja ? '<br>Zgłoszenie: <strong>' + esc(D.organizacja) + '</strong>' : '') + '</p>';
+      }
+
+      if (!/^[A-Za-z0-9_-]{20,64}$/.test(t)) { blad('Ten link jest niekompletny. Skopiuj go w całości z wiadomości.'); return; }
+
+      wolaj({ t: t, tryb: 'info' }).then(function (d) {
+        if (!d.ok) { blad(d.error || 'Nie znaleziono zgłoszenia.'); return; }
+        D = d;
+        if (d.uzupelniono && !test) {
+          T.innerHTML = naglowek() + '<div class="box ok">Lista uczestników została już przesłana. Dziękujemy.</div>' +
+            listaHtml(d.osoby) + '<p class="drobne">Formularz przesyła się jeden raz. Jeśli trzeba coś zmienić, napisz na <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</p>';
+          return;
+        }
+        if (d.zamkniete) {
+          T.innerHTML = naglowek() + '<div class="box err">Termin już minął, więc listy nie można zmienić.</div>' + listaHtml(d.osoby);
+          return;
+        }
+        formularz();
+      }).catch(function () { blad('Brak połączenia. Spróbuj ponownie za chwilę.'); });
+
+      function formularz() {
+        var platne = !D.bezplatne && D.cena !== null && D.cena !== undefined;
+        var html = naglowek();
+        if (test) html += '<div class="test"><strong>Podgląd z testowej wiadomości.</strong> Formularz sprawdza dane, ale niczego nie zapisuje i nie wysyła.</div>';
+        if (!D.bezplatne) {
+          html += '<div class="info"><b class="t">Zaświadczenie o ukończeniu szkolenia</b>Zaświadczenie otrzyma każda zgłoszona osoba, za którą została wniesiona opłata. ' +
+            (platne && D.cena > 0 ? 'Opłata dotyczy każdego uczestnika osobno' + (D.czlonkowska ? ' (cena dla członków GIG: ' + zl(D.cena) + ' za osobę)' : ' (' + zl(D.cena) + ' za osobę)') + '. Wszystkie osoby ujmiemy na jednej ' + (D.osoba_prywatna ? 'rachunku' : 'fakturze') + '.' : '') +
+            (platne && D.cena === 0 ? 'Dla Państwa udział jest bezpłatny.' : '') + '</div>';
+        }
+        if (D.online) {
+          html += '<div class="info"><b class="t">Udział z osobnych stanowisk</b>Jeśli uczestnicy łączą się z osobnych komputerów, podaj e-mail każdej osoby: link wyślemy dzień przed terminem bezpośrednio do niej. ' +
+            'Osoby bez adresu uczestniczą przy wspólnym stanowisku, z linkiem wysłanym na adres zgłoszenia (' + esc(D.email_org) + ').</div>';
+        }
+        html += '<p style="margin-top:18px;">Wpisz <strong>wszystkie osoby</strong> z Twojej organizacji, które wezmą udział.</p>' +
+          '<table><thead><tr><th></th><th>Imię i nazwisko</th><th>E-mail uczestnika' + (D.online ? ' (na niego wyślemy link)' : '') + '</th><th></th></tr></thead><tbody id="wiersze"></tbody></table>' +
+          '<button type="button" class="dodaj" id="dodaj">+ Dodaj osobę</button>' +
+          '<div class="suma" id="suma"></div>' +
+          '<div id="komunikat"></div>' +
+          '<button type="button" class="wyslij" id="wyslij">Prześlij listę uczestników</button>' +
+          '<p class="drobne" style="margin-top:12px;">Formularz przesyła się <strong>jeden raz</strong>. Po przesłaniu zmiany zgłaszaj na <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</p>';
+        T.innerHTML = html;
+
+        var tb = document.getElementById('wiersze');
+        function wiersz(o) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td class="nr"></td>' +
+            '<td><input type="text" class="imie" maxlength="120" placeholder="Imię i nazwisko" autocomplete="off"></td>' +
+            '<td><input type="email" class="email" maxlength="160" placeholder="' + (D.online ? 'adres do linku (opcjonalnie)' : 'adres e-mail (opcjonalnie)') + '" autocomplete="off"></td>' +
+            '<td class="x"><button type="button" class="usun" title="Usuń osobę" aria-label="Usuń osobę">×</button></td>';
+          tr.querySelector('.imie').value = o && o.imie || '';
+          tr.querySelector('.email').value = o && o.email || '';
+          tr.querySelector('.usun').addEventListener('click', function () {
+            if (tb.children.length <= 1) { tr.querySelector('.imie').value = ''; tr.querySelector('.email').value = ''; }
+            else tr.remove();
+            numeruj(); licz();
+          });
+          tr.querySelectorAll('input').forEach(function (i) { i.addEventListener('input', function () { i.classList.remove('zle'); licz(); }); });
+          tb.appendChild(tr);
+        }
+        function numeruj() { Array.prototype.forEach.call(tb.children, function (tr, i) { tr.querySelector('.nr').textContent = (i + 1) + '.'; }); }
+        function zbierz() {
+          return Array.prototype.map.call(tb.children, function (tr) {
+            return { tr: tr, imie: tr.querySelector('.imie').value.replace(/\s+/g, ' ').trim(), email: tr.querySelector('.email').value.trim().toLowerCase() };
+          }).filter(function (o) { return o.imie || o.email; });
+        }
+        function licz() {
+          var l = zbierz(), n = l.length, zm = l.filter(function (o) { return o.email; }).length;
+          var s = 'Liczba osób: <strong>' + n + '</strong>' + (D.online ? ' · z własnym e-mailem: <strong>' + zm + '</strong>' : '');
+          if (platne && D.cena > 0 && n) s += '<br>Do zapłaty: <strong>' + n + ' × ' + zl(D.cena) + ' = ' + zl(n * D.cena) + '</strong>' + (D.czlonkowska ? ' (cena dla członków GIG)' : '');
+          if (D.liczba_osob && n && n !== D.liczba_osob) s += '<br><span style="color:#7a5c14;">W zgłoszeniu było ' + D.liczba_osob + ' ' + osob(D.liczba_osob) + '; po przesłaniu będzie ' + n + ' ' + osob(n) + '.</span>';
+          document.getElementById('suma').innerHTML = s;
+        }
+        (D.osoby && D.osoby.length ? D.osoby : [{}]).forEach(wiersz);
+        numeruj(); licz();
+        document.getElementById('dodaj').addEventListener('click', function () {
+          if (tb.children.length >= (D.max || 60)) return;
+          wiersz({}); numeruj(); licz(); tb.lastChild.querySelector('.imie').focus();
+        });
+
+        var K = document.getElementById('komunikat');
+        function komunikat(txt, ok) { K.innerHTML = '<div class="box ' + (ok ? 'ok' : 'err') + '">' + esc(txt) + '</div>'; }
+        document.getElementById('wyslij').addEventListener('click', function () {
+          var b = this, l = zbierz(), widziane = {};
+          K.innerHTML = '';
+          if (!l.length) { komunikat('Wpisz co najmniej jedną osobę.'); return; }
+          for (var i = 0; i < l.length; i++) {
+            var o = l[i];
+            if (!o.imie) { o.tr.querySelector('.imie').classList.add('zle'); komunikat('Podaj imię i nazwisko osoby nr ' + (i + 1) + '.'); return; }
+            if (o.email) {
+              if (!RE_MAIL.test(o.email)) { o.tr.querySelector('.email').classList.add('zle'); komunikat('Adres e-mail osoby nr ' + (i + 1) + ' jest niepoprawny.'); return; }
+              if (widziane[o.email] !== undefined) { o.tr.querySelector('.email').classList.add('zle');
+                komunikat('Osoby nr ' + (widziane[o.email] + 1) + ' i ' + (i + 1) + ' mają ten sam e-mail. Link jest imienny, więc każda osoba potrzebuje własnego adresu.'); return; }
+              widziane[o.email] = i;
+            }
+          }
+          var n = l.length;
+          if (!test && !confirm('Przesłać listę ' + n + ' ' + (n === 1 ? 'osoby' : 'osób') + (platne && D.cena > 0 ? ' (do zapłaty ' + zl(n * D.cena) + ')' : '') +
+            '?\n\nFormularz przesyła się jeden raz. Późniejsze zmiany tylko przez biuro@gig.org.pl.')) return;
+          b.disabled = true; b.textContent = 'Przesyłanie…';
+          wolaj({ t: t, tryb: 'zapisz', test: test, osoby: l.map(function (o) { return { imie: o.imie, email: o.email || null }; }) })
+            .then(function (r) {
+              if (!r.ok) {
+                if (r.juz && !test) { location.reload(); return; }
+                b.disabled = false; b.textContent = 'Prześlij listę uczestników'; komunikat(r.error || 'Nie udało się zapisać.'); return;
+              }
+              if (r.test) { b.disabled = false; b.textContent = 'Prześlij listę uczestników';
+                komunikat('Test: dane są poprawne (' + r.liczba + ' ' + osob(r.liczba) + (r.kwota ? ', ' + zl(r.kwota) : '') + '). Nic nie zapisano.', true); return; }
+              T.innerHTML = naglowek() + '<div class="box ok"><strong>Dziękujemy, lista została zapisana.</strong> Potwierdzenie wysłaliśmy na adres ' + esc(D.email_org) + '.</div>' +
+                listaHtml(l) +
+                (r.kwota ? '<p>Do zapłaty: <strong>' + r.liczba + ' × ' + zl(D.cena) + ' = ' + zl(r.kwota) + '</strong>' + (r.czlonkowska ? ' (cena dla członków GIG)' : '') + '.</p>' : '') +
+                (D.online ? '<p>Link wyślemy dzień przed terminem na adresy podanych osób' + (l.some(function (o) { return !o.email; }) ? ', a dla osób bez adresu na adres zgłoszenia' : '') + '.</p>' : '') +
+                '<p class="drobne">Zmiany zgłaszaj na <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</p>';
+              window.scrollTo(0, 0);
+            }).catch(function () { b.disabled = false; b.textContent = 'Prześlij listę uczestników'; komunikat('Brak połączenia. Spróbuj ponownie za chwilę.'); });
+        });
+      }
+    })();
+  </script>
+</body>
+</html>

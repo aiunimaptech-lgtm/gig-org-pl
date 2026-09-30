@@ -82,6 +82,24 @@ zachęty do członkostwa). „Reprezentuje: …” i pytanie do prelegentów lą
 bezpłatny, bez faktury i wpłaty”, powiadomienie dla biura nie ma bloku odbiorcy ani JST.
 Gdy odczyt ceny się nie uda, formularz zostaje w zwykłym trybie z fakturą.
 
+**Uczestnicy z e-mailami i prośba o listę (30.09.2026).** `/zapisy/` (płatne i bezpłatne) zbiera
+każdego uczestnika z własnym e-mailem (`uczestnicy_lista` jsonb, na niego idzie link), `email` to kontakt
+organizacji; `nabywca_typ` firma/osoba (osoba prywatna = rachunek). Starsze zgłoszenia wieloosobowe
+(same nazwiska) obsługuje **prośba o listę uczestników**: panel `admin/zapisy.html` → „👥 Prośba o listę
+uczestników” → Edge Function `zapis-uczestnicy` (verify_jwt false; tryby panelu wymagają sesji admina
+z kodem e-mail). Organizacja dostaje mail (płatne: zaświadczenie tylko za opłaconą osobę, kwota
+liczba × cena, jedna faktura; online: e-mail każdej osoby = osobny link) z osobistym linkiem
+`/uczestnicy/?t=<token>` (formularz: imię i nazwisko + opcjonalny e-mail, dopisz/usuń, kwota na żywo).
+**Jednorazowość:** prośba rezerwowana w bazie przed wysyłką (`uczestnicy_prosba_at`, UPDATE z warunkiem
+`is null`), więc drugi raz nie wyjdzie; formularz zapisuje się raz (`uczestnicy_uzupelnione_at`, też
+warunkowy UPDATE), potem link pokazuje tylko zapisaną listę, a zmiany robi biuro („Edytuj dane”).
+Poprzednia lista trafia do `uczestnicy_historia`. Po zapisie: mail do biura (zmiana liczby osób i kwoty)
+i potwierdzenie do organizacji; adresy uczestników nie dostają nic (nie da się tym spamować obcych).
+Trigger `trg_zapis_czysc_prosbe` czyści te pola przy każdym INSERT (publiczny formularz nie podstawi
+tokenu). `&test=1` w linku (z „Test do mnie” w panelu): walidacja bez zapisu. Kolumny i trigger:
+`backend/supabase_zapisy_uczestnicy.sql`. „✉ Do uczestników” dokłada adres organizacji, gdy ktoś
+z listy nie ma własnego e-maila (wspólne stanowisko).
+
 **Propozycja wartości na stronie (27.09.2026).** Strona główna (sekcja „Co zyskujesz jako
 członek Izby”), `/dolacz-do-nas/` (korzyści, 4 kroki, tabela kosztów, FAQ, statut w
 `<details>`) i mail „Zainteresowanie członkostwem” pokazują składki (40 / 80 / 160 zł
