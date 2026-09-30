@@ -30,7 +30,9 @@
     @media(max-width:600px){.zap-ed .rz{grid-template-columns:1fr;}}
     .zap-blok h4{margin:0 0 4px;font-size:14px;color:#16202a;}
     .pr-znak{display:block;margin-top:3px;font-size:11px;font-weight:600;white-space:nowrap;}
-    .pr-znak.lista{color:#1d7a45;}.pr-znak.wyslana{color:#8a6d1f;}
+    .pr-znak.lista,.pr-znak.zapoznano{color:#1d7a45;}.pr-znak.wyslana{color:#8a6d1f;}
+    .pr-stat{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 12px;font-size:13.5px;color:#4b5a66;}
+    .pr-stat b{color:#16202a;}
     #prosbaRows td{vertical-align:middle;}
     #prosbaRows tr.nieaktywny td{color:#9aa7b2;}
     .pr-hist{margin:6px 0 0;padding-left:18px;font-size:13px;color:#4b5a66;}
@@ -145,6 +147,7 @@
           przy każdym szkoleniu online: e-mail każdej osoby do osobnego linku) i przycisk do formularza.
           <strong>Każde zgłoszenie dostaje prośbę tylko raz</strong>, a organizacja może przesłać formularz tylko raz.
         </p>
+        <div class="pr-stat" id="prosbaStat"></div>
         <div class="table-wrap">
           <table class="admin-table">
             <thead><tr><th style="width:34px;"><input type="checkbox" id="prosbaWszystkie" title="Zaznacz wszystkie możliwe"></th><th>Zgłaszający</th><th>Szkolenie</th><th>Osób</th><th>E-maile uczestników</th><th>Stan</th></tr></thead>
@@ -441,12 +444,14 @@
     }
     function prosbaStan(r){
       if (r.uczestnicy_uzupelnione_at) return { kod:'lista', txt:'lista przesłana ' + dzien(r.uczestnicy_uzupelnione_at) };
-      if (r.uczestnicy_prosba_at) return { kod:'wyslana', txt:'prośba wysłana ' + dzien(r.uczestnicy_prosba_at) };
+      if (r.uczestnicy_zapoznano_at) return { kod:'zapoznano', txt:'zapoznano się ' + dzien(r.uczestnicy_zapoznano_at) + ' (lista bez zmian)' };
+      if (r.uczestnicy_prosba_at) return { kod:'wyslana', txt:'prośba wysłana ' + dzien(r.uczestnicy_prosba_at) + ', bez odpowiedzi' };
       return null;
     }
     function prosbaZnak(r){
       const st = prosbaStan(r);
-      return st ? `<span class="pr-znak ${st.kod}" title="Prośba o listę uczestników">${st.kod === 'lista' ? '✓ lista' : '⧗ prośba'}</span>` : '';
+      const znak = { lista:'✓ lista', zapoznano:'✓ zapoznano', wyslana:'⧗ prośba' }[st ? st.kod : ''];
+      return st ? `<span class="pr-znak ${st.kod}" title="Prośba o listę uczestników: ${esc(st.txt)}">${znak}</span>` : '';
     }
     function prosbaSzczegoly(r){
       const st = prosbaStan(r);
@@ -456,6 +461,8 @@
           <h4>Lista uczestników od organizacji</h4>
           <div style="font-size:14px;">
             ${r.uczestnicy_prosba_at ? 'Prośba wysłana: <strong>' + esc(fmtDate(r.uczestnicy_prosba_at)) + '</strong>' : 'Prośby nie wysłano.'}
+            ${r.uczestnicy_zapoznano_at ? '<br>Zapoznanie się z informacją potwierdzone: <strong>' + esc(fmtDate(r.uczestnicy_zapoznano_at)) + '</strong>'
+              : (r.uczestnicy_prosba_at ? '<br>Organizacja jeszcze nie potwierdziła zapoznania się z informacją.' : '')}
             ${r.uczestnicy_uzupelnione_at ? '<br>Lista przesłana formularzem: <strong>' + esc(fmtDate(r.uczestnicy_uzupelnione_at)) + '</strong> (formularz jest już zamknięty; zmiany przez „Edytuj dane”)' : (r.uczestnicy_prosba_at ? '<br>Organizacja jeszcze nie przesłała listy.' : '')}
           </div>
           ${r.uczestnicy_token && !r.uczestnicy_uzupelnione_at ? '<button type="button" class="btn btn-ghost btn-xs" id="zapLinkListy" style="margin-top:8px;">⧉ Kopiuj link do formularza</button>' : ''}
@@ -498,7 +505,14 @@
     function prosbaRysuj(){
       const lista = doProsby();
       const tb = document.getElementById('prosbaRows');
-      if (!lista.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:18px;color:#6b7f84;">Brak zgłoszeń wieloosobowych w bieżącym filtrze.</td></tr>'; prosbaLicz(); return; }
+      if (!lista.length) { document.getElementById('prosbaStat').innerHTML = ''; tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:18px;color:#6b7f84;">Brak zgłoszeń wieloosobowych w bieżącym filtrze.</td></tr>'; prosbaLicz(); return; }
+      const ile = f => lista.filter(f).length;
+      document.getElementById('prosbaStat').innerHTML =
+        `<span>Zgłoszeń wieloosobowych: <b>${lista.length}</b></span>` +
+        `<span>Prośba wysłana: <b>${ile(r => r.uczestnicy_prosba_at)}</b></span>` +
+        `<span>Potwierdziło zapoznanie się: <b>${ile(r => r.uczestnicy_zapoznano_at)}</b></span>` +
+        `<span>Przesłało listę: <b>${ile(r => r.uczestnicy_uzupelnione_at)}</b></span>` +
+        `<span>Bez odpowiedzi: <b>${ile(r => r.uczestnicy_prosba_at && !r.uczestnicy_zapoznano_at && !r.uczestnicy_uzupelnione_at)}</b></span>`;
       tb.innerHTML = lista.map(r => {
         const st = prosbaStan(r), n = osoby(r), m = mailiUczestnikow(r);
         const s = SZKOLENIA[kluczSzk(r.szkolenie)];

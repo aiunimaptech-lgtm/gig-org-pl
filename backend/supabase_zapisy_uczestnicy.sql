@@ -8,7 +8,8 @@ alter table public.zapisy_szkolenia
   add column if not exists uczestnicy_token text,
   add column if not exists uczestnicy_prosba_at timestamptz,
   add column if not exists uczestnicy_uzupelnione_at timestamptz,
-  add column if not exists uczestnicy_historia jsonb not null default '[]'::jsonb;
+  add column if not exists uczestnicy_historia jsonb not null default '[]'::jsonb,
+  add column if not exists uczestnicy_zapoznano_at timestamptz;   -- migracja zapisy_zapoznano_z_informacja
 create unique index if not exists zapisy_szkolenia_uczestnicy_token_uq
   on public.zapisy_szkolenia (uczestnicy_token) where uczestnicy_token is not null;
 comment on column public.zapisy_szkolenia.uczestnicy_token is
@@ -25,6 +26,7 @@ begin
   new.uczestnicy_token := null;
   new.uczestnicy_prosba_at := null;
   new.uczestnicy_uzupelnione_at := null;
+  new.uczestnicy_zapoznano_at := null;
   new.uczestnicy_historia := '[]'::jsonb;
   return new;
 end $$;
@@ -36,4 +38,6 @@ revoke execute on function public.gig_zapis_czysc_pola_prosby() from public, ano
 -- Jednorazowość (w Edge Function):
 --   prośba:     update ... set uczestnicy_prosba_at = now() where id = $1 and uczestnicy_prosba_at is null returning ...
 --               (0 wierszy = już wysłana; nieudana wysyłka zwalnia rezerwację)
+--   zapoznano: update ... set uczestnicy_zapoznano_at = now() where id = $1 and uczestnicy_zapoznano_at is null
+--               (przycisk na /uczestnicy/?t=..&potwierdz=1; samo otwarcie linku nic nie zapisuje)
 --   formularz:  update ... where id = $1 and uczestnicy_uzupelnione_at is null and status <> 'cancelled' returning id

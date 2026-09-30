@@ -14,7 +14,8 @@
 // Tryby (POST JSON):
 //   publiczne (bez logowania, klucz = token z linku):
 //     { t, tryb: 'info' }                   -> dane zgłoszenia do formularza
-//     { t, tryb: 'zapisz', osoby: [{imie, email}] }
+//     { t, tryb: 'zapisz', zapoznano: true, osoby: [{imie, email}] }
+//     { t, tryb: 'zapoznano' }             -> potwierdzenie zapoznania się z informacją (raz)
 //   panel (Authorization: Bearer <access_token admina>, sesja z kodem e-mail):
 //     { tryb: 'podglad', id }               -> { subject, html } bez wysyłki
 //     { tryb: 'wyslij', ids: [...], test? } -> test: mail pierwszego zgłoszenia na adres admina
@@ -75,6 +76,7 @@ type Zapis = Record<string, unknown> & {
   nabywca_nazwa: string | null; nabywca_typ: string | null; czlonek_gig: boolean | null;
   status: string | null; uczestnicy_token: string | null; uczestnicy_prosba_at: string | null;
   uczestnicy_uzupelnione_at: string | null; uczestnicy_historia: unknown[] | null;
+  uczestnicy_zapoznano_at: string | null;
 };
 
 // jak kluczSzk w panelu: tytuł ze zgłoszenia bywa innym wariantem (myślnik, spacje)
@@ -227,8 +229,13 @@ function mailProsba(z: Zapis, s: Szkolenie | null, link: string): { subject: str
       `Jeśli uczestnicy mają łączyć się ${bezpl ? "" : "ze szkoleniem "}z osobnych komputerów, każdy potrzebuje własnego linku. Prosimy wtedy podać <strong>adres e-mail każdej osoby</strong>: link wyślemy dzień przed terminem bezpośrednio do niej. Osoby bez podanego adresu mogą uczestniczyć przy wspólnym stanowisku, z linkiem wysłanym na adres zgłoszenia.`);
   }
 
-  const przycisk = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 18px;"><tr><td style="border-radius:30px;background:${C.mid};">
+  // dwa przyciski jeden pod drugim (na telefonie obok siebie się nie mieszczą)
+  const linkOk = link + (link.includes("?") ? "&" : "?") + "potwierdz=1";
+  const przycisk = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 10px;"><tr><td style="border-radius:30px;background:${C.mid};">
       <a href="${link}" style="display:inline-block;padding:13px 28px;color:#ffffff;font-weight:700;font-size:15px;text-decoration:none;border-radius:30px;">Uzupełnij listę uczestników</a>
+    </td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 18px;"><tr><td style="border-radius:30px;border:2px solid ${C.mid};background:#ffffff;">
+      <a href="${linkOk}" style="display:inline-block;padding:11px 26px;color:${C.mid};font-weight:700;font-size:15px;text-decoration:none;border-radius:30px;">Potwierdzam zapoznanie się z informacją</a>
     </td></tr></table>`;
 
   const body = wstep + bloki
@@ -237,8 +244,8 @@ function mailProsba(z: Zapis, s: Szkolenie | null, link: string): { subject: str
     + P(`Prosimy o sprawdzenie listy i uzupełnienie adresów e-mail w formularzu${doDnia ? `, najlepiej do <strong>${doDnia}</strong>` : "."} Można w nim także dopisać lub usunąć osobę${bezpl ? "" : "; kwota do zapłaty przeliczy się automatycznie"}. Formularz przesyła się <strong>jeden raz</strong>, dlatego prosimy o podanie od razu wszystkich osób z Państwa organizacji.`)
     + przycisk
     + `<p style="margin:0 0 10px;font-size:13px;color:#6b7c8c;line-height:1.6;">${bezEmaila === 0 && osoby.length === n
-        ? "Jeśli lista i adresy się zgadzają, nie trzeba nic robić."
-        : "Jeśli wszyscy będą uczestniczyć przy jednym stanowisku, a lista nazwisk jest pełna, nie trzeba nic robić."}
+        ? "Jeśli lista i adresy się zgadzają"
+        : "Jeśli wszyscy będą uczestniczyć przy jednym stanowisku, a lista nazwisk jest pełna"}, wystarczy kliknąć „Potwierdzam zapoznanie się z informacją”.
        Link jest przeznaczony dla osoby prowadzącej zgłoszenie. Późniejsze zmiany prosimy zgłaszać w odpowiedzi na tę wiadomość. Jeśli przycisk nie działa, skopiuj adres: <span style="word-break:break-all;">${esc(link)}</span></p>`
     + `<p style="margin:0;font-size:13px;color:#6b7c8c;line-height:1.6;">W razie pytań wystarczy odpisać na tę wiadomość.</p>`;
 
@@ -318,14 +325,26 @@ async function publiczny(body: Record<string, unknown>): Promise<Response> {
       ok: true, szkolenie: s?.title ?? z.szkolenie, termin: termin(s), online: s?.is_online !== false,
       bezplatne: bezplatne(s), cena, czlonkowska, organizacja: z.nabywca_nazwa, email_org: z.email,
       osoba_prywatna: z.nabywca_typ === "osoba", liczba_osob: z.liczba_osob, osoby: osobyZeZgloszenia(z),
-      zamkniete, uzupelniono: z.uczestnicy_uzupelnione_at, max: MAX_OSOB,
+      zamkniete, uzupelniono: z.uczestnicy_uzupelnione_at, zapoznano: z.uczestnicy_zapoznano_at, max: MAX_OSOB,
     });
+  }
+  // potwierdzenie zapoznania się z informacją: zapisuje się raz (warunek w UPDATE), kolejne kliknięcia
+  // tylko je pokazują. Samo wejście na stronę niczego nie zapisuje (skanery linków w poczcie).
+  if (body.tryb === "zapoznano") {
+    if (body.test === true) return json({ ok: true, test: true });
+    if (z.uczestnicy_zapoznano_at) return json({ ok: true, juz: true, zapoznano: z.uczestnicy_zapoznano_at });
+    const up = await admin().from("zapisy_szkolenia").update({ uczestnicy_zapoznano_at: new Date().toISOString() })
+      .eq("id", z.id).is("uczestnicy_zapoznano_at", null).select("uczestnicy_zapoznano_at");
+    if (up.error) { console.error(up.error); return json({ ok: false, error: "Nie udało się zapisać. Spróbuj ponownie za chwilę." }, 500); }
+    if (!up.data?.length) return json({ ok: true, juz: true });
+    return json({ ok: true, zapoznano: up.data[0].uczestnicy_zapoznano_at });
   }
   if (body.tryb !== "zapisz") return json({ ok: false, error: "nieznany tryb" }, 400);
   if (zamkniete) return json({ ok: false, error: "Termin już minął, listy nie można zmienić. Napisz do nas na biuro@gig.org.pl." }, 409);
   // formularz jest jednorazowy: po przesłaniu zmiany tylko przez biuro (panel „Edytuj dane”)
   if (z.uczestnicy_uzupelnione_at) return json({ ok: false, juz: true, error: "Lista uczestników została już przesłana. Zmiany prosimy zgłaszać na biuro@gig.org.pl." }, 409);
 
+  if (body.zapoznano !== true) return json({ ok: false, error: "Zaznacz potwierdzenie zapoznania się z informacją." }, 400);
   const surowe = Array.isArray(body.osoby) ? body.osoby as Array<Record<string, unknown>> : [];
   if (surowe.length > MAX_OSOB) return json({ ok: false, error: `Najwięcej ${MAX_OSOB} osób w jednym zgłoszeniu.` }, 400);
   const osoby = surowe.map((o) => ({
@@ -360,6 +379,7 @@ async function publiczny(body: Record<string, unknown>): Promise<Response> {
     uczestnicy_lista: osoby,
     liczba_osob: osoby.length,
     uczestnicy_uzupelnione_at: teraz,
+    uczestnicy_zapoznano_at: z.uczestnicy_zapoznano_at ?? teraz,
     uczestnicy_historia: historia,
   }).eq("id", z.id).is("uczestnicy_uzupelnione_at", null).neq("status", "cancelled").select("id");
   if (up.error) { console.error(up.error); return json({ ok: false, error: "Nie udało się zapisać. Spróbuj ponownie za chwilę." }, 500); }
@@ -458,7 +478,7 @@ Deno.serve(async (req) => {
   let body: Record<string, unknown>;
   try { body = await req.json(); } catch { return json({ ok: false, error: "nieprawidlowe dane" }, 400); }
   try {
-    if (body.tryb === "info" || body.tryb === "zapisz") return await publiczny(body);
+    if (body.tryb === "info" || body.tryb === "zapisz" || body.tryb === "zapoznano") return await publiczny(body);
     return await panel(req, body);
   } catch (err) {
     console.error(err);
