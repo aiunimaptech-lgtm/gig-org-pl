@@ -122,3 +122,6 @@ alter table public.wysylki add column if not exists reply_to text;
 -- 29.09.2026: wysylki.wysylaj_od (nie wysyłaj przed), wysylki.uwaga (powód auto-wstrzymania),
 -- hamulec w gig_kampanie_tick: >= 300 wysłanych i > 5% twardych odbić -> status 'wstrzymana'.
 -- Migracja: wysylki_termin_hamulec.
+-- 30.09.2026: wysylki_odbiorcy.priorytet (wyższy = później; adresy z domen, które już dały twarde
+-- odbicie), wysylki.hamulec_od (hamulec liczy odbicia od wznowienia). Migracja: wysylki_priorytet_hamulec_od.
+-- Czyszczenie kolejek Forum 3-6: 29 adresów z domen bez poczty (DNS) pominiętych i oznaczonych 'bounced'.

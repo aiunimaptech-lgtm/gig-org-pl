@@ -368,7 +368,8 @@
     async function zmienStatus(id, status) {
       if (status === 'wstrzymana') stop = true;
       const zm = { status, updated_at: new Date().toISOString() };
-      if (status === 'w_toku') { zm.nastepna_paczka_at = new Date().toISOString(); zm.uwaga = null; }   // wznowienie: paczka od razu
+      // wznowienie: paczka od razu, hamulec odbić liczy od teraz (stare odbicia nie zatrzymają kampanii od nowa)
+      if (status === 'w_toku') { zm.nastepna_paczka_at = zm.hamulec_od = new Date().toISOString(); zm.uwaga = null; }
       const { error } = await db.from('wysylki').update(zm).eq('id', id);
       if (error) { toast('Błąd zmiany statusu', 'error'); return; }
       toast(status === 'wstrzymana' ? 'Wstrzymano' : 'Wznowiono', 'success');
