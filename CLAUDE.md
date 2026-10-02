@@ -43,6 +43,10 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   `_assets/js/wezel-katalog.js`, generowany `skrypty/gen_wezel_katalog.py`) → tabele
   `wezel_ankiety` / `wezel_ceny` → panel `/admin/wezel.html` (zestawienie min/max/średnia,
   eksport CSV). Kafelek na stronie głównej obok „Nadchodzące wydarzenia".
+- **Moduł „Asystent geodezyjny” (w przygotowaniu, buduje Dawid)**: pytania geodetów/urzędników + wgrane protokoły
+  i interpretacje WINGiK/GGK, odpowiedź AI ze źródłami, zanonimizowane dokumenty do pobrania. Materiały przekazane
+  Dawidowi i **instrukcja odbioru jego paczki**: `dla Dawida/04_ODBIOR_PROJEKTU_instrukcja_dla_Claude.md`
+  (gdy użytkownik powie, że przyszedł projekt od Dawida, zacznij od tego pliku).
 - **Maile**: każdy wpis do `submissions_kontakt` / `submissions_newsletter` / `zapisy_szkolenia`
   wyzwala trigger `pg_net` → Edge Function `send-confirmation` → Resend. Idą dwa maile:
   powiadomienie do GIG (`Reply-To` = zgłaszający) i potwierdzenie do zgłaszającego.
@@ -56,6 +60,9 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   na szkolenie wzbogaca też adresy z newslettera), zdejmują znacznik po ukryciu członka, wypisie
   albo usunięciu zgłoszenia. Wypełnionych pól nie nadpisują. W panelu
   `/admin/baza-email.html` kafelki i filtr „Lista” → „Wyślij e-mail” / „Kampania z filtra”.
+  Czwarta kategoria **„Szkolenia 2021-2026”** (statyczna, bez triggera): uczestnicy dawnych szkoleń z arkuszy
+  „Opłaty/Faktury/Zaświadczenia” (`#szkolenia/lista osob ze szkolen GIG/`), dopisana 2.10.2026 jednorazowym importem:
+  istniejące adresy dostały znacznik i uzupełnione puste pola, nowe mają `pochodzenie = 'szkolenia GIG 2021-2026'`.
 
 ## SEO, agenci AI i prerender (od 28.09.2026)
 - **Treść z bazy jest też w HTML-u**: `skrypty/prerender.mjs` zapisuje szkolenia, katalog Członków,
