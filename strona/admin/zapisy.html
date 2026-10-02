@@ -239,10 +239,28 @@
     /* Firma czy jednostka samorządu — zgłaszający zaznacza to sam przy danych do faktury.
        Od tego zależy moment wystawienia faktury i to, czy odbiorca bywa inny niż nabywca,
        więc ma własną kolumnę zaraz przy nabywcy. */
+    /* Rodzaj nabywcy do wyświetlenia. Znacznik JST zaznacza zgłaszający i od niego zależy
+       rozliczenie, więc go nie zmieniamy; gdy go nie ma, a nazwa wskazuje na urząd lub
+       instytucję państwową, pokazujemy to zamiast mylącego „firma”. */
+    function rodzajNabywcy(r){
+      if (r.nabywca_typ === 'osoba') return { t:'osoba pryw.', k:'badge-read', opis:'osoba prywatna (rachunek)' };
+      if (r.nabywca_jst === true)    return { t:'JST', k:'badge-new', opis:'jednostka samorządu terytorialnego' };
+      const n = (r.nabywca_nazwa || '').toLowerCase();
+      const bez = ' (w zgłoszeniu nie zaznaczono JST; dane zgłoszenia bez zmian)';
+      if (/urząd wojewódzki|wojewódzk\w* inspekcj|wingik|główny urząd geodezji|gugik|ministerstw/.test(n))
+        return { t:'adm. rządowa', k:'badge-confirmed', opis:'administracja rządowa' + bez };
+      if (/lasy państwowe|nadleśnictw|wody polskie|państwowe gospodarstwo|gddkia|generalna dyrekcja|kowr|krajowy ośrodek|agencj|instytut|uniwersytet|politechnik|akademi/.test(n))
+        return { t:'inst. państw.', k:'badge-confirmed', opis:'instytucja państwowa lub publiczna' + bez };
+      const firmowa = /usług|sp\. ?z|spółk|s\.c\.|s\.a\.|biuro|pracownia|przedsiębiorstw|zakład|firma/.test(n);
+      if (!firmowa && /(^|\s)(powiat|starostwo|starostowo|urząd (miasta|miejski|gminy)|gmina|miasto|województwo|marszałkowski|wbgitr|wojewódzkie biuro geodezji)(\s|$)/.test(n))
+        return { t:'urząd', k:'badge-confirmed', opis:'urząd lub jednostka samorządu' + bez };
+      if (r.nabywca_jst === false) return { t:'firma', k:'badge-read', opis:'firma' };
+      return null;
+    }
     function jstBadge(r){
-      if (r.nabywca_jst === true)  return '<span class="badge badge-new" title="jednostka samorządu terytorialnego">JST</span>';
-      if (r.nabywca_jst === false) return '<span class="badge badge-read">firma</span>';
-      return '<span style="color:#9aa7b2;">—</span>';   // starsze zgłoszenia nie miały tego pola
+      const x = rodzajNabywcy(r);
+      if (!x) return '<span style="color:#9aa7b2;">—</span>';   // starsze zgłoszenia nie miały tego pola
+      return `<span class="badge ${x.k}" title="${esc(x.opis)}">${esc(x.t)}</span>`;
     }
     async function ustawCzlonka(id, tak){
       const { error } = await db.from('zapisy_szkolenia')

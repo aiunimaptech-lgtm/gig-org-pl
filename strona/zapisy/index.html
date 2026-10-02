@@ -115,6 +115,7 @@
       <div class="pole" id="zRepPole" hidden>
         <label for="reprezentuje">Kogo reprezentujesz? <span class="wym">*</span></label>
         <select id="reprezentuje" name="reprezentuje">
+          <option value="" selected disabled>Wybierz…</option>
           <option value="firma">Firmę geodezyjną</option>
           <option value="urzad">Urząd lub jednostkę samorządu</option>
           <option value="instytucja">Inną instytucję lub uczelnię</option>
@@ -596,6 +597,9 @@
     if (!val("nabywca_nazwa")) return pokaz(os ? (bezplatne ? "Podaj swoje imię i nazwisko." : "Podaj imię i nazwisko osoby, na którą wystawimy rachunek.") : "Podaj nazwę firmy lub instytucji.", false);
     if (!val("nabywca_adres")) return pokaz(os ? (bezplatne ? "Podaj adres (wystarczy miejscowość)." : "Podaj adres do rachunku.") : "Podaj adres firmy lub instytucji.", false);
     if (!os && !val("nabywca_nip")) return pokaz("Podaj NIP firmy lub instytucji.", false);
+    /* bez domyślnej odpowiedzi: urzędy zostawiały pierwszą opcję „firma geodezyjna” */
+    if (bezplatne && !osobaPrywatna() && !document.getElementById("reprezentuje").value)
+      return pokaz("Wybierz, kogo reprezentujesz: firmę geodezyjną, urząd lub inną instytucję.", false);
     if (!bezplatne && !os) {
       if (!val("nabywca_jst"))
         return pokaz("Zaznacz, czy nabywca jest jednostką samorządu terytorialnego.", false);
