@@ -1,6 +1,7 @@
 # GIG: odświeżanie treści z bazy zapisanej w HTML (skrypty/prerender.mjs).
 # Co godzinę pobiera szkolenia, katalog Członków i wpisy z panelu; commit powstaje
-# tylko wtedy, gdy coś się zmieniło, a Vercel wdraża go jak każdy inny.
+# tylko wtedy, gdy coś się zmieniło, a Vercel wdraża go jak każdy inny. Potem zmienione
+# strony idą do IndexNow (skrypty/indexnow.mjs), żeby Bing znał je od razu.
 # Gdy baza nie odpowiada, generator niczego nie zmienia, więc nie ma commita.
 # Ręcznie: GitHub → Actions → „Prerender treści z bazy” → Run workflow
 # (albo z terminala: gh workflow run prerender.yml).
@@ -30,6 +31,7 @@ jobs:
       - name: Generuj HTML z bazy
         run: node skrypty/prerender.mjs
       - name: Zapisz zmiany
+        id: zapis
         run: |
           git config user.name "gig-prerender"
           git config user.email "prerender@gig.org.pl"
@@ -41,3 +43,11 @@ jobs:
           git commit -m "Prerender: aktualizacja treści z bazy"
           git pull --rebase --autostash origin main
           git push
+          echo "pliki=$(git diff --name-only HEAD~1 HEAD -- strona | tr '\n' ' ')" >> "$GITHUB_OUTPUT"
+      # Bing (wyszukiwarka ChatGPT i Copilot) dowiaduje się o zmienionych stronach od razu.
+      # Czekamy chwilę, aż Vercel wdroży commit; błąd zgłoszenia nie psuje workflow.
+      - name: Powiadom wyszukiwarki (IndexNow)
+        if: steps.zapis.outputs.pliki != ''
+        run: |
+          sleep 90
+          node skrypty/indexnow.mjs ${{ steps.zapis.outputs.pliki }}

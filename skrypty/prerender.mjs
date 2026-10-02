@@ -256,6 +256,23 @@ async function main() {
   }).join("");
   hc = blok(hc, "czlonkowie", `<div data-prerender="czlonkowie">${listaCzl}</div>`,
     (h, c) => h.replace('<div id="lista"><div class="empty">Ładowanie listy członków…</div></div>', `<div id="lista">${c}</div>`));
+  // JSON-LD: lista firm członkowskich jako Organization (wyszukiwarki i agenci AI:
+  // „firma geodezyjna w <mieście>, członek GIG”)
+  const gig = { "@type": "Organization", name: "Geodezyjna Izba Gospodarcza", url: SITE + "/" };
+  const www = (u) => { u = val(u); return !u ? "" : /^https?:\/\//i.test(u) ? u : "https://" + u.replace(/^\/+/, ""); };
+  const czlLd = {
+    "@context": "https://schema.org", "@type": "ItemList", name: "Firmy członkowskie Geodezyjnej Izby Gospodarczej",
+    url: SITE + "/czlonkowie/", numberOfItems: czl.length,
+    itemListElement: czl.map((r, i) => {
+      const org = { "@type": "Organization", name: r.name, memberOf: gig };
+      if (www(r.website)) org.url = www(r.website);
+      if (val(r.address) || r.region) org.address = Object.assign({ "@type": "PostalAddress", addressCountry: "PL" },
+        val(r.address) ? { streetAddress: val(r.address) } : {}, r.region ? { addressRegion: r.region } : {});
+      if (val(r.description)) org.description = skroc(r.description, 300);
+      return { "@type": "ListItem", position: i + 1, item: org };
+    }),
+  };
+  hc = blok(hc, "czlonkowie-jsonld", jsonLd(czlLd), przedHead);
   doZapisu.push(["czlonkowie/index.html", hc]);
 
   // 3) Najnowsze wpisy: strona główna i Baza wiedzy

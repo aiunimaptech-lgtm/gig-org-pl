@@ -72,6 +72,11 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
 - **Automat**: `.github/workflows/prerender.yml` co godzinę (i ręcznie: `gh workflow run prerender.yml`);
   commit tylko przy zmianie treści. **Przed `git push` zawsze `git pull --rebase`**, bo bot też commituje.
 - Mapę strony generuje teraz prerender (dawne `gen_sitemap.py` nie uruchamiaj, nadpisałby wpisy).
+- **JSON-LD**: Organization/WebSite (główna), EducationEvent (szkolenia), Article (wpisy), ItemList firm-Organization
+  (`/czlonkowie/`, blok prerendera `czlonkowie-jsonld`), FAQPage (`/dolacz-do-nas/`, statyczny blok `<!--FAQ-JSONLD-->`:
+  przy zmianie FAQ lub składek na stronie popraw też ten blok).
+- **IndexNow (Bing = wyszukiwarka ChatGPT/Copilot)**: klucz `strona/<32 hex>.txt`, skrypt `skrypty/indexnow.mjs`;
+  workflow prerendera po każdym commicie zgłasza zmienione strony z mapy. Ręcznie wszystko: `node skrypty/indexnow.mjs --wszystko`.
 - `skrypty/seo_uzupelnij.py`: opisy meta, Open Graph, ukryty H1 i JSON-LD na stronach z mapy
   (idempotentny; uruchom po dodaniu nowej strony statycznej). `skrypty/wydajnosc_porzadki.py`:
   usuwa martwe Turnstile/CF7 z kopii WP. Test robotów: `gh workflow run sprawdz-roboty.yml`.
