@@ -87,6 +87,12 @@
               <div class="toolbar">
                 <div class="search-box"><span class="search-icon">⌕</span>
                   <input type="text" class="form-control" id="ktSearch" placeholder="Szukaj po nazwisku, e-mailu, temacie…"></div>
+                <select id="ktRodzaj" class="form-control" style="max-width:260px;" title="Rodzaj wiadomości">
+                  <option value="">Wszystkie wiadomości</option>
+                  <option value="zgloszenie">Zgłoszenie członkowskie</option>
+                  <option value="zainteresowanie">Zainteresowanie członkostwem</option>
+                  <option value="inne">Pozostałe wiadomości</option>
+                </select>
                 <button class="btn btn-outline btn-sm" id="ktExport">⬇ Eksport CSV</button>
               </div>
               <div class="table-wrap">
@@ -181,10 +187,24 @@
       }));
     }
 
+    /* Rodzaj po temacie: „Zgłoszenie członkowskie: …” (formularz Dołącz do nas),
+       „Zainteresowanie członkostwem: …” (zaznaczone przy zapisie na szkolenie), reszta to formularz kontaktowy. */
+    function rodzajKt(r) {
+      const t = (r.subject || '').toLowerCase();
+      if (t.startsWith('zgłoszenie członkowskie')) return 'zgloszenie';
+      if (t.startsWith('zainteresowanie członkostwem')) return 'zainteresowanie';
+      return 'inne';
+    }
+    function liczKt() {
+      const sel = document.getElementById('ktRodzaj');
+      const n = k => ktData.filter(r => !k || rodzajKt(r) === k).length;
+      [...sel.options].forEach(o => { o.textContent = o.textContent.replace(/ \(\d+\)$/, '') + ' (' + n(o.value) + ')'; });
+    }
     function renderKt(filter='') {
       const f = filter.toLowerCase();
-      const rows = ktData.filter(r =>
-        (r.name||'').toLowerCase().includes(f) || (r.email||'').toLowerCase().includes(f) || (r.subject||'').toLowerCase().includes(f));
+      const rodz = document.getElementById('ktRodzaj').value;
+      const rows = ktData.filter(r => (!rodz || rodzajKt(r) === rodz) && (
+        (r.name||'').toLowerCase().includes(f) || (r.email||'').toLowerCase().includes(f) || (r.subject||'').toLowerCase().includes(f)));
       const tb = document.getElementById('ktRows');
       if (!rows.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak wiadomości.</td></tr>'; return; }
       tb.innerHTML = rows.map(r => `
@@ -285,6 +305,7 @@
       if (nl.error || kt.error) { toast('Błąd ładowania danych', 'error'); return; }
       nlData = nl.data || []; ktData = kt.data || [];
       renderNl(document.getElementById('nlSearch').value);
+      liczKt();
       renderKt(document.getElementById('ktSearch').value);
       loadSidebarBadges();
     }
@@ -295,6 +316,7 @@
       document.getElementById('nlSearch').addEventListener('input', e => renderNl(e.target.value));
       document.getElementById('nlStatus').addEventListener('change', () => renderNl(document.getElementById('nlSearch').value));
       document.getElementById('ktSearch').addEventListener('input', e => renderKt(e.target.value));
+      document.getElementById('ktRodzaj').addEventListener('change', () => renderKt(document.getElementById('ktSearch').value));
       document.getElementById('nlExport').addEventListener('click', () =>
         exportCSV(nlData.map(r => ({ email: r.email, status: (ETYK_NL[r.status] || [0, r.status])[1], data: fmtDate(r.created_at) })),
           [{key:'email',label:'E-mail'},{key:'status',label:'Status'},{key:'data',label:'Data zapisu'}], 'newsletter-gig.csv'));
