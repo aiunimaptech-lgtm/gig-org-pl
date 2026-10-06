@@ -123,13 +123,15 @@ function kartaSzkolenia(r) {
   };
   const ceny = (r.price || r.price_member) ? `<div class="gig-szk-ceny">${r.price ? `<span class="gig-szk-cena">Cena: <b>${esc(r.price)}</b></span>` : ""}${r.price_member ? `<span class="gig-szk-cena czlonek">Dla członków GIG: <b>${esc(r.price_member)}</b></span>` : ""}</div>` : "";
   const wyk = r.lecturer ? `<div class="gig-szk-wyk"><div class="kto">${esc(r.lecturer)}</div>${r.lecturer_bio ? `<div class="bio">${esc(r.lecturer_bio)}</div>` : ""}</div>` : "";
-  const zgl = val(r.zgloszenia_do) ? `<p class="gig-szk-zgldo">${esc(r.zgloszenia_do.trim())}</p>` : "";
+  const zgl = r.zapisy_zamkniete ? "" : val(r.zgloszenia_do) ? `<p class="gig-szk-zgldo">${esc(r.zgloszenia_do.trim())}</p>` : "";
   const link = "/zapisy/?szkolenie=" + encodeURIComponent(r.title);
   return `<article class="gig-szk-card">${badge}<div class="gig-szk-body"><h3>${esc(r.title)}</h3>` +
     (meta ? `<p class="gig-szk-meta">${esc(meta)}</p>` : "") +
     (r.time_range ? `<p class="gig-szk-time">Godziny: <b>${esc(r.time_range)}</b></p>` : "") +
     akapity + lista("Program", r.agenda) + lista("Informacje organizacyjne", r.informacje) + ceny + wyk + zgl +
-    `<p><a class="gig-szk-btn" href="${esc(link)}">Zapisz się →</a></p></div></article>`;
+    (r.zapisy_zamkniete
+      ? `<p class="gig-szk-zgldo gig-szk-zamkniete"><b>Zapisy zamknięte.</b> W sprawie udziału prosimy o kontakt: <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>, tel. 22 827 38 43.</p>`
+      : `<p><a class="gig-szk-btn" href="${esc(link)}">Zapisz się →</a></p>`) + `</div></article>`;
 }
 function eventLd(r) {
   if (!r.date_start) return null;
@@ -154,7 +156,7 @@ function eventLd(r) {
     description: skroc(bezTagow(String(r.description || "").replace(/[*][*]/g, "")), 480),
     organizer: { "@type": "Organization", name: "Geodezyjna Izba Gospodarcza", url: SITE },
     ...(r.lecturer ? { performer: { "@type": "Person", name: r.lecturer } } : {}),
-    ...(c != null ? { offers: { "@type": "Offer", price: c, priceCurrency: "PLN", url: SITE + "/zapisy/?szkolenie=" + encodeURIComponent(r.title), availability: "https://schema.org/InStock" } } : {}),
+    ...(c != null ? { offers: { "@type": "Offer", price: c, priceCurrency: "PLN", url: SITE + "/zapisy/?szkolenie=" + encodeURIComponent(r.title), availability: r.zapisy_zamkniete ? "https://schema.org/SoldOut" : "https://schema.org/InStock" } } : {}),
     inLanguage: "pl",
   };
 }

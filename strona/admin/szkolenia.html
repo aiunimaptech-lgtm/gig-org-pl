@@ -104,6 +104,9 @@
         </div>
         <div class="form-group"><label>Zgłoszenia przyjmujemy do <span style="font-weight:400;color:#7a8794">— pokaże się nad przyciskiem „Zapisz się”. Może być opisowo, np. „do wyczerpania miejsc”.</span></label>
           <input type="text" id="sZglDo" class="form-control" placeholder="Prosimy o przesłanie formularza zgłoszeniowego do dnia 28.09.2026 r."></div>
+        <div class="form-group"><label style="display:flex;gap:8px;align-items:center;font-weight:600;">
+          <input type="checkbox" id="sZamkniete" style="width:auto;"> Zapisy zamknięte
+          <span style="font-weight:400;color:#7a8794">(zamiast przycisku „Zapisz się” strona pokaże „Zapisy zamknięte”, a formularz nie przyjmie zgłoszenia)</span></label></div>
         <div class="form-group"><label>Płatność <span style="font-weight:400;color:#7a8794">— dane do przelewu i termin wpłaty; pokaże się na stronie pod cenami. Zostaw puste, jeśli szkolenie jest bezpłatne.</span></label>
           <textarea id="sPlatnosc" class="form-control" rows="6" placeholder="Wpłaty należy dokonać na konto:&#10;Geodezyjna Izba Gospodarcza,&#10;ul. Czackiego 3/5, 00-043 Warszawa&#10;Bank PEKAO SA Oddział Warszawa&#10;nr r-k: 61 1240 6175 1111 0000 4574 9045&#10;w terminie do 28-09-2026 r."></textarea></div>
         <div class="form-group"><label>Wykładowca</label><input type="text" id="sLect" class="form-control" placeholder="dr hab. inż. Jan Kowalski, prof. AGH"></div>
@@ -196,7 +199,7 @@
           <td><strong>${esc(r.title)}</strong></td>
           <td>${r.is_online?'<em>online</em>':esc(r.location||'—')}</td>
           <td>${komorkaZgloszen(r)}</td>
-          <td><span class="badge badge-${badge(r.status)}">${label(r.status)}</span></td>
+          <td><span class="badge badge-${badge(r.status)}">${label(r.status)}</span>${r.zapisy_zamkniete?'<br><span class="badge badge-archived" style="margin-top:4px;">zapisy zamknięte</span>':''}</td>
           <td class="actions">
             <button class="btn btn-ghost btn-xs" data-edit="${r.id}">✎ Edytuj</button>
             <button class="btn btn-danger btn-xs" data-del="${r.id}">🗑</button>
@@ -221,7 +224,7 @@
       const s=id?data.find(x=>x.id===id):null;
       modalTitle.textContent=s?'Edytuj szkolenie':'Nowe szkolenie';
       sId.value=s?s.id:''; sTitle.value=s?s.title||'':''; sStart.value=s?s.date_start||'':''; sEnd.value=s?s.date_end||'':'';
-      sLocation.value=s?s.location||'':''; sStatus.value=s?s.status||'published':'published'; sOnline.checked=s?!!s.is_online:false; sDesc.value=s?s.description||'':''; sTime.value = s ? (s.time_range || '') : ''; sDateLabel.value = s ? (s.date_label || '') : ''; sAgenda.value = s ? (s.agenda || '') : ''; sInfo.value = s ? (s.informacje || '') : ''; sPrice.value = s ? (s.price || '') : ''; sPriceM.value = s ? (s.price_member || '') : ''; sLect.value = s ? (s.lecturer || '') : ''; sLectBio.value = s ? (s.lecturer_bio || '') : ''; sLectUrl.value = s ? (s.lecturer_url || '') : '';
+      sLocation.value=s?s.location||'':''; sStatus.value=s?s.status||'published':'published'; sOnline.checked=s?!!s.is_online:false; sDesc.value=s?s.description||'':''; sTime.value = s ? (s.time_range || '') : ''; sDateLabel.value = s ? (s.date_label || '') : ''; sAgenda.value = s ? (s.agenda || '') : ''; sInfo.value = s ? (s.informacje || '') : ''; sPrice.value = s ? (s.price || '') : ''; sPriceM.value = s ? (s.price_member || '') : ''; sLect.value = s ? (s.lecturer || '') : ''; sLectBio.value = s ? (s.lecturer_bio || '') : ''; sLectUrl.value = s ? (s.lecturer_url || '') : ''; sZamkniete.checked = s ? !!s.zapisy_zamkniete : false;
       /* Nowe szkolenie dostaje gotowy blok z numerem konta — zmienia sie w nim
          tylko termin wplaty, wiec przepisywanie go recznie za kazdym razem
          to proszenie sie o literowke w numerze rachunku. */
@@ -250,7 +253,7 @@
         price:pusteNaNull(sPrice.value), price_member:pusteNaNull(sPriceM.value),
         platnosc:pusteNaNull(sPlatnosc.value), zgloszenia_do:pusteNaNull(sZglDo.value),
         lecturer:pusteNaNull(sLect.value), lecturer_bio:pusteNaNull(sLectBio.value),
-        lecturer_url:pusteNaNull(sLectUrl.value),
+        lecturer_url:pusteNaNull(sLectUrl.value), zapisy_zamkniete:sZamkniete.checked,
         updated_at:new Date().toISOString() };
       const btn=document.getElementById('saveBtn'); btn.disabled=true; btn.textContent='Zapisywanie…';
       const id=sId.value;

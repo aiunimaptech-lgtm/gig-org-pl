@@ -499,10 +499,11 @@
   if (szkolenie) {
     loadSdk().then(function () {
       var db = window.supabase.createClient(window.GIG_CFG.SUPABASE_URL, window.GIG_CFG.SUPABASE_ANON);
-      return db.from("szkolenia").select("price,price_member").eq("status", "published")
+      return db.from("szkolenia").select("price,price_member,zapisy_zamkniete").eq("status", "published")
         .ilike("title", szkolenie.replace(/[%_\\]/g, function (x) { return "\\" + x; })).limit(1);
     }).then(function (r) {
       if (!r || r.error || !r.data || !r.data.length) return;
+      if (r.data[0].zapisy_zamkniete) { zamknijZapisy(); return; }
       if (cenaZerowa(r.data[0].price)) { wlaczBezplatne(); return; }
       cena = liczba(r.data[0].price); cenaCzl = liczba(r.data[0].price_member);
       rysujOplate();
@@ -555,6 +556,18 @@
       btn.disabled = false; btn.textContent = "Wczytaj dane firmy z GUS";
     }
   });
+
+  /* Zapisy zamknięte w panelu: formularz znika, zostaje komunikat. Baza i tak odrzuca
+     taki zapis (trigger trg_zapis_zamkniete, błąd ZAPISY_ZAMKNIETE). */
+  function zamknijZapisy() {
+    form.style.display = "none";
+    var box = document.createElement("div");
+    box.className = "z-msg err";
+    box.style.cssText = "display:block;max-width:820px;margin:24px auto;";
+    box.innerHTML = "<b>Zapisy na to szkolenie są zamknięte.</b> W sprawie udziału prosimy o kontakt: " +
+      '<a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>, tel. 22 827 38 43.';
+    form.parentNode.insertBefore(box, form);
+  }
 
   function pokaz(tekst, ok) {
     msg.textContent = tekst;
@@ -681,6 +694,7 @@
       zachecDoIzby(db, dane);
     } catch (err) {
       console.error(err);
+      if (/ZAPISY_ZAMKNIETE/.test(String(err && err.message))) { zamknijZapisy(); return; }
       btn.disabled = false;
       pokaz("Nie udało się wysłać zgłoszenia. Spróbuj ponownie lub napisz na biuro@gig.org.pl.", false);
     }

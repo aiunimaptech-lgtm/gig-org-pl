@@ -104,6 +104,9 @@
     }).join("");
   }
 
+  var ZAMKNIETE_HTML = '<p class="gig-szk-zgldo gig-szk-zamkniete"><b>Zapisy zamknięte.</b> ' +
+    'W sprawie udziału prosimy o kontakt: <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>, tel. 22 827 38 43.</p>';
+
   function card(r, archiwum) {
     var place = r.is_online ? "Online" : (r.location || "");
     var when = r.date_label
@@ -167,8 +170,11 @@
         "</div>";
     }
 
-    /* Przycisk startuje jako wyłączony; odblokowuje go checkbox zgody (obsługa niżej, delegowana). */
-    var przycisk = archiwum ? "" :
+    /* Przycisk startuje jako wyłączony; odblokowuje go checkbox zgody (obsługa niżej, delegowana).
+       Zapisy zamknięte w panelu (szkolenia.zapisy_zamkniete): zamiast przycisku komunikat;
+       baza i tak odrzuca zapis z formularza (trigger trg_zapis_zamkniete). */
+    if (!archiwum && r.zapisy_zamkniete) zglDo = "";
+    var przycisk = archiwum ? "" : r.zapisy_zamkniete ? ZAMKNIETE_HTML :
       '<label class="gig-szk-zgoda"><input type="checkbox" class="gig-szk-chk">' +
       '<span>Zapoznałem/-am się z <a href="/polityka-prywatnosci-rodo/" target="_blank" rel="noopener">Polityką prywatności</a> ' +
       'i wyrażam zgodę na przetwarzanie danych osobowych w celu obsługi zgłoszenia.</span></label>' +
