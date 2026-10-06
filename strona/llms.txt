@@ -1,6 +1,6 @@
 # Geodezyjna Izba Gospodarcza (GIG)
 
-> Samorząd gospodarczy firm geodezyjnych w Polsce, działający od 1994 roku. Zrzesza 66 firm geodezyjnych, reprezentuje je wobec administracji (m.in. Głównego Geodety Kraju i ośrodków dokumentacji), opiniuje projekty przepisów, prowadzi szkolenia i Węzeł Jakości (rynkowe stawki prac geodezyjnych w układzie SEKOCENBUD). Hasło: „Silni wiedzą, zjednoczeni działaniem”.
+> Samorząd gospodarczy firm geodezyjnych w Polsce, działający od 1994 roku. Zrzesza 67 firm geodezyjnych, reprezentuje je wobec administracji (m.in. Głównego Geodety Kraju i ośrodków dokumentacji), opiniuje projekty przepisów, prowadzi szkolenia i Węzeł Jakości (rynkowe stawki prac geodezyjnych w układzie SEKOCENBUD). Hasło: „Silni wiedzą, zjednoczeni działaniem”.
 
 Dane: ul. Czackiego 3/5, 00-043 Warszawa · tel. 22 827 38 43 · biuro@gig.org.pl · KRS 0000090356 · NIP 525-20-34-024 · REGON 010753536.
 Składka członkowska: 40 zł miesięcznie (firma jednoosobowa), 80 zł (do 5 osób), 160 zł (powyżej 5 osób); wpisowe 75 zł.
@@ -8,7 +8,7 @@ Składka członkowska: 40 zł miesięcznie (firma jednoosobowa), 80 zł (do 5 os
 ## Najważniejsze strony
 - [O Izbie](https://gig.org.pl/o-nas/): historia, organy, statut
 - [Dołącz do Izby](https://gig.org.pl/dolacz-do-nas/): korzyści, koszty, procedura przyjęcia
-- [Katalog Członków](https://gig.org.pl/czlonkowie/): 66 firm geodezyjnych wg województw
+- [Katalog Członków](https://gig.org.pl/czlonkowie/): 67 firm geodezyjnych wg województw
 - [Kalendarz szkoleń](https://gig.org.pl/szkolenia/)
 - [Węzeł Jakości: ankieta cenowa](https://gig.org.pl/wezel-jakosci/)
 - [Baza wiedzy](https://gig.org.pl/baza-wiedzy/)
