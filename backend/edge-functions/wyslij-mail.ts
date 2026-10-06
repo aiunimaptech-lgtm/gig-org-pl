@@ -22,6 +22,9 @@
 // (body.kontakt_id), żeby biuro widziało w panelu, co i kiedy odpisało.
 // Body { akcja: 'odzyskaj', kontakt_id } szuka w historii Resend maili wysłanych
 // do nadawcy po dacie zgłoszenia (dla odpowiedzi sprzed v7) i dopisuje je do archiwum.
+//
+// v8 (6.10.2026): pauza 600 ms między mailami i ponowienie przy 429. Resend przyjmuje
+// ~2 zapytania na sekundę, więc wysyłka do 100 uczestników bez pauzy gubiła część maili.
 // ============================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -159,14 +162,20 @@ function oczyscHtml(html: string): string {
 
 async function wyslijJeden(to: string, subject: string, html: string): Promise<{ ok: boolean; info: unknown }> {
   try {
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html, reply_to: REPLY_TO }),
-    });
-    const wynik = await res.json();
-    if (!res.ok) console.error("Resend:", to, wynik);
-    return { ok: res.ok, info: wynik };
+    let res: Response | null = null;
+    let wynik: unknown = null;
+    for (let proba = 0; proba < 4; proba++) {
+      res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html, reply_to: REPLY_TO }),
+      });
+      wynik = await res.json().catch(() => ({}));
+      if (res.status !== 429) break;                              // chwilowa odmowa: odczekaj i ponów
+      await new Promise((r) => setTimeout(r, 1500 * (proba + 1)));
+    }
+    if (!res!.ok) console.error("Resend:", to, wynik);
+    return { ok: res!.ok, info: wynik };
   } catch (err) {
     console.error("Resend (wyjatek):", to, err);
     return { ok: false, info: String(err) };
@@ -230,7 +239,8 @@ Deno.serve(async (req) => {
   }
 
   const wyniki: Array<{ email: string; ok: boolean; blad?: unknown }> = [];
-  for (const r of odb) {
+  for (const [i, r] of odb.entries()) {
+    if (i > 0) await new Promise((res) => setTimeout(res, 600));   // Resend: ~2 zapytania na sekundę
     // link wypisu tylko dla wysyłek do bazy i gdy znamy wiersz (id)
     const unsubUrl = (rodzaj === "baza" && r.id) ? `${FUNCTIONS_BASE}/baza-wypis?id=${encodeURIComponent(r.id)}` : "";
     const tresc = layout(subject, html, stopka, unsubUrl);
