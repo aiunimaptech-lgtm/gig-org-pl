@@ -9,6 +9,13 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/admin/_admin.css">
   <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+  <style>
+    #ktNagl th[data-sort]{cursor:pointer;user-select:none;white-space:nowrap;}
+    #ktNagl th[data-sort]:hover{color:#cc0a2b;}
+    #ktNagl th[data-sort]::after{content:attr(data-kier);margin-left:4px;color:#cc0a2b;}
+    .kt-filtry th{padding:6px 8px;background:#fbfcfd;font-weight:400;text-transform:none;letter-spacing:0;}
+    .kt-filtry .form-control{padding:5px 8px;font-size:12.5px;min-width:0;width:100%;}
+  </style>
 </head>
 <body>
   <div class="admin-layout">
@@ -87,17 +94,30 @@
               <div class="toolbar">
                 <div class="search-box"><span class="search-icon">⌕</span>
                   <input type="text" class="form-control" id="ktSearch" placeholder="Szukaj po nazwisku, e-mailu, temacie…"></div>
-                <select id="ktRodzaj" class="form-control" style="max-width:260px;" title="Rodzaj wiadomości">
-                  <option value="">Wszystkie wiadomości</option>
-                  <option value="zgloszenie">Zgłoszenie członkowskie</option>
-                  <option value="zainteresowanie">Zainteresowanie członkostwem</option>
-                  <option value="inne">Pozostałe wiadomości</option>
-                </select>
                 <button class="btn btn-outline btn-sm" id="ktExport">⬇ Eksport CSV</button>
               </div>
               <div class="table-wrap">
                 <table class="admin-table">
-                  <thead><tr><th>Nadawca</th><th>Temat</th><th>Wiadomość</th><th>Data</th><th>Status</th><th></th></tr></thead>
+                  <thead>
+                    <tr id="ktNagl"><th data-sort="name">Nadawca</th><th data-sort="subject">Temat</th><th data-sort="message">Wiadomość</th><th data-sort="created_at">Data</th><th data-sort="status">Status</th><th></th></tr>
+                    <tr class="kt-filtry">
+                      <th><input id="ktFNadawca" class="form-control" placeholder="nazwisko, e-mail"></th>
+                      <th><select id="ktRodzaj" class="form-control" title="Rodzaj wiadomości">
+                        <option value="">Wszystkie</option>
+                        <option value="zgloszenie">Zgłoszenie członkowskie</option>
+                        <option value="zainteresowanie">Zainteresowanie członkostwem</option>
+                        <option value="inne">Pozostałe wiadomości</option>
+                      </select></th>
+                      <th><input id="ktFTresc" class="form-control" placeholder="szukaj w treści"></th>
+                      <th><select id="ktFData" class="form-control">
+                        <option value="">Wszystkie</option><option value="1">Dziś</option><option value="7">7 dni</option><option value="30">30 dni</option>
+                      </select></th>
+                      <th><select id="ktFStatus" class="form-control">
+                        <option value="">Wszystkie</option><option value="new">Nowe</option><option value="read">Przeczytane</option><option value="replied">Odpowiedziano</option>
+                      </select></th>
+                      <th><button type="button" class="btn btn-ghost btn-xs" id="ktFCzysc" title="Wyczyść filtry">✕</button></th>
+                    </tr>
+                  </thead>
                   <tbody id="ktRows"><tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
                 </table>
               </div>
@@ -200,11 +220,27 @@
       const n = k => ktData.filter(r => !k || rodzajKt(r) === k).length;
       [...sel.options].forEach(o => { o.textContent = o.textContent.replace(/ \(\d+\)$/, '') + ' (' + n(o.value) + ')'; });
     }
+    /* Sortowanie kliknięciem w nagłówek (drugie kliknięcie odwraca), filtry w wierszu pod nagłówkami. */
+    let ktSort = { pole: 'created_at', rosnaco: false };
     function renderKt(filter='') {
       const f = filter.toLowerCase();
-      const rodz = document.getElementById('ktRodzaj').value;
+      const v = id => document.getElementById(id).value.trim().toLowerCase();
+      const rodz = v('ktRodzaj'), fn = v('ktFNadawca'), ft = v('ktFTresc'), fd = v('ktFData'), fs = v('ktFStatus');
+      const od = fd ? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - (Number(fd) - 1)); return d; })() : null;
       const rows = ktData.filter(r => (!rodz || rodzajKt(r) === rodz) && (
-        (r.name||'').toLowerCase().includes(f) || (r.email||'').toLowerCase().includes(f) || (r.subject||'').toLowerCase().includes(f)));
+        (r.name||'').toLowerCase().includes(f) || (r.email||'').toLowerCase().includes(f) || (r.subject||'').toLowerCase().includes(f))
+        && (!fn || ((r.name||'') + ' ' + (r.email||'')).toLowerCase().includes(fn))
+        && (!ft || (r.message||'').toLowerCase().includes(ft))
+        && (!od || new Date(r.created_at) >= od)
+        && (!fs || r.status === fs));
+      const { pole, rosnaco } = ktSort;
+      rows.sort((a, b) => {
+        const x = String(a[pole] ?? '').toLowerCase(), y = String(b[pole] ?? '').toLowerCase();
+        return (x < y ? -1 : x > y ? 1 : 0) * (rosnaco ? 1 : -1);
+      });
+      document.querySelectorAll('#ktNagl th[data-sort]').forEach(th => {
+        th.dataset.kier = th.dataset.sort === pole ? (rosnaco ? '▲' : '▼') : '';
+      });
       const tb = document.getElementById('ktRows');
       if (!rows.length) { tb.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#6b7f84;">Brak wiadomości.</td></tr>'; return; }
       tb.innerHTML = rows.map(r => `
@@ -316,7 +352,17 @@
       document.getElementById('nlSearch').addEventListener('input', e => renderNl(e.target.value));
       document.getElementById('nlStatus').addEventListener('change', () => renderNl(document.getElementById('nlSearch').value));
       document.getElementById('ktSearch').addEventListener('input', e => renderKt(e.target.value));
-      document.getElementById('ktRodzaj').addEventListener('change', () => renderKt(document.getElementById('ktSearch').value));
+      const ktOdswiez = () => renderKt(document.getElementById('ktSearch').value);
+      ['ktRodzaj', 'ktFData', 'ktFStatus'].forEach(id => document.getElementById(id).addEventListener('change', ktOdswiez));
+      ['ktFNadawca', 'ktFTresc'].forEach(id => document.getElementById(id).addEventListener('input', ktOdswiez));
+      document.getElementById('ktFCzysc').addEventListener('click', () => {
+        ['ktRodzaj', 'ktFNadawca', 'ktFTresc', 'ktFData', 'ktFStatus'].forEach(id => { document.getElementById(id).value = ''; });
+        ktOdswiez();
+      });
+      document.querySelectorAll('#ktNagl th[data-sort]').forEach(th => th.addEventListener('click', () => {
+        ktSort = { pole: th.dataset.sort, rosnaco: ktSort.pole === th.dataset.sort ? !ktSort.rosnaco : th.dataset.sort !== 'created_at' };
+        ktOdswiez();
+      }));
       document.getElementById('nlExport').addEventListener('click', () =>
         exportCSV(nlData.map(r => ({ email: r.email, status: (ETYK_NL[r.status] || [0, r.status])[1], data: fmtDate(r.created_at) })),
           [{key:'email',label:'E-mail'},{key:'status',label:'Status'},{key:'data',label:'Data zapisu'}], 'newsletter-gig.csv'));
