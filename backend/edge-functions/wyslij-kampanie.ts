@@ -1,5 +1,7 @@
 // ============================================================
-// GIG — Edge Function: wyslij-kampanie (v8: wysyłka z serwera przez pg_cron, {{WYPIS}}, Reply-To kampanii)
+// GIG — Edge Function: wyslij-kampanie (v8: wysyłka z serwera przez pg_cron, {{WYPIS}}, Reply-To kampanii;
+//   v9 6.10.2026: rodzaj 'szkolenie' = zaplanowana wiadomość do uczestników szkolenia z panelu Zapisy,
+//   stopka „zgłoszono Cię na szkolenie”, bez linku wypisu)
 // Wysyła kampanię z kolejki (tabele `wysylki` + `wysylki_odbiorcy`) PORCJAMI.
 // Panel woła ją wielokrotnie, aż zostanie 0 — dzięki temu:
 //   • nie ma limitu czasu Edge Function (każde wywołanie robi kawałek),
@@ -50,11 +52,15 @@ function jwtClaims(token: string): Record<string, unknown> {
 }
 
 /* Ta sama szata co w wyslij-mail: logo GIG, czerwona kreska, stopka z wypisem. */
-function layout(title: string, body: string, unsubUrl: string, rodzaj = "baza"): string {
+function layout(title: string, body: string, unsubUrl: string, rodzaj = "baza", szkolenie = ""): string {
   const newsletter = rodzaj === "newsletter";
   /* Odbiorca ma wiedziec, SKAD mamy jego adres - inna odpowiedz dla kogos,
      kto sam zapisal sie na newsletter, inna dla adresu z bazy kontaktow. */
-  const skad = newsletter
+  const skad = rodzaj === "szkolenie"
+    ? (szkolenie
+      ? `Otrzymujesz tę wiadomość, ponieważ zgłoszono Cię na szkolenie GIG: <strong>${esc(szkolenie)}</strong>. Odpowiedź na ten mail trafi do biura Izby.`
+      : "Otrzymujesz tę wiadomość jako uczestnik szkoleń Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.")
+    : newsletter
     ? "Otrzymujesz tę wiadomość, ponieważ zapisałeś/-aś się do newslettera Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby."
     : "Otrzymujesz tę wiadomość, ponieważ Twój adres jest w bazie kontaktów Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.";
   const wypis = unsubUrl
@@ -199,7 +205,8 @@ Deno.serve(async (req) => {
 
   const tresc = oczyscHtml(String(kampania.html ?? ""));
   const temat = String(kampania.temat ?? "").trim();
-  const rodzaj = kampania.rodzaj === "newsletter" ? "newsletter" : "baza";
+  const rodzaj = kampania.rodzaj === "newsletter" || kampania.rodzaj === "szkolenie" ? kampania.rodzaj : "baza";
+  const szkolenie = String(kampania.szkolenie ?? "").trim();
   let wyslane = 0, bledy = pominiete.length;
 
   for (let i = 0; i < odbiorcy.length; i += BATCH) {
@@ -235,7 +242,7 @@ Deno.serve(async (req) => {
         subject: temat,
         reply_to: replyTo,
         headers: naglowki,
-        html: layout(temat, trescOdb, strona, rodzaj),
+        html: layout(temat, trescOdb, strona, rodzaj, szkolenie),
       };
     });
 

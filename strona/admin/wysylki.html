@@ -225,6 +225,7 @@
       <div class="modal-footer">
         <button class="btn btn-ghost" data-modal-close="pkModal">Anuluj</button>
         <button class="btn btn-primary" id="pkZapisz">Zapisz</button>
+        <button class="btn btn-primary" id="pkPlanuj" hidden>🕒 Zaplanuj wysyłkę</button>
       </div>
     </div>
   </div>
@@ -300,7 +301,7 @@
         <tr data-id="${k.id}">
           <td style="max-width:280px;">
             <div class="wy-temat">${esc(k.temat)}</div>
-            <div class="wy-sub">${k.rodzaj === 'newsletter' ? '<span class="badge badge-read" style="margin-right:6px;">newsletter</span>' : ''}${esc(k.opis_filtra || '—')}</div>
+            <div class="wy-sub">${k.rodzaj === 'newsletter' ? '<span class="badge badge-read" style="margin-right:6px;">newsletter</span>' : k.rodzaj === 'szkolenie' ? '<span class="badge badge-read" style="margin-right:6px;">szkolenie</span>' : ''}${esc(k.opis_filtra || '—')}</div>
             <div class="wy-sub">${fmtDate(k.created_at)}${k.utworzyl ? ' · ' + esc(k.utworzyl) : ''}</div>
           </td>
           <td class="wy-post">
@@ -316,6 +317,7 @@
           <td><span class="badge badge-${esc(k.status)}">${ETYK[k.status] || k.status}</span>${stanSerwera(k)}</td>
           <td class="actions" style="white-space:nowrap;">
             ${k.czeka > 0 && k.status !== 'wstrzymana' && !(k.auto && k.status === 'w_toku') ? `<button class="btn btn-primary btn-xs" data-start="${k.id}">▶ Wyślij</button>` : ''}
+            ${k.czeka > 0 && k.status === 'robocza' ? `<button class="btn btn-outline btn-xs" data-plan="${k.id}" title="Ustaw dzień i godzinę: serwer wyśle sam">🕒 Zaplanuj</button>` : ''}
             ${k.status === 'w_toku' || k.status === 'robocza' ? `<button class="btn btn-outline btn-xs" data-pauza="${k.id}">⏸ Wstrzymaj</button>` : ''}
             ${k.status === 'wstrzymana' ? `<button class="btn btn-outline btn-xs" data-wznow="${k.id}">▶ Wznów</button>` : ''}
             ${k.status !== 'zakonczona' ? `<button class="btn btn-outline btn-xs" data-edytuj="${k.id}" title="Zmień temat i treść">✎ Edytuj</button>` : ''}
@@ -337,6 +339,7 @@
       tb.querySelectorAll('[data-test]').forEach(b => b.addEventListener('click', () => wyslijTest(b.dataset.test, b)));
       tb.querySelectorAll('[data-usun]').forEach(b => b.addEventListener('click', () => usun(b.dataset.usun)));
       tb.querySelectorAll('[data-paczki]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); pkOtworz(a.dataset.paczki); }));
+      tb.querySelectorAll('[data-plan]').forEach(b => b.addEventListener('click', () => { pkOtworz(b.dataset.plan, true); }));
     }
 
     /* Co zrobi serwer z kampanią (auto = true): kiedy następna paczka i dlaczego czeka. */
@@ -404,8 +407,12 @@
         : 'Kolejka jest pusta.';
     }
     ['pkPaczka', 'pkPrzerwa', 'pkLimit'].forEach(id => document.getElementById(id).addEventListener('input', pkSzacuj));
-    function pkOtworz(id) {
+    /* planuj = true: okno otwarte przyciskiem „🕒 Zaplanuj”; zapis od razu przekazuje
+       wysyłkę serwerowi (auto), a harmonogram ruszy ją o ustawionej godzinie (wysylaj_od). */
+    function pkOtworz(id, planuj) {
       const k = dane.find(x => x.id === id); if (!k) return;
+      document.getElementById('pkPlanuj').hidden = !planuj;
+      document.getElementById('pkZapisz').hidden = !!planuj;
       document.getElementById('pkId').value = id;
       document.getElementById('pkPaczka').value = k.paczka || 100;
       document.getElementById('pkPrzerwa').value = k.przerwa_min || 0;
@@ -414,8 +421,11 @@
       document.getElementById('pkOd').value = k.wysylaj_od ? lokalnyCzas(k.wysylaj_od) : '';
       pkSzacuj();
       openModal('pkModal');
+      if (planuj) setTimeout(() => document.getElementById('pkOd').focus(), 60);
     }
-    document.getElementById('pkZapisz').addEventListener('click', async () => {
+    document.getElementById('pkZapisz').addEventListener('click', () => pkZapiszUstawienia(false));
+    document.getElementById('pkPlanuj').addEventListener('click', () => pkZapiszUstawienia(true));
+    async function pkZapiszUstawienia(planuj) {
       const id = document.getElementById('pkId').value;
       const paczka = parseInt(document.getElementById('pkPaczka').value, 10);
       const przerwa = parseInt(document.getElementById('pkPrzerwa').value, 10);
@@ -426,11 +436,21 @@
       const godziny_pracy = document.getElementById('pkGodziny').checked;
       const odV = document.getElementById('pkOd').value;            // czas lokalny przeglądarki
       const wysylaj_od = odV ? new Date(odV).toISOString() : null;
-      const { error } = await db.from('wysylki').update({ paczka, przerwa_min: przerwa, limit_dzienny: limit, godziny_pracy, wysylaj_od, updated_at: new Date().toISOString() }).eq('id', id);
+      const zm = { paczka, przerwa_min: przerwa, limit_dzienny: limit, godziny_pracy, wysylaj_od, updated_at: new Date().toISOString() };
+      if (planuj) {
+        if (!wysylaj_od || new Date(wysylaj_od) <= new Date()) { toast('Ustaw dzień i godzinę w przyszłości w polu „Nie wysyłaj przed”', 'error', 6000); return; }
+        const k = dane.find(x => x.id === id) || {};
+        const kiedy = new Date(wysylaj_od).toLocaleString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+        if (!confirm(`Zaplanować wysyłkę „${k.temat || ''}”?\n\nStart: ${kiedy}\nAdresów: ${k.czeka || 0}\n` +
+          (godziny_pracy ? 'Tylko w dni robocze 7:00-19:00 (poza nimi start przesunie się).\n' : '') +
+          '\nWyśle serwer; przeglądarkę można zamknąć. Do tego czasu „⏸ Wstrzymaj” zatrzymuje plan, a „✎ Edytuj” dalej działa.')) return;
+        Object.assign(zm, { auto: true, status: 'w_toku', start_at: wysylaj_od, nastepna_paczka_at: wysylaj_od });
+      }
+      const { error } = await db.from('wysylki').update(zm).eq('id', id);
       if (error) { console.error(error); toast('Nie udało się zapisać: ' + error.message, 'error'); return; }
-      toast('Zapisano: paczki po ' + paczka + (przerwa ? ' co ' + przerwa + ' min' : '') + ', limit ' + limit + '/dobę', 'success');
+      toast(planuj ? 'Wysyłka zaplanowana' : 'Zapisano: paczki po ' + paczka + (przerwa ? ' co ' + przerwa + ' min' : '') + ', limit ' + limit + '/dobę', 'success');
       closeModal('pkModal'); load();
-    });
+    }
 
     async function podglad(id) {
       const { data, error } = await db.from('wysylki').select('temat,html').eq('id', id).maybeSingle();
@@ -443,7 +463,7 @@
     /* Test: ta sama treść i szata co w kampanii, na jeden adres (domyślnie zalogowanego),
        z dopiskiem [TEST] w temacie. Kolejka odbiorców i statystyki zostają nietknięte. */
     async function wyslijTest(id, btn) {
-      const { data, error } = await db.from('wysylki').select('temat,html').eq('id', id).maybeSingle();
+      const { data, error } = await db.from('wysylki').select('temat,html,rodzaj,szkolenie').eq('id', id).maybeSingle();
       if (error || !data) { toast('Błąd odczytu kampanii', 'error'); return; }
       const sesja = await getSession();
       if (!sesja) { toast('Sesja wygasła, zaloguj się ponownie', 'error'); return; }
@@ -455,7 +475,8 @@
         const res = await fetch(SUPABASE_URL + '/functions/v1/wyslij-mail', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
-          body: JSON.stringify({ subject: '[TEST] ' + data.temat, html: podstawWypis(data.html), recipients: [{ email: adres }], rodzaj: 'baza' }),
+          body: JSON.stringify({ subject: '[TEST] ' + data.temat, html: podstawWypis(data.html), recipients: [{ email: adres }],
+            rodzaj: data.rodzaj === 'szkolenie' ? 'szkolenie' : 'baza', szkolenie: data.szkolenie || '' }),
         });
         const w = await res.json().catch(() => ({}));
         if (!res.ok || !w.ok || !w.wyslane) throw new Error(w.error || ('HTTP ' + res.status));
@@ -620,11 +641,11 @@
 
         let celId = id;
         if (nowa) {
-          const { data: zrodlo, error: e0 } = await db.from('wysylki').select('temat,html,rodzaj,limit_dzienny').eq('id', id).single();
+          const { data: zrodlo, error: e0 } = await db.from('wysylki').select('temat,html,rodzaj,szkolenie,limit_dzienny').eq('id', id).single();
           if (e0) throw e0;
           const sesja = await getSession();
           const { data: kamp, error: e1 } = await db.from('wysylki').insert({
-            temat: zrodlo.temat, html: zrodlo.html, rodzaj: zrodlo.rodzaj, limit_dzienny: zrodlo.limit_dzienny,
+            temat: zrodlo.temat, html: zrodlo.html, rodzaj: zrodlo.rodzaj, szkolenie: zrodlo.szkolenie, limit_dzienny: zrodlo.limit_dzienny,
             status: 'robocza', opis_filtra: 'adresy wpisane ręcznie',
             utworzyl: sesja && sesja.user ? sesja.user.email : null }).select('id').single();
           if (e1) throw e1;
@@ -736,6 +757,7 @@
       if (!confirm(`Uruchomić wysyłkę kampanii „${k.temat}”?\n\nDo wysłania: ${k.czeka} adresów.\n` +
         `Paczki po ${paczka}, ${przerwa ? 'co ' + przerwa + ' min' : 'co minutę'}; limit ${k.limit_dzienny} na dobę.\n` +
         (godz ? 'Tylko w dni robocze 7:00-19:00.\n' : 'Także wieczorem i w weekendy.\n') +
+        (k.wysylaj_od && new Date(k.wysylaj_od) > new Date() ? 'Start zaplanowany: ' + new Date(k.wysylaj_od).toLocaleString('pl-PL') + '.\n' : '') +
         `\nWysyła serwer: przeglądarkę można zamknąć.`)) return;
       btn.disabled = true;
       const teraz = new Date().toISOString();

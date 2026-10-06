@@ -94,8 +94,7 @@
         <div class="topbar-actions">
           <button class="btn btn-outline btn-sm" id="expPytania" title="Pytania z pola Uwagi, z pytającym i instytucją: do przekazania prowadzącemu">📄 Pytania uczestników (PDF)</button>
           <button class="btn btn-outline btn-sm" id="expRaport" title="Jeden wiersz na uczestnika — układ jak w arkuszu „Opłaty / Faktury / Zaświadczenia”">↓ Raport szkolenia (CSV)</button>
-          <button class="btn btn-outline btn-sm" id="btnProsba" title="Mail do zgłaszających kilka osób: formularz do podania imienia, nazwiska i e-maila każdego uczestnika (jedna prośba na zgłoszenie)">👥 Prośba o listę uczestników</button>
-          <button class="btn btn-outline btn-sm" id="btnMailUcz" title="Wiadomość do uczestników (np. link do szkolenia) na ich własne adresy">✉ Do uczestników</button>
+          <button class="btn btn-outline btn-sm" id="btnMailUcz" title="Wiadomość do uczestników (np. link do szkolenia) na ich własne adresy: trafia do Wysyłek jako wysyłka robocza, tam edycja, test, plan i start">✉ Do uczestników</button>
           <button class="btn btn-primary btn-sm" id="btnMail" title="Wiadomość do zgłaszających organizacji z bieżącego filtra (sprawy zgłoszenia, faktura)">✉ Do organizacji</button>
         </div>
       </header>
@@ -887,7 +886,9 @@
         catch (_) { toast('Przeglądarka nie pozwoliła skopiować', 'error'); }
       });
 
-      document.getElementById('btnProsba').addEventListener('click', () => {
+      /* Przycisk „Prośba o listę uczestników” zdjęty 6.10.2026 (akcja zakończona);
+         okno i funkcja zapis-uczestnicy zostają, gdyby trzeba było wrócić. */
+      document.getElementById('btnProsba')?.addEventListener('click', () => {
         document.getElementById('prosbaPodglad').hidden = true;
         prosbaRysuj(); openModal('prosbaModal');
       });
@@ -916,10 +917,32 @@
           osoby.forEach(o => { const k = (o.email || '').toLowerCase(); if (k && !widziane.has(k)) { widziane.add(k); odbiorcy.push(o); } });
         });
         if (!odbiorcy.length) { toast('Brak odbiorców: zmień filtr albo poczekaj na zgłoszenia'); return; }
+        /* Wiadomość nie wychodzi od razu: trafia do Wysyłek jako wysyłka robocza (rodzaj
+           'szkolenie', stopka „zgłoszono Cię na szkolenie”, bez linku wypisu). Tam można ją
+           poprawić, wysłać test, ustawić „wysyłaj od” i dopiero wtedy uruchomić. */
         gigKreatorMaila({
           odbiorcy, rodzaj: 'szkolenie', szkolenie: szk,
+          etykietaWyslij: '📥 Zapisz w Wysyłkach',
           opis: 'uczestnicy' + (szk ? ' szkolenia <strong>' + esc(szk) + '</strong>' : ' <strong>wszystkich szkoleń</strong>') +
-            (zOrganizacji ? ` · ${zOrganizacji} starszych zgłoszeń bez adresów uczestników: tam wysyłamy na adres organizacji` : '')
+            (zOrganizacji ? ` · ${zOrganizacji} starszych zgłoszeń bez adresów uczestników: tam wysyłamy na adres organizacji` : '') +
+            ' · wiadomość trafi do Wysyłek jako robocza; tam edycja, test, plan i start',
+          zamiastWysylki: async ({ temat, html, odbiorcy }) => {
+            const sesja = await getSession();
+            const { data: kamp, error: e1 } = await db.from('wysylki').insert({
+              temat, html, rodzaj: 'szkolenie', szkolenie: szk || null,
+              opis_filtra: (szk ? 'uczestnicy szkolenia: ' + szk : 'uczestnicy wszystkich szkoleń') + ' (' + odbiorcy.length + ' adresów)',
+              status: 'robocza', limit_dzienny: 2000, paczka: 200, przerwa_min: 0, godziny_pracy: false,
+              utworzyl: sesja && sesja.user ? sesja.user.email : null
+            }).select('id').single();
+            if (e1) throw e1;
+            const wiersze = odbiorcy.map(o => ({ wysylka_id: kamp.id, email: o.email }));
+            for (let i = 0; i < wiersze.length; i += 500) {
+              const { error: e2 } = await db.from('wysylki_odbiorcy').insert(wiersze.slice(i, i + 500));
+              if (e2) throw e2;
+            }
+            toast('Zapisano w Wysyłkach: ' + wiersze.length + ' adresów', 'success');
+            window.location.href = 'wysylki.html';
+          }
         });
       });
 
