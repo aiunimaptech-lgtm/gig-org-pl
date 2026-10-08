@@ -26,3 +26,12 @@ _zdjecia-zrodlowe/
 
 # Brudnopisy w skryptach (eksperymenty, nie część pipeline'u)
 skrypty/_test_*.py
+
+# Dane osobowe i robocze materialy biura: nigdy do repozytorium (audyt 8.10.2026)
+#szkolenia/
+dla Dawida/
+*.xlsx
+*.xls
+*.csv
+*.7z
+*.zip

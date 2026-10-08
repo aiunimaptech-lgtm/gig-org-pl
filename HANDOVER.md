@@ -35,7 +35,7 @@ na szkolenie), `uchwala-wyslij` v2 i `glosuj` v2 (oba z obsługą etapu `opinia`
 `newsletter-unsubscribe` v1, `pierwsze-haslo` v1, `firma-gus` v1.
 
 **Otwarte zadania** (szczegóły w sekcji 3):
-1. `GIG_HOOK_TOKEN` w sekretach Supabase — brama `send-confirmation` czeka bezczynnie (punkt C).
+1. ~~`GIG_HOOK_TOKEN` w sekretach Supabase~~ zrobione 8.10.2026: `send-confirmation` v21 wymaga `x-gig-token` zawsze (sprawdza go przez RPC `gig_hook_token_ok` w bazie, sekret w Edge Secrets jest opcjonalny). Audyt bezpieczeństwa: `backend/supabase_audyt_2026_10_08.sql`.
 2. ~~Resend Pro przed pierwszą masową kampanią~~ zrobione 28.09.2026 (plan płatny, 50 tys./mies.).
 3. Biuletyn nr 8 PDF — pliku nie ma nigdzie, musi dostarczyć GIG (punkt E).
 4. Opcjonalnie: RLS zawężone do listy adresów e-mail jako trzecia warstwa (punkt F).
@@ -612,7 +612,7 @@ Zapasowa droga wdrożenia (schowkiem) nadal działa:
    Set-Clipboard -Value (Get-Content -LiteralPath 'backend\edge-functions\send-confirmation.ts' -Raw -Encoding UTF8)
    ```
 
-**Został krok 2 (nadal otwarty na 9.09.2026):** **dodać sekret** `GIG_HOOK_TOKEN`
+**Krok 2 ZROBIONY inaczej (8.10.2026, audyt):** v21 nie potrzebuje sekretu; bez poprawnego nagłówka odpowiada 401 (sprawdzone: bez tokenu 401, token z triggera 200). Poniższy opis zostaje jako historia. ~~**dodać sekret** `GIG_HOOK_TOKEN`~~
 w Supabase → Edge Functions → Secrets. Wartość:
    ```sql
    select wartosc from private.gig_sekrety where klucz = 'hook_token';

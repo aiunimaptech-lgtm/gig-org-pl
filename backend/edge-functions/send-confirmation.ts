@@ -7,7 +7,7 @@
 //   RESEND_API_KEY = re_xxxxxxxx
 //   FROM_EMAIL     = Geodezyjna Izba Gospodarcza <biuro@gig.org.pl>  (domena zweryfikowana w Resend)
 //   NOTIFY_EMAILS  = biuro@gig.org.pl,jerzy.bryk@gmail.com   (opcjonalny; adresy po przecinku)
-//   GIG_HOOK_TOKEN = <wartosc z private.gig_sekrety>          (opcjonalny; wlacza brame)
+//   GIG_HOOK_TOKEN = <wartosc z private.gig_sekrety>          (opcjonalny; bez niego token sprawdza baza przez RPC)
 //
 // Przy zgloszeniu z formularza kontaktowego ida DWA maile:
 //   1. powiadomienie do GIG (NOTIFY_EMAILS) z trescia zgloszenia, Reply-To = nadawca,
@@ -28,12 +28,20 @@ const FUNCTIONS_BASE = (Deno.env.get("SUPABASE_URL") ?? "") + "/functions/v1";
 const NOTIFY_EMAILS = (Deno.env.get("NOTIFY_EMAILS") ?? "biuro@gig.org.pl,jerzy.bryk@gmail.com")
   .split(",").map((x) => x.trim()).filter(Boolean);
 
-// Wspolny sekret miedzy triggerem w bazie a ta funkcja.
-// Dopoki sekret NIE jest ustawiony, funkcja dziala jak dotad (zeby wdrozenie
-// kodu nie przerwalo wysylki maili). Gdy sekret zostanie dodany w
-// Supabase -> Edge Functions -> Secrets, ochrona wlacza sie sama.
-// Wartosc po stronie bazy: private.gig_sekrety, klucz 'hook_token'.
+// Wspolny sekret miedzy triggerem w bazie a ta funkcja (private.gig_sekrety, klucz 'hook_token').
+// Audyt 8.10.2026: brama jest OBOWIAZKOWA. Token sprawdzamy z sekretu GIG_HOOK_TOKEN, a gdy go nie ma,
+// przez RPC gig_hook_token_ok (service_role) w bazie. Bez poprawnego naglowka x-gig-token: 401.
+// Wczesniej brak sekretu oznaczal brak bramy, czyli otwarty przekaznik poczty z domeny Izby.
 const HOOK_TOKEN = Deno.env.get("GIG_HOOK_TOKEN") ?? "";
+async function hookTokenOk(podany: string): Promise<boolean> {
+  if (!podany || podany.length < 32) return false;
+  if (HOOK_TOKEN) return rowneStalyCzas(podany, HOOK_TOKEN);
+  const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data, error } = await admin.rpc("gig_hook_token_ok", { p_token: podany });
+  if (error) console.error("gig_hook_token_ok:", error.message);
+  return data === true;
+}
 
 // Porownanie o stalym czasie - nie zdradza, ile pierwszych znakow sie zgadza.
 function rowneStalyCzas(a: string, b: string): boolean {
@@ -534,17 +542,14 @@ async function wyslij(
 Deno.serve(async (req) => {
   try {
     // Brama: klucz publiczny (anon) jest jawny na stronie, wiec sam w sobie
-    // nie dowodzi, ze wywolanie pochodzi z naszego triggera. Gdy sekret jest
-    // ustawiony, wymagamy zgodnego naglowka - inaczej mozna by tym kanalem
-    // wysylac maile z domeny Izby na dowolny adres.
-    if (HOOK_TOKEN) {
-      const podany = req.headers.get("x-gig-token") ?? "";
-      if (!rowneStalyCzas(podany, HOOK_TOKEN)) {
-        return new Response(JSON.stringify({ error: "brak uprawnien" }), {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        });
-      }
+    // nie dowodzi, ze wywolanie pochodzi z naszego triggera. Wymagamy zgodnego
+    // naglowka x-gig-token - inaczej mozna by tym kanalem wysylac maile z domeny
+    // Izby na dowolny adres.
+    if (!await hookTokenOk(req.headers.get("x-gig-token") ?? "")) {
+      return new Response(JSON.stringify({ error: "brak uprawnien" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     const payload = await req.json();

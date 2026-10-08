@@ -683,7 +683,7 @@
         wpisowe_at: val('uWpisoweData') || null,
       }, 'Zapisano stan dokumentów');
       if (!ok) return;
-      if (u.status === 'opiniowanie' && u.opinia_status === 'projekt') await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      if (u.status === 'opiniowanie' && u.opinia_status === 'projekt') await db.rpc('gig_uchwala_generuj_panel', { uid: u.id });
       await load(); otworz(u.id);
     }
 
@@ -709,7 +709,7 @@
     async function generujOpinie(u){
       if (!confirm('Wygenerować prośbę o opinię od nowa z danych kandydata i stanu dokumentów? Ręczne poprawki w jej treści zostaną nadpisane.')) return;
       if (!await zapiszOpinie(u, true)) return;
-      const { error } = await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      const { error } = await db.rpc('gig_uchwala_generuj_panel', { uid: u.id });
       if (error) { toast('Błąd generowania: ' + error.message, 'error'); return; }
       await load(); otworz(u.id);
       toast('Prośba wygenerowana od nowa', 'success');
@@ -721,7 +721,7 @@
       if (uwaga === null) return;
       if (!uwaga.trim()) { toast('Wpisz krótką notatkę do protokołu', 'error'); return; }
       if (!await zapiszPola(u, { opinia_status: 'pominieta', opinia_uwagi: uwaga.trim(), status: 'projekt' })) return;
-      await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      await db.rpc('gig_uchwala_generuj_panel', { uid: u.id });
       await load(); otworz(u.id);
       toast('Odnotowano. Sprawa przeszła do etapu 2', 'success');
     }
@@ -743,7 +743,7 @@
         status: poz ? 'projekt' : 'opiniowanie',
       })) return;
       /* treść uchwały powołuje się na opinię i jej datę, więc budujemy ją na nowo */
-      await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      await db.rpc('gig_uchwala_generuj_panel', { uid: u.id });
       await load(); otworz(u.id);
       toast('Opiniowanie zakończone: opinia ' + (poz ? 'pozytywna' : 'negatywna'), poz ? 'success' : 'error', 5000);
     }
@@ -751,7 +751,7 @@
     async function naOdmowe(u){
       if (!confirm(`Przygotować uchwałę o ODMOWIE przyjęcia (${kogo(u)})?\n\nPanel wygeneruje projekt uchwały odmownej z pouczeniem o odwołaniu do Walnego Zgromadzenia (art. 12 pkt 3 Statutu) i przekaże sprawę do etapu 2.`)) return;
       if (!await zapiszPola(u, { rodzaj: 'odmowa', status: 'projekt' })) return;
-      await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      await db.rpc('gig_uchwala_generuj_panel', { uid: u.id });
       await load(); otworz(u.id);
       toast('Projekt uchwały o odmowie gotowy do sprawdzenia', 'success');
     }
@@ -796,7 +796,7 @@
       if (!confirm('Wygenerować treść uchwały i maila od nowa z danych kandydata? Ręczne poprawki w treści zostaną nadpisane.')) return;
       /* najpierw zapis pól (numer, data, kandydat), żeby generator wziął aktualne dane */
       if (!await zapisz(u, true)) return;
-      const { error } = await db.rpc('gig_uchwala_generuj', { uid: u.id });
+      const { error } = await db.rpc('gig_uchwala_generuj_panel', { uid: u.id });
       if (error) { toast('Błąd generowania: ' + error.message, 'error'); return; }
       await load();
       otworz(u.id);
@@ -1050,7 +1050,7 @@
         data_wejscia: v('nowaData') || new Date().toISOString().slice(0, 10) };
       const ins = await db.from('uchwaly').insert(rec).select('id').single();
       if (ins.error) { toast('Nie udało się utworzyć: ' + ins.error.message, 'error'); return; }
-      const gen = await db.rpc('gig_uchwala_generuj', { uid: ins.data.id });
+      const gen = await db.rpc('gig_uchwala_generuj_panel', { uid: ins.data.id });
       if (gen.error) toast('Uchwała utworzona, ale bez treści: ' + gen.error.message, 'error');
       closeModal('nowaModal');
       await load();

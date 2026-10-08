@@ -168,15 +168,15 @@
         : 'Brak. Uruchom supabase_czlonkowie.sql albo dodaj firmę.'}</td></tr>`;return;}
       tb.innerHTML=rows.map(r=>`
         <tr>
-          <td>${r.website
-            ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer" title="${esc(r.website)}" style="color:#16202a;text-decoration:none;border-bottom:1px solid #d8e0e7;"><strong>${esc(r.name)}</strong> <span style="color:#9aa7b2;font-size:11px;">↗</span></a>`
+          <td>${bezpiecznyUrl(r.website)
+            ? `<a href="${esc(bezpiecznyUrl(r.website))}" target="_blank" rel="noopener noreferrer" title="${esc(r.website)}" style="color:#16202a;text-decoration:none;border-bottom:1px solid #d8e0e7;"><strong>${esc(r.name)}</strong> <span style="color:#9aa7b2;font-size:11px;">↗</span></a>`
             : `<strong>${esc(r.name)}</strong>`}</td>
           <td>${esc(r.region||'—')}</td>
           <td>${esc(r.person||'—')}</td>
           <td>${r.email?`<a href="mailto:${esc(r.email)}" style="color:#cc0a2b;text-decoration:none;">${esc(r.email)}</a>`:'<span style="color:#c0392b">—</span>'}</td>
           <td style="white-space:nowrap;">${r.nip?esc(r.nip):'<span style="color:#c0392b">—</span>'}</td>
-          <td>${r.website
-            ? `<a href="${esc(r.website)}" target="_blank" rel="noopener noreferrer" style="color:#cc0a2b;text-decoration:none;">${esc(domena(r.website))}</a>`
+          <td>${bezpiecznyUrl(r.website)
+            ? `<a href="${esc(bezpiecznyUrl(r.website))}" target="_blank" rel="noopener noreferrer" style="color:#cc0a2b;text-decoration:none;">${esc(domena(r.website))}</a>`
             : '<span style="color:#c0392b">—</span>'}</td>
           <td>${STATUS_BADGE(r)}</td>
           <td class="actions" style="white-space:nowrap;">

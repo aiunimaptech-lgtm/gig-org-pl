@@ -186,8 +186,11 @@
     ].filter(function (p) { return p[1]; });
     if (!w.length) return;
     $("gDane").innerHTML = w.map(function (p) {
-      var dd = p[0] === "Strona WWW"
-        ? '<dd><a href="' + encodeURI(p[1]) + '" target="_blank" rel="noopener">' + esc(p[1]) + "</a></dd>"
+      /* link tylko dla http(s): adres pochodzi z publicznego formularza, wiec "javascript:" ma zostac tekstem */
+      var www = p[0] === "Strona WWW" ? String(p[1]).trim() : "";
+      if (www && !/^https?:\/\//i.test(www)) www = /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(www) ? "https://" + www : "";
+      var dd = www
+        ? '<dd><a href="' + esc(www) + '" target="_blank" rel="noopener noreferrer">' + esc(p[1]) + "</a></dd>"
         : "<dd>" + esc(p[1]) + "</dd>";
       return "<div><dt>" + esc(p[0]) + "</dt>" + dd + "</div>";
     }).join("");

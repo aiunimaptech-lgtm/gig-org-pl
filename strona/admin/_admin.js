@@ -49,7 +49,10 @@ function toast(msg, type = 'default', duration = 3500) {
   const icons = { success: '✓', error: '✕', default: 'ℹ' };
   const el = document.createElement('div');
   el.className = `toast ${type}`;
-  el.innerHTML = `<span>${icons[type] || 'ℹ'}</span><span>${msg}</span>`;
+  /* komunikat jako tekst: trafiaja tu nazwy z bazy i tresci bledow, wiec bez HTML */
+  const ikona = document.createElement('span'); ikona.textContent = icons[type] || 'ℹ';
+  const tekst = document.createElement('span'); tekst.textContent = String(msg ?? '');
+  el.append(ikona, tekst);
   toastContainer.appendChild(el);
   setTimeout(() => el.remove(), duration);
 }
@@ -207,14 +210,21 @@ function fmtDate(iso) {
 /* ── Eksport CSV ── */
 function exportCSV(rows, columns, filename) {
   const header = columns.map(c => c.label).join(';');
-  const body = rows.map(row =>
-    columns.map(c => `"${(row[c.key] ?? '').toString().replace(/"/g, '""')}"`).join(';')
-  ).join('\n');
+  /* wartosci zaczynajace sie od = + - @ (albo tab/CR) Excel wykonalby jako formule; apostrof to wylacza */
+  const kom = v => { let t = (v ?? '').toString(); if (/^[=+\-@\t\r]/.test(t)) t = "'" + t; return `"${t.replace(/"/g, '""')}"`; };
+  const body = rows.map(row => columns.map(c => kom(row[c.key])).join(';')).join('\n');
   const blob = new Blob(['﻿' + header + '\n' + body], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
+}
+
+/* ── Bezpieczny adres www z danych wpisanych przez ludzi: tylko http(s), inaczej pusty ── */
+function bezpiecznyUrl(u) {
+  const t = String(u ?? '').trim();
+  if (/^https?:\/\//i.test(t)) return t;
+  return /^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(t) ? 'https://' + t : '';
 }
 
 /* ── Escape ── */
