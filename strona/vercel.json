@@ -75,7 +75,7 @@
       ]
     },
     {
-      "source": "/(admin|glosowanie|ankieta|uczestnicy|wizytowka|wypis)/(.*)",
+      "source": "/(admin|glosowanie|ankieta|uczestnicy|wizytowka|wypis)(.*)",
       "headers": [
         {
           "key": "Referrer-Policy",
@@ -88,7 +88,7 @@
       ]
     },
     {
-      "source": "/admin/(.*)",
+      "source": "/admin(.*)",
       "headers": [
         {
           "key": "Cache-Control",
