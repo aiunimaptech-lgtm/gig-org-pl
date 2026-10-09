@@ -73,6 +73,7 @@
         <div class="topbar-actions">
           <button class="btn btn-outline btn-sm" id="btnLink" title="Skopiuj link do ankiety dla wybranego szkolenia">🔗 Link do ankiety</button>
           <button class="btn btn-outline btn-sm" id="btnCsv" title="Wszystkie odpowiedzi z bieżącego filtra">↓ CSV</button>
+          <button class="btn btn-primary btn-sm" id="btnPdf" title="Raport z wynikami ankiety dla bieżącego filtra">↓ PDF z wynikami</button>
         </div>
       </header>
 
@@ -104,6 +105,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="/_assets/js/gig-config.js"></script>
   <script src="/admin/_admin.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
   <script>
     const PYT = [
       ['ocena_calosc', '1. Jak oceniasz szkolenie?'],
@@ -113,6 +116,7 @@
       ['ocena_polecenie', '5. Czy polecisz innym?'],
     ];
     let dane = [];
+    let TERMINY = {};   /* tytuł szkolenia → date_start z kalendarza */
     const sel = () => document.getElementById('fSzk').value;
     const filtruj = () => dane.filter(r => !sel() || r.szkolenie === sel());
     const gw = s => { const n = Math.round(s); return `<span class="an-gw">${'★'.repeat(n)}<span class="p">${'★'.repeat(5 - n)}</span></span>`; };
@@ -146,6 +150,125 @@
       document.getElementById('tematy').innerHTML = lista('tematy', 'Brak propozycji.');
     }
 
+    /* Pełne brzmienie pytań z formularza ankiety (pyt. 3 zależy od tego, czy to warsztaty). */
+    function pelnePytania(szk) {
+      const w = /warsztat/i.test(szk || '');
+      return ['Jak oceniasz szkolenie?', 'Czy treści szkolenia były dla Ciebie przydatne?',
+        w ? 'Jak oceniasz sposób prowadzenia szkolenia w formie warsztatów?' : 'Jak oceniasz sposób prowadzenia szkolenia?',
+        'Czy szkolenie spełniło Twoje oczekiwania?', 'Czy polecił(a)byś to szkolenie innym?'];
+    }
+
+    function wynikiPdf() {
+      if (!window.pdfMake) { toast('Moduł PDF się nie załadował, odśwież stronę', 'error'); return; }
+      const rows = filtruj();
+      if (!rows.length) { toast('Brak odpowiedzi do raportu'); return; }
+      const szk = sel();
+      const n = rows.length;
+      const sr = k => rows.reduce((a, r) => a + r[k], 0) / n;
+      const ogolna = PYT.reduce((a, p) => a + sr(p[0]), 0) / PYT.length;
+      const polec = rows.filter(r => r.ocena_polecenie >= 4).length;
+      const dzien = d => new Date(d).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const daty = rows.map(r => r.created_at).sort();
+      const kiedy = new Date().toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const pyt = pelnePytania(szk);
+      const pl = x => x.toFixed(2).replace('.', ',');
+      const C = { red: '#cc0a2b', ink: '#16202a', muted: '#6b7f84', line: '#e3e9ee', star: '#e8b400', soft: '#f7f9fb' };
+
+      const meta = [];
+      if (szk && TERMINY[szk]) meta.push('Termin szkolenia: ' + dzien(TERMINY[szk]));
+      meta.push('Liczba ankiet: ' + n);
+      const od = dzien(daty[0]), doo = dzien(daty[n - 1]);
+      meta.push('Odpowiedzi z dni: ' + (od === doo ? od : od + ' do ' + doo));
+
+      const kafel = (t, v, s) => ({ table: { widths: ['*'], body: [[{ stack: [
+        { text: t.toUpperCase(), fontSize: 7.5, bold: true, color: C.muted, characterSpacing: 0.5 },
+        { text: [{ text: v, fontSize: 20, bold: true, color: C.ink }, { text: s ? '  ' + s : '', fontSize: 9, color: C.muted }], margin: [0, 3, 0, 0] },
+      ], fillColor: C.soft, margin: [8, 6, 8, 6] }]] }, layout: 'noBorders' });
+
+      /* Pasek rozkładu proporcjonalny do liczby głosów. */
+      const pasek = (c, max) => ({ canvas: [
+        { type: 'rect', x: 0, y: 0, w: 22, h: 6, color: C.line },
+        ...(c ? [{ type: 'rect', x: 0, y: 0, w: Math.max(2, 22 * c / max), h: 6, color: C.red }] : []),
+      ], margin: [0, 3, 0, 0] });
+
+      const naglowek = ['Pytanie', 'Średnia', '1', '2', '3', '4', '5'].map((t, i) => ({ text: t, bold: true, fontSize: 8.5, color: C.muted, alignment: i ? 'center' : 'left' }));
+      const body = [naglowek];
+      PYT.forEach(([k], i) => {
+        const rozk = [1, 2, 3, 4, 5].map(v => rows.filter(r => r[k] === v).length);
+        const max = Math.max(1, ...rozk);
+        const s = sr(k);
+        body.push([
+          { text: (i + 1) + '. ' + pyt[i], fontSize: 9.5 },
+          { stack: [{ text: pl(s), bold: true, fontSize: 11, alignment: 'center', color: s >= 4 ? '#1c6b39' : (s < 3 ? C.red : C.ink) },
+            { text: 'na 5', fontSize: 7.5, alignment: 'center', color: C.muted }] },
+          ...rozk.map(c => ({ stack: [{ text: String(c), alignment: 'center', fontSize: 9.5, color: c ? C.ink : '#b5c0c8' }, pasek(c, max)] })),
+        ]);
+      });
+
+      const lista = (k, pusto) => {
+        const l = rows.filter(r => (r[k] || '').trim()).slice().sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
+        if (!l.length) return [{ text: pusto, style: 'pusto' }];
+        return l.map((r, i) => ({ unbreakable: true, margin: [0, 0, 0, 8], table: { widths: [18, '*'], body: [[
+          { text: String(i + 1), bold: true, color: C.red, fontSize: 11 },
+          { stack: [
+            { text: dzien(r.created_at) + (szk ? '' : ' · ' + r.szkolenie), fontSize: 8, color: '#7a8b97', margin: [0, 0, 0, 2] },
+            { text: r[k].trim(), fontSize: 10, lineHeight: 1.25 },
+          ] },
+        ]] }, layout: { hLineWidth: () => 0, vLineWidth: (j) => j === 1 ? 1.5 : 0, vLineColor: () => C.red,
+          paddingLeft: (j) => j === 1 ? 9 : 0, paddingTop: () => 2, paddingBottom: () => 4 } }));
+      };
+
+      const tresc = [
+        { text: 'GEODEZYJNA IZBA GOSPODARCZA', style: 'h0' },
+        { text: 'Wyniki ankiety po szkoleniu', style: 'h1' },
+        { text: szk || 'Wszystkie szkolenia', style: 'szk' },
+        { text: meta.join('   ·   '), style: 'meta' },
+        { columns: [
+          kafel('Ankiet', String(n)),
+          kafel('Średnia ogólna', pl(ogolna), '/ 5'),
+          kafel('Ocena szkolenia', pl(sr('ocena_calosc')), '/ 5'),
+          kafel('Poleciłoby', Math.round(100 * polec / n) + '%', 'ocena 4 lub 5'),
+        ], columnGap: 8, margin: [0, 0, 0, 16] },
+        { text: 'CZĘŚĆ I. OCENY (SKALA 1 DO 5)', style: 'h2' },
+        { text: 'Kolumny 1 do 5 pokazują, ile osób wybrało daną ocenę (1 to bardzo źle, 5 to bardzo dobrze).', style: 'opis' },
+        { table: { headerRows: 1, widths: ['*', 48, 30, 30, 30, 30, 30], body },
+          layout: { hLineWidth: (j, node) => (j === 0 || j === node.table.body.length) ? 0 : (j === 1 ? 1 : 0.5),
+            vLineWidth: () => 0, hLineColor: (j) => j === 1 ? C.muted : C.line,
+            paddingTop: () => 6, paddingBottom: () => 6, paddingLeft: () => 4, paddingRight: () => 4 }, margin: [0, 0, 0, 18] },
+        { text: 'CZĘŚĆ II. PYTANIA OTWARTE', style: 'h2' },
+        { text: '6. Uwagi i komentarze dotyczące szkolenia', style: 'h3' },
+        ...lista('uwagi', 'Brak komentarzy.'),
+        { text: '7. Tematy szkoleń interesujące w przyszłości', style: 'h3', margin: [0, 10, 0, 6] },
+        ...lista('tematy', 'Brak propozycji.'),
+        { text: 'Ankieta anonimowa. Raport wygenerowano ' + kiedy + ' w panelu GIG.', style: 'foot' },
+      ];
+
+      const dd = {
+        pageSize: 'A4', pageMargins: [42, 48, 42, 56],
+        info: { title: 'Wyniki ankiety po szkoleniu' + (szk ? ': ' + szk : ''), author: 'Geodezyjna Izba Gospodarcza' },
+        footer: (page, pages) => ({ margin: [42, 14, 42, 0], fontSize: 8, color: '#7a8b97',
+          columns: [{ text: 'Geodezyjna Izba Gospodarcza · gig.org.pl' }, { text: 'Strona ' + page + ' z ' + pages, alignment: 'right' }] }),
+        content: tresc,
+        styles: {
+          h0: { fontSize: 9, bold: true, color: C.red, characterSpacing: 1, margin: [0, 0, 0, 4] },
+          h1: { fontSize: 18, bold: true, color: C.ink, margin: [0, 0, 0, 4] },
+          szk: { fontSize: 12, bold: true, color: '#38444e', margin: [0, 0, 0, 4] },
+          meta: { fontSize: 9, color: C.muted, margin: [0, 0, 0, 14] },
+          h2: { fontSize: 10, bold: true, color: C.red, characterSpacing: 0.5, margin: [0, 0, 0, 3] },
+          h3: { fontSize: 11, bold: true, color: C.ink, margin: [0, 4, 0, 6] },
+          opis: { fontSize: 8.5, color: C.muted, margin: [0, 0, 0, 6] },
+          pusto: { fontSize: 9.5, color: C.muted, italics: true, margin: [0, 0, 0, 6] },
+          foot: { fontSize: 8.5, color: '#7a8b97', margin: [0, 14, 0, 0] },
+        },
+        defaultStyle: { font: 'Roboto', fontSize: 10, color: '#2b3a45' },
+      };
+      const nazwa = 'ankieta-' + (szk || 'wszystkie-szkolenia').toLowerCase()
+        .replace(/[ąćęłńóśźż]/g, c => 'acelnoszz'['ąćęłńóśźż'.indexOf(c)])
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) + '.pdf';
+      try { pdfMake.createPdf(dd).download(nazwa); }
+      catch (e) { console.error(e); toast('Nie udało się zbudować PDF: ' + e.message, 'error'); }
+    }
+
     async function load() {
       const [a, s] = await Promise.all([
         db.from('ankiety_szkolen').select('*').order('created_at', { ascending: false }),
@@ -153,6 +276,7 @@
       ]);
       if (a.error) { console.error(a.error); toast('Błąd ładowania ankiet', 'error'); return; }
       dane = a.data || [];
+      TERMINY = {}; (s.data || []).forEach(x => { if (x.title && x.date_start) TERMINY[x.title] = x.date_start; });
       const f = document.getElementById('fSzk'); const biez = f.value;
       /* lista: szkolenia z kalendarza (żeby dało się skopiować link przed pierwszą odpowiedzią) + tytuły z odpowiedzi */
       const tytuly = [...new Set([...(s.data || []).map(x => x.title), ...dane.map(x => x.szkolenie)].filter(Boolean))];
@@ -180,6 +304,7 @@
           { key: 'o4', label: '4. Oczekiwania' }, { key: 'o5', label: '5. Polecenie' }, { key: 'uwagi', label: '6. Uwagi' }, { key: 'tematy', label: '7. Tematy na przyszłość' },
         ], 'ankiety-' + (sel() || 'wszystkie').replace(/[^\w]+/g, '-').slice(0, 60) + '.csv');
       });
+      document.getElementById('btnPdf').addEventListener('click', wynikiPdf);
       load();
     })();
   </script>
