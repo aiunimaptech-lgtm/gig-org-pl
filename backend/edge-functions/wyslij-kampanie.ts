@@ -185,7 +185,16 @@ Deno.serve(async (req) => {
     return json({ ok: true, wyslane: 0, bledy: 0, zostalo: await zostaloCzeka(), dzisiaj_zostalo: 0, status: kampania.status, info: "limit dzienny wyczerpany" });
   }
 
-  const ile = Math.min(porcja, dzisiajZostalo);
+  /* Załączniki pobieramy przed rezerwacją kolejki; z nimi maile idą pojedynczo (~0,7 s każdy),
+     więc porcja na jedno wywołanie to maks. 40, żeby zmieścić się w limicie czasu funkcji. */
+  let zalaczniki: Zalacznik[] = [];
+  try { zalaczniki = await pobierzZalaczniki(kampania.zalaczniki); }
+  catch (e) {
+    const msg = "zalacznik: " + String((e as Error).message ?? e);
+    await admin.from("wysylki").update({ status: "wstrzymana", uwaga: msg, updated_at: new Date().toISOString() }).eq("id", wysylkaId);
+    return json({ error: msg }, 400);
+  }
+  const ile = Math.min(porcja, dzisiajZostalo, zalaczniki.length ? 40 : PORCJA_MAX);
   /* Rezerwacja paczki w bazie (status 'w_trakcie', FOR UPDATE SKIP LOCKED): dwa równoległe
      wywołania (harmonogram i panel) nigdy nie dostaną tych samych adresów. */
   const { data: kolejka, error: oErr } = await admin.rpc("gig_wysylka_pobierz", { p_wysylka: wysylkaId, p_ile: ile });
@@ -231,14 +240,6 @@ Deno.serve(async (req) => {
   const rodzaj = kampania.rodzaj === "newsletter" || kampania.rodzaj === "szkolenie" ? kampania.rodzaj : "baza";
   const szkolenie = String(kampania.szkolenie ?? "").trim();
   let wyslane = 0, bledy = pominiete.length;
-  let zalaczniki: Zalacznik[] = [];
-  try { zalaczniki = await pobierzZalaczniki(kampania.zalaczniki); }
-  catch (e) {
-    const msg = "zalacznik: " + String((e as Error).message ?? e);
-    await admin.from("wysylki_odbiorcy").update({ status: "czeka", pobrano_at: null }).in("id", odbiorcy.map((r) => r.id as string));
-    await admin.from("wysylki").update({ status: "wstrzymana", uwaga: msg, updated_at: new Date().toISOString() }).eq("id", wysylkaId);
-    return json({ error: msg }, 400);
-  }
 
   for (let i = 0; i < odbiorcy.length; i += BATCH) {
     const paczka = odbiorcy.slice(i, i + BATCH);
