@@ -23,6 +23,7 @@
 // Body { akcja: 'odzyskaj', kontakt_id } szuka w historii Resend maili wysłanych
 // do nadawcy po dacie zgłoszenia (dla odpowiedzi sprzed v7) i dopisuje je do archiwum.
 //
+// v9 (9.10.2026): body.attachments [{nazwa,url}] (pliki z gig.org.pl) doklejane do każdego maila.
 // v8 (6.10.2026): pauza 600 ms między mailami i ponowienie przy 429. Resend przyjmuje
 // ~2 zapytania na sekundę, więc wysyłka do 100 uczestników bez pauzy gubiła część maili.
 // ============================================================
@@ -160,7 +161,28 @@ function oczyscHtml(html: string): string {
     .replace(/<blockquote>/gi, `<blockquote style="margin:12px 0;padding:4px 0 4px 14px;border-left:3px solid #e6ebef;color:#6b7c8c;">`);
 }
 
-async function wyslijJeden(to: string, subject: string, html: string): Promise<{ ok: boolean; info: unknown }> {
+
+/* Załączniki: [{nazwa,url}] tylko z https://gig.org.pl/ (plik pobieramy raz, Resend dostaje base64).
+   Limit Resend: 40 MB na mail; batch nie obsługuje załączników, więc wysyłka idzie pojedynczo. */
+type Zalacznik = { filename: string; content: string };
+async function pobierzZalaczniki(lista: unknown): Promise<Zalacznik[]> {
+  const out: Zalacznik[] = [];
+  if (!Array.isArray(lista)) return out;
+  for (const z of lista as Array<Record<string, unknown>>) {
+    const url = String(z?.url ?? "");
+    if (!/^https:\/\/gig\.org\.pl\/[^\s]+$/.test(url)) continue;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`zalacznik ${url}: HTTP ${res.status}`);
+    const buf = new Uint8Array(await res.arrayBuffer());
+    if (buf.byteLength > 25 * 1024 * 1024) throw new Error(`zalacznik ${url}: za duzy`);
+    let bin = ""; const CH = 0x8000;
+    for (let i = 0; i < buf.length; i += CH) bin += String.fromCharCode(...buf.subarray(i, i + CH));
+    out.push({ filename: String(z?.nazwa || decodeURIComponent(url.split("/").pop() || "zalacznik")), content: btoa(bin) });
+  }
+  return out;
+}
+
+async function wyslijJeden(to: string, subject: string, html: string, attachments: Zalacznik[] = []): Promise<{ ok: boolean; info: unknown }> {
   try {
     let res: Response | null = null;
     let wynik: unknown = null;
@@ -168,7 +190,7 @@ async function wyslijJeden(to: string, subject: string, html: string): Promise<{
       res = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html, reply_to: REPLY_TO }),
+        body: JSON.stringify({ from: FROM_EMAIL, to: [to], subject, html, reply_to: REPLY_TO, ...(attachments.length ? { attachments } : {}) }),
       });
       wynik = await res.json().catch(() => ({}));
       if (res.status !== 429) break;                              // chwilowa odmowa: odczekaj i ponów
@@ -211,6 +233,9 @@ Deno.serve(async (req) => {
   const rodzaj = String(body.rodzaj ?? "").trim();
   const szkolenie = String(body.szkolenie ?? "").trim();
   const wejscie = Array.isArray(body.recipients) ? body.recipients as Array<Record<string, unknown>> : [];
+  let zalaczniki: Zalacznik[] = [];
+  try { zalaczniki = await pobierzZalaczniki(body.attachments); }
+  catch (e) { return json({ error: "zalacznik: " + String((e as Error).message ?? e) }, 400); }
 
   if (!subject) return json({ error: "brak tematu" }, 400);
   if (!html || html.replace(/<[^>]+>/g, "").trim().length < 2) return json({ error: "brak tresci" }, 400);
@@ -244,7 +269,7 @@ Deno.serve(async (req) => {
     // link wypisu tylko dla wysyłek do bazy i gdy znamy wiersz (id)
     const unsubUrl = (rodzaj === "baza" && r.id) ? `${FUNCTIONS_BASE}/baza-wypis?id=${encodeURIComponent(r.id)}` : "";
     const tresc = layout(subject, html, stopka, unsubUrl);
-    const w = await wyslijJeden(r.email, subject, tresc);
+    const w = await wyslijJeden(r.email, subject, tresc, zalaczniki);
     wyniki.push({ email: r.email, ok: w.ok, ...(w.ok ? {} : { blad: w.info }) });
     // odpowiedź na formularz kontaktowy: zostaje w archiwum przy zgłoszeniu
     if (w.ok && rodzaj === "kontakt" && kontaktOk) {

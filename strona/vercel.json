@@ -88,6 +88,19 @@
       ]
     },
     {
+      "source": "/materialy/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "private, max-age=3600"
+        }
+      ]
+    },
+    {
       "source": "/admin(.*)",
       "headers": [
         {

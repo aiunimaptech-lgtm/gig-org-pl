@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Ankiety po szkoleniach — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .an-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;margin-bottom:18px;}
+    .an-sum .k{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:12px 16px;min-width:0;}
+    .an-sum .k .t{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+    .an-sum .k .v{font-size:24px;font-weight:800;color:#16202a;margin-top:3px;}
+    .an-sum .k .v small{font-size:13px;font-weight:600;color:#6b7f84;}
+    .an-gw{color:#e8b400;letter-spacing:1px;font-size:15px;}
+    .an-gw .p{color:#d8dee3;}
+    .an-rozk{display:flex;gap:3px;align-items:flex-end;height:28px;}
+    .an-rozk i{display:block;width:12px;background:#cc0a2b;border-radius:2px 2px 0 0;min-height:2px;opacity:.85;}
+    .an-rozk i[data-n="0"]{background:#e3e9ee;}
+    .an-mini{font-size:12px;color:#6b7f84;line-height:1.5;}
+    .an-odp{background:#f7f9fb;border-radius:10px;padding:12px 14px;margin:0 0 10px;font-size:14px;white-space:pre-wrap;}
+    .an-odp .d{font-size:12px;color:#9aa7b2;margin-bottom:4px;}
+    .an-link{font-size:12.5px;word-break:break-all;}
+    .an-liczba{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html"><span class="nav-icon">🏠</span> Pulpit</a>
+        <div class="nav-section">Zgłoszenia ze strony</div>
+        <a href="formularze.html#kontakt"><span class="nav-icon">📨</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">📝</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <div class="nav-section">Sprawy Izby</div>
+        <a href="czlonkowie.html"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
+        <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
+        <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
+        <a href="wizytowki.html"><span class="nav-icon">🪪</span> Wizytówki członków <span class="nav-badge" id="navBadgeWizytowki" style="display:none">0</span></a>
+        <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
+        <a href="ankiety.html" class="active"><span class="nav-icon">⭐</span> Ankiety po szkoleniach</a>
+        <div class="nav-section">Treści na stronie</div>
+        <a href="artykuly.html"><span class="nav-icon">📰</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <div class="nav-section">Wysyłka maili</div>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Ankiety po szkoleniach</div>
+        <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" id="btnLink" title="Skopiuj link do ankiety dla wybranego szkolenia">🔗 Link do ankiety</button>
+          <button class="btn btn-outline btn-sm" id="btnCsv" title="Wszystkie odpowiedzi z bieżącego filtra">↓ CSV</button>
+        </div>
+      </header>
+
+      <main class="admin-content">
+        <div class="card" style="margin-bottom:18px;"><div class="card-body">
+          <div class="toolbar">
+            <select id="fSzk" class="form-control" style="max-width:520px;"></select>
+            <span class="an-mini" id="info"></span>
+          </div>
+          <p class="an-mini" style="margin:8px 0 0;">Ankieta jest anonimowa: nie ma tu nazwisk ani adresów. Link do ankiety dla szkolenia ma postać
+            <code>/ankieta-szkolenie/?s=&lt;tytuł szkolenia&gt;</code>; „🔗 Link do ankiety” kopiuje go do schowka, gotowy do wklejenia w Wysyłkach.</p>
+        </div></div>
+
+        <div class="an-sum" id="sum"></div>
+
+        <div class="card" style="margin-bottom:18px;"><div class="card-header"><div class="card-title">Oceny (skala 1-5)</div></div><div class="card-body">
+          <div class="table-wrap"><table class="admin-table">
+            <thead><tr><th>Pytanie</th><th class="an-liczba">Średnia</th><th>Gwiazdki</th><th>Rozkład 1→5</th><th class="an-liczba">Odpowiedzi</th></tr></thead>
+            <tbody id="oceny"></tbody>
+          </table></div>
+        </div></div>
+
+        <div class="card" style="margin-bottom:18px;"><div class="card-header"><div class="card-title">6. Uwagi i komentarze</div></div><div class="card-body" id="uwagi"></div></div>
+        <div class="card"><div class="card-header"><div class="card-title">7. Tematy szkoleń na przyszłość</div></div><div class="card-body" id="tematy"></div></div>
+      </main>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    const PYT = [
+      ['ocena_calosc', '1. Jak oceniasz szkolenie?'],
+      ['ocena_tresci', '2. Czy treści były przydatne?'],
+      ['ocena_prowadzenie', '3. Sposób prowadzenia'],
+      ['ocena_oczekiwania', '4. Czy spełniło oczekiwania?'],
+      ['ocena_polecenie', '5. Czy polecisz innym?'],
+    ];
+    let dane = [];
+    const sel = () => document.getElementById('fSzk').value;
+    const filtruj = () => dane.filter(r => !sel() || r.szkolenie === sel());
+    const gw = s => { const n = Math.round(s); return `<span class="an-gw">${'★'.repeat(n)}<span class="p">${'★'.repeat(5 - n)}</span></span>`; };
+
+    function render() {
+      const rows = filtruj();
+      document.getElementById('info').textContent = rows.length ? `${rows.length} ${rows.length === 1 ? 'odpowiedź' : 'odpowiedzi'}` + (rows.length ? ', ostatnia ' + fmtDate(rows[0].created_at) : '') : 'brak odpowiedzi';
+      const sr = k => rows.length ? rows.reduce((a, r) => a + r[k], 0) / rows.length : 0;
+      const ogolna = rows.length ? PYT.reduce((a, p) => a + sr(p[0]), 0) / PYT.length : 0;
+      const polec = rows.filter(r => r.ocena_polecenie >= 4).length;
+      document.getElementById('sum').innerHTML = [
+        ['Odpowiedzi', rows.length, ''],
+        ['Średnia ogólna', rows.length ? ogolna.toFixed(2) : '—', '<small>/ 5</small>'],
+        ['Ocena szkolenia', rows.length ? sr('ocena_calosc').toFixed(2) : '—', '<small>/ 5</small>'],
+        ['Poleciłoby', rows.length ? Math.round(100 * polec / rows.length) + '%' : '—', '<small>ocena 4 lub 5</small>'],
+      ].map(([t, v, s]) => `<div class="k"><div class="t">${t}</div><div class="v">${v} ${s}</div></div>`).join('');
+
+      document.getElementById('oceny').innerHTML = PYT.map(([k, t]) => {
+        const rozk = [1, 2, 3, 4, 5].map(n => rows.filter(r => r[k] === n).length);
+        const max = Math.max(1, ...rozk);
+        return `<tr><td>${esc(t)}</td><td class="an-liczba"><strong>${rows.length ? sr(k).toFixed(2) : '—'}</strong></td><td>${rows.length ? gw(sr(k)) : ''}</td>
+          <td><div class="an-rozk" title="${rozk.map((c, i) => (i + 1) + ': ' + c).join(', ')}">${rozk.map(c => `<i data-n="${c}" style="height:${Math.round(100 * c / max)}%"></i>`).join('')}</div></td>
+          <td class="an-liczba">${rows.length}</td></tr>`;
+      }).join('');
+
+      const lista = (k, pusto) => {
+        const l = rows.filter(r => (r[k] || '').trim());
+        return l.length ? l.map(r => `<div class="an-odp"><div class="d">${esc(fmtDate(r.created_at))}${sel() ? '' : ' · ' + esc(r.szkolenie)}</div>${esc(r[k])}</div>`).join('') : `<p class="an-mini">${pusto}</p>`;
+      };
+      document.getElementById('uwagi').innerHTML = lista('uwagi', 'Brak komentarzy.');
+      document.getElementById('tematy').innerHTML = lista('tematy', 'Brak propozycji.');
+    }
+
+    async function load() {
+      const [a, s] = await Promise.all([
+        db.from('ankiety_szkolen').select('*').order('created_at', { ascending: false }),
+        db.from('szkolenia').select('title,date_start').order('date_start', { ascending: false }),
+      ]);
+      if (a.error) { console.error(a.error); toast('Błąd ładowania ankiet', 'error'); return; }
+      dane = a.data || [];
+      const f = document.getElementById('fSzk'); const biez = f.value;
+      /* lista: szkolenia z kalendarza (żeby dało się skopiować link przed pierwszą odpowiedzią) + tytuły z odpowiedzi */
+      const tytuly = [...new Set([...(s.data || []).map(x => x.title), ...dane.map(x => x.szkolenie)].filter(Boolean))];
+      const ile = t => dane.filter(x => x.szkolenie === t).length;
+      f.innerHTML = '<option value="">Wszystkie szkolenia</option>' + tytuly.map(t => `<option value="${esc(t)}">${esc(t)} (${ile(t)})</option>`).join('');
+      f.value = tytuly.includes(biez) ? biez : (tytuly[0] || '');
+      render(); loadSidebarBadges();
+    }
+
+    (async () => {
+      if (!await requireAuth()) return;
+      document.getElementById('fSzk').addEventListener('change', render);
+      document.getElementById('btnLink').addEventListener('click', async () => {
+        if (!sel()) { toast('Wybierz szkolenie z listy'); return; }
+        const url = location.origin + '/ankieta-szkolenie/?s=' + encodeURIComponent(sel());
+        try { await navigator.clipboard.writeText(url); toast('Skopiowano link do ankiety', 'success'); }
+        catch (_) { prompt('Link do ankiety:', url); }
+      });
+      document.getElementById('btnCsv').addEventListener('click', () => {
+        const rows = filtruj().map(r => ({ data: fmtDate(r.created_at), szkolenie: r.szkolenie, o1: r.ocena_calosc, o2: r.ocena_tresci, o3: r.ocena_prowadzenie, o4: r.ocena_oczekiwania, o5: r.ocena_polecenie, uwagi: r.uwagi || '', tematy: r.tematy || '' }));
+        if (!rows.length) { toast('Brak danych do eksportu'); return; }
+        exportCSV(rows, [
+          { key: 'data', label: 'Data' }, { key: 'szkolenie', label: 'Szkolenie' },
+          { key: 'o1', label: '1. Ocena szkolenia' }, { key: 'o2', label: '2. Przydatność treści' }, { key: 'o3', label: '3. Prowadzenie' },
+          { key: 'o4', label: '4. Oczekiwania' }, { key: 'o5', label: '5. Polecenie' }, { key: 'uwagi', label: '6. Uwagi' }, { key: 'tematy', label: '7. Tematy na przyszłość' },
+        ], 'ankiety-' + (sel() || 'wszystkie').replace(/[^\w]+/g, '-').slice(0, 60) + '.csv');
+      });
+      load();
+    })();
+  </script>
+</body>
+</html>

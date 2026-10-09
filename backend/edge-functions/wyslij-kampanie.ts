@@ -1,7 +1,9 @@
 // ============================================================
 // GIG — Edge Function: wyslij-kampanie (v8: wysyłka z serwera przez pg_cron, {{WYPIS}}, Reply-To kampanii;
 //   v9 6.10.2026: rodzaj 'szkolenie' = zaplanowana wiadomość do uczestników szkolenia z panelu Zapisy,
-//   stopka „zgłoszono Cię na szkolenie”, bez linku wypisu)
+//   stopka „zgłoszono Cię na szkolenie”, bez linku wypisu;
+//   v10 9.10.2026: wysylki.zalaczniki [{nazwa,url}]: pliki z gig.org.pl doklejane do maila,
+//   wtedy wysyłka pojedyncza przez /emails (batch nie obsługuje załączników))
 // Wysyła kampanię z kolejki (tabele `wysylki` + `wysylki_odbiorcy`) PORCJAMI.
 // Panel woła ją wielokrotnie, aż zostanie 0 — dzięki temu:
 //   • nie ma limitu czasu Edge Function (każde wywołanie robi kawałek),
@@ -95,6 +97,27 @@ function layout(title: string, body: string, unsubUrl: string, rodzaj = "baza", 
     </table>
   </td></tr></table>
 </body></html>`;
+}
+
+
+/* Załączniki: [{nazwa,url}] tylko z https://gig.org.pl/ (plik pobieramy raz, Resend dostaje base64).
+   Limit Resend: 40 MB na mail; batch nie obsługuje załączników, więc wysyłka idzie pojedynczo. */
+type Zalacznik = { filename: string; content: string };
+async function pobierzZalaczniki(lista: unknown): Promise<Zalacznik[]> {
+  const out: Zalacznik[] = [];
+  if (!Array.isArray(lista)) return out;
+  for (const z of lista as Array<Record<string, unknown>>) {
+    const url = String(z?.url ?? "");
+    if (!/^https:\/\/gig\.org\.pl\/[^\s]+$/.test(url)) continue;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`zalacznik ${url}: HTTP ${res.status}`);
+    const buf = new Uint8Array(await res.arrayBuffer());
+    if (buf.byteLength > 25 * 1024 * 1024) throw new Error(`zalacznik ${url}: za duzy`);
+    let bin = ""; const CH = 0x8000;
+    for (let i = 0; i < buf.length; i += CH) bin += String.fromCharCode(...buf.subarray(i, i + CH));
+    out.push({ filename: String(z?.nazwa || decodeURIComponent(url.split("/").pop() || "zalacznik")), content: btoa(bin) });
+  }
+  return out;
 }
 
 function oczyscHtml(html: string): string {
@@ -208,6 +231,14 @@ Deno.serve(async (req) => {
   const rodzaj = kampania.rodzaj === "newsletter" || kampania.rodzaj === "szkolenie" ? kampania.rodzaj : "baza";
   const szkolenie = String(kampania.szkolenie ?? "").trim();
   let wyslane = 0, bledy = pominiete.length;
+  let zalaczniki: Zalacznik[] = [];
+  try { zalaczniki = await pobierzZalaczniki(kampania.zalaczniki); }
+  catch (e) {
+    const msg = "zalacznik: " + String((e as Error).message ?? e);
+    await admin.from("wysylki_odbiorcy").update({ status: "czeka", pobrano_at: null }).in("id", odbiorcy.map((r) => r.id as string));
+    await admin.from("wysylki").update({ status: "wstrzymana", uwaga: msg, updated_at: new Date().toISOString() }).eq("id", wysylkaId);
+    return json({ error: msg }, 400);
+  }
 
   for (let i = 0; i < odbiorcy.length; i += BATCH) {
     const paczka = odbiorcy.slice(i, i + BATCH);
@@ -245,6 +276,33 @@ Deno.serve(async (req) => {
         html: layout(temat, trescOdb, strona, rodzaj, szkolenie),
       };
     });
+
+    /* Z załącznikami: osobne żądanie /emails na odbiorcę (batch ich nie przyjmuje), z pauzą ~2/s. */
+    if (zalaczniki.length) {
+      for (let j = 0; j < payload.length; j++) {
+        if (i > 0 || j > 0) await new Promise((r) => setTimeout(r, 600));
+        let ok1 = false, kom1 = "";
+        try {
+          let res: Response | null = null;
+          for (let proba = 0; proba < 3; proba++) {
+            res = await fetch("https://api.resend.com/emails", {
+              method: "POST",
+              headers: { "Authorization": `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+              body: JSON.stringify({ ...payload[j], attachments: zalaczniki }),
+            });
+            if (res.status !== 429) break;
+            await new Promise((r) => setTimeout(r, 1500 * (proba + 1)));
+          }
+          const wynik = await res!.json().catch(() => ({}));
+          ok1 = res!.ok;
+          if (!ok1) { kom1 = JSON.stringify(wynik).slice(0, 300); console.error("Resend (zalacznik):", kom1); }
+        } catch (err) { kom1 = String(err).slice(0, 300); }
+        const id1 = paczka[j].id as string;
+        if (ok1) { await admin.from("wysylki_odbiorcy").update({ status: "wyslany", wyslano_at: new Date().toISOString(), blad: null }).eq("id", id1); wyslane++; }
+        else { await admin.from("wysylki_odbiorcy").update({ status: "blad", blad: kom1 || "blad wysylki" }).eq("id", id1); bledy++; }
+      }
+      continue;
+    }
 
     let ok = false, komunikat = "";
     if (i > 0) await new Promise((r) => setTimeout(r, 600));   // Resend: 2 zapytania na sekunde

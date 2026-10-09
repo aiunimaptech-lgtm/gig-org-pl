@@ -1,5 +1,7 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /materialy/
+Disallow: /ankieta-szkolenie/
 
 Sitemap: https://gig.org.pl/sitemap.xml

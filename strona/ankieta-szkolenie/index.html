@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ankieta po szkoleniu: Geodezyjna Izba Gospodarcza</title>
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root{--red:#cc0a2b;--ink:#16202a;--muted:#6b7884;--line:#e6ebef;--bg:#f4f6f8;--soft:#fdecef;--star:#e8b400;}
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;}
+    a{color:var(--red);text-decoration:none;}a:hover{text-decoration:underline;}
+    .karta{max-width:720px;margin:40px auto;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 4px 18px rgba(22,32,42,.06);}
+    .logo{padding:24px 30px 16px;}.logo img{width:190px;height:auto;display:block;}
+    .pasek{height:3px;background:var(--red);}
+    .tresc{padding:26px 30px 30px;}
+    .nadtytul{margin:0 0 4px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--red);font-weight:700;}
+    h1{font-size:22px;line-height:1.3;margin:0 0 6px;}
+    .meta{margin:0 0 18px;color:var(--muted);font-size:14.5px;}
+    p{margin:0 0 14px;font-size:15px;color:#38444e;}
+    h2{font-size:13px;letter-spacing:.8px;text-transform:uppercase;color:var(--red);margin:26px 0 4px;}
+    .skala{font-size:13px;color:var(--muted);margin:0 0 10px;}
+    .pyt{padding:14px 0;border-top:1px solid #f0f3f5;}
+    .pyt:first-of-type{border-top:0;}
+    .pyt .q{font-size:15px;font-weight:600;margin:0 0 8px;}
+    .pyt .q .nr{color:var(--muted);font-weight:700;margin-right:6px;}
+    .gw{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+    .gw button{font:inherit;border:1px solid var(--line);background:#fff;border-radius:9px;width:48px;height:44px;cursor:pointer;font-size:24px;line-height:1;color:#cfd6dc;transition:all .12s;}
+    .gw button:hover{border-color:var(--star);}
+    .gw button.on{color:var(--star);border-color:var(--star);background:#fffbe8;}
+    .gw .op{margin-left:8px;font-size:13px;color:var(--muted);min-width:110px;}
+    .pyt.zle .gw button{border-color:var(--red);}
+    textarea{width:100%;font:inherit;font-size:14.5px;padding:10px 12px;border:1px solid #cfd6dc;border-radius:8px;background:#fff;min-height:96px;resize:vertical;}
+    textarea:focus{outline:2px solid rgba(204,10,43,.25);border-color:var(--red);}
+    .wyslij{margin-top:10px;font:inherit;font-weight:700;font-size:15px;border:0;border-radius:9px;padding:12px 26px;cursor:pointer;background:var(--red);color:#fff;}
+    .wyslij:disabled{opacity:.6;cursor:default;}
+    .box{padding:13px 16px;border-radius:10px;font-size:14.5px;margin:16px 0 0;}
+    .box.ok{background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .box.err{background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .drobne{font-size:13px;color:var(--muted);margin-top:14px;}
+    .stopka{font-size:12.5px;color:#9aa7b2;text-align:center;margin:0 16px 40px;}
+    @media(max-width:640px){.karta{margin:16px;}.tresc,.logo{padding-left:18px;padding-right:18px;}.gw button{width:42px;height:40px;font-size:22px;}.gw .op{width:100%;margin:4px 0 0;}}
+  </style>
+</head>
+<body>
+  <main class="karta">
+    <div class="logo"><a href="/"><img src="/_assets/img/gig-logo-email.png" alt="Geodezyjna Izba Gospodarcza"></a></div>
+    <div class="pasek"></div>
+    <div class="tresc" id="tresc">
+      <p class="nadtytul">Ankieta satysfakcji po szkoleniu</p>
+      <h1 id="tytul">Prosimy o ocenę szkolenia</h1>
+      <p class="meta" id="meta"></p>
+      <p>Ankieta jest <strong>anonimowa</strong>, a jej wypełnienie zajmie około 2 minut.</p>
+
+      <form id="f" novalidate>
+        <h2>Część I. Ocena szkolenia</h2>
+        <p class="skala">Skala: 1 to bardzo źle, 5 to bardzo dobrze. Kliknij gwiazdkę.</p>
+        <div id="oceny"></div>
+
+        <h2>Część II. Pytania otwarte</h2>
+        <div class="pyt"><p class="q"><span class="nr">6.</span>Uwagi i komentarze dotyczące szkolenia</p>
+          <textarea id="uwagi" maxlength="3000" placeholder="Co było najbardziej wartościowe, co można poprawić…"></textarea></div>
+        <div class="pyt"><p class="q"><span class="nr">7.</span>Jakie tematy szkoleń byłyby dla Ciebie interesujące w przyszłości?</p>
+          <textarea id="tematy" maxlength="3000" placeholder="Tematy, zagadnienia, forma (wykład, warsztat, online, stacjonarnie)…"></textarea></div>
+
+        <button type="submit" class="wyslij" id="btn">Wyślij ankietę</button>
+        <div class="box err" id="err" hidden></div>
+        <p class="drobne">Nie zbieramy imienia, nazwiska, adresu e-mail ani adresu IP. Odpowiedzi trafiają do biura Izby wyłącznie w formie zbiorczej.</p>
+      </form>
+
+      <div id="dzieki" hidden>
+        <div class="box ok">Dziękujemy za udział w szkoleniu i podzielenie się opinią. Twoje odpowiedzi pomogą nam doskonalić kolejne szkolenia oraz lepiej dopasowywać ich tematykę do potrzeb uczestników.</div>
+        <p class="drobne" style="margin-top:18px;">Najbliższe szkolenia Izby: <a href="/szkolenia/">gig.org.pl/szkolenia</a></p>
+      </div>
+    </div>
+  </main>
+  <p class="stopka">Geodezyjna Izba Gospodarcza · ul. Czackiego 3/5, 00-043 Warszawa · <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a></p>
+
+  <script src="/_assets/js/gig-config.js"></script>
+  <script>
+    /* Anonimowa ankieta po szkoleniu. Link z maila: /ankieta-szkolenie/?s=<tytuł szkolenia>.
+       Zapis: INSERT do ankiety_szkolen (polityka tylko INSERT dla anon; odczyt w panelu po 2FA).
+       Wzór pytań: propozycja Prezydium z 9.10.2026 (pyt. 1 bez „jako całość”, pyt. 3 „w formie warsztatów”). */
+    (function () {
+      var q = new URLSearchParams(location.search);
+      var szk = (q.get('s') || '').trim().slice(0, 300);
+      var warsztaty = /warsztat/i.test(szk);
+      if (szk) { document.getElementById('meta').textContent = szk; document.title = 'Ankieta: ' + szk + ' | GIG'; }
+      else document.getElementById('meta').textContent = 'Szkolenie Geodezyjnej Izby Gospodarczej';
+
+      var PYT = [
+        ['ocena_calosc',      'Jak oceniasz szkolenie?'],
+        ['ocena_tresci',      'Czy treści szkolenia były dla Ciebie przydatne?'],
+        ['ocena_prowadzenie', warsztaty ? 'Jak oceniasz sposób prowadzenia szkolenia w formie warsztatów?' : 'Jak oceniasz sposób prowadzenia szkolenia?'],
+        ['ocena_oczekiwania', 'Czy szkolenie spełniło Twoje oczekiwania?'],
+        ['ocena_polecenie',   'Czy polecił(a)byś to szkolenie innym?']
+      ];
+      var OPIS = ['', 'bardzo źle', 'słabo', 'przeciętnie', 'dobrze', 'bardzo dobrze'];
+      var wart = {};
+      var host = document.getElementById('oceny');
+      PYT.forEach(function (p, i) {
+        var d = document.createElement('div'); d.className = 'pyt'; d.id = 'p_' + p[0];
+        d.innerHTML = '<p class="q"><span class="nr">' + (i + 1) + '.</span>' + p[1] + '</p><div class="gw" role="radiogroup" aria-label="' + p[1] + '"></div>';
+        var gw = d.querySelector('.gw');
+        for (var k = 1; k <= 5; k++) (function (k) {
+          var b = document.createElement('button'); b.type = 'button'; b.textContent = '★'; b.setAttribute('aria-label', k + ' z 5'); b.dataset.k = k;
+          b.addEventListener('click', function () {
+            wart[p[0]] = k; d.classList.remove('zle');
+            gw.querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', +x.dataset.k <= k); });
+            op.textContent = k + '/5: ' + OPIS[k];
+          });
+          gw.appendChild(b);
+        })(k);
+        var op = document.createElement('span'); op.className = 'op'; gw.appendChild(op);
+        host.appendChild(d);
+      });
+
+      function loadSdk() {
+        return new Promise(function (res, rej) {
+          if (window.supabase) return res();
+          var s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
+          s.onload = res; s.onerror = rej; document.head.appendChild(s);
+        });
+      }
+
+      document.getElementById('f').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var err = document.getElementById('err'); err.hidden = true;
+        var brak = PYT.filter(function (p) { return !wart[p[0]]; });
+        brak.forEach(function (p) { document.getElementById('p_' + p[0]).classList.add('zle'); });
+        if (brak.length) { err.textContent = 'Prosimy ocenić wszystkie pięć pytań w części I.'; err.hidden = false; document.getElementById('p_' + brak[0][0]).scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+        var btn = document.getElementById('btn'); btn.disabled = true; btn.textContent = 'Wysyłanie…';
+        try {
+          await loadSdk();
+          var db = window.supabase.createClient(window.GIG_CFG.SUPABASE_URL, window.GIG_CFG.SUPABASE_ANON);
+          var rec = { szkolenie: szk || 'szkolenie GIG (bez tytułu)',
+            uwagi: document.getElementById('uwagi').value.trim() || null,
+            tematy: document.getElementById('tematy').value.trim() || null };
+          PYT.forEach(function (p) { rec[p[0]] = wart[p[0]]; });
+          var r = await db.from('ankiety_szkolen').insert(rec);
+          if (r.error) throw r.error;
+          document.getElementById('f').hidden = true; document.getElementById('dzieki').hidden = false;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } catch (ex) {
+          console.error(ex);
+          err.textContent = 'Nie udało się wysłać ankiety. Spróbuj ponownie za chwilę albo napisz na biuro@gig.org.pl.'; err.hidden = false;
+          btn.disabled = false; btn.textContent = 'Wyślij ankietę';
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
