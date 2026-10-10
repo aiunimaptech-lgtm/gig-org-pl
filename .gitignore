@@ -28,7 +28,9 @@ _zdjecia-zrodlowe/
 skrypty/_test_*.py
 
 # Dane osobowe i robocze materialy biura: nigdy do repozytorium (audyt 8.10.2026)
-#szkolenia/
+# (ukosnik przed #, bo linia zaczynajaca sie od # to dla gita komentarz; dwa starsze
+#  pliki z programami szkolen sa juz w repo i zostaja sledzone)
+\#szkolenia/
 dla Dawida/
 *.xlsx
 *.xls
