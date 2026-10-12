@@ -21,6 +21,7 @@ create table if not exists public.konsultacje (
   temat         text not null default '',
   tresc         text not null default '',          -- zwykły tekst, akapity po pustej linii
   grupa         text not null default 'prezydium', -- z jakiej grupy złożono listę odbiorców
+  z_pytaniem    boolean not null default true,   -- 12.10.2026: false = sama wiadomość, bez pytania i przycisków za/przeciw
   pytanie       text not null default 'Czy jest Pani/Pan za?',
   etykieta_za      text not null default 'Jestem ZA',
   etykieta_przeciw text not null default 'Jestem PRZECIW',

@@ -48,7 +48,13 @@
     .k-grupa .osoby label{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;padding:4px 0;}
     .k-grupa .osoby input{width:16px;height:16px;accent-color:#cc0a2b;margin-top:2px;flex:none;}
     .k-grupa .osoby .mail{color:#6b7f84;font-size:12px;display:block;}
-    .k-hurt{display:flex;gap:8px;padding:0 14px 12px;}
+    .k-hurt{display:flex;gap:8px;padding:10px 14px 0;}
+    .k-hurt-wszyscy{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px;}
+    .k-hurt .btn, .k-hurt-wszyscy .btn{font-weight:700;}
+    .k-przelacz{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #e3e9ee;border-radius:10px;background:#f7f9fb;font-weight:700;font-size:14px;cursor:pointer;}
+    .k-przelacz input{width:18px;height:18px;accent-color:#cc0a2b;flex:none;}
+    .k-przelacz small{font-weight:500;color:#6b7f84;font-size:12.5px;}
+    .k-pytanie-pola[hidden]{display:none !important;}
     .k-podsum{font-size:13.5px;font-weight:700;color:#16202a;margin:4px 0 12px;}
   </style>
 </head>
@@ -231,7 +237,7 @@
     function podsumuj(){
       const n = s => dane.filter(k => k.status === s).length;
       const kafel = (t, v, small, st, wyr) => `<div class="k" data-st="${st}" ${wyr ? 'style="border-color:#f3ccd4;background:#fff5f6;"' : ''}><div class="t">${t}</div><div class="v" ${wyr ? 'style="color:#cc0a2b;"' : ''}>${v}${small ? ` <small>${small}</small>` : ''}</div></div>`;
-      const czekaja = dane.filter(k => k.status === 'glosowanie')
+      const czekaja = dane.filter(k => k.status === 'glosowanie' && k.z_pytaniem !== false)
         .reduce((s, k) => s + licz(gl(k)).brak, 0);
       document.getElementById('podsumowanie').innerHTML =
         kafel('Szkice do wysłania', n('projekt'), '', 'projekt', n('projekt') > 0) +
@@ -269,6 +275,7 @@
             ${k.wyslano_at ? `<div class="u-mini">wysłano ${fmtDT(k.wyslano_at)}</div>` : ''}
             ${k.zamknieto_at ? `<div class="u-mini">zamknięto ${fmtDT(k.zamknieto_at)}</div>` : ''}</td>
           <td>${k.status === 'projekt' ? '<span class="u-mini">—</span>'
+              : k.z_pytaniem === false ? '<span class="u-mini">bez pytania (sama wiadomość)</span>'
               : `<span class="u-glosy"><b class="za">${c.za} za</b> · <b class="przeciw">${c.przeciw} przeciw</b> · <b class="brak">bez odpowiedzi: ${c.brak}</b></span>`}</td>
           <td class="actions" style="white-space:nowrap;">
             <button class="btn btn-outline btn-xs" data-otworz="${k.id}">${k.status === 'projekt' ? 'Sprawdź i wyślij' : 'Otwórz'}</button>
@@ -286,13 +293,13 @@
         return `<details class="k-grupa" data-grupa="${gr.id}" ${ile ? 'open' : ''}>
           <summary><span class="strzalka">▸</span> ${esc(gr.nazwa)}
             <span class="licz"><span class="licz-wybrane">${ile}</span> z ${osoby.length} · ${esc(gr.opis)}</span></summary>
+          <div class="k-hurt">
+            <button type="button" class="btn btn-outline btn-sm" data-zazn="${gr.id}">☑ Zaznacz wszystkich</button>
+            <button type="button" class="btn btn-outline btn-sm" data-odzn="${gr.id}">☐ Odznacz wszystkich</button>
+          </div>
           <div class="osoby">${osoby.map(o => `
             <label><input type="checkbox" class="kOdb" value="${esc(o.id)}" data-grupa="${gr.id}" ${zaznaczeni.has(o.id) ? 'checked' : ''}>
               <span>${esc(o.nazwa)}<span class="mail">${esc(o.opis || '')}${o.opis ? ' · ' : ''}${esc(o.email)}</span></span></label>`).join('')}</div>
-          <div class="k-hurt">
-            <button type="button" class="btn btn-ghost btn-xs" data-zazn="${gr.id}">Zaznacz wszystkich</button>
-            <button type="button" class="btn btn-ghost btn-xs" data-odzn="${gr.id}">Odznacz</button>
-          </div>
         </details>`;
       }).join('');
     }
@@ -319,6 +326,16 @@
         document.querySelectorAll(`.kOdb[data-grupa="${b.dataset.odzn}"]`).forEach(i => { i.checked = false; });
         policzOdbiorcow();
       }));
+      /* wszystkie grupy naraz; rozwijamy je, żeby było widać, kogo zaznaczono */
+      document.getElementById('kZaznWszystkich')?.addEventListener('click', () => {
+        document.querySelectorAll('.kOdb').forEach(i => { i.checked = true; });
+        document.querySelectorAll('.k-grupa').forEach(d => { d.open = true; });
+        policzOdbiorcow();
+      });
+      document.getElementById('kOdznWszystkich')?.addEventListener('click', () => {
+        document.querySelectorAll('.kOdb').forEach(i => { i.checked = false; });
+        policzOdbiorcow();
+      });
       document.querySelectorAll('.kOdb').forEach(i => i.addEventListener('change', policzOdbiorcow));
       policzOdbiorcow();
     }
@@ -330,6 +347,7 @@
       const g = gl(k), c = licz(g);
       const projekt = k.status === 'projekt';
       const wToku = k.status === 'glosowanie';
+      const zp = k.z_pytaniem !== false;   // false = sama wiadomość, bez głosowania
       document.getElementById('konsTytul').textContent = k.temat || '(bez tematu)';
 
       let html = `<div class="u-status-pasek">
@@ -341,23 +359,24 @@
 
       if (!projekt) {
         html += `<div class="u-sekcja">
-          <h4>Odpowiedzi <small>${osoby(g.length)} na liście</small></h4>
-          <div class="u-wynik"><span class="za">${c.za} ZA</span><span class="przeciw">${c.przeciw} PRZECIW</span><span class="brak">bez odpowiedzi: ${c.brak}</span></div>
+          <h4>${zp ? 'Odpowiedzi' : 'Odbiorcy'} <small>${osoby(g.length)} na liście</small></h4>
+          ${zp ? '' : '<p class="u-mini" style="margin:0 0 10px;">Wiadomość bez pytania: odbiorcy nie głosują, uwagi przychodzą mailem albo w dokumencie.</p>'}
+          <div class="u-wynik" ${zp ? '' : 'hidden'}><span class="za">${c.za} ZA</span><span class="przeciw">${c.przeciw} PRZECIW</span><span class="brak">bez odpowiedzi: ${c.brak}</span></div>
           <div class="table-wrap"><table class="admin-table">
             <thead><tr><th>Odbiorca</th><th>Wysłano</th><th>Przyp.</th><th>Odpowiedź</th><th>Kiedy</th><th>Uzasadnienie</th></tr></thead>
             <tbody>${g.map(x => `<tr>
               <td><strong>${esc(x.imie_nazwisko)}</strong>${x.organizacja ? `<div class="u-mini">${esc(x.organizacja)}</div>` : ''}<div class="u-mini">${esc(x.email)}</div></td>
               <td style="white-space:nowrap;">${x.wyslano_at ? fmtDT(x.wyslano_at) : (x.blad_wysylki ? '<span class="badge badge-cancelled" title="' + esc(x.blad_wysylki) + '">błąd wysyłki</span>' : '—')}</td>
               <td style="text-align:center;">${x.przypomnien || 0}</td>
-              <td>${x.glos === 'za' ? '<span class="badge badge-confirmed">ZA</span>' : (x.glos === 'przeciw' ? '<span class="badge badge-cancelled" style="text-decoration:none;">PRZECIW</span>' : '<span class="badge badge-read">brak</span>')}</td>
+              <td>${!zp ? '—' : x.glos === 'za' ? '<span class="badge badge-confirmed">ZA</span>' : (x.glos === 'przeciw' ? '<span class="badge badge-cancelled" style="text-decoration:none;">PRZECIW</span>' : '<span class="badge badge-read">brak</span>')}</td>
               <td style="white-space:nowrap;">${x.glosowano_at ? fmtDT(x.glosowano_at) : ''}</td>
               <td class="u-uz">${esc(x.uzasadnienie || '')}</td>
             </tr>`).join('') || '<tr><td colspan="6" style="color:#6b7f84;">Brak listy odbiorców.</td></tr>'}</tbody>
           </table></div>
           <div class="u-akcje">
-            ${wToku ? `<button class="btn btn-outline btn-sm" id="konsPrzypomnij" ${c.brak ? '' : 'disabled'}>✉ Przypomnij bez odpowiedzi (${c.brak})</button>` : ''}
+            ${wToku ? `<button class="btn btn-outline btn-sm" id="konsPrzypomnij" ${c.brak ? '' : 'disabled'}>${zp ? `✉ Przypomnij bez odpowiedzi (${c.brak})` : `✉ Wyślij przypomnienie (${c.brak})`}</button>` : ''}
             <button class="btn btn-outline btn-sm" id="konsCsv">↓ Pobierz odpowiedzi (CSV)</button>
-            ${wToku ? '<button class="btn btn-primary btn-sm prawo" id="konsZakoncz">Zakończ i podsumuj</button>' : ''}
+            ${wToku ? `<button class="btn btn-primary btn-sm prawo" id="konsZakoncz">${zp ? 'Zakończ i podsumuj' : 'Zakończ'}</button>` : ''}
           </div>
         </div>`;
       }
@@ -369,11 +388,15 @@
             <input class="form-control" id="kTemat" value="${esc(k.temat || '')}" ${projekt ? '' : 'readonly'}></div>
           <div class="form-group szeroki"><label>Treść</label>
             <textarea class="form-control k-tresc" id="kTresc" ${projekt ? '' : 'readonly'}>${esc(k.tresc || '')}</textarea></div>
-          <div class="form-group szeroki"><label>Pytanie pod treścią</label>
+          <div class="form-group szeroki"><label class="k-przelacz">
+            <input type="checkbox" id="kZPytaniem" ${k.z_pytaniem !== false ? 'checked' : ''} ${projekt ? '' : 'disabled'}>
+            <span>Pytanie z przyciskami „za” i „przeciw”
+              <small>odznacz, gdy to sama wiadomość lub prośba o uwagi, bez głosowania</small></span></label></div>
+          <div class="form-group szeroki k-pytanie-pola" ${k.z_pytaniem !== false ? '' : 'hidden'}><label>Pytanie pod treścią</label>
             <input class="form-control" id="kPytanie" value="${esc(k.pytanie || '')}" ${projekt ? '' : 'readonly'}></div>
-          <div class="form-group"><label>Napis na przycisku ZA</label>
+          <div class="form-group k-pytanie-pola" ${k.z_pytaniem !== false ? '' : 'hidden'}><label>Napis na przycisku ZA</label>
             <input class="form-control" id="kZa" value="${esc(k.etykieta_za || '')}" ${projekt ? '' : 'readonly'}></div>
-          <div class="form-group"><label>Napis na przycisku PRZECIW</label>
+          <div class="form-group k-pytanie-pola" ${k.z_pytaniem !== false ? '' : 'hidden'}><label>Napis na przycisku PRZECIW</label>
             <input class="form-control" id="kPrzeciw" value="${esc(k.etykieta_przeciw || '')}" ${projekt ? '' : 'readonly'}></div>
           <div class="form-group"><label>Termin na odpowiedź</label>
             <input class="form-control" type="date" id="kTermin" value="${esc(k.termin || '')}" ${projekt ? '' : 'readonly'}></div>
@@ -386,6 +409,10 @@
         html += `<div class="u-sekcja">
           <h4>Odbiorcy <small>zaznacz grupy albo pojedyncze osoby</small></h4>
           <p class="k-podsum" id="kRazem"></p>
+          <div class="k-hurt-wszyscy">
+            <button type="button" class="btn btn-outline btn-sm" id="kZaznWszystkich">☑ Zaznacz wszystkich we wszystkich grupach</button>
+            <button type="button" class="btn btn-outline btn-sm" id="kOdznWszystkich">☐ Odznacz wszystkich</button>
+          </div>
           ${odbiorcyHtml(wstepni)}
         </div>
         <div class="u-akcje">
@@ -409,6 +436,9 @@
       document.getElementById('konsTresc').innerHTML = html;
       openModal('konsModal');
       if (projekt) podepnijOdbiorcow();
+      document.getElementById('kZPytaniem').addEventListener('change', e => {
+        document.querySelectorAll('.k-pytanie-pola').forEach(el => { el.hidden = !e.target.checked; });
+      });
 
       const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener('click', fn); };
       on('konsZapisz', () => zapisz(k));
@@ -429,6 +459,7 @@
       if (k.status !== 'projekt') return true;
       const p = {
         temat: val('kTemat'), tresc: document.getElementById('kTresc').value,
+        z_pytaniem: document.getElementById('kZPytaniem').checked,
         pytanie: val('kPytanie') || 'Czy jest Pani/Pan za?',
         etykieta_za: val('kZa') || 'Jestem ZA', etykieta_przeciw: val('kPrzeciw') || 'Jestem PRZECIW',
         termin: val('kTermin') || null, updated_at: new Date().toISOString(),
@@ -464,7 +495,8 @@
       if (!await zapisz(k, true)) return;
       const odb = [...document.querySelectorAll('.kOdb:checked')].map(x => x.value);
       if (!odb.length) { toast('Zaznacz co najmniej jednego odbiorcę', 'error'); return; }
-      if (!confirm(`Wysłać zapytanie „${k.temat}" do ${odb.length} ${odmiana(odb.length, ['osoby', 'osób', 'osób'])}?\n\nPo wysłaniu treść będzie zamrożona, a każdy odbiorca dostanie osobisty link do odpowiedzi.`)) return;
+      const bezPyt = k.z_pytaniem === false;
+      if (!confirm(`Wysłać ${bezPyt ? 'wiadomość' : 'zapytanie'} „${k.temat}" do ${odb.length} ${odmiana(odb.length, ['osoby', 'osób', 'osób'])}?\n\nPo wysłaniu treść będzie zamrożona${bezPyt ? '.' : ', a każdy odbiorca dostanie osobisty link do odpowiedzi.'}`)) return;
       const btn = document.getElementById('konsWyslij');
       btn.disabled = true; btn.textContent = 'Wysyłanie…';
       try {
@@ -495,6 +527,13 @@
        odbiorców zwykle nie odpowiada, a sprawa i tak musi się domknąć. */
     async function zakoncz(k){
       const c = licz(gl(k));
+      if (k.z_pytaniem === false) {
+        if (!confirm(`Zakończyć „${k.temat}"? Wiadomość trafi do zakończonych.`)) return;
+        const { error } = await db.from('konsultacje').update({ status: 'zakonczona', zamknieto_at: new Date().toISOString(),
+          zamknal: adminEmail, updated_at: new Date().toISOString() }).eq('id', k.id);
+        if (error) { toast('Nie udało się zamknąć: ' + error.message, 'error'); return; }
+        toast('Zakończono', 'success'); await load(); otworz(k.id); return;
+      }
       if (!c.za && !c.przeciw) { toast('Nikt jeszcze nie odpowiedział, nie ma czego podsumowywać', 'error'); return; }
       const wynik = c.za > c.przeciw ? 'stanowisko ZA' : (c.za < c.przeciw ? 'stanowisko PRZECIW' : 'remis, bez rozstrzygnięcia');
       if (!confirm(`Zakończyć konsultację „${k.temat}"?\n\nWynik: ${c.za} za, ${c.przeciw} przeciw, bez odpowiedzi ${c.brak}.\nPrzeważa: ${wynik}.\nPóźniejsze odpowiedzi nie będą przyjmowane.`)) return;

@@ -5,6 +5,7 @@
 // przyciskami (za / przeciw) i miejscem na uzasadnienie. Używane tam, gdzie
 // Izba zabiera głos kolegialnie, ale sprawa nie jest uchwałą Rady.
 // Wołana z panelu /admin/konsultacje.html.
+// v2 12.10.2026: konsultacje.z_pytaniem = false -> sama wiadomość, bez pytania i przycisków.
 //
 // Autoryzacja jak uchwala-wyslij: Authorization: Bearer <access_token admina>,
 // sesja musi być na liście panel_sesje_ok (kod z e-maila). verify_jwt = false.
@@ -61,7 +62,12 @@ function nowyToken(): string {
 
 function akapity(t: string): string {
   return t.trim().split(/\n\s*\n/).map((p) =>
-    `<p style="margin:0 0 14px;font-size:15px;line-height:1.65;">${esc(p.trim()).replace(/\n/g, "<br>")}</p>`).join("");
+    `<p style="margin:0 0 14px;font-size:15px;line-height:1.65;">${linki(esc(p.trim())).replace(/\n/g, "<br>")}</p>`).join("");
+}
+/* Adresy http(s) w treści stają się klikalne (np. link do dokumentu do komentowania). */
+function linki(t: string): string {
+  return t.replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, (u) =>
+    `<a href="${u}" style="color:${RED};word-break:break-all;">${u}</a>`);
 }
 
 const MIES = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", "lipca",
@@ -75,6 +81,7 @@ function dataPl(iso: string | null): string {
 type Konsultacja = {
   id: string; temat: string; tresc: string; pytanie: string;
   etykieta_za: string; etykieta_przeciw: string; termin: string | null; status: string;
+  z_pytaniem?: boolean;   // false = sama wiadomość: bez pytania, przycisków i osobistego linku (12.10.2026)
 };
 type Odbiorca = { id: string; nazwa: string; email: string; opis: string | null; grupa: string };
 
@@ -83,16 +90,28 @@ function mailKonsultacji(k: Konsultacja, imie: string, token: string, przypomnie
   const linkPrzeciw = `${SITE}/ankieta/?t=${encodeURIComponent(token)}&g=przeciw`;
   const temat = k.temat || "Zapytanie Geodezyjnej Izby Gospodarczej";
   const subject = (przypomnienie ? "Przypomnienie: " : "") + temat;
+  const zPytaniem = k.z_pytaniem !== false;
 
   const przyp = przypomnienie
     ? `<div style="margin:0 0 18px;padding:12px 16px;background:#fff8e6;border:1px solid #f0e2b6;border-radius:8px;font-size:14px;line-height:1.6;color:#7a5c14;">
-         <strong>Przypomnienie.</strong> Nie odnotowaliśmy jeszcze Państwa stanowiska w tej sprawie.${
-           k.termin ? ` Termin na odpowiedź upływa ${esc(dataPl(k.termin))}` : ""
-         } Jeśli głos został już oddany, prosimy zignorować tę wiadomość.</div>`
+         <strong>Przypomnienie.</strong> ${zPytaniem ? "Nie odnotowaliśmy jeszcze Państwa stanowiska w tej sprawie." : "Uprzejmie przypominamy o poniższej sprawie."}${
+           k.termin ? ` Termin upływa ${esc(dataPl(k.termin))}.` : ""
+         }${zPytaniem ? " Jeśli głos został już oddany, prosimy zignorować tę wiadomość." : ""}</div>`
+    : "";
+
+  const pytanie = zPytaniem
+    ? `<div style="margin:22px 0 18px;padding:18px 22px;background:#fdf5f6;border-left:4px solid ${RED};border-radius:8px;">
+          <p style="margin:0 0 14px;font-size:16px;line-height:1.5;color:${DARK};font-weight:700;">${esc(k.pytanie)}</p>
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td style="padding:0 12px 0 0;"><a href="${linkZa}" style="display:inline-block;padding:13px 26px;background:${GREEN};color:#ffffff;font-weight:700;font-size:15px;border-radius:30px;text-decoration:none;">✓ ${esc(k.etykieta_za)}</a></td>
+            <td><a href="${linkPrzeciw}" style="display:inline-block;padding:13px 26px;background:${RED};color:#ffffff;font-weight:700;font-size:15px;border-radius:30px;text-decoration:none;">✕ ${esc(k.etykieta_przeciw)}</a></td>
+          </tr></table>
+        </div>
+        <p style="margin:0;font-size:12.5px;color:#7a8b97;line-height:1.6;">${esc(imie)}, po kliknięciu otworzy się strona, na której można dopisać uzasadnienie i potwierdzić odpowiedź. Link jest osobisty i działa tylko dla tej sprawy. Jeśli przyciski nie działają, skopiuj adres: <span style="word-break:break-all;">${esc(linkZa)}</span></p>`
     : "";
 
   const termin = !przypomnienie && k.termin
-    ? `<p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#7a5c14;background:#fff8e6;border:1px solid #f0e2b6;border-radius:8px;padding:10px 14px;">Prosimy o odpowiedź do dnia <strong>${esc(dataPl(k.termin))}</strong>.</p>`
+    ? `<p style="margin:0 0 14px;font-size:14px;line-height:1.6;color:#7a5c14;background:#fff8e6;border:1px solid #f0e2b6;border-radius:8px;padding:10px 14px;">${zPytaniem ? "Prosimy o odpowiedź" : "Prosimy o uwagi"} do dnia <strong>${esc(dataPl(k.termin))}</strong>.</p>`
     : "";
 
   const html = `<!DOCTYPE html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -109,14 +128,7 @@ function mailKonsultacji(k: Konsultacja, imie: string, token: string, przypomnie
         ${przyp}
         ${akapity(k.tresc)}
         ${termin}
-        <div style="margin:22px 0 18px;padding:18px 22px;background:#fdf5f6;border-left:4px solid ${RED};border-radius:8px;">
-          <p style="margin:0 0 14px;font-size:16px;line-height:1.5;color:${DARK};font-weight:700;">${esc(k.pytanie)}</p>
-          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-            <td style="padding:0 12px 0 0;"><a href="${linkZa}" style="display:inline-block;padding:13px 26px;background:${GREEN};color:#ffffff;font-weight:700;font-size:15px;border-radius:30px;text-decoration:none;">✓ ${esc(k.etykieta_za)}</a></td>
-            <td><a href="${linkPrzeciw}" style="display:inline-block;padding:13px 26px;background:${RED};color:#ffffff;font-weight:700;font-size:15px;border-radius:30px;text-decoration:none;">✕ ${esc(k.etykieta_przeciw)}</a></td>
-          </tr></table>
-        </div>
-        <p style="margin:0;font-size:12.5px;color:#7a8b97;line-height:1.6;">${esc(imie)}, po kliknięciu otworzy się strona, na której można dopisać uzasadnienie i potwierdzić odpowiedź. Link jest osobisty i działa tylko dla tej sprawy. Jeśli przyciski nie działają, skopiuj adres: <span style="word-break:break-all;">${esc(linkZa)}</span></p>
+        ${pytanie}
       </td></tr>
       <tr><td style="background:#f5f8fa;padding:20px 34px;border-top:1px solid #e6ebef;">
         <p style="margin:0;font-size:12px;color:#7a8b97;line-height:1.7;">
