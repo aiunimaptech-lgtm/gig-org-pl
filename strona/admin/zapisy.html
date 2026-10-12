@@ -93,6 +93,8 @@
       <header class="admin-topbar">
         <div class="topbar-title">Zapisy na szkolenia</div>
         <div class="topbar-actions">
+          <button class="btn btn-outline btn-sm" id="btnLinkZapisu" title="Kopiuje link do formularza zapisu na wybrane szkolenie, działający także po zamknięciu zapisów na stronie (do wysłania mailem)">🔗 Link do zapisu</button>
+          <button class="btn btn-outline btn-sm" id="btnDopisz" title="Otwiera formularz zapisu na wybrane szkolenie w nowej karcie, także po zamknięciu zapisów: biuro wpisuje zgłoszenie ręcznie">＋ Dopisz zgłoszenie</button>
           <button class="btn btn-outline btn-sm" id="expPytania" title="Pytania z pola Uwagi, z pytającym i instytucją: do przekazania prowadzącemu">📄 Pytania uczestników (PDF)</button>
           <button class="btn btn-outline btn-sm" id="expRaport" title="Jeden wiersz na uczestnika — układ jak w arkuszu „Opłaty / Faktury / Zaświadczenia”">↓ Raport szkolenia (CSV)</button>
           <button class="btn btn-outline btn-sm" id="btnMailUcz" title="Wiadomość do uczestników (np. link do szkolenia) na ich własne adresy: trafia do Wysyłek jako wysyłka robocza, tam edycja, test, plan i start">✉ Do uczestników</button>
@@ -855,7 +857,7 @@
       dane = data || [];
 
       /* Ceny i terminy — tylko do raportu; brak tabeli nie może psuć widoku zapisów. */
-      const szk = await db.from('szkolenia').select('title,date_start,price,price_member,is_online');
+      const szk = await db.from('szkolenia').select('id,title,date_start,price,price_member,is_online,zapisy_zamkniete');
       if (szk.error) console.error(szk.error);
       (szk.data || []).forEach(x => { SZKOLENIA[kluczSzk(x.title)] = x; zapamietajNazwe(x.title, true); });
       dane.forEach(r => zapamietajNazwe(r.szkolenie, false));
@@ -880,6 +882,30 @@
       if (!await requireAuth()) return;
       ['szukaj'].forEach(id => document.getElementById(id).addEventListener('input', render));
       ['fSzkolenie','fStatus','fCzlonek'].forEach(id => document.getElementById(id).addEventListener('change', render));
+
+      /* Zapis po zamknięciu: link /zapisy/ z kluczem szkolenia (szkolenia_klucze, tylko panel).
+         Trigger trg_zapis_zamkniete przepuszcza zgłoszenie z poprawnym kluczem i dopisuje notkę do uwag. */
+      async function linkZapisu() {
+        const s = SZKOLENIA[document.getElementById('fSzkolenie').value];
+        if (!s || !s.id) { toast('Najpierw wybierz szkolenie w filtrze', 'error'); return null; }
+        let { data, error } = await db.from('szkolenia_klucze').select('klucz').eq('szkolenie_id', s.id).maybeSingle();
+        if (!error && !data) ({ data, error } = await db.from('szkolenia_klucze').insert({ szkolenie_id: s.id }).select('klucz').single());
+        if (error || !data) { console.error(error); toast('Nie udało się przygotować linku', 'error'); return null; }
+        return { url: 'https://gig.org.pl/zapisy/?szkolenie=' + encodeURIComponent(s.title) + '&k=' + data.klucz, s };
+      }
+      document.getElementById('btnLinkZapisu').addEventListener('click', async () => {
+        const l = await linkZapisu(); if (!l) return;
+        try {
+          await navigator.clipboard.writeText(l.url);
+          toast('Skopiowano link do zapisu' + (l.s.zapisy_zamkniete ? ' (działa mimo zamkniętych zapisów)' : ''), 'success', 5000);
+        } catch (_) { prompt('Skopiuj link do zapisu:', l.url); }
+      });
+      document.getElementById('btnDopisz').addEventListener('click', async () => {
+        const okno = window.open('', '_blank');   // otwarte od razu, żeby przeglądarka nie zablokowała karty
+        const l = await linkZapisu();
+        if (!l) { if (okno) okno.close(); return; }
+        if (okno) okno.location.href = l.url; else window.open(l.url, '_blank');
+      });
 
       document.getElementById('zapKopiuj').addEventListener('click', async () => {
         if (!biezacy) return;

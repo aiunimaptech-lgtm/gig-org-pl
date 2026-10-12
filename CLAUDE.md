@@ -21,6 +21,11 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   Bezpłatne wydarzenia mają te same wiersze uczestników (bez faktury). Zgłoszenia wieloosobowe bez adresów:
   panel „Prośba o listę uczestników” → Edge Function `zapis-uczestnicy` → formularz `/uczestnicy/?t=<token>`;
   prośba idzie raz na zgłoszenie, formularz przesyła się raz (szczegóły w HANDOVER.md).
+  **Zapis po zamknięciu** (`backend/supabase_zapisy_link_po_zamknieciu.sql`): panel Zapisy → „🔗 Link do zapisu”
+  (kopiuje `/zapisy/?szkolenie=…&k=<klucz>`) i „＋ Dopisz zgłoszenie” (otwiera ten formularz). Klucz w `szkolenia_klucze`
+  (tylko panel); trigger `trg_zapis_zamkniete` przepuszcza zapis z kluczem, zeruje go i dopisuje notkę do uwag.
+- **Maile do członków**: filtr samej listy „Członkowie GIG” w Bazie e-mail wysyła jako `rodzaj = 'czlonkowie'`
+  (też do wypisanych z newslettera, bez linku wypisu); wypis dotyczy tylko mailingów.
 - **Przyjęcie członka — dwa etapy wg art. 12 pkt 1 Statutu** (`backend/supabase_uchwaly.sql`
   + `backend/supabase_uchwaly_opinia.sql`, tabele `uchwaly`, `uchwaly_glosy`, `rada_izby`):
   zgłoszenie „Dołącz do nas" → mail do kandydata z prośbą o wydruk CEIDG/KRS **i** potwierdzenie
