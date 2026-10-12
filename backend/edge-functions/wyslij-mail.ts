@@ -23,6 +23,7 @@
 // Body { akcja: 'odzyskaj', kontakt_id } szuka w historii Resend maili wysłanych
 // do nadawcy po dacie zgłoszenia (dla odpowiedzi sprzed v7) i dopisuje je do archiwum.
 //
+// v10 (12.10.2026): rodzaj 'czlonkowie' = sprawy członkowskie, stopka członkowska, bez linku wypisu.
 // v9 (9.10.2026): body.attachments [{nazwa,url}] (pliki z gig.org.pl) doklejane do każdego maila.
 // v8 (6.10.2026): pauza 600 ms między mailami i ponowienie przy 429. Resend przyjmuje
 // ~2 zapytania na sekundę, więc wysyłka do 100 uczestników bez pauzy gubiła część maili.
@@ -255,6 +256,8 @@ Deno.serve(async (req) => {
   let stopka: string;
   if (rodzaj === "kontakt") {
     stopka = "To odpowiedź na Twoją wiadomość wysłaną przez formularz na gig.org.pl. Odpisując na ten mail, piszesz do biura Izby.";
+  } else if (rodzaj === "czlonkowie") {
+    stopka = "Otrzymujesz tę wiadomość jako członek Geodezyjnej Izby Gospodarczej. Sprawy członkowskie przesyłamy wszystkim członkom, także tym, którzy wypisali się z newslettera. Odpowiedź na ten mail trafi do biura Izby.";
   } else if (rodzaj === "baza") {
     stopka = "Otrzymujesz tę wiadomość, ponieważ Twój adres jest w bazie kontaktów Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.";
   } else if (szkolenie) {

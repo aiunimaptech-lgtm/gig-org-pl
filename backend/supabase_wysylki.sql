@@ -21,7 +21,7 @@ create table if not exists public.wysylki (
   opis_filtra   text,                         -- z jakiego segmentu Bazy e-mail powstała
   status        text default 'robocza' check (status in ('robocza','w_toku','wstrzymana','zakonczona')),
   limit_dzienny integer default 100 check (limit_dzienny between 1 and 20000),
-  rodzaj        text not null default 'baza' check (rodzaj in ('baza','newsletter')),
+  rodzaj        text not null default 'baza' check (rodzaj in ('baza','newsletter','szkolenie','czlonkowie'))  -- 12.10.2026: 'czlonkowie' = sprawy członkowskie, wypis z newslettera nie blokuje,
   utworzyl      text,
   created_at    timestamptz default now(),
   updated_at    timestamptz default now()

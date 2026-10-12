@@ -523,9 +523,14 @@
 
       /* Mail do przefiltrowanych (bez wypisanych i odbitych). Funkcja wysyłkowa ma limit 200
          adresów — do masowej wysyłki służy MailerLite, tu wysyłamy do wąskich grup. */
+      /* Sprawy członkowskie: przy filtrze tylko „Członkowie GIG” wypis z newslettera nie blokuje
+         (pomijamy wyłącznie adresy odbite), a mail idzie jako rodzaj 'czlonkowie' bez linku wypisu. */
+      const tylkoCzlonkowie = () => msLista.size() === 1 && msLista.values()[0] === 'Członkowie GIG';
+      const doWysylki = r => tylkoCzlonkowie() ? r.status !== 'bounced' : (!r.status || r.status === 'active');
+
       document.getElementById('btnMail').addEventListener('click', () => {
         // każda firma może mieć do 3 adresów — wysyłamy do wszystkich (dedup po stronie funkcji)
-        const odb = filtruj().filter(r => !r.status || r.status === 'active').flatMap(r =>
+        const odb = filtruj().filter(doWysylki).flatMap(r =>
           [r.email, r.email2, r.email3].filter(Boolean).map(e => ({ email: e, name: r.osoba || r.firma || '', id: r.id })));
         if (!odb.length) { toast('Brak aktywnych odbiorców w bieżącym filtrze'); return; }
         if (odb.length > 200) { toast(`Za dużo odbiorców (${odb.length}). Zawęź filtr do maks. 200 adresów — masowe wysyłki rób w MailerLite.`, 'error', 7000); return; }
@@ -534,17 +539,20 @@
         if (msPochodzenie.size()) opisy.push('źródło: <strong>' + esc(msPochodzenie.values().join(', ')) + '</strong>');
         if (msGrupa.size()) opisy.push('grupa: <strong>' + esc(msGrupa.values().join(', ')) + '</strong>');
         if (msRodzaj.size()) opisy.push('branża: <strong>' + esc(msRodzaj.values().join(', ')) + '</strong>');
-        gigKreatorMaila({ odbiorcy: odb, rodzaj: 'baza', opis: opisy.join(' · ') || '<strong>bieżący filtr</strong>' });
+        if (tylkoCzlonkowie()) opisy.push('sprawy członkowskie, także do wypisanych z newslettera');
+        gigKreatorMaila({ odbiorcy: odb, rodzaj: tylkoCzlonkowie() ? 'czlonkowie' : 'baza', opis: opisy.join(' · ') || '<strong>bieżący filtr</strong>' });
       });
 
       /* Kampania: zapisuje treść i kolejkę odbiorców; wysyłka rusza w zakładce „Wysyłki”
          — porcjami, z limitem dziennym, bez limitu 200 i bez ryzyka dubli. */
       document.getElementById('btnKampania').addEventListener('click', () => {
-        const odb = filtruj().filter(r => !r.status || r.status === 'active').flatMap(r =>
+        const czlonk = tylkoCzlonkowie();
+        const odb = filtruj().filter(doWysylki).flatMap(r =>
           [r.email, r.email2, r.email3].filter(Boolean).map(e => ({ email: e, name: r.osoba || r.firma || '', id: r.id })));
         if (!odb.length) { toast('Brak aktywnych odbiorców w bieżącym filtrze'); return; }
 
         const czesci = [];
+        if (czlonk) czesci.push('sprawy członkowskie');
         if (msLista.size())       czesci.push('lista: ' + msLista.values().join(', '));
         if (msPochodzenie.size()) czesci.push('źródło: ' + msPochodzenie.values().join(', '));
         if (msGrupa.size())       czesci.push('grupa: ' + msGrupa.values().join(', '));
@@ -560,7 +568,7 @@
           zamiastWysylki: async ({ temat, html, odbiorcy }) => {
             const sesja = await getSession();
             const { data: kamp, error: e1 } = await db.from('wysylki').insert({
-              temat, html, opis_filtra: opisFiltra, status: 'robocza', limit_dzienny: 250,
+              temat, html, opis_filtra: opisFiltra, status: 'robocza', limit_dzienny: 250, rodzaj: czlonk ? 'czlonkowie' : 'baza',
               utworzyl: sesja && sesja.user ? sesja.user.email : null
             }).select('id').single();
             if (e1) throw e1;

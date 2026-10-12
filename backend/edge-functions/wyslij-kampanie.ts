@@ -3,7 +3,9 @@
 //   v9 6.10.2026: rodzaj 'szkolenie' = zaplanowana wiadomość do uczestników szkolenia z panelu Zapisy,
 //   stopka „zgłoszono Cię na szkolenie”, bez linku wypisu;
 //   v10 9.10.2026: wysylki.zalaczniki [{nazwa,url}]: pliki z gig.org.pl doklejane do maila,
-//   wtedy wysyłka pojedyncza przez /emails (batch nie obsługuje załączników))
+//   wtedy wysyłka pojedyncza przez /emails (batch nie obsługuje załączników);
+//   v11 12.10.2026: rodzaj 'czlonkowie' = sprawy członkowskie: wypis z mailingów ich nie blokuje
+//   (pomijamy tylko adresy odbite i usunięte), bez linku wypisu i nagłówka List-Unsubscribe)
 // Wysyła kampanię z kolejki (tabele `wysylki` + `wysylki_odbiorcy`) PORCJAMI.
 // Panel woła ją wielokrotnie, aż zostanie 0 — dzięki temu:
 //   • nie ma limitu czasu Edge Function (każde wywołanie robi kawałek),
@@ -58,7 +60,9 @@ function layout(title: string, body: string, unsubUrl: string, rodzaj = "baza", 
   const newsletter = rodzaj === "newsletter";
   /* Odbiorca ma wiedziec, SKAD mamy jego adres - inna odpowiedz dla kogos,
      kto sam zapisal sie na newsletter, inna dla adresu z bazy kontaktow. */
-  const skad = rodzaj === "szkolenie"
+  const skad = rodzaj === "czlonkowie"
+    ? "Otrzymujesz tę wiadomość jako członek Geodezyjnej Izby Gospodarczej. Sprawy członkowskie przesyłamy wszystkim członkom, także tym, którzy wypisali się z newslettera. Odpowiedź na ten mail trafi do biura Izby."
+    : rodzaj === "szkolenie"
     ? (szkolenie
       ? `Otrzymujesz tę wiadomość, ponieważ zgłoszono Cię na szkolenie GIG: <strong>${esc(szkolenie)}</strong>. Odpowiedź na ten mail trafi do biura Izby.`
       : "Otrzymujesz tę wiadomość jako uczestnik szkoleń Geodezyjnej Izby Gospodarczej. Odpowiedź na ten mail trafi do biura Izby.")
@@ -215,10 +219,15 @@ Deno.serve(async (req) => {
   /* Adres mogl zostac wypisany albo odbic sie juz po zbudowaniu kolejki
      (link wypisu, webhook Resend -> resend-webhook). Sprawdzamy stan tuz przed wysylka. */
   const nieaktywne = new Set<string>();
+  const czlonkowie = kampania.rodzaj === "czlonkowie";
   const bazaIds = kolejka.map((r) => r.baza_email_id as string).filter(Boolean);
   for (let i = 0; i < bazaIds.length; i += 150) {
     const { data: st } = await admin.from("baza_email").select("id,status,usuniety_panel").in("id", bazaIds.slice(i, i + 150));
-    for (const r of st ?? []) if ((r.status && r.status !== "active") || r.usuniety_panel) nieaktywne.add("b:" + r.id);
+    for (const r of st ?? []) {
+      // sprawy członkowskie: wypis z mailingów nie blokuje, tylko odbicie albo usunięcie z bazy
+      const zablokowany = czlonkowie ? r.status === "bounced" : (r.status && r.status !== "active");
+      if (zablokowany || r.usuniety_panel) nieaktywne.add("b:" + r.id);
+    }
   }
   const nlIds = kolejka.map((r) => r.newsletter_id as string).filter(Boolean);
   for (let i = 0; i < nlIds.length; i += 150) {
@@ -237,7 +246,7 @@ Deno.serve(async (req) => {
 
   const tresc = oczyscHtml(String(kampania.html ?? ""));
   const temat = String(kampania.temat ?? "").trim();
-  const rodzaj = kampania.rodzaj === "newsletter" || kampania.rodzaj === "szkolenie" ? kampania.rodzaj : "baza";
+  const rodzaj = ["newsletter", "szkolenie", "czlonkowie"].includes(kampania.rodzaj) ? kampania.rodzaj : "baza";
   const szkolenie = String(kampania.szkolenie ?? "").trim();
   let wyslane = 0, bledy = pominiete.length;
 
@@ -246,7 +255,7 @@ Deno.serve(async (req) => {
     const payload = paczka.map((r) => {
       /* Link wypisu zalezy od tego, skad jest adres: Baza e-mail ma swoj
          (baza-wypis), zapis z newslettera swoj (newsletter-unsubscribe). */
-      const wypis = r.baza_email_id
+      const wypis = czlonkowie ? "" : r.baza_email_id
         ? `${FUNCTIONS_BASE}/baza-wypis?id=${encodeURIComponent(String(r.baza_email_id))}`
         : r.newsletter_id
           ? `${FUNCTIONS_BASE}/newsletter-unsubscribe?id=${encodeURIComponent(String(r.newsletter_id))}`
@@ -264,7 +273,7 @@ Deno.serve(async (req) => {
       /* Link dla czlowieka (stopka i znacznik {{WYPIS}} w tresci): strona gig.org.pl/wypis/
          z potwierdzeniem. Samo otwarcie niczego nie zmienia, bo filtry pocztowe klikaja
          linki automatycznie. Naglowek List-Unsubscribe zostaje przy funkcji (POST jednym klikiem). */
-      const strona = r.baza_email_id
+      const strona = czlonkowie ? "" : r.baza_email_id
         ? `https://gig.org.pl/wypis/?id=${encodeURIComponent(String(r.baza_email_id))}`
         : wypis;
       const trescOdb = tresc.replace(/\{\{WYPIS\}\}|%7B%7BWYPIS%7D%7D/gi, strona || "https://gig.org.pl/kontakt/");

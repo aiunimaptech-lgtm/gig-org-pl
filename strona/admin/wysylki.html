@@ -304,7 +304,7 @@
         <tr data-id="${k.id}">
           <td style="max-width:280px;">
             <div class="wy-temat">${esc(k.temat)}</div>
-            <div class="wy-sub">${k.rodzaj === 'newsletter' ? '<span class="badge badge-read" style="margin-right:6px;">newsletter</span>' : k.rodzaj === 'szkolenie' ? '<span class="badge badge-read" style="margin-right:6px;">szkolenie</span>' : ''}${esc(k.opis_filtra || '—')}</div>
+            <div class="wy-sub">${k.rodzaj === 'newsletter' ? '<span class="badge badge-read" style="margin-right:6px;">newsletter</span>' : k.rodzaj === 'szkolenie' ? '<span class="badge badge-read" style="margin-right:6px;">szkolenie</span>' : k.rodzaj === 'czlonkowie' ? '<span class="badge badge-read" style="margin-right:6px;">członkowie</span>' : ''}${esc(k.opis_filtra || '—')}</div>
             <div class="wy-sub">${fmtDate(k.created_at)}${k.utworzyl ? ' · ' + esc(k.utworzyl) : ''}</div>
             ${Array.isArray(k.zalaczniki) && k.zalaczniki.length ? `<div class="wy-sub">📎 ${k.zalaczniki.map(z => `<a href="${esc(z.url)}" target="_blank" rel="noopener">${esc(z.nazwa)}</a>`).join(', ')}</div>` : ''}
           </td>
@@ -480,7 +480,7 @@
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON, 'Authorization': 'Bearer ' + sesja.access_token },
           body: JSON.stringify({ subject: '[TEST] ' + data.temat, html: podstawWypis(data.html), recipients: [{ email: adres }],
-            rodzaj: data.rodzaj === 'szkolenie' ? 'szkolenie' : 'baza', szkolenie: data.szkolenie || '',
+            rodzaj: ['szkolenie', 'czlonkowie'].includes(data.rodzaj) ? data.rodzaj : 'baza', szkolenie: data.szkolenie || '',
             attachments: Array.isArray(data.zalaczniki) ? data.zalaczniki : [] }),
         });
         const w = await res.json().catch(() => ({}));
