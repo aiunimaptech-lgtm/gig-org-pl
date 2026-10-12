@@ -428,6 +428,7 @@
           <div class="u-akcje"><button class="btn btn-ghost btn-sm" id="konsPodsumZapisz">Zapisz podsumowanie</button></div>
         </div>
         <div class="u-akcje">
+          ${wToku ? `<button class="btn btn-outline btn-sm" id="konsCofnij" ${g.some(x => x.glos) ? 'disabled title="Ktoś już odpowiedział, więc zapytania nie można cofnąć"' : 'title="Wraca do szkicu: można poprawić treść i odbiorców, a potem wysłać ponownie"'}>↩ Cofnij do szkicu</button>` : ''}
           ${wToku ? '<button class="btn btn-ghost btn-sm" id="konsAnuluj">Anuluj zapytanie</button>' : ''}
           <button class="btn btn-danger btn-sm prawo" id="konsUsun">🗑 Usuń zapytanie</button>
         </div>`;
@@ -448,6 +449,7 @@
       on('konsPrzypomnij', () => przypomnij(k));
       on('konsZakoncz', () => zakoncz(k));
       on('konsAnuluj', () => anuluj(k));
+      on('konsCofnij', () => cofnijDoSzkicu(k));
       on('konsCsv', () => csv(k));
       on('konsPodsumZapisz', () => zapiszPodsumowanie(k));
     }
@@ -543,6 +545,23 @@
       }).eq('id', k.id);
       if (error) { toast('Nie udało się zamknąć: ' + error.message, 'error'); return; }
       toast('Konsultacja zakończona: ' + wynik, 'success', 5000);
+      await load(); otworz(k.id);
+    }
+
+    /* Cofnięcie wysłanego zapytania do szkicu, póki nikt nie odpowiedział (np. po wysyłce
+       testowej albo z błędem w treści). Lista odbiorców znika, żeby przy ponownej wysyłce
+       nikt nie został pominięty; wysłanych maili nie da się oczywiście odwołać. */
+    async function cofnijDoSzkicu(k){
+      const g = gl(k);
+      if (g.some(x => x.glos)) { toast('Ktoś już odpowiedział, nie można cofnąć do szkicu', 'error'); return; }
+      if (!confirm(`Cofnąć „${k.temat}" do szkicu?\n\nWysłano już do: ${osoby(g.filter(x => x.wyslano_at).length)}. Tych maili nie da się odwołać, a ich linki przestaną działać.\nPo poprawkach możesz wysłać zapytanie ponownie.`)) return;
+      const d = await db.from('konsultacje_glosy').delete().eq('konsultacja_id', k.id).is('glos', null);
+      if (d.error) { toast('Nie udało się: ' + d.error.message, 'error'); return; }
+      const { error } = await db.from('konsultacje').update({
+        status: 'projekt', wyslano_at: null, wyslal: null, updated_at: new Date().toISOString(),
+      }).eq('id', k.id);
+      if (error) { toast('Nie udało się: ' + error.message, 'error'); return; }
+      toast('Zapytanie wróciło do szkicu', 'success');
       await load(); otworz(k.id);
     }
 
