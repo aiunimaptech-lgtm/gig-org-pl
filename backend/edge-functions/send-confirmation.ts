@@ -15,6 +15,8 @@
 // Przy zapisie do newslettera idzie TYLKO potwierdzenie do zapisujacego sie.
 // Powiadomien o zapisach nie wysylamy: bylo ich za duzo, a lista jest w panelu
 // (Newsletter) i w Bazie e-mail (lista „Newsletter”).
+// v22 (15.10.2026): zapis na szkolenie daje TYLKO potwierdzenie do zglaszajacego;
+// powiadomienie do GIG wraca po ustawieniu sekretu NOTIFY_ZAPISY = tak.
 // ============================================================
 
 import { createClient } from "npm:@supabase/supabase-js@2";
@@ -27,6 +29,8 @@ const FUNCTIONS_BASE = (Deno.env.get("SUPABASE_URL") ?? "") + "/functions/v1";
 // zeby dodanie/zmiana odbiorcy nie wymagala ponownego wdrozenia funkcji.
 const NOTIFY_EMAILS = (Deno.env.get("NOTIFY_EMAILS") ?? "biuro@gig.org.pl,jerzy.bryk@gmail.com")
   .split(",").map((x) => x.trim()).filter(Boolean);
+// Powiadomienia o zapisach na szkolenia: domyslnie wylaczone (od 15.10.2026), bo zgloszenia sa w panelu.
+const NOTIFY_ZAPISY = /^(tak|1|true)$/i.test(Deno.env.get("NOTIFY_ZAPISY") ?? "");
 
 // Wspolny sekret miedzy triggerem w bazie a ta funkcja (private.gig_sekrety, klucz 'hook_token').
 // Audyt 8.10.2026: brama jest OBOWIAZKOWA. Token sprawdzamy z sekretu GIG_HOOK_TOKEN, a gdy go nie ma,
@@ -576,8 +580,9 @@ Deno.serve(async (req) => {
     } else if (table === "zapisy_szkolenia") {
       // szkolenie pobieramy od razu: od ceny zalezy, czy oba maile mowia o fakturze
       const szk = await pobierzSzkolenie(String(rec.szkolenie ?? ""));
-      // 1) powiadomienie do GIG z kompletem danych do faktury (albo bez, gdy udzial bezplatny)
-      if (NOTIFY_EMAILS.length) {
+      // 1) powiadomienie do GIG wylaczone 15.10.2026 (v22): zgloszenia i dane do faktury sa w panelu
+      //    Zapisy. Zeby wlaczyc z powrotem: sekret NOTIFY_ZAPISY = tak.
+      if (NOTIFY_ZAPISY && NOTIFY_EMAILS.length) {
         const r = await wyslij(NOTIFY_EMAILS, zapisNotifyMail(rec, szk), nadawca);
         wyniki.powiadomienie = r.ok ? "wyslane" : r.info;
       }

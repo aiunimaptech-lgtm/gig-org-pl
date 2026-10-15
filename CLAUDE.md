@@ -55,7 +55,9 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
 - **Maile**: każdy wpis do `submissions_kontakt` / `submissions_newsletter` / `zapisy_szkolenia`
   wyzwala trigger `pg_net` → Edge Function `send-confirmation` → Resend. Idą dwa maile:
   powiadomienie do GIG (`Reply-To` = zgłaszający) i potwierdzenie do zgłaszającego.
-  Wyjątek: zapis do newslettera daje tylko potwierdzenie do zapisującego się (bez powiadomienia).
+  Wyjątki: zapis do newslettera i (od 15.10.2026, send-confirmation v22) zapis na szkolenie dają tylko
+  potwierdzenie do zgłaszającego, bez powiadomienia do GIG. Powiadomienia o zapisach na szkolenia
+  wracają po ustawieniu sekretu `NOTIFY_ZAPISY = tak`.
   Definicje triggerów: `backend/supabase_webhooki_maile.sql`, `backend/supabase_zapisy.sql`.
 
 - **Baza e-mail: listy** (`backend/supabase_baza_listy.sql`): `baza_email.listy` to znaczniki
