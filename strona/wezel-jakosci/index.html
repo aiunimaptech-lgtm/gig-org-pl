@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Węzeł Jakości — ankieta cenowa — Geodezyjna Izba Gospodarcza</title>
+  <title>Ile kosztuje geodezja? Ankieta cenowa Węzła Jakości — Geodezyjna Izba Gospodarcza</title>
   <meta name="description" content="Ankieta cenowa Węzła Jakości GIG: firmy geodezyjne podają swoje stawki w układzie wskaźników SEKOCENBUD, a Izba publikuje zbiorcze zestawienie.">
   <link rel="canonical" href="https://gig.org.pl/wezel-jakosci/">
   <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
@@ -93,6 +93,24 @@
     .w-msg{margin:16px 0 0;padding:13px 16px;border-radius:10px;font-size:14.5px;display:none;}
     .w-msg.ok{display:block;background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
     .w-msg.err{display:block;background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    /* wybór zakresu: karty-przełączniki nad katalogiem */
+    .w-zakresy{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:0 0 6px;}
+    .w-zakres{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;font-size:14px;font-weight:600;margin:0;background:#fff;}
+    .w-zakres input{width:18px;height:18px;accent-color:var(--red);flex:none;margin-top:1px;}
+    .w-zakres small{display:block;font-weight:500;color:var(--muted);font-size:12.5px;}
+    .w-zakres:has(input:checked){border-color:var(--red);background:#fff5f6;}
+    .w-szkic{margin:0 0 16px;padding:10px 14px;border-radius:10px;background:#f4f6f8;font-size:13.5px;color:var(--muted);}
+    .w-szkic button{background:none;border:0;color:var(--red);font:inherit;cursor:pointer;padding:0;text-decoration:underline;}
+    /* uwagi do pozycji i brakujące pozycje */
+    .w-uw-btn{background:none;border:0;color:#9aa7b2;font:inherit;font-size:12px;cursor:pointer;padding:2px 0 0;text-decoration:underline;}
+    .w-uw-btn:hover{color:var(--red);}
+    .w-uw-btn.ma{color:var(--red);font-weight:600;}
+    tr.w-uw-wiersz td{padding:0 8px 10px;}
+    .w-uw-wiersz textarea,.w-brak textarea{min-height:56px;font-size:13.5px;}
+    .w-brak{margin:8px 0 4px;}
+    .w-brak > button{background:none;border:0;color:var(--red);font:inherit;font-size:13px;cursor:pointer;padding:0;}
+    .w-brak textarea{margin-top:6px;}
+    .w-uwaga-prawna{font-size:12.5px;color:var(--muted);max-width:74ch;margin:12px 0 0;}
     .w-ok-box{display:none;max-width:820px;margin:0 auto;padding:52px 22px 70px;text-align:center;}
     .w-ok-box h2{font-size:26px;margin:0 0 12px;}
     .w-ok-box p{color:var(--muted);max-width:62ch;margin:0 auto 8px;}
@@ -103,7 +121,7 @@
   <link rel="stylesheet" href="/_assets/css/gig-subhead.css">
 <!--GIG-SEO--><meta property="og:type" content="website">
 <meta property="og:site_name" content="Geodezyjna Izba Gospodarcza">
-<meta property="og:title" content="Węzeł Jakości — ankieta cenowa — Geodezyjna Izba Gospodarcza">
+<meta property="og:title" content="Ile kosztuje geodezja? Ankieta cenowa Węzła Jakości — Geodezyjna Izba Gospodarcza">
 <meta property="og:url" content="https://gig.org.pl/wezel-jakosci/">
 <meta property="og:locale" content="pl_PL">
 <meta property="og:description" content="Ankieta cenowa Węzła Jakości GIG: firmy geodezyjne podają swoje stawki w układzie wskaźników SEKOCENBUD, a Izba publikuje zbiorcze zestawienie.">
@@ -116,17 +134,20 @@
 
 <section class="w-hero">
   <div class="wrap">
-    <span class="w-kicker">Węzeł Jakości</span>
-    <h1>Ankieta cenowa prac geodezyjnych</h1>
+    <span class="w-kicker">Węzeł Jakości · ankieta cenowa</span>
+    <h1>Ile kosztuje geodezja? Podaj swoje stawki</h1>
     <p class="lead">Zbieramy stawki od firm geodezyjnych w układzie wskaźników cenowych <strong>SEKOCENBUD</strong>
       (pozycje WKI 7.5, opracowanie ZOPI). Im więcej firm poda swoje ceny, tym mocniejszy argument w rozmowach
       z zamawiającymi: publikowane wskaźniki przestają być uznaniowe, a stają się obrazem rynku.</p>
-    <p class="lead">Wypełnij tylko te pozycje, które realnie wykonujesz. Puste zostawiasz bez konsekwencji.</p>
+    <p class="lead">Wybierz tylko swój zakres prac i wpisz stawki, które stosujesz. Puste pozycje zostawiasz bez konsekwencji,
+      a niedokończoną ankietę przeglądarka zapamięta do Twojego powrotu.</p>
     <div class="w-korzysci">
       <div><b>Dane zbiorcze</b>Publikujemy wyłącznie zestawienia: minimum, maksimum, średnią i medianę. Ceny pojedynczej firmy nie są nigdzie pokazywane.</div>
       <div><b>Zwrotnie do Ciebie</b>Po zamknięciu zbierania wyślemy uczestnikom zestawienie, żeby każdy mógł porównać się z rynkiem.</div>
-      <div><b>Kilka minut</b>73 pozycje w czterech sekcjach, rozwijane. Większość firm wypełnia jedną sekcję.</div>
+      <div><b>Kilka minut</b><span id="opisPozycji">73 pozycje w czterech zakresach.</span> Większość firm wypełnia jeden zakres.</div>
     </div>
+    <p class="w-uwaga-prawna">To badanie rynku: zbieramy stawki faktycznie stosowane przez firmy i publikujemy je wyłącznie
+      w formie zbiorczej. Izba nie ustala ani nie zaleca cen; każda firma kalkuluje swoje stawki samodzielnie.</p>
   </div>
 </section>
 
@@ -189,11 +210,20 @@
   </fieldset>
 
   <fieldset>
+    <legend>Czym się zajmujesz?<span class="opis">Zaznacz zakresy, w których podasz ceny. Pokażemy tylko te pozycje.</span></legend>
+    <div class="w-zakresy" id="zakresy"></div>
+    <p class="hint" style="margin:8px 0 0;">Nic nie zaznaczysz: zobaczysz wszystkie zakresy. Inny zakres możesz dodać później, wysyłając ankietę jeszcze raz.</p>
+  </fieldset>
+
+  <fieldset>
     <legend>Ceny netto za pozycję<span class="opis">Stawki w złotych, bez VAT. Wypełnij tylko to, co wykonujesz.</span></legend>
     <div class="w-pasek">
-      <span>Wypełnione pozycje: <span class="licznik" id="licznik">0</span> z 73</span>
+      <span>Wypełnione pozycje: <span class="licznik" id="licznik">0</span> z <span id="wszystkich">73</span></span>
     </div>
+    <div class="w-szkic" id="szkicInfo" hidden></div>
     <div id="katalog"></div>
+    <p class="hint">Pozycja źle opisana, inna jednostka, czegoś brakuje? Kliknij „uwaga do pozycji” przy pozycji
+      albo „brakuje pozycji” pod grupą. Uwagi pomagają nam poprawić katalog.</p>
     <div class="pole" style="margin:18px 0 0;">
       <label for="uwagi">Uwagi do cen (opcjonalnie)</label>
       <textarea id="uwagi" name="uwagi" placeholder="Np. czego nie obejmują podane stawki, jakie są typowe dopłaty, co najmocniej wpływa na cenę."></textarea>
@@ -224,6 +254,8 @@
   <h2>Dziękujemy ✓</h2>
   <p>Ceny trafiły do Węzła Jakości. Publikujemy wyłącznie dane zbiorcze, nigdy stawek pojedynczej firmy.</p>
   <p id="wOkZapisy"></p>
+  <p style="margin-top:22px"><a href="/wezel-jakosci/" style="display:inline-block;background:var(--red);color:#fff;font-weight:700;padding:12px 26px;border-radius:30px;text-decoration:none;">Dodaj ceny z innego zakresu</a></p>
+  <p class="hint">Dane firmy wypełnimy za Ciebie, wybierasz tylko kolejny zakres.</p>
   <p style="margin-top:24px"><a href="/szkolenia/">Zobacz najbliższe szkolenia GIG →</a></p>
   <p><a href="/dolacz-do-nas/">Dołącz do Izby →</a></p>
 </div>
@@ -275,15 +307,24 @@
   })();
   $("zrodloOkres").textContent = window.GIG_WEZEL_ZRODLO || "poprzedniego badania";
 
-  /* ── katalog: sekcje (rozwijane) → grupy → pozycje ── */
+  /* ── katalog: zakresy (sekcje, rozwijane) → grupy → pozycje ── */
+  var slug = function (t) {
+    return String(t).toLowerCase().replace(/[ąćęłńóśźż]/g, function (c) { return "acelnoszz"["ąćęłńóśźż".indexOf(c)]; })
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  };
+  var sekcje = [];
+  K.forEach(function (g) {
+    var s = sekcje.filter(function (x) { return x.nazwa === g.sekcja; })[0];
+    if (!s) { s = { nazwa: g.sekcja, id: slug(g.sekcja), grupy: [] }; sekcje.push(s); }
+    s.grupy.push(g);
+  });
+  var WSZYSTKICH = K.reduce(function (n, g) { return n + g.pozycje.length; }, 0);
+  $("wszystkich").textContent = WSZYSTKICH;
+  var pozycjiSlowo = function (n) { var j = n % 10, d = n % 100; return n === 1 ? "pozycja" : (j >= 2 && j <= 4 && (d < 12 || d > 14) ? "pozycje" : "pozycji"); };
+  $("opisPozycji").textContent = WSZYSTKICH + " " + pozycjiSlowo(WSZYSTKICH) + " w " + sekcje.length + " zakresach.";
+
   (function render() {
-    var sekcje = [];
-    K.forEach(function (g) {
-      var s = sekcje.filter(function (x) { return x.nazwa === g.sekcja; })[0];
-      if (!s) { s = { nazwa: g.sekcja, grupy: [] }; sekcje.push(s); }
-      s.grupy.push(g);
-    });
-    var html = sekcje.map(function (s, i) {
+    var html = sekcje.map(function (s) {
       var ile = s.grupy.reduce(function (n, g) { return n + g.pozycje.length; }, 0);
       var grupy = s.grupy.map(function (g) {
         var wiersze = g.pozycje.map(function (p) {
@@ -291,32 +332,153 @@
             ? "od " + zl(p.ref.min) + " do " + zl(p.ref.max) + ", śr. " + zl(p.ref.sr)
             : "brak danych";
           return '<tr>' +
-            '<td><span class="w-poz">' + esc(p.krotka) + '</span><span class="w-kod">' + esc(p.kod) + "</span></td>" +
+            '<td><span class="w-poz">' + esc(p.krotka) + '</span><span class="w-kod">' + esc(p.kod) + "</span>" +
+              '<button type="button" class="w-uw-btn" data-uw-pokaz="' + esc(p.kod) + '">uwaga do pozycji</button></td>' +
             '<td class="w-jm">' + esc(p.jm) + "</td>" +
             '<td class="w-ref ukryty">' + ref + "</td>" +
             '<td class="w-cena"><input type="number" min="0" step="0.01" inputmode="decimal" placeholder="zł" ' +
               'data-kod="' + esc(p.kod) + '" data-nazwa="' + esc(p.nazwa) + '" data-jm="' + esc(p.jm) + '" aria-label="' + esc(p.nazwa) + '"></td>' +
-            "</tr>";
+            "</tr>" +
+            '<tr class="w-uw-wiersz" data-uw-wiersz="' + esc(p.kod) + '" hidden><td colspan="4">' +
+              '<textarea data-uwaga="' + esc(p.kod) + '" data-nazwa="' + esc(p.nazwa) + '" maxlength="2000" ' +
+              'placeholder="Np. pozycja źle opisana, inna jednostka rozliczenia, czego stawka nie obejmuje."></textarea></td></tr>';
         }).join("");
         return '<div class="w-grupa"><h3>' + esc(g.tytul) + "</h3>" +
           '<table class="w-tab"><thead><tr><th>Pozycja</th><th>Jednostka</th><th class="w-ref ukryty">SEKOCENBUD</th><th>Twoja cena netto</th></tr></thead>' +
-          "<tbody>" + wiersze + "</tbody></table></div>";
+          "<tbody>" + wiersze + "</tbody></table>" +
+          '<div class="w-brak"><button type="button" data-brak-pokaz="' + esc(g.kod) + '">+ Brakuje pozycji w tej grupie?</button>' +
+          '<textarea data-brak="' + esc(g.kod) + '" data-nazwa="' + esc(g.tytul) + '" maxlength="2000" hidden ' +
+          'placeholder="Jaką pracę wykonujecie w tej grupie, a nie ma jej w katalogu? Podaj nazwę, jednostkę i, jeśli chcesz, swoją stawkę."></textarea></div>' +
+          "</div>";
       }).join("");
-      return '<details class="w-sekcja"' + (i === 0 ? " open" : "") + "><summary><span>" + esc(s.nazwa) +
+      return '<details class="w-sekcja" data-sekcja="' + s.id + '"><summary><span>' + esc(s.nazwa) +
         ' <span class="ile">(' + ile + " poz.)</span></span></summary>" + grupy + "</details>";
     }).join("");
     $("katalog").innerHTML = html;
+    $("zakresy").innerHTML = sekcje.map(function (s) {
+      var ile = s.grupy.reduce(function (n, g) { return n + g.pozycje.length; }, 0);
+      return '<label class="w-zakres"><input type="checkbox" value="' + s.id + '"><span>' + esc(s.nazwa) +
+        "<small>" + ile + " poz.</small></span></label>";
+    }).join("");
   })();
+
+  /* Zakres: pokazujemy tylko zaznaczone sekcje (i od razu je rozwijamy). Nic nie zaznaczone = wszystkie.
+     Link ?zakres=<id>[,<id>] z maila zaznacza zakres od razu. */
+  var zakresy = function () { return Array.prototype.slice.call(document.querySelectorAll("#zakresy input:checked")).map(function (i) { return i.value; }); };
+  function pokazZakresy() {
+    var wyb = zakresy();
+    document.querySelectorAll("#katalog .w-sekcja").forEach(function (d, i) {
+      var wlacz = !wyb.length || wyb.indexOf(d.dataset.sekcja) >= 0;
+      d.hidden = !wlacz;
+      if (wyb.length) d.open = wlacz; else if (!d.dataset.ruszony) d.open = i === 0;
+    });
+  }
+  $("zakresy").addEventListener("change", function () { pokazZakresy(); zapiszSzkic(); });
+  (function zakresZUrl() {
+    var m = location.search.match(/[?&]zakres=([^&]+)/);
+    if (!m) return;
+    decodeURIComponent(m[1]).split(",").forEach(function (id) {
+      var el = document.querySelector('#zakresy input[value="' + id.replace(/[^a-z0-9-]/g, "") + '"]');
+      if (el) el.checked = true;
+    });
+  })();
+  pokazZakresy();
+
+  /* uwagi do pozycji i brakujące pozycje: pole otwiera się na kliknięcie */
+  $("katalog").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-uw-pokaz],[data-brak-pokaz]");
+    if (!b) return;
+    if (b.dataset.uwPokaz) {
+      var w = document.querySelector('[data-uw-wiersz="' + b.dataset.uwPokaz + '"]');
+      w.hidden = !w.hidden;
+      if (!w.hidden) w.querySelector("textarea").focus();
+    } else {
+      var t = document.querySelector('[data-brak="' + b.dataset.brakPokaz + '"]');
+      t.hidden = !t.hidden;
+      if (!t.hidden) t.focus();
+    }
+  });
 
   /* licznik wypełnionych pozycji — od razu widać, ile już zrobione */
   var pola = function () { return Array.prototype.slice.call(document.querySelectorAll("#katalog input[data-kod]")); };
-  form.addEventListener("input", function (e) {
-    if (!e.target.dataset || !e.target.dataset.kod) return;
+  var uwagiPola = function () { return Array.prototype.slice.call(document.querySelectorAll("#katalog textarea[data-uwaga],#katalog textarea[data-brak]")); };
+  function przelicz() {
     var ile = pola().filter(function (i) { return i.value.trim() !== ""; }).length;
     $("licznik").textContent = ile;
     /* przełącznik wskaźników pojawia się dopiero, gdy jest już co porównywać */
     $("refPrzelacznik").hidden = ile === 0;
+    document.querySelectorAll("[data-uw-pokaz]").forEach(function (b) {
+      var t = document.querySelector('textarea[data-uwaga="' + b.dataset.uwPokaz + '"]');
+      b.classList.toggle("ma", !!(t && t.value.trim()));
+    });
+  }
+  form.addEventListener("input", function (e) {
+    if (e.target.dataset && (e.target.dataset.kod || e.target.dataset.uwaga || e.target.dataset.brak)) przelicz();
+    zapiszSzkic();
   });
+
+  /* ── szkic w przeglądarce: niedokończona ankieta czeka na powrót (tylko na tym komputerze) ── */
+  var SZKIC = "gig-wezel-szkic";
+  var POLA_FIRMY = ["nip", "firma", "wojewodztwo", "zasieg", "wielkosc", "osoba", "email", "telefon", "okres", "uwagi"];
+  var zapisTimer = null;
+  function zapiszSzkic() {
+    clearTimeout(zapisTimer);
+    zapisTimer = setTimeout(function () {
+      var d = { firma: {}, ceny: {}, uwagi: {}, braki: {}, zakresy: zakresy(), kiedy: Date.now() };
+      POLA_FIRMY.forEach(function (id) { d.firma[id] = $(id).value; });
+      pola().forEach(function (i) { if (i.value.trim() !== "") d.ceny[i.dataset.kod] = i.value; });
+      document.querySelectorAll("textarea[data-uwaga]").forEach(function (t) { if (t.value.trim()) d.uwagi[t.dataset.uwaga] = t.value; });
+      document.querySelectorAll("textarea[data-brak]").forEach(function (t) { if (t.value.trim()) d.braki[t.dataset.brak] = t.value; });
+      try { localStorage.setItem(SZKIC, JSON.stringify(d)); } catch (e) { /* tryb prywatny: bez szkicu */ }
+    }, 400);
+  }
+  function wyczyscSzkic(tylkoCeny) {
+    try {
+      if (!tylkoCeny) { localStorage.removeItem(SZKIC); return; }
+      var d = JSON.parse(localStorage.getItem(SZKIC) || "null");
+      if (d) { d.ceny = {}; d.uwagi = {}; d.braki = {}; d.zakresy = []; localStorage.setItem(SZKIC, JSON.stringify(d)); }
+    } catch (e) {}
+  }
+  (function przywrocSzkic() {
+    var d = null;
+    try { d = JSON.parse(localStorage.getItem(SZKIC) || "null"); } catch (e) {}
+    if (!d) return;
+    POLA_FIRMY.forEach(function (id) {
+      if (d.firma && d.firma[id] && !$(id).value) {
+        if (id === "okres" && !Array.prototype.some.call($(id).options, function (o) { return o.value === d.firma[id]; })) return;
+        $(id).value = d.firma[id];
+      }
+    });
+    var ileCen = 0;
+    Object.keys(d.ceny || {}).forEach(function (k) {
+      var i = document.querySelector('#katalog input[data-kod="' + k + '"]');
+      if (i) { i.value = d.ceny[k]; ileCen++; }
+    });
+    Object.keys(d.uwagi || {}).forEach(function (k) {
+      var t = document.querySelector('textarea[data-uwaga="' + k + '"]');
+      if (t) { t.value = d.uwagi[k]; t.closest("tr").hidden = false; }
+    });
+    Object.keys(d.braki || {}).forEach(function (k) {
+      var t = document.querySelector('textarea[data-brak="' + k + '"]');
+      if (t) { t.value = d.braki[k]; t.hidden = false; }
+    });
+    if (!location.search.match(/[?&]zakres=/)) (d.zakresy || []).forEach(function (id) {
+      var el = document.querySelector('#zakresy input[value="' + id + '"]');
+      if (el) el.checked = true;
+    });
+    pokazZakresy(); przelicz();
+    if (ileCen) {
+      var box = $("szkicInfo");
+      box.innerHTML = "Przywróciliśmy niedokończoną ankietę z tej przeglądarki (" + ileCen +
+        (ileCen === 1 ? " cena)" : " cen)") + '. <button type="button" id="szkicUsun">Zacznij od nowa</button>';
+      box.hidden = false;
+      $("szkicUsun").addEventListener("click", function () {
+        pola().forEach(function (i) { i.value = ""; });
+        uwagiPola().forEach(function (t) { t.value = ""; });
+        wyczyscSzkic(true); przelicz(); box.hidden = true;
+      });
+    }
+  })();
   $("pokazRef").addEventListener("change", function () {
     document.querySelectorAll(".w-ref").forEach(function (el) { el.classList.toggle("ukryty", !$("pokazRef").checked); });
   });
@@ -352,13 +514,18 @@
     var ceny = pola().filter(function (i) { return i.value.trim() !== ""; })
       .map(function (i) { return { kod: i.dataset.kod, nazwa: i.dataset.nazwa, jm: i.dataset.jm, cena: Number(i.value) }; })
       .filter(function (c) { return isFinite(c.cena) && c.cena >= 0; });
+    var uwagi = uwagiPola().filter(function (t) { return t.value.trim().length >= 2; }).map(function (t) {
+      return t.dataset.uwaga
+        ? { rodzaj: "pozycja", kod: t.dataset.uwaga, nazwa: t.dataset.nazwa, tresc: t.value.trim() }
+        : { rodzaj: "brak", kod: t.dataset.brak, nazwa: t.dataset.nazwa, tresc: t.value.trim() };
+    });
 
     if (!val("firma")) return pokaz("Podaj nazwę firmy.", false);
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val("email"))) return pokaz("Podaj poprawny adres e-mail.", false);
     if (!val("wojewodztwo")) return pokaz("Wybierz województwo.", false);
     var nip = val("nip").replace(/[\s-]/g, "");
     if (!/^\d{10}$/.test(nip)) return pokaz("Podaj NIP firmy (10 cyfr). Po NIP-ie rozpoznajemy członków Izby i pilnujemy, żeby jedna firma nie liczyła się dwa razy.", false);
-    if (!ceny.length) return pokaz("Uzupełnij cenę przynajmniej w jednej pozycji.", false);
+    if (!ceny.length && !uwagi.length) return pokaz("Uzupełnij cenę przynajmniej w jednej pozycji albo dodaj uwagę do katalogu.", false);
     if (!$("rodo").checked) return pokaz("Zaznacz zgodę na przetwarzanie danych osobowych.", false);
 
     btn.disabled = true; pokaz("Wysyłanie…", true);
@@ -380,9 +547,16 @@
       });
       if (ank.error) throw ank.error;
 
-      var wiersze = ceny.map(function (c) { return { ankieta_id: ankietaId, kod: c.kod, nazwa: c.nazwa, jm: c.jm, cena: c.cena }; });
-      var cen = await db.from("wezel_ceny").insert(wiersze);
-      if (cen.error) throw cen.error;
+      if (ceny.length) {
+        var wiersze = ceny.map(function (c) { return { ankieta_id: ankietaId, kod: c.kod, nazwa: c.nazwa, jm: c.jm, cena: c.cena }; });
+        var cen = await db.from("wezel_ceny").insert(wiersze);
+        if (cen.error) throw cen.error;
+      }
+      /* uwagi do katalogu: błąd nie przekreśla przyjętych cen */
+      if (uwagi.length) {
+        var uw = await db.from("wezel_uwagi").insert(uwagi.map(function (u) { u.ankieta_id = ankietaId; return u; }));
+        if (uw.error) console.warn("uwagi:", uw.error.message);
+      }
 
       /* Newsletter i chęć szkoleń dopisujemy PO udanej ankiecie i nie przerywamy
          na błędzie: 23505 = adres już jest na liście, a ankieta i tak jest przyjęta. */
@@ -393,9 +567,11 @@
           if (!nl.error || nl.error.code === "23505") zapisy.push("newslettera");
         } catch (e2) { console.warn("newsletter:", e2); }
       }
+      wyczyscSzkic(true);   // dane firmy zostają na kolejny zakres, ceny i uwagi czyścimy
       form.style.display = "none";
       $("wOk").style.display = "block";
-      $("wOkZapisy").textContent = "Podałeś ceny w " + ceny.length + (ceny.length === 1 ? " pozycji." : " pozycjach.") +
+      $("wOkZapisy").textContent = (ceny.length ? "Podałeś ceny w " + ceny.length + (ceny.length === 1 ? " pozycji." : " pozycjach.") : "") +
+        (uwagi.length ? " Dziękujemy też za " + uwagi.length + (uwagi.length === 1 ? " uwagę" : " uwagi") + " do katalogu." : "") +
         (zapisy.length ? " Zapisaliśmy Cię także do " + zapisy.join(" i ") + "." : "");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {

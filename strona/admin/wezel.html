@@ -96,6 +96,20 @@
           </div>
         </div></div>
 
+        <div class="card" style="margin-bottom:18px;"><div class="card-header">
+          <div class="card-title">Uwagi do katalogu</div>
+          <select id="fUwagi" class="form-control" style="max-width:190px;">
+            <option value="new">Do przejrzenia</option><option value="">Wszystkie</option>
+            <option value="uwzgledniona">Uwzględnione</option><option value="odrzucona">Odrzucone</option>
+          </select>
+        </div><div class="card-body">
+          <p class="wz-mini" style="margin:0 0 12px;">Uwagi firm do pozycji ankiety i propozycje brakujących pozycji. Służą do poprawiania katalogu.</p>
+          <div class="table-wrap"><table class="admin-table">
+            <thead><tr><th>Pozycja / grupa</th><th>Uwaga</th><th>Firma</th><th>Data</th><th></th></tr></thead>
+            <tbody id="uwagiRows"><tr><td colspan="5" style="text-align:center;padding:18px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+          </table></div>
+        </div></div>
+
         <div class="card"><div class="card-body">
           <div class="toolbar">
             <div class="search-box"><span class="search-icon">⌕</span>
@@ -139,7 +153,7 @@
     /* Węzeł Jakości: ankiety cenowe z /wezel-jakosci/ (tabele wezel_ankiety + wezel_ceny).
        Zestawienie liczymy tu, z surowych cen — widok `wezel_zestawienie` w bazie robi to samo,
        ale licząc po stronie panelu możemy od razu zestawić wynik z filtrem okresu i katalogiem. */
-    let ankiety = [], ceny = [], refWg = {};
+    let ankiety = [], ceny = [], uwagi = [], refWg = {};
     const ETYK = { new:'nowe', read:'przeczytane', zweryfikowana:'zweryfikowana', odrzucona:'odrzucona' };
     const BADGE = { new:'badge-new', read:'badge-read', zweryfikowana:'badge-confirmed', odrzucona:'badge-cancelled' };
     const zl = n => Number(n).toLocaleString('pl-PL', { maximumFractionDigits:2 }) + ' zł';
@@ -167,10 +181,23 @@
         (nowe ? k('Nieobsłużone', nowe, '', true) : '');
     }
 
+    /* Firma może wysłać ankietę kilka razy (np. osobno dla każdego zakresu). Do zestawienia bierzemy
+       jedną cenę na firmę (NIP) i pozycję: z najnowszej ankiety, żeby nikt nie liczył się podwójnie. */
+    function cenyDoZestawienia(){
+      const akt = aktywne(), wgId = {};
+      akt.forEach(a => { wgId[a.id] = a; });
+      const najnowsza = {};
+      ceny.filter(x => wgId[x.ankieta_id]).forEach(x => {
+        const a = wgId[x.ankieta_id], klucz = ((a.nip || a.firma || a.id) + '').trim() + '|' + x.kod;
+        const b = najnowsza[klucz];
+        if (!b || new Date(a.created_at) > new Date(wgId[b.ankieta_id].created_at)) najnowsza[klucz] = x;
+      });
+      return Object.values(najnowsza);
+    }
+
     function zestawienie(){
-      const ids = new Set(aktywne().map(a => a.id));
       const wg = {};
-      ceny.filter(x => ids.has(x.ankieta_id)).forEach(x => {
+      cenyDoZestawienia().forEach(x => {
         (wg[x.kod] = wg[x.kod] || { kod:x.kod, nazwa:x.nazwa, jm:x.jm, ceny:[] }).ceny.push(Number(x.cena));
       });
       const wiersze = Object.values(wg).sort((a, b) => a.kod.localeCompare(b.kod));
@@ -270,6 +297,9 @@
             }).join('')}</tbody>
           </table></div>
         </div>
+        ${uwagi.some(u => u.ankieta_id === id) ? `<div class="wz-blok"><h4>Uwagi do katalogu</h4><ul style="margin:0;padding-left:18px;">${
+          uwagi.filter(u => u.ankieta_id === id).map(u => `<li><strong>${esc(u.rodzaj === 'brak' ? 'Brakuje w: ' + (u.nazwa || u.kod) : (u.nazwa || u.kod))}</strong>: ${esc(u.tresc)}</li>`).join('')
+        }</ul></div>` : ''}
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
           <button type="button" class="btn btn-outline btn-sm" id="wzZweryfikuj">✓ Oznacz jako zweryfikowaną</button>
           <button type="button" class="btn btn-ghost btn-sm" id="wzOdrzuc" title="Ankieta zniknie z zestawienia (np. dane oczywiście błędne)">✕ Odrzuć</button>
@@ -291,10 +321,12 @@
     }
 
     async function load(){
-      const [a, c] = await Promise.all([
+      const [a, c, u] = await Promise.all([
         db.from('wezel_ankiety').select('*').order('created_at', { ascending:false }),
         db.from('wezel_ceny').select('*'),
+        db.from('wezel_uwagi').select('*').order('created_at', { ascending:false }),
       ]);
+      uwagi = u.error ? [] : (u.data || []);
       if (a.error) { toast('Błąd ładowania ankiet', 'error'); console.error(a.error); return; }
       ankiety = a.data || [];
       ceny = c.data || [];
@@ -305,19 +337,47 @@
       sel.innerHTML = '<option value="">Wszystkie okresy</option>' + okresy.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
       sel.value = okresy.includes(biezacy) ? biezacy : (okresy[0] || '');
 
-      podsumuj(); zestawienie(); render(); loadSidebarBadges();
+      podsumuj(); zestawienie(); render(); renderUwagi(); loadSidebarBadges();
+    }
+
+    const UW_ETYK = { new:'do przejrzenia', uwzgledniona:'uwzględniona', odrzucona:'odrzucona' };
+    function renderUwagi(){
+      const st = document.getElementById('fUwagi').value;
+      const wgA = {}; ankiety.forEach(a => { wgA[a.id] = a; });
+      const rows = uwagi.filter(x => !st || x.status === st);
+      const tb = document.getElementById('uwagiRows');
+      if (!rows.length) { tb.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:18px;color:#6b7f84;">${uwagi.length ? 'Brak uwag w tym widoku.' : 'Nikt jeszcze nie zgłosił uwag.'}</td></tr>`; return; }
+      tb.innerHTML = rows.map(x => {
+        const a = wgA[x.ankieta_id] || {};
+        return `<tr>
+          <td style="max-width:260px;">${x.rodzaj === 'brak' ? '<span class="badge badge-new">brakująca pozycja</span><br>' : ''}${esc(x.nazwa || '')}<span class="wz-kod">${esc(x.kod)}</span></td>
+          <td style="max-width:380px;white-space:pre-wrap;">${esc(x.tresc)}</td>
+          <td>${esc(a.firma || '—')}<div class="wz-mini">${esc(a.email || '')}</div></td>
+          <td style="white-space:nowrap;">${fmtDate(x.created_at)}<div class="wz-mini">${UW_ETYK[x.status] || x.status}</div></td>
+          <td class="actions" style="white-space:nowrap;">
+            ${x.status !== 'uwzgledniona' ? `<button class="btn btn-outline btn-xs" data-uw="${x.id}" data-st="uwzgledniona" title="Uwzględniona w katalogu">✓</button>` : ''}
+            ${x.status !== 'odrzucona' ? `<button class="btn btn-ghost btn-xs" data-uw="${x.id}" data-st="odrzucona" title="Odrzuć">✕</button>` : ''}
+            ${x.status !== 'new' ? `<button class="btn btn-ghost btn-xs" data-uw="${x.id}" data-st="new" title="Wróć do przejrzenia">↩</button>` : ''}
+          </td></tr>`;
+      }).join('');
+      tb.querySelectorAll('[data-uw]').forEach(b => b.addEventListener('click', async () => {
+        const { error } = await db.from('wezel_uwagi').update({ status: b.dataset.st }).eq('id', b.dataset.uw);
+        if (error) { toast('Nie udało się zapisać', 'error'); return; }
+        const x = uwagi.find(y => y.id === b.dataset.uw); if (x) x.status = b.dataset.st;
+        renderUwagi();
+      }));
     }
 
     (async () => {
       if (!await requireAuth()) return;
       document.getElementById('szukaj').addEventListener('input', render);
       document.getElementById('fStatus').addEventListener('change', render);
+      document.getElementById('fUwagi').addEventListener('change', renderUwagi);
       document.getElementById('fOkres').addEventListener('change', () => { podsumuj(); zestawienie(); render(); });
 
       document.getElementById('expZest').addEventListener('click', () => {
-        const ids = new Set(aktywne().map(x => x.id));
         const wg = {};
-        ceny.filter(x => ids.has(x.ankieta_id)).forEach(x => {
+        cenyDoZestawienia().forEach(x => {
           (wg[x.kod] = wg[x.kod] || { kod:x.kod, nazwa:x.nazwa, jm:x.jm, ceny:[] }).ceny.push(Number(x.cena));
         });
         const rows = Object.values(wg).sort((a, b) => a.kod.localeCompare(b.kod)).map(w => {
