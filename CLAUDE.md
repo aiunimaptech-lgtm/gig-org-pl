@@ -48,6 +48,11 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   `_assets/js/wezel-katalog.js`, generowany `skrypty/gen_wezel_katalog.py`) → tabele
   `wezel_ankiety` / `wezel_ceny` → panel `/admin/wezel.html` (zestawienie min/max/średnia,
   eksport CSV). Kafelek na stronie głównej obok „Nadchodzące wydarzenia".
+- **Kalkulator „Ile kosztuje geodeta?”** (`/ile-kosztuje-geodezja/`, od 15.10.2026): opis usług (co obejmuje cena, od czego
+  zależy, czego nie ma w cenie, czas), bez cen (brak wiarygodnych danych; ceny dołożymy z Węzła albo raportu Geodety po zgodzie
+  redakcji). Klient wybiera firmy członkowskie z województwa (losowa kolejność, maks. 8) → Edge Function `zapytanie-wycena`
+  (adresy firm z `czlonkowie` po id, limity 3/e-mail i 10/IP na dobę, pułapka `www` i min. 6 s) → mail do każdej firmy
+  (Reply-To klient) + potwierdzenie dla klienta → tabela `zapytania_wyceny`, panel `/admin/wyceny.html`.
 - **Moduł „Asystent geodezyjny” (w przygotowaniu, buduje Dawid)**: pytania geodetów/urzędników + wgrane protokoły
   i interpretacje WINGiK/GGK, odpowiedź AI ze źródłami, zanonimizowane dokumenty do pobrania. Materiały przekazane
   Dawidowi i **instrukcja odbioru jego paczki**: `dla Dawida/04_ODBIOR_PROJEKTU_instrukcja_dla_Claude.md`

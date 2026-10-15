@@ -373,6 +373,7 @@ async function main() {
     lin("Dołącz do Izby", SITE + "/dolacz-do-nas/", "korzyści, koszty, procedura przyjęcia"),
     lin("Katalog Członków", SITE + "/czlonkowie/", `${czl.length} firm geodezyjnych wg województw`),
     lin("Kalendarz szkoleń", SITE + "/szkolenia/"),
+    lin("Ile kosztuje geodeta? Usługi geodezyjne i zapytanie o wycenę", SITE + "/ile-kosztuje-geodezja/", "z czego składa się cena podziału, mapy do celów projektowych, wznowienia granic, wytyczenia; zapytanie do firm z regionu"),
     lin("Węzeł Jakości: ankieta cenowa", SITE + "/wezel-jakosci/"),
     lin("Baza wiedzy", SITE + "/baza-wiedzy/"),
     lin("Kontakt", SITE + "/kontakt/"),

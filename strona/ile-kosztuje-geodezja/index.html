@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ile kosztuje geodeta? Kalkulator usług geodezyjnych i zapytanie o wycenę — Geodezyjna Izba Gospodarcza</title>
+  <meta name="description" content="Ile kosztuje podział działki, mapa do celów projektowych, wznowienie granic czy wytyczenie budynku? Sprawdź, z czego składa się cena usługi geodezyjnej, i wyślij jedno zapytanie o wycenę do firm geodezyjnych z Twojego województwa.">
+  <link rel="canonical" href="https://gig.org.pl/ile-kosztuje-geodezja/">
+  <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+  <style>
+    :root{--red:#cc0a2b;--ink:#16202a;--muted:#6b7884;--line:#e6ebef;--bg:#f4f6f8;}
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.65;}
+    a{color:var(--red);text-decoration:none;}a:hover{text-decoration:underline;}
+    .wrap{max-width:1140px;margin:0 auto;padding:0 22px;}
+    .k-hero{background:linear-gradient(180deg,#fff,var(--bg));padding:34px 0 28px;border-bottom:1px solid var(--line);}
+    .k-hero h1{font-size:clamp(26px,4vw,40px);margin:9px 0 10px;line-height:1.15;}
+    .k-hero .lead{color:var(--muted);max-width:74ch;margin:0 0 6px;font-size:16.5px;}
+    .k-kicker{display:inline-block;background:var(--red);color:#fff;font-size:12px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:4px 12px;border-radius:20px;}
+    main{max-width:980px;margin:0 auto;padding:28px 22px 60px;}
+    .krok{border:1px solid var(--line);border-radius:14px;padding:22px;margin:0 0 20px;}
+    .krok h2{font-size:18px;margin:0 0 4px;display:flex;gap:10px;align-items:center;}
+    .krok h2 .nr{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--red);color:#fff;font-size:14px;flex:none;}
+    .krok .opis{color:var(--muted);font-size:14px;margin:0 0 16px;}
+    .uslugi{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
+    .usluga{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;background:#fff;text-align:left;font:inherit;color:inherit;}
+    .usluga b{display:block;font-size:15px;}
+    .usluga span{display:block;font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:3px;}
+    .usluga:hover{border-color:#e7a6b2;}
+    .usluga.wybrana{border-color:var(--red);background:#fff5f6;}
+    .row{display:grid;gap:16px;grid-template-columns:1fr 1fr;}
+    @media(max-width:720px){.row{grid-template-columns:1fr;}}
+    label{display:block;font-size:13.5px;font-weight:600;margin:0 0 6px;}
+    label .wym{color:var(--red);}
+    .pole{margin:0 0 16px;}
+    input[type=text],input[type=email],input[type=tel],input[type=number],textarea,select{
+      width:100%;padding:11px 13px;border:1px solid #d6dde3;border-radius:9px;font:inherit;font-size:15px;background:#fff;color:var(--ink);}
+    input:focus,textarea:focus,select:focus{outline:none;border-color:var(--red);box-shadow:0 0 0 3px rgba(204,10,43,.10);}
+    textarea{min-height:90px;resize:vertical;}
+    .hint{font-size:12.5px;color:var(--muted);margin:5px 0 0;line-height:1.5;}
+    /* wynik */
+    .wynik{display:none;}
+    .wynik.widoczny{display:block;}
+    .cena-box{border-radius:14px;padding:18px 20px;background:#16202a;color:#fff;margin:0 0 18px;}
+    .cena-box b{display:block;font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:#ff8a9a;margin:0 0 4px;}
+    .cena-box p{margin:0;color:#d4dbe2;font-size:15px;}
+    .cena-box a{color:#fff;text-decoration:underline;}
+    .sklad{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media(max-width:720px){.sklad{grid-template-columns:1fr;}}
+    .sklad div{background:var(--bg);border-radius:12px;padding:14px 18px;}
+    .sklad h3{font-size:12.5px;letter-spacing:.5px;text-transform:uppercase;color:var(--red);margin:0 0 8px;}
+    .sklad ul{margin:0;padding-left:18px;font-size:14.5px;}
+    .sklad li{margin:0 0 4px;}
+    .uwaga{background:#fff8e6;border:1px solid #f0e2b6;color:#7a5c14;border-radius:10px;padding:10px 14px;font-size:14px;margin:14px 0 0;}
+    /* firmy */
+    .firmy{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;}
+    .firma{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;margin:0;font-weight:400;}
+    .firma input{width:18px;height:18px;accent-color:var(--red);flex:none;margin-top:3px;}
+    .firma:has(input:checked){border-color:var(--red);background:#fff5f6;}
+    .firma b{display:block;font-size:14.5px;}
+    .firma small{display:block;color:var(--muted);font-size:12.5px;line-height:1.5;}
+    .firmy-tytul{font-size:13px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;}
+    .brak-firm{background:var(--bg);border-radius:10px;padding:12px 16px;font-size:14px;color:var(--muted);}
+    .licznik{font-size:13.5px;color:var(--muted);margin:10px 0 0;}
+    .chk{display:flex;gap:10px;align-items:flex-start;font-size:14px;margin:0 0 14px;}
+    .chk input{margin-top:3px;flex:none;width:17px;height:17px;accent-color:var(--red);}
+    .chk label{font-weight:500;margin:0;}
+    .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;}
+    .wyslij{background:var(--red);color:#fff;border:0;border-radius:30px;padding:14px 34px;font:inherit;font-weight:700;font-size:16px;cursor:pointer;}
+    .wyslij:hover{filter:brightness(.93);}.wyslij:disabled{opacity:.55;cursor:not-allowed;filter:none;}
+    .msg{margin:16px 0 0;padding:13px 16px;border-radius:10px;font-size:14.5px;display:none;}
+    .msg.ok{display:block;background:#eaf6ee;border:1px solid #bfe3cb;color:#1c6b39;}
+    .msg.err{display:block;background:#fdecef;border:1px solid #f3ccd4;color:#a3122c;}
+    .dla-geodet{margin:26px 0 0;padding:16px 20px;border:1px dashed #d6dde3;border-radius:12px;font-size:14.5px;color:var(--muted);}
+    .zastrzezenie{font-size:12.5px;color:var(--muted);margin:22px 0 0;}
+    .site-foot{background:var(--ink);color:rgba(255,255,255,.75);padding:40px 0 26px;}
+    .foot-in{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;}
+    .site-foot strong{color:#fff;}.site-foot a{color:#fff;}.foot-soc a{display:inline-block;margin-left:14px;}
+  </style>
+  <link rel="stylesheet" href="/_assets/css/gig-subhead.css">
+<!--GIG-SEO--><meta property="og:type" content="website">
+<meta property="og:site_name" content="Geodezyjna Izba Gospodarcza">
+<meta property="og:title" content="Ile kosztuje geodeta? Kalkulator usług geodezyjnych i zapytanie o wycenę — Geodezyjna Izba Gospodarcza">
+<meta property="og:url" content="https://gig.org.pl/ile-kosztuje-geodezja/">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:description" content="Ile kosztuje podział działki, mapa do celów projektowych, wznowienie granic czy wytyczenie budynku? Sprawdź, z czego składa się cena usługi geodezyjnej, i wyślij jedno zapytanie o wycenę do firm geodezyjnych z Twojego województwa.">
+<meta property="og:image" content="https://gig.org.pl/_assets/img/gig-og.png">
+<meta name="twitter:card" content="summary_large_image"><!--/GIG-SEO-->
+</head>
+<body>
+
+<header class="site-head"><div class="wrap head-in"><a class="logo" href="/"><img src="/wp-content/uploads/2026/04/gig-logo-new-poziom-dark.svg" alt="Geodezyjna Izba Gospodarcza"></a><nav class="nav"><a href="/">Home</a><span class="nav-item"><a href="/o-nas/">O nas</a><span class="nav-sub"><a href="/czlonkowie/">Członkowie</a></span></span><span class="nav-item"><a href="/baza-wiedzy/aktualnosci-gig/">Aktualności</a><span class="nav-sub"><a href="/nadchodzace-wydarzenia/">Nadchodzące wydarzenia</a></span></span><span class="nav-item"><a href="/baza-wiedzy/">Baza wiedzy</a><span class="nav-sub"><a href="/baza-wiedzy/artykuly/">Artykuły</a><a href="/biuletyn-gig/">Biuletyn</a></span></span><a href="/szkolenia/">Szkolenia</a><span class="nav-item"><a href="/kontakt/">Kontakt</a><span class="nav-sub"><a href="/dolacz-do-nas/">Dołącz do nas</a></span></span></nav><a class="head-phone" href="tel:+48228273843"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z"/></svg> +48 22 / 827 38 43</a></div></header>
+
+<section class="k-hero">
+  <div class="wrap">
+    <span class="k-kicker">Dla inwestorów i właścicieli nieruchomości</span>
+    <h1>Ile kosztuje geodeta? Sprawdź, z czego składa się cena, i zapytaj o wycenę</h1>
+    <p class="lead">Wybierz usługę i województwo. Wyjaśnimy, jakie prace obejmuje, od czego zależy cena i czego zwykle w niej nie ma.
+      Potem jednym formularzem wyślesz zapytanie o wycenę do firm geodezyjnych z Twojego regionu, członków Geodezyjnej Izby Gospodarczej.</p>
+  </div>
+</section>
+
+<main>
+  <section class="krok">
+    <h2><span class="nr">1</span> Jakiej usługi potrzebujesz?</h2>
+    <p class="opis">Nie wiesz, którą wybrać? Opis pod spodem podpowie. W razie wątpliwości wybierz „Inna usługa” i opisz sprawę własnymi słowami.</p>
+    <div class="uslugi" id="uslugi"></div>
+  </section>
+
+  <div class="wynik" id="wynik">
+    <section class="krok">
+      <h2><span class="nr">2</span> <span id="wTytul"></span></h2>
+      <p class="opis" id="wOpis"></p>
+      <div class="cena-box" id="cenaBox">
+        <b>Orientacyjna cena</b>
+        <p>Nie mamy jeszcze wystarczająco wiarygodnych danych z rynku, żeby podać rzetelne widełki dla tej usługi w Twoim regionie.
+          Cena zależy od parametrów opisanych niżej, dlatego najpewniej poznasz ją, pytając o konkretną wycenę kilka firm.
+          Pracujemy nad zestawieniem stawek rynkowych (<a href="/wezel-jakosci/">Węzeł Jakości</a>).</p>
+      </div>
+      <div class="sklad">
+        <div><h3>Co zwykle obejmuje cena</h3><ul id="wZawiera"></ul></div>
+        <div><h3>Od czego zależy cena</h3><ul id="wZalezy"></ul></div>
+        <div><h3>Czego zwykle nie ma w cenie</h3><ul id="wNie"></ul></div>
+        <div><h3>Ile to trwa</h3><ul id="wCzas"></ul></div>
+      </div>
+      <p class="uwaga" id="wUwaga" hidden></p>
+    </section>
+
+    <form class="krok" id="zForm" novalidate>
+      <h2><span class="nr">3</span> Zapytaj firmy z Twojego regionu o wycenę</h2>
+      <p class="opis">Jedno zapytanie trafi do wybranych firm, a każda odpowie Ci bezpośrednio mailem. Zapytanie jest bezpłatne i do niczego nie zobowiązuje.</p>
+
+      <div class="row">
+        <div class="pole">
+          <label for="woj">Województwo <span class="wym">*</span></label>
+          <select id="woj" required>
+            <option value="">— wybierz —</option>
+            <option>dolnośląskie</option><option>kujawsko-pomorskie</option><option>lubelskie</option><option>lubuskie</option>
+            <option>łódzkie</option><option>małopolskie</option><option>mazowieckie</option><option>opolskie</option>
+            <option>podkarpackie</option><option>podlaskie</option><option>pomorskie</option><option>śląskie</option>
+            <option>świętokrzyskie</option><option>warmińsko-mazurskie</option><option>wielkopolskie</option><option>zachodniopomorskie</option>
+          </select>
+        </div>
+        <div class="pole">
+          <label for="miejscowosc">Miejscowość i powiat <span class="wym">*</span></label>
+          <input type="text" id="miejscowosc" placeholder="np. Mikołów, powiat mikołowski">
+        </div>
+      </div>
+
+      <div class="row" id="parametry"></div>
+
+      <div class="pole">
+        <label for="opis">Opisz krótko sprawę</label>
+        <textarea id="opis" maxlength="3000" placeholder="Np. numer działki, cel prac, czy masz decyzję o warunkach zabudowy lub projekt, czy są znaki graniczne w terenie."></textarea>
+      </div>
+      <div class="pole">
+        <label for="termin">Kiedy potrzebujesz?</label>
+        <select id="termin">
+          <option value="">— bez znaczenia —</option>
+          <option>jak najszybciej</option><option>w ciągu miesiąca</option><option>w ciągu 3 miesięcy</option><option>planuję, termin elastyczny</option>
+        </select>
+      </div>
+
+      <div id="firmyBox">
+        <p class="hint">Wybierz województwo, a pokażemy firmy członkowskie Izby z Twojego regionu.</p>
+      </div>
+      <p class="licznik" id="licznik"></p>
+
+      <div class="row" style="margin-top:14px;">
+        <div class="pole"><label for="imie">Imię i nazwisko lub nazwa firmy <span class="wym">*</span></label><input type="text" id="imie" autocomplete="name"></div>
+        <div class="pole"><label for="email">Adres e-mail <span class="wym">*</span></label><input type="email" id="email" autocomplete="email"></div>
+      </div>
+      <div class="row">
+        <div class="pole"><label for="telefon">Telefon</label><input type="tel" id="telefon" autocomplete="tel"><p class="hint">Opcjonalnie. Ułatwi firmom dopytanie o szczegóły.</p></div>
+      </div>
+      <div class="hp" aria-hidden="true"><label for="www">Nie wypełniaj</label><input type="text" id="www" tabindex="-1" autocomplete="off"></div>
+
+      <div class="chk">
+        <input type="checkbox" id="zgoda">
+        <label for="zgoda">Zgadzam się na przekazanie mojego zapytania i danych kontaktowych zaznaczonym firmom w celu przygotowania wyceny.
+          Administratorem danych jest Geodezyjna Izba Gospodarcza, a po przekazaniu także każda z wybranych firm.
+          Szczegóły w <a href="/polityka-prywatnosci-rodo/" target="_blank" rel="noopener">Polityce prywatności</a>. <span class="wym">*</span></label>
+      </div>
+
+      <button type="submit" class="wyslij" id="wyslij">Wyślij zapytanie o wycenę</button>
+      <div class="msg" id="msg"></div>
+    </form>
+  </div>
+
+  <div class="dla-geodet">
+    <strong>Jesteś geodetą?</strong> Pomóż nam pokazać klientom realne ceny: podaj swoje stawki w
+    <a href="/wezel-jakosci/">ankiecie cenowej Węzła Jakości</a>. Publikujemy wyłącznie dane zbiorcze.
+    Firma z Izby? Zapytania z tego formularza trafiają tylko do członków, <a href="/dolacz-do-nas/">dołącz do nas</a>.
+  </div>
+  <p class="zastrzezenie">Opisy mają charakter informacyjny i pokazują typowy przebieg prac. Każda firma ustala cenę samodzielnie,
+    na podstawie zakresu zlecenia i warunków lokalnych. Geodezyjna Izba Gospodarcza nie ustala ani nie zaleca cen usług.</p>
+</main>
+
+<footer class="site-foot"><div class="wrap foot-in">
+    <div>
+      <strong>Geodezyjna Izba Gospodarcza</strong><br>
+      ul. Czackiego 3/5, 00-043 Warszawa<br>
+      tel. 22 827 38 43 · <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>
+    </div>
+    <div class="foot-soc">
+      <a href="https://www.facebook.com/gigorgpl" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://www.linkedin.com/company/gig-geodezyjna-izba-gospodarcza" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div></footer>
+
+<script src="/_assets/js/gig-config.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (t) { return String(t == null ? "" : t).replace(/[&<>"]/g, function (c) { return ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]; }); };
+  var MAX = 8;
+  var start = Date.now();
+
+  /* Usługi: opis typowego przebiegu prac. Treść informacyjna, bez cen (zob. zastrzeżenie na dole strony). */
+  var USLUGI = [
+    { id: "podzial", nazwa: "Podział nieruchomości", krotko: "Wydzielenie nowych działek, np. pod sprzedaż albo budowę.",
+      opis: "Podział działki na dwie lub więcej działek, zakończony decyzją wójta, burmistrza lub prezydenta miasta zatwierdzającą podział.",
+      zawiera: ["zgłoszenie pracy i materiały z ośrodka dokumentacji", "analiza dokumentów i stanu prawnego (księga wieczysta)", "wstępny projekt podziału i jego zaopiniowanie przez gminę", "ustalenie przebiegu granic działki z udziałem sąsiadów", "pomiar w terenie i oznaczenie nowych punktów granicznych", "mapa z projektem podziału, wykaz zmian danych ewidencyjnych, operat do ośrodka"],
+      zalezy: ["liczba nowych działek", "czy granice działki były wcześniej ustalone", "powierzchnia i ukształtowanie terenu", "zgodność z planem miejscowym albo warunkami zabudowy", "liczba stron i sąsiadów do zawiadomienia"],
+      nie: ["opłata adiacencka, którą gmina może naliczyć po podziale", "koszty notarialne i sądowe (księgi wieczyste)", "ewentualne opłaty urzędowe"],
+      czas: ["zwykle od 1 do 3 miesięcy, dużo zależy od urzędu gminy i ośrodka dokumentacji"],
+      uwaga: "Przed zleceniem sprawdź w gminie plan miejscowy albo warunki zabudowy: od nich zależy, czy i jak można podzielić działkę.",
+      parametry: [{ id: "dzialki", etykieta: "Na ile działek dzielisz?", typ: "number", ph: "np. 2" }, { id: "pow", etykieta: "Powierzchnia działki", typ: "text", ph: "np. 0,25 ha albo 2500 m²" }] },
+    { id: "wznowienie", nazwa: "Wznowienie lub wyznaczenie granic", krotko: "Odtworzenie znaków granicznych działki w terenie.",
+      opis: "Odszukanie i odtworzenie w terenie punktów granicznych działki (np. przed budową ogrodzenia), na podstawie istniejącej dokumentacji.",
+      zawiera: ["zgłoszenie pracy i materiały z ośrodka dokumentacji", "analiza dokumentacji granicznej", "zawiadomienie właścicieli sąsiednich działek", "odszukanie i wznowienie znaków albo wyznaczenie punktów w terenie", "protokół z czynności i szkic, przekazanie dokumentacji do ośrodka"],
+      zalezy: ["liczba punktów granicznych", "jakość i wiek dokumentacji w ośrodku", "dostępność terenu (zarośla, zabudowa)", "liczba sąsiadów do zawiadomienia"],
+      nie: ["ustalenie granic, które nigdy nie zostały ustalone (to inna procedura)", "rozwiązanie sporu z sąsiadem (do tego służy rozgraniczenie)"],
+      czas: ["zwykle od 2 do 6 tygodni, w tym czas na zawiadomienie sąsiadów"],
+      uwaga: "Wznowić można tylko granice wcześniej ustalone i udokumentowane. Jeśli dokumentacji nie ma albo sąsiad kwestionuje granicę, geodeta zaproponuje inną procedurę.",
+      parametry: [{ id: "punkty", etykieta: "Liczba punktów granicznych", typ: "number", ph: "np. 4" }, { id: "znaki", etykieta: "Czy znaki są widoczne w terenie?", typ: "select", opcje: ["nie wiem", "tak, część", "nie ma żadnych"] }] },
+    { id: "rozgraniczenie", nazwa: "Rozgraniczenie nieruchomości", krotko: "Ustalenie spornej lub nieznanej granicy z sąsiadem.",
+      opis: "Postępowanie prowadzone przez wójta, burmistrza lub prezydenta miasta, w którym geodeta ustala przebieg granicy między działkami, zwykle gdy jest spór albo brak dokumentów.",
+      zawiera: ["wniosek do gminy i upoważnienie geodety", "analiza dokumentów i materiałów z ośrodka", "wezwanie stron na czynności w terenie", "ustalenie granicy na podstawie dokumentów, znaków lub zgodnego oświadczenia stron", "protokół graniczny, szkic i operat"],
+      zalezy: ["długość granicy i liczba punktów", "stan dokumentacji", "liczba stron i ich zgodność", "czy sprawa kończy się ugodą, czy trafia do sądu"],
+      nie: ["koszty postępowania sądowego, jeśli strony się nie porozumieją", "opłaty urzędowe"],
+      czas: ["zwykle kilka miesięcy; przy sporze sądowym znacznie dłużej"],
+      uwaga: "Jeśli granica była kiedyś ustalona i nikt jej nie kwestionuje, często wystarczy tańsze wznowienie znaków granicznych.",
+      parametry: [{ id: "dlugosc", etykieta: "Przybliżona długość granicy", typ: "text", ph: "np. 40 m" }, { id: "spor", etykieta: "Czy jest spór z sąsiadem?", typ: "select", opcje: ["nie wiem", "nie", "tak"] }] },
+    { id: "mapa", nazwa: "Mapa do celów projektowych", krotko: "Podkład dla architekta do projektu domu albo przyłącza.",
+      opis: "Aktualna mapa terenu z uzbrojeniem, potrzebna projektantowi do projektu budowlanego, uwierzytelniona przez ośrodek dokumentacji.",
+      zawiera: ["zgłoszenie pracy i materiały z ośrodka (mapa zasadnicza, ewidencja, sieci)", "pomiar aktualizacyjny w terenie", "opracowanie mapy zgodnie z przepisami", "weryfikacja i uwierzytelnienie mapy w ośrodku", "przekazanie mapy w wersji papierowej lub elektronicznej"],
+      zalezy: ["powierzchnia terenu", "gęstość zabudowy i uzbrojenia", "aktualność mapy zasadniczej w danym powiecie", "czas weryfikacji w ośrodku dokumentacji"],
+      nie: ["część opłat za materiały i uwierzytelnienie, jeśli firma ich nie wlicza", "dodatkowe egzemplarze mapy"],
+      czas: ["zwykle od 2 do 6 tygodni, dużo zależy od ośrodka dokumentacji"],
+      uwaga: "Zapytaj architekta, jaki obszar ma obejmować mapa i w jakiej formie jej potrzebuje. To skraca wycenę i zapobiega dopłatom.",
+      parametry: [{ id: "pow", etykieta: "Powierzchnia terenu", typ: "text", ph: "np. 0,12 ha albo 1200 m²" }, { id: "cel", etykieta: "Cel mapy", typ: "select", opcje: ["dom jednorodzinny", "przyłącza", "budynek usługowy lub wielorodzinny", "inny"] }] },
+    { id: "wytyczenie", nazwa: "Wytyczenie budynku", krotko: "Wyznaczenie w terenie położenia budynku według projektu.",
+      opis: "Przeniesienie projektu na grunt: geodeta wyznacza położenie budynku (osie, narożniki) przed rozpoczęciem budowy i wpisuje to do dziennika budowy.",
+      zawiera: ["analiza projektu zagospodarowania działki", "obliczenie danych do tyczenia", "wytyczenie osi lub narożników budynku", "szkic tyczenia i wpis do dziennika budowy"],
+      zalezy: ["wielkość i kształt budynku", "liczba punktów do wytyczenia", "dostępność osnowy w okolicy", "liczba wizyt (np. ponowne tyczenie)"],
+      nie: ["ławy drutowe i palikowanie, jeśli firma ich nie wykonuje", "ponowne wytyczenie zniszczonych punktów"],
+      czas: ["zwykle kilka dni od zgłoszenia, sama praca w terenie to często jeden dzień"],
+      uwaga: "Często opłaca się zamówić u jednej firmy wytyczenie i później inwentaryzację powykonawczą.",
+      parametry: [{ id: "obiekt", etykieta: "Rodzaj obiektu", typ: "select", opcje: ["dom jednorodzinny", "budynek gospodarczy lub garaż", "inny budynek"] }, { id: "ile", etykieta: "Liczba budynków", typ: "number", ph: "np. 1" }] },
+    { id: "inwentaryzacja", nazwa: "Inwentaryzacja powykonawcza", krotko: "Pomiar wybudowanego budynku lub przyłączy do odbioru.",
+      opis: "Pomiar tego, co zostało wybudowane (budynek, przyłącza, sieci), i mapa powykonawcza potrzebna do zakończenia budowy i aktualizacji mapy zasadniczej.",
+      zawiera: ["zgłoszenie pracy i materiały z ośrodka", "pomiar w terenie (przyłącza przed zasypaniem)", "mapa powykonawcza i operat do ośrodka", "aktualizacja mapy zasadniczej i ewidencji, gdy to wymagane"],
+      zalezy: ["rodzaj i liczba obiektów", "długość przyłączy lub sieci", "liczba wizyt w terenie", "czas weryfikacji w ośrodku"],
+      nie: ["ponowne odkopanie przyłącza, jeśli zasypano je przed pomiarem", "dodatkowe egzemplarze mapy"],
+      czas: ["zwykle od 2 do 4 tygodni po pomiarze"],
+      uwaga: "Przyłącza i sieci zgłoś geodecie do pomiaru, zanim zostaną zasypane. Pomiar po zasypaniu jest trudniejszy i droższy.",
+      parametry: [{ id: "co", etykieta: "Co inwentaryzujesz?", typ: "select", opcje: ["budynek", "przyłącza", "budynek i przyłącza", "sieć lub inny obiekt"] }, { id: "ile", etykieta: "Liczba obiektów lub długość", typ: "text", ph: "np. budynek i 3 przyłącza" }] },
+    { id: "inna", nazwa: "Inna usługa", krotko: "Np. aktualizacja ewidencji, pomiar, skaning, mapa dla sądu.",
+      opis: "Opisz w formularzu, czego potrzebujesz. Firmy dopytają o szczegóły i przygotują wycenę.",
+      zawiera: ["zależnie od rodzaju pracy: zgłoszenie w ośrodku, pomiar, opracowanie wyników, dokumentacja"],
+      zalezy: ["zakres i cel prac", "wielkość terenu lub obiektu", "wymagania urzędu, sądu albo projektanta"],
+      nie: ["opłaty urzędowe i sądowe"],
+      czas: ["ustalany indywidualnie"],
+      uwaga: "",
+      parametry: [{ id: "rodzaj", etykieta: "Rodzaj usługi", typ: "text", ph: "np. aktualizacja budynku w ewidencji" }] }
+  ];
+
+  var wybrana = null;
+  $("uslugi").innerHTML = USLUGI.map(function (u) {
+    return '<button type="button" class="usluga" data-u="' + u.id + '"><b>' + esc(u.nazwa) + "</b><span>" + esc(u.krotko) + "</span></button>";
+  }).join("");
+  var li = function (arr) { return arr.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join(""); };
+
+  function pokazUsluge(id) {
+    var u = USLUGI.filter(function (x) { return x.id === id; })[0];
+    if (!u) return;
+    wybrana = u;
+    document.querySelectorAll(".usluga").forEach(function (b) { b.classList.toggle("wybrana", b.dataset.u === id); });
+    $("wTytul").textContent = u.nazwa;
+    $("wOpis").textContent = u.opis;
+    $("wZawiera").innerHTML = li(u.zawiera);
+    $("wZalezy").innerHTML = li(u.zalezy);
+    $("wNie").innerHTML = li(u.nie);
+    $("wCzas").innerHTML = li(u.czas);
+    $("wUwaga").hidden = !u.uwaga;
+    $("wUwaga").textContent = u.uwaga ? "Wskazówka: " + u.uwaga : "";
+    $("parametry").innerHTML = u.parametry.map(function (p) {
+      var pole = p.typ === "select"
+        ? '<select data-par="' + p.id + '" data-etykieta="' + esc(p.etykieta) + '">' + p.opcje.map(function (o) { return "<option>" + esc(o) + "</option>"; }).join("") + "</select>"
+        : '<input type="' + (p.typ === "number" ? "number" : "text") + '"' + (p.typ === "number" ? ' min="1" step="1"' : "") +
+          ' data-par="' + p.id + '" data-etykieta="' + esc(p.etykieta) + '" placeholder="' + esc(p.ph || "") + '">';
+      return '<div class="pole"><label>' + esc(p.etykieta) + "</label>" + pole + "</div>";
+    }).join("");
+    $("wynik").classList.add("widoczny");
+    try { history.replaceState(null, "", "?usluga=" + id + location.hash); } catch (e) {}
+    $("wynik").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  $("uslugi").addEventListener("click", function (e) {
+    var b = e.target.closest(".usluga");
+    if (b) pokazUsluge(b.dataset.u);
+  });
+
+  /* ── firmy członkowskie: województwo i sąsiednie, kolejność losowa (żadna firma nie jest wyróżniona) ── */
+  var SASIEDZI = {
+    "dolnośląskie": ["lubuskie", "wielkopolskie", "opolskie"],
+    "kujawsko-pomorskie": ["pomorskie", "warmińsko-mazurskie", "mazowieckie", "łódzkie", "wielkopolskie"],
+    "lubelskie": ["mazowieckie", "podlaskie", "świętokrzyskie", "podkarpackie"],
+    "lubuskie": ["zachodniopomorskie", "wielkopolskie", "dolnośląskie"],
+    "łódzkie": ["mazowieckie", "świętokrzyskie", "śląskie", "opolskie", "wielkopolskie", "kujawsko-pomorskie"],
+    "małopolskie": ["śląskie", "świętokrzyskie", "podkarpackie"],
+    "mazowieckie": ["warmińsko-mazurskie", "podlaskie", "lubelskie", "świętokrzyskie", "łódzkie", "kujawsko-pomorskie"],
+    "opolskie": ["dolnośląskie", "wielkopolskie", "łódzkie", "śląskie"],
+    "podkarpackie": ["małopolskie", "świętokrzyskie", "lubelskie"],
+    "podlaskie": ["warmińsko-mazurskie", "mazowieckie", "lubelskie"],
+    "pomorskie": ["zachodniopomorskie", "wielkopolskie", "kujawsko-pomorskie", "warmińsko-mazurskie"],
+    "śląskie": ["opolskie", "łódzkie", "świętokrzyskie", "małopolskie"],
+    "świętokrzyskie": ["łódzkie", "mazowieckie", "lubelskie", "podkarpackie", "małopolskie", "śląskie"],
+    "warmińsko-mazurskie": ["pomorskie", "kujawsko-pomorskie", "mazowieckie", "podlaskie"],
+    "wielkopolskie": ["zachodniopomorskie", "pomorskie", "kujawsko-pomorskie", "łódzkie", "opolskie", "dolnośląskie", "lubuskie"],
+    "zachodniopomorskie": ["pomorskie", "wielkopolskie", "lubuskie"]
+  };
+  var czlonkowie = null;
+  function sdk() {
+    if (window.supabase) return Promise.resolve();
+    return new Promise(function (res, rej) {
+      var s = document.createElement("script");
+      s.src = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js";
+      s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  }
+  function wczytajFirmy() {
+    if (czlonkowie) return Promise.resolve(czlonkowie);
+    return sdk().then(function () {
+      var db = window.supabase.createClient(window.GIG_CFG.SUPABASE_URL, window.GIG_CFG.SUPABASE_ANON);
+      return db.from("czlonkowie").select("id,name,region,address,website").eq("status", "published");
+    }).then(function (r) {
+      if (r.error) throw r.error;
+      czlonkowie = (r.data || []).map(function (f) { f.woj = String(f.region || "").toLowerCase().trim(); return f; });
+      for (var i = czlonkowie.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = czlonkowie[i]; czlonkowie[i] = czlonkowie[j]; czlonkowie[j] = t; }
+      return czlonkowie;
+    });
+  }
+  var miasto = function (adres) { var m = String(adres || "").match(/\d{2}-\d{3}\s+([^,]+)/); return m ? m[1].trim() : String(adres || ""); };
+  function kafelek(f, zaznacz) {
+    return '<label class="firma"><input type="checkbox" class="fCheck" value="' + esc(f.id) + '"' + (zaznacz ? " checked" : "") + ">" +
+      "<span><b>" + esc(f.name) + "</b><small>" + esc(miasto(f.address)) + (f.woj ? " · woj. " + esc(f.woj) : "") + "</small></span></label>";
+  }
+  function pokazFirmy() {
+    var woj = $("woj").value;
+    if (!woj) { $("firmyBox").innerHTML = '<p class="hint">Wybierz województwo, a pokażemy firmy członkowskie Izby z Twojego regionu.</p>'; licz(); return; }
+    $("firmyBox").innerHTML = '<p class="hint">Wczytuję firmy…</p>';
+    wczytajFirmy().then(function (lista) {
+      var swoje = lista.filter(function (f) { return f.woj === woj; });
+      var sasiednie = lista.filter(function (f) { return (SASIEDZI[woj] || []).indexOf(f.woj) >= 0; });
+      var html = '<p class="firmy-tytul">Firmy członkowskie z województwa ' + esc(woj) + "</p>";
+      html += swoje.length
+        ? '<div class="firmy">' + swoje.map(function (f, i) { return kafelek(f, i < MAX); }).join("") + "</div>"
+        : '<p class="brak-firm">W tym województwie nie mamy jeszcze firm członkowskich. Wybierz firmy z sąsiednich województw poniżej albo napisz do biura Izby: <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</p>';
+      if (sasiednie.length && swoje.length < 4) {
+        html += '<p class="firmy-tytul">Z sąsiednich województw</p><div class="firmy">' +
+          sasiednie.map(function (f) { return kafelek(f, false); }).join("") + "</div>";
+      }
+      $("firmyBox").innerHTML = html;
+      licz();
+    }).catch(function (e) {
+      console.warn(e);
+      $("firmyBox").innerHTML = '<p class="brak-firm">Nie udało się wczytać listy firm. Odśwież stronę albo zobacz <a href="/czlonkowie/">katalog Członków</a>.</p>';
+    });
+  }
+  function licz() {
+    var n = document.querySelectorAll(".fCheck:checked").length;
+    $("licznik").textContent = document.querySelector(".fCheck")
+      ? "Zaznaczone firmy: " + n + " (najwyżej " + MAX + ")" : "";
+  }
+  $("woj").addEventListener("change", pokazFirmy);
+  $("firmyBox").addEventListener("change", function (e) {
+    if (!e.target.classList.contains("fCheck")) return;
+    if (document.querySelectorAll(".fCheck:checked").length > MAX) { e.target.checked = false; pokaz("Możesz zaznaczyć najwyżej " + MAX + " firm.", false); }
+    licz();
+  });
+
+  function pokaz(t, ok) { $("msg").textContent = t; $("msg").className = "msg " + (ok ? "ok" : "err"); }
+  var val = function (id) { return ($(id).value || "").trim(); };
+
+  $("zForm").addEventListener("submit", async function (ev) {
+    ev.preventDefault();
+    var firmy = Array.prototype.map.call(document.querySelectorAll(".fCheck:checked"), function (i) { return i.value; });
+    if (!wybrana) return pokaz("Wybierz usługę na górze strony.", false);
+    if (!val("woj")) return pokaz("Wybierz województwo.", false);
+    if (!val("miejscowosc")) return pokaz("Podaj miejscowość i powiat.", false);
+    if (!firmy.length) return pokaz("Zaznacz co najmniej jedną firmę.", false);
+    if (!val("imie")) return pokaz("Podaj imię i nazwisko albo nazwę firmy.", false);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(val("email"))) return pokaz("Podaj poprawny adres e-mail.", false);
+    if (!$("zgoda").checked) return pokaz("Zaznacz zgodę na przekazanie zapytania wybranym firmom.", false);
+
+    var parametry = Array.prototype.map.call(document.querySelectorAll("[data-par]"), function (el) {
+      return { etykieta: el.dataset.etykieta, wartosc: (el.value || "").trim() };
+    }).filter(function (p) { return p.wartosc; });
+
+    var btn = $("wyslij"); btn.disabled = true; pokaz("Wysyłam zapytanie…", true);
+    try {
+      var r = await fetch(window.GIG_CFG.SUPABASE_URL + "/functions/v1/zapytanie-wycena", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", apikey: window.GIG_CFG.SUPABASE_ANON },
+        body: JSON.stringify({
+          usluga: wybrana.id, usluga_nazwa: wybrana.nazwa, wojewodztwo: val("woj"), miejscowosc: val("miejscowosc"),
+          parametry: parametry, opis: val("opis"), termin: val("termin"),
+          imie: val("imie"), email: val("email"), telefon: val("telefon"),
+          firmy: firmy, zgoda: true, www: val("www"), czas: Date.now() - start
+        })
+      });
+      var d = await r.json().catch(function () { return {}; });
+      if (!r.ok || !d.ok) throw new Error(d.error || "Nie udało się wysłać zapytania.");
+      $("zForm").innerHTML = '<h2><span class="nr">✓</span> Zapytanie wysłane</h2>' +
+        "<p>Twoje zapytanie trafiło do " + (d.wyslano === 1 ? "1 firmy" : d.wyslano + " firm") + ": " + esc((d.firmy || []).join(", ")) + ".</p>" +
+        "<p>Firmy odpowiedzą bezpośrednio na adres <strong>" + esc(val("email")) + "</strong>. Wysłaliśmy Ci też potwierdzenie z ich danymi kontaktowymi.</p>";
+      $("zForm").scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch (err) {
+      btn.disabled = false;
+      pokaz(err.message || "Nie udało się wysłać zapytania. Spróbuj ponownie albo napisz na biuro@gig.org.pl.", false);
+    }
+  });
+
+  /* link z ?usluga=<id> otwiera od razu opis usługi */
+  var m = location.search.match(/[?&]usluga=([a-z]+)/);
+  if (m) pokazUsluge(m[1]);
+})();
+</script>
+<script defer src="/_assets/js/gig-site.js"></script>
+</body>
+</html>

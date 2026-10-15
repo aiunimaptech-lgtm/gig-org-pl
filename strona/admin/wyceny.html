@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Zapytania o wycenę — Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .zw-sum{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:18px;}
+    .zw-sum .k{background:#fff;border:1px solid #e3e9ee;border-radius:12px;padding:12px 16px;}
+    .zw-sum .k .t{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+    .zw-sum .k .v{font-size:22px;font-weight:800;color:#16202a;margin-top:3px;}
+    .zw-mini{font-size:12px;color:#6b7f84;line-height:1.5;margin-top:3px;}
+    .zw-dane dt{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:12px;}
+    .zw-dane dd{margin:3px 0 0;font-size:15px;color:#16202a;white-space:pre-wrap;}
+    .zw-firmy li{margin:0 0 4px;}
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html"><span class="nav-icon">🏠</span> Pulpit</a>
+        <div class="nav-section">Zgłoszenia ze strony</div>
+        <a href="formularze.html#kontakt"><span class="nav-icon">📨</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">📝</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <a href="wyceny.html" class="active"><span class="nav-icon">💬</span> Zapytania o wycenę <span class="nav-badge" id="navBadgeWyceny" style="display:none">0</span></a>
+        <div class="nav-section">Sprawy Izby</div>
+        <a href="czlonkowie.html"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
+        <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
+        <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
+        <a href="wizytowki.html"><span class="nav-icon">🪪</span> Wizytówki członków <span class="nav-badge" id="navBadgeWizytowki" style="display:none">0</span></a>
+        <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
+        <a href="ankiety.html"><span class="nav-icon">⭐</span> Ankiety po szkoleniach</a>
+        <div class="nav-section">Treści na stronie</div>
+        <a href="artykuly.html"><span class="nav-icon">📰</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <div class="nav-section">Wysyłka maili</div>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Zapytania o wycenę z kalkulatora</div>
+        <div class="topbar-actions">
+          <a class="btn btn-ghost btn-sm" href="/ile-kosztuje-geodezja/" target="_blank">↗ Kalkulator na stronie</a>
+          <button class="btn btn-outline btn-sm" id="expCsv">↓ Eksport (CSV)</button>
+        </div>
+      </header>
+      <main class="admin-content">
+        <div class="zw-sum" id="podsumowanie"></div>
+        <div class="card"><div class="card-body">
+          <p class="zw-mini" style="margin:0 0 12px;">Klienci wysyłają zapytanie ze strony <a href="/ile-kosztuje-geodezja/" target="_blank">/ile-kosztuje-geodezja/</a>
+            do wybranych firm członkowskich (najwyżej 8). Każda firma dostaje osobny mail z adresem klienta do odpowiedzi; biuro widzi tu, kto pytał i do kogo trafiło zapytanie.</p>
+          <div class="toolbar">
+            <div class="search-box"><span class="search-icon">⌕</span>
+              <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: klient, e-mail, miejscowość, firma…"></div>
+            <select id="fUsluga" class="form-control" style="max-width:230px;"><option value="">Wszystkie usługi</option></select>
+            <select id="fStatus" class="form-control" style="max-width:170px;">
+              <option value="">Wszystkie statusy</option><option value="new">Nowe</option><option value="read">Przeczytane</option>
+              <option value="archiwum">Archiwum</option><option value="spam">Spam</option>
+            </select>
+          </div>
+          <div class="table-wrap"><table class="admin-table">
+            <thead><tr><th>Klient</th><th>Usługa</th><th>Lokalizacja</th><th>Firmy</th><th>Data</th><th>Status</th><th></th></tr></thead>
+            <tbody id="rows"><tr><td colspan="7" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+          </table></div>
+        </div></div>
+      </main>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="zwModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title" id="zwTytul">Zapytanie</div>
+        <button class="modal-close" data-modal-close="zwModal">×</button>
+      </div>
+      <div class="modal-body" id="zwTresc"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    /* Zapytania o wycenę z kalkulatora /ile-kosztuje-geodezja/ (tabela zapytania_wyceny).
+       Zapis robi wyłącznie Edge Function zapytanie-wycena; tu tylko podgląd, status i eksport. */
+    let dane = [];
+    const ETYK = { new:'nowe', read:'przeczytane', archiwum:'archiwum', spam:'spam' };
+    const BADGE = { new:'badge-new', read:'badge-read', archiwum:'badge-archived', spam:'badge-cancelled' };
+    const firmyTxt = z => (z.firmy || []).filter(f => f.ok).map(f => f.nazwa);
+
+    function podsumuj(){
+      const d30 = Date.now() - 30 * 86400000;
+      const ost = dane.filter(z => new Date(z.created_at).getTime() >= d30 && z.status !== 'spam');
+      const k = (t, v) => `<div class="k"><div class="t">${t}</div><div class="v">${v}</div></div>`;
+      const firm = new Set(ost.flatMap(z => (z.firmy || []).filter(f => f.ok).map(f => f.id))).size;
+      document.getElementById('podsumowanie').innerHTML =
+        k('Zapytania (30 dni)', ost.length) + k('Wysłanych maili do firm', ost.reduce((s, z) => s + (z.wyslano_do || 0), 0)) +
+        k('Firm, które dostały zapytania', firm) + k('Nowe', dane.filter(z => z.status === 'new').length);
+    }
+    function filtruj(){
+      const f = document.getElementById('szukaj').value.toLowerCase().trim();
+      const u = document.getElementById('fUsluga').value, st = document.getElementById('fStatus').value;
+      return dane.filter(z => (!u || z.usluga === u) && (!st || z.status === st) &&
+        (!f || [z.imie, z.email, z.telefon, z.miejscowosc, z.wojewodztwo, z.opis, ...firmyTxt(z)].some(v => (v || '').toLowerCase().includes(f))));
+    }
+    function render(){
+      const rows = filtruj(), tb = document.getElementById('rows');
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#6b7f84;">Brak zapytań.</td></tr>'; return; }
+      tb.innerHTML = rows.map(z => `<tr>
+        <td><strong>${esc(z.imie)}</strong><div class="zw-mini">${esc(z.email)}${z.telefon ? ' · ' + esc(z.telefon) : ''}</div></td>
+        <td>${esc(z.usluga_nazwa || z.usluga)}</td>
+        <td>${esc(z.miejscowosc || '')}<div class="zw-mini">woj. ${esc(z.wojewodztwo)}</div></td>
+        <td style="max-width:260px;">${z.wyslano_do}<div class="zw-mini">${esc(firmyTxt(z).join(', '))}</div></td>
+        <td style="white-space:nowrap;">${fmtDate(z.created_at)}</td>
+        <td><span class="badge ${BADGE[z.status] || 'badge-read'}">${ETYK[z.status] || z.status}</span></td>
+        <td class="actions"><button class="btn btn-ghost btn-xs" data-z="${z.id}">Szczegóły</button></td>
+      </tr>`).join('');
+      tb.querySelectorAll('[data-z]').forEach(b => b.addEventListener('click', () => pokaz(b.dataset.z)));
+    }
+    async function status(id, s){
+      const { error } = await db.from('zapytania_wyceny').update({ status: s }).eq('id', id);
+      if (error) { toast('Nie udało się zapisać', 'error'); return; }
+      const z = dane.find(x => x.id === id); if (z) z.status = s;
+      podsumuj(); render(); loadSidebarBadges();
+    }
+    function pokaz(id){
+      const z = dane.find(x => x.id === id); if (!z) return;
+      if (z.status === 'new') status(id, 'read');
+      const w = (k, v) => v ? `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>` : '';
+      document.getElementById('zwTytul').textContent = (z.usluga_nazwa || z.usluga) + ' · ' + (z.miejscowosc || '');
+      document.getElementById('zwTresc').innerHTML = `<dl class="zw-dane" style="margin:0;">
+          ${w('Klient', z.imie)}${w('E-mail', z.email)}${w('Telefon', z.telefon)}
+          ${w('Usługa', z.usluga_nazwa || z.usluga)}${w('Lokalizacja', (z.miejscowosc || '') + ', woj. ' + z.wojewodztwo)}
+          ${(z.parametry || []).map(p => w(p.etykieta, p.wartosc)).join('')}
+          ${w('Termin', z.termin)}${w('Opis', z.opis)}${w('Wysłano', fmtDate(z.created_at))}
+          <dt>Firmy</dt><dd><ul class="zw-firmy" style="margin:4px 0 0;padding-left:18px;">${(z.firmy || []).map(f =>
+            `<li>${esc(f.nazwa)} <span class="zw-mini">(${esc(f.email)})</span> ${f.ok ? '✓' : '<span class="badge badge-cancelled">nie wysłano</span>'}</li>`).join('')}</ul></dd>
+        </dl>
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" data-st="archiwum">Do archiwum</button>
+          <button class="btn btn-ghost btn-sm" data-st="spam">Oznacz jako spam</button>
+        </div>`;
+      document.querySelectorAll('#zwTresc [data-st]').forEach(b => b.addEventListener('click', async () => { await status(id, b.dataset.st); closeModal('zwModal'); }));
+      openModal('zwModal');
+    }
+    async function load(){
+      const { data, error } = await db.from('zapytania_wyceny').select('*').order('created_at', { ascending:false });
+      if (error) { toast('Błąd ładowania zapytań', 'error'); console.error(error); return; }
+      dane = data || [];
+      const sel = document.getElementById('fUsluga'), biez = sel.value;
+      const uslugi = [...new Map(dane.map(z => [z.usluga, z.usluga_nazwa || z.usluga])).entries()];
+      sel.innerHTML = '<option value="">Wszystkie usługi</option>' + uslugi.map(([k, n]) => `<option value="${esc(k)}">${esc(n)}</option>`).join('');
+      sel.value = biez;
+      podsumuj(); render(); loadSidebarBadges();
+    }
+    (async () => {
+      if (!await requireAuth()) return;
+      document.getElementById('szukaj').addEventListener('input', render);
+      document.getElementById('fUsluga').addEventListener('change', render);
+      document.getElementById('fStatus').addEventListener('change', render);
+      document.getElementById('expCsv').addEventListener('click', () => {
+        const rows = filtruj().map(z => ({ data: fmtDate(z.created_at), klient: z.imie, email: z.email, telefon: z.telefon || '',
+          usluga: z.usluga_nazwa || z.usluga, wojewodztwo: z.wojewodztwo, miejscowosc: z.miejscowosc || '',
+          parametry: (z.parametry || []).map(p => p.etykieta + ': ' + p.wartosc).join('; '), termin: z.termin || '',
+          opis: (z.opis || '').replace(/\s+/g, ' '), firmy: firmyTxt(z).join('; '), status: ETYK[z.status] || z.status }));
+        if (!rows.length) { toast('Brak danych do eksportu'); return; }
+        exportCSV(rows, Object.keys(rows[0]).map(k => ({ key:k, label:k })), 'zapytania-o-wycene.csv');
+      });
+      load();
+    })();
+  </script>
+</body>
+</html>
