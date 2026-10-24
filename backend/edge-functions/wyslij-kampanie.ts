@@ -4,6 +4,7 @@
 //   stopka „zgłoszono Cię na szkolenie”, bez linku wypisu;
 //   v10 9.10.2026: wysylki.zalaczniki [{nazwa,url}]: pliki z gig.org.pl doklejane do maila,
 //   wtedy wysyłka pojedyncza przez /emails (batch nie obsługuje załączników);
+//   v12 24.10.2026: link wypisu z newslettera prowadzi na /wypis-newsletter/ (strona z przyciskiem);
 //   v11 12.10.2026: rodzaj 'czlonkowie' = sprawy członkowskie: wypis z mailingów ich nie blokuje
 //   (pomijamy tylko adresy odbite i usunięte), bez linku wypisu i nagłówka List-Unsubscribe)
 // Wysyła kampanię z kolejki (tabele `wysylki` + `wysylki_odbiorcy`) PORCJAMI.
@@ -275,7 +276,9 @@ Deno.serve(async (req) => {
          linki automatycznie. Naglowek List-Unsubscribe zostaje przy funkcji (POST jednym klikiem). */
       const strona = czlonkowie ? "" : r.baza_email_id
         ? `https://gig.org.pl/wypis/?id=${encodeURIComponent(String(r.baza_email_id))}`
-        : wypis;
+        : r.newsletter_id
+          ? `https://gig.org.pl/wypis-newsletter/?id=${encodeURIComponent(String(r.newsletter_id))}`
+          : wypis;
       const trescOdb = tresc.replace(/\{\{WYPIS\}\}|%7B%7BWYPIS%7D%7D/gi, strona || "https://gig.org.pl/kontakt/");
       return {
         from: FROM_EMAIL,

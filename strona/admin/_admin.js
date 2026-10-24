@@ -232,7 +232,7 @@ function bezpiecznyUrl(u) {
 function esc(s) {
   return (s ?? '').toString()
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
 /* ── Zapisy na szkolenia: liczba osób w zgłoszeniu ──

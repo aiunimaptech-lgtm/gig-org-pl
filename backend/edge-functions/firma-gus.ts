@@ -15,8 +15,11 @@
 //
 // Dane są publiczne (rejestry), więc funkcja nie wymaga logowania
 // (verify_jwt = false). Zabezpieczenie przed nadużyciem: NIP musi przejść sumę
-// kontrolną, więc funkcja nie nadaje się do skanowania zakresów.
+// kontrolną, a od 24.10.2026 (v2) jest limit: 20 zapytań na IP na godzinę i 600 na dobę
+// łącznie (gig_gus_limit, tabela wpisy_limit), żeby nikt nie zużył klucza GUS Izby.
 // ============================================================
+
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const GUS_KEY = Deno.env.get("GUS_BIR_KEY") ?? "";
 const GUS_URL = "https://wyszukiwarkaregon.stat.gov.pl/wsBIR/UslugaBIRzewnPubl.svc";
@@ -166,6 +169,15 @@ Deno.serve(async (req) => {
 
   nip = nip.replace(/[\s-]/g, "");
   if (!nipOk(nip)) return json({ error: "Podaj poprawny NIP (10 cyfr)." }, 400);
+
+  // limit na IP (rejestracja wywołania w bazie); przy błędzie bazy nie blokujemy formularza
+  try {
+    const ip = (req.headers.get("cf-connecting-ip") ?? req.headers.get("x-forwarded-for") ?? "").split(",")[0].trim().slice(0, 60) || null;
+    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: wolno, error } = await db.rpc("gig_gus_limit", { p_ip: ip });
+    if (!error && wolno === false) return json({ error: "Zbyt wiele zapytań. Spróbuj za chwilę albo wpisz dane ręcznie." }, 429);
+  } catch (e) { console.error("gig_gus_limit:", e); }
 
   const firma = (await zGus(nip)) ?? (await zMf(nip));
   if (!firma) return json({ error: "Nie znaleźliśmy firmy o tym NIP-ie w rejestrach. Wpisz dane ręcznie." }, 404);

@@ -152,6 +152,7 @@
 </section>
 
 <form class="w-form" id="wForm" novalidate>
+<div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Nie wypełniaj <input type="text" id="gigWww" name="gig-www" tabindex="-1" autocomplete="off"></label></div>
   <fieldset>
     <legend>Firma<span class="opis">Kto podaje ceny. Danych firmy nie publikujemy.</span></legend>
     <div class="w-gus">
@@ -508,9 +509,14 @@
   function pokaz(t, ok) { msg.textContent = t; msg.className = "w-msg " + (ok ? "ok" : "err"); }
   var val = function (id) { return ($(id).value || "").trim(); };
 
+  var START = Date.now();
   form.addEventListener("submit", async function (ev) {
     ev.preventDefault();
     var btn = $("wSend");
+    /* pułapka na roboty: ukryte pole albo wysyłka w kilka sekund od wejścia; udajemy sukces */
+    if (($("gigWww").value || "").trim() !== "" || Date.now() - START < 4000) {
+      form.style.display = "none"; $("wOk").style.display = "block"; return;
+    }
     var ceny = pola().filter(function (i) { return i.value.trim() !== ""; })
       .map(function (i) { return { kod: i.dataset.kod, nazwa: i.dataset.nazwa, jm: i.dataset.jm, cena: Number(i.value) }; })
       .filter(function (c) { return isFinite(c.cena) && c.cena >= 0; });
@@ -545,7 +551,10 @@
         okres: val("okres"), uwagi: val("uwagi") || null,
         newsletter: $("newsletter").checked, status: "new"
       });
-      if (ank.error) throw ank.error;
+      if (ank.error) {
+        if (/ZA_DUZO_ZGLOSZEN/.test(String(ank.error.message))) { btn.disabled = false; pokaz("Zbyt wiele ankiet z tego adresu. Spróbuj później albo napisz na biuro@gig.org.pl.", false); return; }
+        throw ank.error;
+      }
 
       if (ceny.length) {
         var wiersze = ceny.map(function (c) { return { ankieta_id: ankietaId, kod: c.kod, nazwa: c.nazwa, jm: c.jm, cena: c.cena }; });

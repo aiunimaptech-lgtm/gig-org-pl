@@ -76,6 +76,16 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   „Opłaty/Faktury/Zaświadczenia” (`#szkolenia/lista osob ze szkolen GIG/`), dopisana 2.10.2026 jednorazowym importem:
   istniejące adresy dostały znacznik i uzupełnione puste pola, nowe mają `pochodzenie = 'szkolenia GIG 2021-2026'`.
 
+## Antyspam formularzy publicznych (od 24.10.2026, `backend/supabase_antyspam.sql`)
+- Trigger `gig_limit_wpisow` na `submissions_kontakt`, `submissions_newsletter`, `zapisy_szkolenia`, `wezel_ankiety`
+  (tylko rola anon): 3/h i 10/dobę na e-mail, 12/h i 40/dobę na IP (z nagłówków PostgREST), 300/h na tabelę.
+  Nadmiar = błąd `ZA_DUZO_ZGLOSZEN`; formularze pokazują wtedy własny komunikat. Rejestr w `wpisy_limit`.
+- Pułapka na roboty: ukryte pole `gig-www` i min. 3–4 s od wejścia (`forms_integration.js`, `/zapisy/`, `/wezel-jakosci/`).
+  Robot dostaje „sukces”, nic nie zapisujemy.
+- `firma-gus` v2: 20 zapytań/h na IP i 600/dobę (`gig_gus_limit`). Potwierdzenie kontaktu nie cytuje treści wiadomości.
+- Wypis z newslettera: `/wypis-newsletter/?id=` (strona z przyciskiem) + `newsletter-unsubscribe` v2 (GET → 302,
+  POST one-click/JSON), jak `baza-wypis`. Podglądy maili w panelu w ramkach z `sandbox`.
+
 ## SEO, agenci AI i prerender (od 28.09.2026)
 - **Treść z bazy jest też w HTML-u**: `skrypty/prerender.mjs` zapisuje szkolenia, katalog Członków,
   najnowsze wpisy i pełne strony `/wpis/<slug>/` (z JSON-LD), a także `sitemap.xml` i `llms.txt`.

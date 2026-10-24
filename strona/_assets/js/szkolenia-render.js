@@ -89,7 +89,9 @@
     var n = t.replace(/\s/g, "").match(/\d+(?:[.,]\d+)?/);
     return !!n && parseFloat(n[0].replace(",", ".")) === 0;
   }
-  function esc(s) { return (s == null ? "" : String(s)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function esc(s) { return (s == null ? "" : String(s)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"); }
+  /* adres do atrybutu href: tylko http(s), inaczej pusto */
+  function bezpiecznyUrl(u) { u = String(u == null ? "" : u).trim(); return /^https?:\/\//i.test(u) ? esc(u) : ""; }
 
   /* Opis: akapity rozdzielone pustą linią; zwykłe adresy zamieniane w odnośniki. */
   function akapity(txt) {
@@ -166,7 +168,7 @@
     if (r.lecturer) {
       wyk = '<div class="gig-szk-wyk"><div class="kto">' + esc(r.lecturer) + "</div>" +
         (r.lecturer_bio ? '<div class="bio">' + esc(r.lecturer_bio) + "</div>" : "") +
-        (r.lecturer_url ? '<a href="' + esc(r.lecturer_url) + '" target="_blank" rel="noopener">Profil wykładowcy ↗</a>' : "") +
+        (bezpiecznyUrl(r.lecturer_url) ? '<a href="' + bezpiecznyUrl(r.lecturer_url) + '" target="_blank" rel="noopener">Profil wykładowcy ↗</a>' : "") +
         "</div>";
     }
 

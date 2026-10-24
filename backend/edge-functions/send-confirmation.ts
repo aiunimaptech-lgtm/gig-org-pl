@@ -15,6 +15,9 @@
 // Przy zapisie do newslettera idzie TYLKO potwierdzenie do zapisujacego sie.
 // Powiadomien o zapisach nie wysylamy: bylo ich za duzo, a lista jest w panelu
 // (Newsletter) i w Bazie e-mail (lista „Newsletter”).
+// v23 (24.10.2026): potwierdzenie kontaktu bez cytatu tresci (ktos moglby wysylac przez
+// formularz cudza tresc na dowolny adres z nadawca Izby); link wypisu z newslettera na strone
+// /wypis-newsletter/ z przyciskiem, zeby filtry pocztowe nie wypisywaly ludzi same.
 // v22 (15.10.2026): zapis na szkolenie daje TYLKO potwierdzenie do zglaszajacego;
 // powiadomienie do GIG wraca po ustawieniu sekretu NOTIFY_ZAPISY = tak.
 // ============================================================
@@ -100,7 +103,8 @@ function layout(title: string, body: string, zacheta = true): string {
 }
 
 function newsletterMail(rec: Record<string, unknown>) {
-  const unsub = `${FUNCTIONS_BASE}/newsletter-unsubscribe?id=${rec.id ?? ""}`;
+  // strona z przyciskiem: samo otwarcie linku (np. przez filtr pocztowy) nie wypisuje
+  const unsub = `https://gig.org.pl/wypis-newsletter/?id=${rec.id ?? ""}`;
   const adres = (rec.email as string) || "";
   const body = `
     <p style="margin:0 0 14px;">Dzień dobry,</p>
@@ -115,7 +119,7 @@ function newsletterMail(rec: Record<string, unknown>) {
     </div>
     <p style="margin:0 0 14px;">Najbliższe szkolenia znajdziesz na stronie <a href="https://gig.org.pl/szkolenia/" style="color:${C.mid};text-decoration:none;">gig.org.pl/szkolenia</a>.</p>
     <p style="margin:22px 0 0;padding-top:14px;border-top:1px solid #edf1f4;font-size:12.5px;color:#9aa7b2;line-height:1.6;">
-      Nie chcesz otrzymywać newslettera? <a href="${unsub}" style="color:#9aa7b2;text-decoration:underline;">Wypisz się jednym kliknięciem</a>.
+      Nie chcesz otrzymywać newslettera? <a href="${unsub}" style="color:#9aa7b2;text-decoration:underline;">Wypisz się z newslettera</a>.
     </p>`;
   return { subject: "Potwierdzenie zapisu do newslettera GIG", html: layout("Zapis potwierdzony ✓", body, false) };
 }
@@ -127,9 +131,7 @@ function kontaktMail(rec: Record<string, unknown>) {
   const body = `
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">${greet}</p>
     <p style="margin:0 0 14px;font-size:15px;line-height:1.65;">dziękujemy za kontakt z Geodezyjną Izbą Gospodarczą. Odpowiemy najszybciej, jak to możliwe.</p>
-    ${msg ? `<div style="margin:0 0 16px;padding:14px 18px;background:${C.bg};border-left:4px solid ${C.mid};border-radius:6px;">
-      <p style="margin:0 0 6px;font-size:12px;font-weight:700;color:${C.mid};text-transform:uppercase;">Twoja wiadomość:</p>
-      <p style="margin:0;font-size:14px;line-height:1.6;white-space:pre-wrap;">${esc(msg)}</p></div>` : ""}`;
+    <p style="margin:0 0 14px;font-size:14px;line-height:1.65;color:#6b7c8c;">Wiadomość${msg ? ` (${msg.trim().length} znaków)` : ""} trafiła do biura Izby. Jeśli to nie Ty ją wysłałeś, zignoruj tę wiadomość.</p>`;
   return { subject: "Otrzymaliśmy Twoją wiadomość - GIG", html: layout("Wiadomość przyjęta ✓", body) };
 }
 

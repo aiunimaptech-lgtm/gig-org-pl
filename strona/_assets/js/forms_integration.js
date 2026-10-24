@@ -134,7 +134,7 @@
       showMsg(form, "✓ Dziękujemy! Zapisano do newslettera.", true);
     } catch (e) {
       console.error(e);
-      showMsg(form, "Błąd zapisu — spróbuj ponownie lub napisz na " + FALLBACK_EMAIL + ".", false);
+      showMsg(form, komunikatBledu(e, "Błąd zapisu — spróbuj ponownie lub napisz na " + FALLBACK_EMAIL + "."), false);
     }
   }
 
@@ -167,7 +167,7 @@
       showMsg(form, "✓ Wiadomość wysłana. Odpowiemy najszybciej, jak to możliwe.", true);
     } catch (e) {
       console.error(e);
-      showMsg(form, "Błąd wysyłania — spróbuj ponownie lub napisz na " + FALLBACK_EMAIL + ".", false);
+      showMsg(form, komunikatBledu(e, "Błąd wysyłania — spróbuj ponownie lub napisz na " + FALLBACK_EMAIL + "."), false);
     }
   }
 
@@ -260,7 +260,7 @@
       showMsg(form, "✓ Dziękujemy! Zgłoszenie zostało wysłane. Skontaktujemy się z Państwem.", true);
     } catch (e) {
       console.error(e);
-      showMsg(form, "Błąd wysyłania — spróbuj ponownie lub napisz na " + FALLBACK_EMAIL + ".", false);
+      showMsg(form, komunikatBledu(e, "Błąd wysyłania — spróbuj ponownie lub napisz na " + FALLBACK_EMAIL + "."), false);
     } finally {
       if (btn) btn.disabled = false;
     }
@@ -268,10 +268,30 @@
 
   /* Jedno wejście dla obu ścieżek (klik w przycisk i Enter w polu), z blokadą
      podwójnego wysłania. */
+  /* Pułapka na roboty: ukryte pole, którego człowiek nie widzi, oraz minimalny czas
+     od załadowania strony. Robot wypełnia wszystko i wysyła od razu; wtedy udajemy
+     sukces i nic nie zapisujemy. Twarde limity są dodatkowo w bazie (trigger). */
+  var START = Date.now();
+  function pulapka(form) {
+    var hp = form.querySelector('[name="gig-www"]');
+    return (hp && hp.value.trim() !== "") || (Date.now() - START) < 3000;
+  }
+  function komunikatBledu(e, domyslny) {
+    var t = String((e && (e.message || e.hint)) || "");
+    if (/ZA_DUZO_ZGLOSZEN/.test(t)) return "Zbyt wiele zgłoszeń z tego adresu. Spróbuj później albo napisz na " + FALLBACK_EMAIL + ".";
+    return domyslny;
+  }
+
   function obsluz(form) {
     if (form.dataset.gigBusy === "1") return;
     form.dataset.gigBusy = "1";
     var kind = classify(form);
+    if (pulapka(form)) {
+      form.reset();
+      showMsg(form, "✓ Dziękujemy! Zgłoszenie zostało przyjęte.", true);
+      form.dataset.gigBusy = "";
+      return;
+    }
     var p = kind === "newsletter"   ? handleNewsletter(form)
           : kind === "czlonkostwo"  ? handleCzlonkostwo(form)
           : kind === "kontakt"      ? handleKontakt(form)
@@ -289,6 +309,15 @@
       e.stopImmediatePropagation(); // zablokuj własny handler CF7
       obsluz(form);
     }, true); // capture
+
+    /* ukryte pole pułapki (poza ekranem, bez tabulatora, autouzupełnianie wyłączone) */
+    if (!form.querySelector('[name="gig-www"]')) {
+      var hp = document.createElement("div");
+      hp.style.cssText = "position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;";
+      hp.setAttribute("aria-hidden", "true");
+      hp.innerHTML = '<label>Nie wypełniaj <input type="text" name="gig-www" tabindex="-1" autocomplete="off"></label>';
+      form.appendChild(hp);
+    }
 
     var btn = form.querySelector('.wpcf7-submit, [type="submit"]');
     if (!btn) return;
