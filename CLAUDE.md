@@ -85,6 +85,10 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
 - `firma-gus` v2: 20 zapytań/h na IP i 600/dobę (`gig_gus_limit`). Potwierdzenie kontaktu nie cytuje treści wiadomości.
 - Wypis z newslettera: `/wypis-newsletter/?id=` (strona z przyciskiem) + `newsletter-unsubscribe` v2 (GET → 302,
   POST one-click/JSON), jak `baza-wypis`. Podglądy maili w panelu w ramkach z `sandbox`.
+- **Content-Security-Policy** (`strona/vercel.json`, nagłówek dla `/(.*)`): skrypty i style tylko z `self`, inline,
+  `cdn.jsdelivr.net` i `unpkg.com` (style/fonty też Google Fonts); `connect-src` Supabase + CDN; obrazy `https:`;
+  ramki Google Maps/YouTube/Vimeo; `object-src 'none'`, `frame-ancestors 'self'`. **Nowa biblioteka z innego CDN
+  albo nowe źródło fetch/iframe wymaga dopisania do CSP**, inaczej przeglądarka ją zablokuje (błąd „Refused to load” w konsoli).
 
 ## SEO, agenci AI i prerender (od 28.09.2026)
 - **Treść z bazy jest też w HTML-u**: `skrypty/prerender.mjs` zapisuje szkolenia, katalog Członków,
