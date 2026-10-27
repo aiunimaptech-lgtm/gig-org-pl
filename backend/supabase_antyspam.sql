@@ -9,6 +9,10 @@
 -- Pułapka na roboty i minimalny czas wypełniania są dodatkowo po stronie przeglądarki
 -- (forms_integration.js, /zapisy/, /wezel-jakosci/); Edge Function firma-gus zapisuje tu
 -- swoje wywołania (tabela = 'firma-gus') i ma własny limit na IP.
+-- 27.10.2026: poprawka (zmienne v_ip/v_em). Wersja z 24.10 z niejednoznaczną kolumną ip odrzucała
+-- KAŻDE zgłoszenie z formularzy od 24.10 ok. 12:00 do 27.10 ok. 17:00 (błąd 42702 → HTTP 400).
+-- Uwaga przy testach: execute_sql z MCP opakowuje całość w transakcję, więc ROLLBACK w tym samym
+-- wywołaniu cofa też CREATE OR REPLACE. Zmiany i testy wykonuj w osobnych wywołaniach.
 -- ============================================================
 
 create table if not exists public.wpisy_limit (
