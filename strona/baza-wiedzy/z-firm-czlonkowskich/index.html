@@ -88,7 +88,7 @@
   (function(){
     function esc(s){return (s==null?'':String(s)).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
     function card(d){
-      var img = d.img ? 'style="background-image:url(''+esc(d.img)+'')"' : '';
+      var img = d.img ? 'style="background-image:url(\''+esc(d.img)+'\')"' : '';
       return '<a class="bw-card" href="'+esc(d.href)+'">'
         +'<div class="img" '+img+'></div>'
         +'<div class="body">'
