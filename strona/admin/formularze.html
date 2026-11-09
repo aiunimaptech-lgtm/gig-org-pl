@@ -97,6 +97,7 @@
                 <div class="search-box"><span class="search-icon">⌕</span>
                   <input type="text" class="form-control" id="ktSearch" placeholder="Szukaj po nazwisku, e-mailu, temacie…"></div>
                 <button class="btn btn-outline btn-sm" id="ktExport">⬇ Eksport CSV</button>
+                <button class="btn btn-outline btn-sm" id="ktPdf" title="Lista z bieżących filtrów. Bez wybranego rodzaju: zainteresowani członkostwem i zgłoszenia członkowskie">⬇ Lista PDF</button>
               </div>
               <div class="table-wrap">
                 <table class="admin-table">
@@ -132,6 +133,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/pdfmake.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pdfmake@0.2.10/build/vfs_fonts.js"></script>
   <script src="/_assets/js/gig-config.js"></script>
 <script src="/admin/_admin.js"></script>
   <script>
@@ -224,7 +227,8 @@
     }
     /* Sortowanie kliknięciem w nagłówek (drugie kliknięcie odwraca), filtry w wierszu pod nagłówkami. */
     let ktSort = { pole: 'created_at', rosnaco: false };
-    function renderKt(filter='') {
+    /* Wiersze widoczne w tabeli (filtry + sortowanie); z tego samego zbioru powstaje lista PDF. */
+    function ktWidoczne(filter='') {
       const f = filter.toLowerCase();
       const v = id => document.getElementById(id).value.trim().toLowerCase();
       const rodz = v('ktRodzaj'), fn = v('ktFNadawca'), ft = v('ktFTresc'), fd = v('ktFData'), fs = v('ktFStatus');
@@ -240,6 +244,11 @@
         const x = String(a[pole] ?? '').toLowerCase(), y = String(b[pole] ?? '').toLowerCase();
         return (x < y ? -1 : x > y ? 1 : 0) * (rosnaco ? 1 : -1);
       });
+      return rows;
+    }
+    function renderKt(filter='') {
+      const rows = ktWidoczne(filter);
+      const { pole, rosnaco } = ktSort;
       document.querySelectorAll('#ktNagl th[data-sort]').forEach(th => {
         th.dataset.kier = th.dataset.sort === pole ? (rosnaco ? '▲' : '▼') : '';
       });
@@ -335,6 +344,142 @@
       openModal('odpModal');
     }
 
+    /* Lista PDF z zakładki Kontakt, w układzie raportów z ankiet i pytań. Zgłoszenia z „Dołącz do nas”
+       i zainteresowanie członkostwem przy zapisie na szkolenie mają w treści pola „Klucz: wartość”
+       po jednym w linii; rozbieramy je na kolumny. NIP porównujemy z katalogiem Członków i z deklaracjami,
+       żeby było widać, kto już dołączył. Lista ma e-maile i telefony, więc to dokument wewnętrzny. */
+    function polaWiad(m) {
+      const o = {};
+      String(m || '').split('\n').forEach(l => {
+        const x = l.match(/^([^:\n]{2,40}):\s*(.*)$/);
+        if (!x) return;
+        const k = x[1].trim(), w = x[2].trim();
+        if (!(k in o)) o[k] = (w === '—' || w === '-') ? '' : w;
+      });
+      return o;
+    }
+    const cyfryNip = s => String(s || '').replace(/\D/g, '');
+    const TYTUL_PDF = {
+      '': 'Zainteresowani członkostwem i zgłoszenia członkowskie',
+      zainteresowanie: 'Zainteresowani członkostwem',
+      zgloszenie: 'Zgłoszenia członkowskie',
+      inne: 'Wiadomości z formularza kontaktowego',
+    };
+
+    async function ktListaPdf() {
+      if (!window.pdfMake) { toast('Moduł PDF się nie załadował, odśwież stronę', 'error'); return; }
+      const fv = id => document.getElementById(id);
+      const rodz = fv('ktRodzaj').value;
+      let rows = ktWidoczne(fv('ktSearch').value);
+      if (!rodz) rows = rows.filter(r => rodzajKt(r) !== 'inne');
+      if (!rows.length) { toast('Przy tych filtrach nie ma czego zestawić'); return; }
+      const czlonkowskie = rodz !== 'inne';
+
+      // Kto już jest w katalogu Członków i kto złożył deklarację. Bez tej informacji lista i tak powstaje.
+      const { data: cz, error } = await db.from('czlonkowie').select('nip').eq('status', 'published');
+      if (error) console.error(error);
+      const nipCzl = new Set((cz || []).map(c => cyfryNip(c.nip)).filter(Boolean));
+      const deklaracje = {};
+      ktData.filter(r => rodzajKt(r) === 'zgloszenie').forEach(r => {
+        const n = cyfryNip(polaWiad(r.message).NIP);
+        if (n && (!deklaracje[n] || r.created_at < deklaracje[n])) deklaracje[n] = r.created_at;
+      });
+
+      const C = { red: '#cc0a2b', ink: '#16202a', muted: '#6b7f84', line: '#e3e9ee', soft: '#f7f9fb', green: '#1c6b39' };
+      const dzien = d => new Date(d).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const kiedy = new Date().toLocaleString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const glowny = t => ({ text: t, bold: true, fontSize: 9.5, color: C.ink });
+      const male = t => ({ text: t, fontSize: 8.5, color: C.muted, margin: [0, 1, 0, 0] });
+
+      let nCzl = 0, nDekl = 0;
+      const wiersze = rows.map((r, i) => {
+        const p = polaWiad(r.message);
+        const typ = rodzajKt(r);
+        const nip = cyfryNip(p.NIP);
+        const czl = !!nip && nipCzl.has(nip);
+        const dekl = typ === 'zainteresowanie' && nip ? deklaracje[nip] : null;
+        if (czl) nCzl++; else if (dekl) nDekl++;
+        const status = [{ text: ETYK_KT[r.status] || r.status || '', fontSize: 9, bold: r.status === 'new', color: r.status === 'new' ? C.red : C.ink }];
+        if (czl) status.push({ text: 'członek GIG', fontSize: 8.5, bold: true, color: C.green, margin: [0, 2, 0, 0] });
+        else if (dekl) status.push({ text: 'deklaracja z ' + dzien(dekl), fontSize: 8.5, bold: true, color: C.green, margin: [0, 2, 0, 0] });
+        const lp = { text: String(i + 1), bold: true, color: C.red, fontSize: 10 };
+        const data = { text: dzien(r.created_at), fontSize: 9 };
+        if (!czlonkowskie) return [lp,
+          { stack: [glowny(r.name || '(bez nazwiska)'), male(r.email || '')] },
+          { stack: [glowny(r.subject || '(bez tematu)'), { text: (r.message || '').trim(), fontSize: 9, lineHeight: 1.2, margin: [0, 2, 0, 0] }] },
+          data, { stack: status }];
+        const firma = p.Firma || (r.subject || '').replace(/^[^:]*:\s*/, '') || '(nie podano)';
+        const adres = [p.Adres, p['Województwo'] ? 'woj. ' + p['Województwo'] : ''].filter(Boolean).join(', ');
+        const osoba = p.Osoba || p['Osoba reprezentująca'] || r.name || '(nie podano)';
+        const skad = typ === 'zgloszenie'
+          ? [glowny('Deklaracja członkowska'), male('formularz „Dołącz do nas”')]
+          : [glowny('Przy zapisie na szkolenie'), male(p.Szkolenie || '')];
+        return [lp,
+          { stack: [glowny(firma), nip ? male('NIP ' + p.NIP) : null, adres ? male(adres) : null].filter(Boolean) },
+          { stack: [glowny(osoba), male(p['E-mail'] || r.email || ''), p.Telefon ? male('tel. ' + p.Telefon) : null].filter(Boolean) },
+          { stack: skad }, data, { stack: status }];
+      });
+
+      const kol = czlonkowskie
+        ? ['Lp.', 'Firma', 'Osoba kontaktowa', 'Skąd zgłoszenie', 'Data', 'Status']
+        : ['Lp.', 'Nadawca', 'Temat i wiadomość', 'Data', 'Status'];
+      const naglowek = kol.map(t => ({ text: t.toUpperCase(), bold: true, fontSize: 7.5, color: C.muted, characterSpacing: 0.4 }));
+      const widths = czlonkowskie ? [20, '*', '*', 170, 56, 84] : [20, 160, '*', 56, 84];
+
+      const odp = rows.filter(r => r.status === 'replied').length;
+      const kafel = (t, v, s) => ({ table: { widths: ['*'], body: [[{ stack: [
+        { text: t.toUpperCase(), fontSize: 7.5, bold: true, color: C.muted, characterSpacing: 0.5 },
+        { text: [{ text: v, fontSize: 20, bold: true, color: C.ink }, { text: s ? '  ' + s : '', fontSize: 9, color: C.muted }], margin: [0, 3, 0, 0] },
+      ], fillColor: C.soft, margin: [8, 6, 8, 6] }]] }, layout: 'noBorders' });
+      const kafle = [kafel('Pozycji', String(rows.length)), kafel('Odpowiedziano', String(odp)), kafel('Bez odpowiedzi', String(rows.length - odp))];
+      if (czlonkowskie) kafle.push(kafel('Już w Izbie', String(nCzl), nDekl ? '+ ' + nDekl + ' z deklaracją' : ''));
+
+      const daty = rows.map(r => r.created_at).sort();
+      const od = dzien(daty[0]), doo = dzien(daty[daty.length - 1]);
+      const filtry = [];
+      const tekst = id => fv(id).value.trim();
+      if (tekst('ktSearch')) filtry.push('szukaj „' + tekst('ktSearch') + '”');
+      if (tekst('ktFNadawca')) filtry.push('nadawca „' + tekst('ktFNadawca') + '”');
+      if (tekst('ktFTresc')) filtry.push('treść „' + tekst('ktFTresc') + '”');
+      if (fv('ktFData').value) filtry.push('okres: ' + fv('ktFData').selectedOptions[0].textContent.toLowerCase());
+      if (fv('ktFStatus').value) filtry.push('status: ' + fv('ktFStatus').selectedOptions[0].textContent.toLowerCase().replace(/ \(\d+\)$/, ''));
+      const meta = ['Wpłynęły: ' + (od === doo ? od : od + ' do ' + doo)];
+      if (filtry.length) meta.push('Filtry: ' + filtry.join(', '));
+
+      const tytul = TYTUL_PDF[rodz] || TYTUL_PDF[''];
+      const dd = {
+        pageSize: 'A4', pageOrientation: 'landscape', pageMargins: [36, 40, 36, 50],
+        info: { title: tytul, author: 'Geodezyjna Izba Gospodarcza' },
+        footer: (page, pages) => ({ margin: [36, 14, 36, 0], fontSize: 8, color: '#7a8b97',
+          columns: [{ text: 'Geodezyjna Izba Gospodarcza · gig.org.pl · dokument wewnętrzny' }, { text: 'Strona ' + page + ' z ' + pages, alignment: 'right' }] }),
+        content: [
+          { text: 'GEODEZYJNA IZBA GOSPODARCZA', style: 'h0' },
+          { text: tytul, style: 'h1' },
+          { text: meta.join('   ·   '), style: 'meta' },
+          { columns: kafle, columnGap: 8, margin: [0, 0, 0, 16] },
+          { table: { headerRows: 1, dontBreakRows: czlonkowskie, widths, body: [naglowek, ...wiersze] },
+            layout: { hLineWidth: (j, node) => (j === 0 || j === node.table.body.length) ? 0 : (j === 1 ? 1 : 0.5),
+              vLineWidth: () => 0, hLineColor: (j) => j === 1 ? C.muted : C.line,
+              fillColor: (j) => j > 0 && j % 2 === 0 ? C.soft : null,
+              paddingTop: () => 6, paddingBottom: () => 6, paddingLeft: () => 5, paddingRight: () => 5 } },
+          { text: 'Dokument wewnętrzny Izby: zawiera dane kontaktowe. „Członek GIG” oznacza, że NIP jest w katalogu Członków. '
+              + 'Wygenerowano ' + kiedy + ' w panelu GIG.', style: 'foot' },
+        ],
+        styles: {
+          h0: { fontSize: 9, bold: true, color: C.red, characterSpacing: 1, margin: [0, 0, 0, 4] },
+          h1: { fontSize: 18, bold: true, color: C.ink, margin: [0, 0, 0, 4] },
+          meta: { fontSize: 9, color: C.muted, margin: [0, 0, 0, 14] },
+          foot: { fontSize: 8.5, color: '#7a8b97', margin: [0, 14, 0, 0] },
+        },
+        defaultStyle: { font: 'Roboto', fontSize: 10, color: '#2b3a45' },
+      };
+      const nazwa = tytul.toLowerCase()
+        .replace(/[ąćęłńóśźż]/g, c => 'acelnoszz'['ąćęłńóśźż'.indexOf(c)])
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 60) + '-' + new Date().toISOString().slice(0, 10) + '.pdf';
+      try { pdfMake.createPdf(dd).download(nazwa); }
+      catch (e) { console.error(e); toast('Nie udało się zbudować PDF: ' + e.message, 'error'); }
+    }
+
     async function load() {
       const [nl, kt] = await Promise.all([
         db.from('submissions_newsletter').select('*').order('created_at', { ascending: false }),
@@ -400,6 +545,7 @@
       });
       document.getElementById('ktExport').addEventListener('click', () =>
         exportCSV(ktData, [{key:'name',label:'Imię'},{key:'email',label:'E-mail'},{key:'subject',label:'Temat'},{key:'message',label:'Wiadomość'},{key:'created_at',label:'Data'}], 'kontakt-gig.csv'));
+      document.getElementById('ktPdf').addEventListener('click', ktListaPdf);
       /* Zakładka ↔ hash w adresie. Menu boczne linkuje do #newsletter / #kontakt;
          gdy strona jest już otwarta, kliknięcie zmienia tylko hash (bez przeładowania),
          więc nasłuchujemy hashchange. W drugą stronę: klik w zakładkę ustawia hash,
