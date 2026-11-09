@@ -26,8 +26,8 @@ i to, że brama Supabase wymusza `text/plain` na odpowiedziach Edge Functions.
 
 **Wersje Edge Functions na 21.09.2026** (repo = wdrożone, poza komentarzami):
 `send-confirmation` v14 (potwierdzenia rozpoznawane po prefiksie tematu w `submissions_kontakt`:
-„Zgłoszenie członkowskie:" = wniosek, w którym prosimy o wydruk CEIDG/KRS **i** potwierdzenie
-przelewu wpisowego 75 zł na konto Izby, z terminem +7 dni (stała `WPISOWE_DNI`, tyle samo co
+„Zgłoszenie członkowskie:" = wniosek, w którym prosimy o potwierdzenie przelewu wpisowego 75 zł
+(od 9.11.2026, v24: bez prośby o wydruk CEIDG/KRS, biuro pobiera go samo po NIP) na konto Izby, z terminem +7 dni (stała `WPISOWE_DNI`, tyle samo co
 domyślny termin opinii Prezydium) i opisem dalszej drogi: opinia Prezydium,
 potem uchwała Rady; „Zainteresowanie członkostwem:" = klient zostawił zaznaczoną zachętę po zapisie
 na szkolenie), `uchwala-wyslij` v2 i `glosuj` v2 (oba z obsługą etapu `opinia`), `wyslij-mail` v6,
@@ -187,7 +187,7 @@ Przedstawicielem Regionalnym. Odmowa przyjęcia też zapada w formie uchwały Ra
 odwołanie do Walnego Zgromadzenia w 30 dni (art. 12 pkt 3). Panel prowadzi całą tę ścieżkę:
 
 ```
-zgłoszenie ze strony  →  mail do kandydata (CEIDG/KRS + przelew wpisowego 75 zł, termin 7 dni)
+zgłoszenie ze strony  →  mail do kandydata (przelew wpisowego 75 zł, termin 7 dni; CEIDG/KRS pobiera biuro)
 ETAP 1  opiniowanie/projekt     → „Wyślij do Prezydium" (uchwala-wyslij, etap 'opinia')
         opiniowanie/głosowanie  → opinie z /glosowanie/ → „Zakończ opiniowanie"
              pozytywna  → ETAP 2                 negatywna → uchwała o odmowie albo zamknięcie
@@ -249,8 +249,8 @@ Dalej, krok po kroku:
    poprawia ręcznie, bo treść jest edytowalna. Numer uchwały to samo liczba (np. `12`), pełny
    zapis `12/IX/2026` składa się z miesiąca rzymskiego i roku daty wejścia w życie.
 2. **Panel, okno sprawy**: u góry ścieżka „Zgłoszenie → Opinia Prezydium → Uchwała Rady → Wynik",
-   pod nią zawsze widoczny blok **Dokumenty i wpisowe** (rodzaj dokumentu, data wpływu, wpisowe
-   z datą). Te dwa fakty wchodzą zdaniami do obu maili („Wydruk z CEIDG wpłynął do biura Izby.",
+   pod nią zawsze widoczny blok **Dokumenty i wpisowe** (rodzaj dokumentu, data pobrania, wpisowe
+   z datą). Te dwa fakty wchodzą zdaniami do obu maili („Biuro Izby pobrało wydruk z CEIDG.",
    „Wpisowe zostało już uiszczone."), więc zapis stanu dokumentów odświeża treść prośby o opinię.
    Dalej sekcja **etapu 1** i sekcja **etapu 2**; etap 2 jest zablokowany komunikatem, dopóki
    etap 1 się nie domknie. Plakietka w menu liczy sprawy o statusie `opiniowanie` **i** `projekt`.

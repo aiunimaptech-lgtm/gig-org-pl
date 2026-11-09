@@ -173,10 +173,11 @@ begin
                  else 'w terminie 7 dni' end;
 
   zd_dok := case u.dok_rodzaj
-              when 'ceidg' then 'Wydruk z CEIDG wpłynął do biura Izby.'
-              when 'krs'   then 'Odpis z rejestru przedsiębiorców KRS wpłynął do biura Izby.'
-              when 'inny'  then 'Dokument potwierdzający status prawny przedsiębiorcy wpłynął do biura Izby.'
-              else 'Na wydruk z CEIDG lub odpis z KRS biuro Izby jeszcze czeka.' end;
+              when 'ceidg' then 'Biuro Izby pobrało wydruk z CEIDG.'
+              when 'krs'   then 'Biuro Izby pobrało odpis z rejestru przedsiębiorców KRS.'
+              when 'inny'  then 'Biuro Izby ma dokument potwierdzający status prawny przedsiębiorcy.'
+              else 'Wydruk z CEIDG albo odpis z KRS biuro Izby pobierze samo.' end;
+  -- 9.11.2026: kandydat nie przesyła dokumentu rejestrowego, biuro pobiera go samo po NIP.
 
   zd_wpis := case when u.wpisowe_oplacone
                   then 'Wpisowe zostało już uiszczone.'

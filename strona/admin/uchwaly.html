@@ -492,16 +492,16 @@
         </div>
 
         <div class="u-sekcja">
-          <h4>Dokumenty i wpisowe <small>art. 12 pkt 1 Statutu: do wniosku dołącza się wydruk z CEIDG albo odpis z KRS, a uchwała wchodzi w życie pod warunkiem uiszczenia wpisowego</small></h4>
+          <h4>Dokumenty i wpisowe <small>wydruk z CEIDG albo odpis z KRS biuro pobiera samo po NIP (kandydat go nie przesyła); uchwała wchodzi w życie pod warunkiem uiszczenia wpisowego (art. 12 pkt 1 Statutu)</small></h4>
           <div class="u-grid">
             <div class="form-group"><label>Dokument rejestrowy</label>
               <select class="form-control" id="uDok">
-                <option value="">— jeszcze nie wpłynął —</option>
+                <option value="">— jeszcze nie pobrany —</option>
                 <option value="ceidg" ${u.dok_rodzaj === 'ceidg' ? 'selected' : ''}>wydruk z CEIDG</option>
                 <option value="krs" ${u.dok_rodzaj === 'krs' ? 'selected' : ''}>odpis z KRS</option>
                 <option value="inny" ${u.dok_rodzaj === 'inny' ? 'selected' : ''}>inny dokument rejestrowy</option>
               </select></div>
-            <div class="form-group"><label>Data wpływu dokumentu</label><input class="form-control" type="date" id="uDokData" value="${esc(u.dok_otrzymany_at || '')}"></div>
+            <div class="form-group"><label>Data pobrania dokumentu</label><input class="form-control" type="date" id="uDokData" value="${esc(u.dok_otrzymany_at || '')}"></div>
             <div class="form-group"><label>Wpisowe</label>
               <div class="u-checkline"><input type="checkbox" id="uWpisowe" ${u.wpisowe_oplacone ? 'checked' : ''}> <label for="uWpisowe" style="margin:0;font-weight:400;">wpisowe uiszczone (75,00 zł)</label></div></div>
             <div class="form-group"><label>Data wpłaty wpisowego</label><input class="form-control" type="date" id="uWpisoweData" value="${esc(u.wpisowe_at || '')}"></div>
@@ -945,7 +945,7 @@
       const metryka = [
         ['Kandydat', [u.kandydat_osoba, u.kandydat_firma, u.kandydat_adres,
           [u.kandydat_nip ? 'NIP ' + u.kandydat_nip : '', u.kandydat_regon ? 'REGON ' + u.kandydat_regon : '', u.kandydat_krs ? 'KRS ' + u.kandydat_krs : ''].filter(Boolean).join(' · ')].filter(Boolean).join('\n')],
-        ['Dokument rejestrowy', (DOK[u.dok_rodzaj] || 'brak') + (u.dok_otrzymany_at ? ', wpłynął ' + fmtDay(u.dok_otrzymany_at) : '')],
+        ['Dokument rejestrowy', (DOK[u.dok_rodzaj] || 'brak') + (u.dok_otrzymany_at ? ', pobrany ' + fmtDay(u.dok_otrzymany_at) : '')],
         ['Wpisowe', u.wpisowe_oplacone ? 'uiszczone' + (u.wpisowe_at ? ' ' + fmtDay(u.wpisowe_at) : '') : 'brak wpłaty'],
       ];
       if (u.konsultacja_kto) metryka.push(['Konsultacja (art. 12 pkt 1)',

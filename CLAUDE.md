@@ -28,8 +28,8 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   (też do wypisanych z newslettera, bez linku wypisu); wypis dotyczy tylko mailingów.
 - **Przyjęcie członka — dwa etapy wg art. 12 pkt 1 Statutu** (`backend/supabase_uchwaly.sql`
   + `backend/supabase_uchwaly_opinia.sql`, tabele `uchwaly`, `uchwaly_glosy`, `rada_izby`):
-  zgłoszenie „Dołącz do nas" → mail do kandydata z prośbą o wydruk CEIDG/KRS **i** potwierdzenie
-  przelewu wpisowego → trigger zakłada sprawę na **etapie 1** (prośba do Prezydium o zaopiniowanie)
+  zgłoszenie „Dołącz do nas" → mail do kandydata z prośbą o potwierdzenie przelewu wpisowego
+  (wydruk CEIDG/KRS biuro pobiera samo po NIP, od 9.11.2026; send-confirmation v24) → trigger zakłada sprawę na **etapie 1** (prośba do Prezydium o zaopiniowanie)
   → panel `/admin/uchwaly.html` wysyła ją Edge Function `uchwala-wyslij` (`etap: 'opinia'`)
   → Prezydium opiniuje z osobistego linku na `/glosowanie/` (Edge Function `glosuj`)
   → po **opinii pozytywnej** sprawa przechodzi na **etap 2**: projekt uchwały Rady → wysyłka
