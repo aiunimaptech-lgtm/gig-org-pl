@@ -20,9 +20,11 @@ const SRC_JSON = path.join(__dirname, "_czlonkowie.json");
 const SUPABASE_URL = "https://zlepwzeyjwpmhyxfnime.supabase.co";
 const SUPABASE_ANON = "sb_publishable_1KPF4mdln3C-cZHMIqAOFw_ZM8Go2Ji";
 
-// Kolumny renderowane przez /czlonkowie/ (resztę — www, social, opis, współrzędne,
+// Kolumny renderowane przez /czlonkowie/ (resztę — www, social, opis,
 // NIP/REGON/KRS — dokłada czlonkowie-enrich.js przez mergeEnrich()).
-const FIELDS = ["name", "region", "person", "phone", "email", "address", "website", "description"];
+// Współrzędne bierzemy z bazy, bo nowe firmy (lokalizowane w panelu) nie mają ich w enrich;
+// gdy enrich ma swoje, nadal wygrywa (mergeEnrich nadpisuje lat/lng).
+const FIELDS = ["name", "region", "person", "phone", "email", "address", "website", "description", "lat", "lng"];
 
 function pick(row) {
   const o = {};

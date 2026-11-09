@@ -73,6 +73,7 @@
             <span style="color:#6b7f84;font-size:13px;" id="cnt"></span>
           </div>
           <div id="oczekujacePasek" hidden style="margin:0 0 14px;padding:11px 15px;background:#fff8e6;border:1px solid #f0e2b6;border-radius:10px;font-size:13.5px;line-height:1.6;color:#7a5c14;"></div>
+          <div id="bezPinezkiPasek" hidden style="margin:0 0 14px;padding:11px 15px;background:#fdecef;border:1px solid #f3c6cf;border-radius:10px;font-size:13.5px;line-height:1.6;color:#8a1c2e;"></div>
           <div class="table-wrap">
             <table class="admin-table">
               <thead><tr><th>Firma</th><th>Region</th><th>Osoba</th><th>E-mail</th><th>NIP</th><th>WWW</th><th>Status</th><th></th></tr></thead>
@@ -117,6 +118,10 @@
         <div class="grid-2">
           <div class="form-group"><label>Szer. geogr. (lat)</label><input type="text" id="cLat" class="form-control" placeholder="np. 52.23"></div>
           <div class="form-group"><label>Dł. geogr. (lng)</label><input type="text" id="cLng" class="form-control" placeholder="np. 21.01"></div>
+        </div>
+        <div class="form-group" style="margin-top:-6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-xs" id="cGeoBtn" title="Szuka adresu w OpenStreetMap i wpisuje współrzędne pinezki">📍 Zlokalizuj adres</button>
+          <span id="cGeoInfo" style="font-size:12px;color:#6b7f84;">Bez współrzędnych firma nie pojawi się na mapie. Puste pola uzupełnią się same przy zapisie.</span>
         </div>
         <div class="form-group"><label>Opis (profil działalności, pokaże się w szczegółach i dymku mapy)</label><textarea id="cDesc" class="form-control" rows="4"></textarea></div>
       </div>
@@ -165,6 +170,15 @@
         Zgłoszenia z formularza „Dołącz do nas" trafiają tu automatycznie i nie są widoczne na stronie,
         dopóki ich nie zatwierdzisz. Uchwałę Rady w tej sprawie prowadzisz w zakładce
         <a href="uchwaly.html" style="color:#7a5c14;text-decoration:underline;">Uchwały Rady</a>.`;
+      const bezPin=data.filter(r=>r.status==='published'&&(r.lat==null||r.lng==null));
+      const pasekPin=document.getElementById('bezPinezkiPasek');
+      pasekPin.hidden=!bezPin.length;
+      if(bezPin.length){
+        pasekPin.innerHTML=`<strong>${bezPin.length===1?'1 firma nie ma':bezPin.length+' firm nie ma'} pinezki na mapie Członków:</strong>
+          ${bezPin.map(r=>esc(r.name)).join(', ')}.
+          <button type="button" class="btn btn-outline btn-xs" id="geoBrakBtn" style="margin-left:6px;">📍 Zlokalizuj adresy</button>`;
+        document.getElementById('geoBrakBtn').addEventListener('click',zlokalizujBrakujace);
+      }
       if(!rows.length){tb.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">${data.length
         ? 'Brak firm dla wybranego filtra. Zmień status na „Wszystkie” albo wyczyść wyszukiwanie.'
         : 'Brak. Uruchom supabase_czlonkowie.sql albo dodaj firmę.'}</td></tr>`;return;}
@@ -204,11 +218,78 @@
       cNip.value=r?r.nip||'':''; cRegon.value=r?r.regon||'':''; cKrs.value=r?r.krs||'':'';
       cFb.value=r?r.facebook||'':''; cLi.value=r?r.linkedin||'':'';
       cLat.value=(r&&r.lat!=null)?r.lat:''; cLng.value=(r&&r.lng!=null)?r.lng:'';
+      cGeoInfo.textContent='Bez współrzędnych firma nie pojawi się na mapie. Puste pola uzupełnią się same przy zapisie.';
       openModal('editModal');
     }
+
+    /* Pinezka na mapie Członków bierze się z kolumn lat/lng. Nowe firmy (z „Dołącz do nas”)
+       przychodzą bez nich, więc lokalizujemy adres w OpenStreetMap (Nominatim), tak jak skrypt
+       skrypty/geocode2.py: najpierw ulica + miasto + kod, potem bez kodu, potem cały adres,
+       na końcu sama miejscowość. Nominatim pozwala na 1 zapytanie na sekundę. */
+    const czekaj=ms=>new Promise(r=>setTimeout(r,ms));
+    async function geokoduj(adres){
+      const a=String(adres||'').replace(/\s+/g,' ').trim(); if(!a) return null;
+      const pc=(a.match(/\d{2}-\d{3}/)||[''])[0];
+      const przed=(pc?a.slice(0,a.indexOf(pc)):a).replace(/[\s,]+$/,'');
+      const po=(pc?a.slice(a.indexOf(pc)+pc.length):'').replace(/^[\s,]+/,'').trim();
+      const czesci=przed.split(',').map(s=>s.trim()).filter(Boolean);
+      while(czesci.length>1 && /^(lok\.?|m\.?)\s*\d/i.test(czesci[czesci.length-1])) czesci.pop();
+      const ul=(czesci[czesci.length-1]||'')
+        .replace(/\b(ul|al|pl|os|gen|kap|mjr|plk|ks)\b\.?\s*/gi,'').replace(/\bnr\s*/gi,'')
+        .replace(/\s*(lok\.?|m\.?)\s*\w+\s*$/i,'').replace(/\s*\/\s*\S+\s*$/,'').replace(/\s+/g,' ').trim();
+      const miasto=po||(czesci.length>1?czesci[0]:'');
+      const proby=[];
+      if(ul&&miasto){ if(pc) proby.push({street:ul,city:miasto,postalcode:pc}); proby.push({street:ul,city:miasto}); }
+      proby.push({q:a});
+      if(miasto) proby.push(pc?{city:miasto,postalcode:pc}:{city:miasto});
+      for(let i=0;i<proby.length;i++){
+        if(i) await czekaj(1100);
+        const p=new URLSearchParams({format:'json',limit:'1',addressdetails:'1',countrycodes:'pl','accept-language':'pl',...proby[i]});
+        try{
+          const res=await fetch('https://nominatim.openstreetmap.org/search?'+p);
+          if(!res.ok) continue;
+          const d=await res.json();
+          if(d&&d[0]){
+            const ad=d[0].address||{};
+            return {lat:+(+d[0].lat).toFixed(7),lng:+(+d[0].lon).toFixed(7),
+              precyzja:ad.house_number?'budynek':(ad.road?'ulica':'miejscowość'),opis:d[0].display_name||''};
+          }
+        }catch(e){console.error(e);}
+      }
+      return null;
+    }
+    async function zlokalizujWFormularzu(){
+      const btn=document.getElementById('cGeoBtn');
+      if(!cAddress.value.trim()){toast('Najpierw wpisz adres','error');return;}
+      btn.disabled=true; cGeoInfo.textContent='Szukam adresu…';
+      const g=await geokoduj(cAddress.value);
+      btn.disabled=false;
+      if(!g){cGeoInfo.textContent='Nie znaleziono adresu. Sprawdź pisownię albo wpisz współrzędne ręcznie (np. z Google Maps).';return null;}
+      cLat.value=g.lat; cLng.value=g.lng;
+      cGeoInfo.textContent='Znaleziono (dokładność: '+g.precyzja+'): '+g.opis;
+      return g;
+    }
+    /* Firmy widoczne na stronie bez pinezki: lokalizujemy po kolei i zapisujemy. */
+    async function zlokalizujBrakujace(){
+      const lista=data.filter(r=>r.status==='published'&&(r.lat==null||r.lng==null)&&r.address);
+      if(!lista.length) return;
+      const btn=document.getElementById('geoBrakBtn'); if(btn){btn.disabled=true;btn.textContent='Lokalizuję…';}
+      let ok=0; const nie=[];
+      for(let i=0;i<lista.length;i++){
+        if(i) await czekaj(1100);
+        const g=await geokoduj(lista[i].address);
+        if(!g){nie.push(lista[i].name);continue;}
+        const {error}=await db.from('czlonkowie').update({lat:g.lat,lng:g.lng,updated_at:new Date().toISOString()}).eq('id',lista[i].id);
+        if(error){console.error(error);nie.push(lista[i].name);} else ok++;
+      }
+      toast('Dodano na mapę: '+ok+(nie.length?'. Nie znaleziono adresu: '+nie.join(', ')+' (wpisz współrzędne ręcznie)':''),nie.length?'error':'success',7000);
+      load();
+    }
+
     async function save(){
       const name=cName.value.trim(); if(!name){toast('Podaj nazwę firmy','error');return;}
       const num=v=>{v=(v||'').trim().replace(',','.');return v&&!isNaN(+v)?+v:null;};
+      if((num(cLat.value)==null||num(cLng.value)==null)&&cAddress.value.trim()) await zlokalizujWFormularzu();
       const rec={name,region:cRegion.value.trim()||null,address:cAddress.value.trim()||null,person:cPerson.value.trim()||null,
         phone:cPhone.value.trim()||null,email:cEmail.value.trim()||null,website:cWebsite.value.trim()||null,
         nip:cNip.value.trim()||null,regon:cRegon.value.trim()||null,krs:cKrs.value.trim()||null,
@@ -226,7 +307,13 @@
     async function zatwierdz(id){
       const r=data.find(x=>x.id===id); if(!r) return;
       if(!confirm(`Zatwierdzić firmę „${r.name}"?\n\nOd tej chwili będzie widoczna w katalogu Członków na stronie.`)) return;
-      const {error}=await db.from('czlonkowie').update({status:'published',updated_at:new Date().toISOString()}).eq('id',id);
+      const zmiana={status:'published',updated_at:new Date().toISOString()};
+      if((r.lat==null||r.lng==null)&&r.address){
+        const g=await geokoduj(r.address);
+        if(g){zmiana.lat=g.lat;zmiana.lng=g.lng;}
+        else toast('Nie znaleziono adresu na mapie: uzupełnij współrzędne w edycji firmy','error',6000);
+      }
+      const {error}=await db.from('czlonkowie').update(zmiana).eq('id',id);
       if(error){console.error(error);toast('Nie udało się zatwierdzić','error');return;}
       toast('Zatwierdzono. Firma jest już w katalogu na stronie','success',5000);
       await load();
@@ -260,6 +347,7 @@
       if(!await requireAuth())return;
       document.getElementById('newBtn').addEventListener('click',()=>openEditor(null));
       document.getElementById('saveBtn').addEventListener('click',save);
+      document.getElementById('cGeoBtn').addEventListener('click',zlokalizujWFormularzu);
       document.getElementById('search').addEventListener('input',e=>render(e.target.value));
       document.getElementById('fStatus').addEventListener('change',()=>render(document.getElementById('search').value));
       /* ?status=oczekuje: wejście z zadania na pulpicie prosto do zgłoszeń */
