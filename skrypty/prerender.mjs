@@ -11,7 +11,8 @@
 //   strona/szkolenia/index.html      karty szkoleń + JSON-LD Event
 //   strona/czlonkowie/index.html     lista firm wg województw + liczba
 //   strona/index.html                2 najnowsze aktualności (zapas przed skryptem)
-//   strona/baza-wiedzy/index.html    po 3 najnowsze aktualności i artykuły
+//   strona/baza-wiedzy/index.html    po 3 najnowsze aktualności, artykuły i wpisy z firm członkowskich
+//   strona/baza-wiedzy/z-firm-czlonkowskich/index.html  wszystkie wpisy kategorii „firmy”
 //   strona/wpis/<slug>/index.html    pełna strona każdego wpisu z panelu (+ JSON-LD Article)
 //   strona/sitemap.xml, strona/llms.txt
 //
@@ -166,7 +167,10 @@ const KAT = {
   aktualnosci: { etykieta: "Aktualność", lista: "/baza-wiedzy/aktualnosci-gig/", nazwa: "Aktualności" },
   artykuly: { etykieta: "Artykuł", lista: "/baza-wiedzy/artykuly/", nazwa: "Artykuły" },
   biuletyn: { etykieta: "Biuletyn", lista: "/biuletyn-gig/", nazwa: "Biuletyn" },
+  firmy: { etykieta: "Z firm członkowskich", lista: "/baza-wiedzy/z-firm-czlonkowskich/", nazwa: "Z firm członkowskich" },
 };
+const NOTA_FIRMY = `<div class="a-note">Informacja przygotowana przez firmę członkowską Geodezyjnej Izby Gospodarczej. Izba nie odpowiada za jej treść. ` +
+  `<a href="/baza-wiedzy/z-firm-czlonkowskich/">Więcej informacji firm członkowskich</a></div>`;
 function stronaWpisu(szablon, a) {
   const k = KAT[a.category] || KAT.aktualnosci;
   const url = `${SITE}/wpis/${a.slug}/`;
@@ -178,16 +182,17 @@ function stronaWpisu(szablon, a) {
     `<section class="a-hero"><div class="narrow">` +
     `<div class="a-crumbs"><a href="/">Strona główna</a> › <a href="${k.lista}">${k.nazwa}</a> › ${esc(a.title)}</div>` +
     `<span class="a-kicker">${k.etykieta}</span><h1 class="a-title">${esc(a.title)}</h1>` +
-    `<div class="a-byline">${a.author ? `<span>Autor: <b>${esc(a.author)}</b></span>` : "<span>Geodezyjna Izba Gospodarcza</span>"}` +
+    `<div class="a-byline">${a.author ? `<span>${a.category === "firmy" ? "Firma" : "Autor"}: <b>${esc(a.author)}</b></span>` : "<span>Geodezyjna Izba Gospodarcza</span>"}` +
     `<span class="dot"></span><span>${dzien(d)}</span><span class="dot"></span><span>czas czytania: ~${Math.max(1, Math.round(slow / 200))} min</span></div>` +
-    `</div></section>${figura}<article class="post"><div class="narrow"><div id="gigTresc">${a.content || ""}</div>` +
+    `</div></section>${figura}<article class="post"><div class="narrow"><div id="gigTresc">${a.content || ""}</div>${a.category === "firmy" ? NOTA_FIRMY : ""}` +
     `<a class="a-back" href="${k.lista}">← Wróć do: ${k.nazwa}</a></div></article>`;
   const ld = {
     "@context": "https://schema.org", "@type": a.category === "artykuly" ? "Article" : "NewsArticle",
     headline: skroc(a.title, 110), description: opis, url, mainEntityOfPage: url, inLanguage: "pl",
     datePublished: d.toISOString(), dateModified: new Date(a.updated_at || a.published_at || a.created_at).toISOString(),
     ...(a.image_url ? { image: [a.image_url] } : {}),
-    author: a.author ? { "@type": "Person", name: a.author.split(",")[0].trim(), description: a.author } : { "@type": "Organization", name: "Geodezyjna Izba Gospodarcza" },
+    author: a.category === "firmy" && a.author ? { "@type": "Organization", name: a.author }
+      : a.author ? { "@type": "Person", name: a.author.split(",")[0].trim(), description: a.author } : { "@type": "Organization", name: "Geodezyjna Izba Gospodarcza" },
     publisher: { "@type": "Organization", name: "Geodezyjna Izba Gospodarcza", url: SITE, logo: { "@type": "ImageObject", url: SITE + "/_assets/img/gig-logo-email.png" } },
   };
   let h = szablon
@@ -211,7 +216,7 @@ async function main() {
   try {
     [szk, czl, art] = await Promise.all([
       pobierz(cfg, "szkolenia", "select=*&status=eq.published&order=date_start.asc"),
-      pobierz(cfg, "czlonkowie", "select=name,region,person,address,website,description&status=eq.published&order=region.asc,name.asc"),
+      pobierz(cfg, "czlonkowie", "select=name,region,person,address,website,description,rodzaj&status=eq.published&order=region.asc,name.asc"),
       pobierz(cfg, "articles", "select=title,slug,excerpt,content,category,published_at,created_at,updated_at,image_url,author&status=eq.published&order=published_at.desc.nullslast"),
     ]);
   } catch (e) {
@@ -251,7 +256,7 @@ async function main() {
       l.map((r) => {
         const msc = ((String(r.address || "").match(/\d{2}-\d{3}\s*(.+)$/) || [])[1] || "").trim();
         const meta = [esc(reg), esc(msc)].filter(Boolean).join(" · ");
-        return `<div class="card"><h3>${esc(r.name)}</h3>${meta ? `<div class="who">${meta}</div>` : ""}` +
+        return `<div class="card">${r.rodzaj === "geoinformatyka" ? '<span class="rodzaj">Geoinformatyka i oprogramowanie</span>' : ""}<h3>${esc(r.name)}</h3>${meta ? `<div class="who">${meta}</div>` : ""}` +
           (r.person ? `<div class="who" style="margin-top:2px;color:#8a96a2">${esc(r.person)}</div>` : "") +
           (val(r.description) ? `<p class="who" style="margin-top:6px">${esc(skroc(r.description, 200))}</p>` : "") + `</div>`;
       }).join("") + `</div>`;
@@ -302,11 +307,20 @@ async function main() {
   const kartaBw = (d) => `<a class="bw-card" href="${esc(d.href)}"><div class="img" ${d.img ? `style="background-image:url('${esc(d.img)}')"` : ""}></div><div class="body">` +
     (d.date ? `<span class="date">${esc(d.date)}</span>` : "") + `<h3>${esc(d.title)}</h3>` + (d.excerpt ? `<p>${esc(d.excerpt)}</p>` : "") + `<span class="more">Czytaj dalej →</span></div></a>`;
   let hb = await czytaj("baza-wiedzy/index.html");
-  for (const [id, kat, stat] of [["bw-aktualnosci", "aktualnosci", statAkt], ["bw-artykuly", "artykuly", statArt]]) {
-    hb = blok(hb, id, najnowsze(zPanelu(kat), stat, 3).map(kartaBw).join(""),
+  for (const [id, kat, stat] of [["bw-aktualnosci", "aktualnosci", statAkt], ["bw-artykuly", "artykuly", statArt], ["bw-firmy", "firmy", []]]) {
+    const kartyBw = najnowsze(zPanelu(kat), stat, 3).map(kartaBw).join("");
+    hb = blok(hb, id, kartyBw || (kat === "firmy" ? '<div class="bw-loading">Pierwsze informacje firm członkowskich pojawią się tu wkrótce.</div>' : ""),
       (h, c) => h.replace(`<div class="bw-grid" id="${id}"><div class="bw-loading">Ładowanie…</div></div>`, `<div class="bw-grid" id="${id}">${c}</div>`));
   }
   doZapisu.push(["baza-wiedzy/index.html", hb]);
+
+  // 3a) Strona „Z firm członkowskich”: wszystkie wpisy kategorii „firmy” (pusto = komunikat dla firm)
+  let hf = await czytaj("baza-wiedzy/z-firm-czlonkowskich/index.html");
+  const firmy = zPanelu("firmy");
+  hf = blok(hf, "firmy-lista", firmy.length ? firmy.map(kartaBw).join("")
+    : '<div class="bw-loading">Pierwsze informacje firm członkowskich pojawią się tu wkrótce.</div>',
+    (h, c) => h.replace('<div class="bw-grid" id="firmy-lista"><div class="bw-loading">Ładowanie…</div></div>', `<div class="bw-grid" id="firmy-lista">${c}</div>`));
+  doZapisu.push(["baza-wiedzy/z-firm-czlonkowskich/index.html", hf]);
 
   // 3b) Listy Aktualności i Artykułów: wpisy z panelu na górze, jak robi artykuly-render.js
   //     (klon pierwszej karty z WordPressa, oznaczony data-gig-src="db", żeby skrypt ich nie dublował)
@@ -376,6 +390,7 @@ async function main() {
     lin("Ile kosztuje geodeta? Usługi geodezyjne i zapytanie o wycenę", SITE + "/ile-kosztuje-geodezja/", "z czego składa się cena podziału, mapy do celów projektowych, wznowienia granic, wytyczenia; zapytanie do firm z regionu"),
     lin("Węzeł Jakości: ankieta cenowa", SITE + "/wezel-jakosci/"),
     lin("Baza wiedzy", SITE + "/baza-wiedzy/"),
+    lin("Z firm członkowskich", SITE + "/baza-wiedzy/z-firm-czlonkowskich/", "informacje firm członkowskich Izby"),
     lin("Kontakt", SITE + "/kontakt/"),
     "",
     "## Nadchodzące szkolenia i wydarzenia",

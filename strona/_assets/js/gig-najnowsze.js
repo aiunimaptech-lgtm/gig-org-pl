@@ -30,7 +30,7 @@
       var cfg = window.GIG_CFG;
       if (!cfg || !window.fetch) return res([]);
       fetch(cfg.SUPABASE_URL + "/rest/v1/articles?select=title,slug,excerpt,published_at,created_at,image_url" +
-        "&status=eq.published&category=eq." + encodeURIComponent(kategoria) + "&order=published_at.desc.nullslast&limit=6",
+        "&status=eq.published&category=eq." + encodeURIComponent(kategoria) + "&order=published_at.desc.nullslast&limit=" + (kategoria === "firmy" ? 60 : 6),
         { headers: { apikey: cfg.SUPABASE_ANON, Authorization: "Bearer " + cfg.SUPABASE_ANON } })
         .then(function (r) { return r.ok ? r.json() : []; })
         .then(function (rows) {
@@ -60,9 +60,10 @@
     }).catch(function () { return []; });
   }
 
-  /* kategoria: 'aktualnosci' | 'artykuly'; zwraca Promise z listą max pozycji */
+  /* kategoria: 'aktualnosci' | 'artykuly' | 'firmy'; statycznaUrl = dawna lista WP albo null
+     (wpisy firm członkowskich są tylko w panelu); zwraca Promise z listą max pozycji */
   window.gigNajnowsze = function (kategoria, statycznaUrl, max) {
-    return Promise.all([zPanelu(kategoria), zeStatycznej(statycznaUrl)]).then(function (w) {
+    return Promise.all([zPanelu(kategoria), statycznaUrl ? zeStatycznej(statycznaUrl) : Promise.resolve([])]).then(function (w) {
       var widziane = {};
       var wszystkie = w[0].concat(w[1]).filter(function (d) {
         if (!d.title || widziane[d.href]) return false;

@@ -90,6 +90,7 @@
               <option value="aktualnosci">Aktualności</option>
               <option value="artykuly">Artykuły</option>
               <option value="biuletyn">Biuletyn</option>
+              <option value="firmy">Z firm członkowskich</option>
             </select></div>
           <div class="form-group"><label>Status</label>
             <select id="aStatus" class="form-control">
@@ -99,7 +100,7 @@
             </select></div>
         </div>
         <div class="form-group"><label>Zajawka <span style="font-weight:400;color:#7a8794">— krótki opis widoczny na liście wpisów. Zostaw puste, a powstanie z pierwszych zdań treści.</span></label><textarea id="aExcerpt" class="form-control" rows="2"></textarea></div>
-        <div class="form-group"><label>Autor <span style="font-weight:400;color:#7a8794">(np. „Jan Kowalski, firma”). Zostaw puste, a wpis podpisze Geodezyjna Izba Gospodarcza.</span></label><input type="text" id="aAuthor" class="form-control"></div>
+        <div class="form-group"><label>Autor <span style="font-weight:400;color:#7a8794">(np. „Jan Kowalski, firma”). Zostaw puste, a wpis podpisze Geodezyjna Izba Gospodarcza. Przy kategorii „Z firm członkowskich” wpisz nazwę firmy członkowskiej: pojawi się jako „Firma: …”, a pod wpisem adnotacja, że Izba nie odpowiada za treść.</span></label><input type="text" id="aAuthor" class="form-control"></div>
         <div class="form-group"><label>Zdjęcie główne <span style="font-weight:400;color:#7a8794">— pokazuje się na liście wpisów i u góry artykułu. Nieobowiązkowe; bez niego użyjemy logo Izby.</span></label><div id="aImageBox"></div><input id="aImage" type="hidden"></div>
         <div class="form-group"><label>Treść</label><div id="editor" style="background:#fff;"></div></div>
       </div>
@@ -134,7 +135,7 @@
       tb.innerHTML = rows.map(r => `
         <tr>
           <td><strong>${esc(r.title||'(bez tytułu)')}</strong></td>
-          <td>${esc(r.category||'—')}</td>
+          <td>${esc(({aktualnosci:'Aktualności',artykuly:'Artykuły',biuletyn:'Biuletyn',firmy:'Z firm członkowskich'})[r.category]||r.category||'—')}</td>
           <td><span class="badge badge-${badge(r.status)}">${label(r.status)}</span></td>
           <td style="white-space:nowrap;">${fmtDate(r.updated_at||r.created_at)}</td>
           <td class="actions">

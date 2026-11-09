@@ -92,6 +92,8 @@
       <div class="modal-body">
         <input type="hidden" id="cId">
         <div class="form-group"><label>Nazwa firmy</label><input type="text" id="cName" class="form-control"></div>
+        <div class="form-group"><label>Rodzaj członka <span style="font-weight:400;color:#7a8794">(art. 9 Statutu)</span></label>
+          <select id="cRodzaj" class="form-control"><option value="uslugi">Usługi geodezyjne (dostaje zapytania o wycenę z kalkulatora)</option><option value="geoinformatyka">Geoinformatyka i oprogramowanie (bez zapytań o wycenę)</option></select></div>
         <div class="grid-2">
           <div class="form-group"><label>Region (województwo)</label><input type="text" id="cRegion" class="form-control"></div>
           <div class="form-group"><label>Status</label>
@@ -186,7 +188,7 @@
         <tr>
           <td>${bezpiecznyUrl(r.website)
             ? `<a href="${esc(bezpiecznyUrl(r.website))}" target="_blank" rel="noopener noreferrer" title="${esc(r.website)}" style="color:#16202a;text-decoration:none;border-bottom:1px solid #d8e0e7;"><strong>${esc(r.name)}</strong> <span style="color:#9aa7b2;font-size:11px;">↗</span></a>`
-            : `<strong>${esc(r.name)}</strong>`}</td>
+            : `<strong>${esc(r.name)}</strong>`}${r.rodzaj==='geoinformatyka'?' <span class="badge badge-draft" title="Geoinformatyka i oprogramowanie: bez zapytań o wycenę z kalkulatora">geoinformatyka</span>':''}</td>
           <td>${esc(r.region||'—')}</td>
           <td>${esc(r.person||'—')}</td>
           <td>${r.email?`<a href="mailto:${esc(r.email)}" style="color:#cc0a2b;text-decoration:none;">${esc(r.email)}</a>`:'<span style="color:#c0392b">—</span>'}</td>
@@ -215,6 +217,7 @@
       cId.value=r?r.id:''; cName.value=r?r.name||'':''; cRegion.value=r?r.region||'':''; cAddress.value=r?r.address||'':'';
       cPerson.value=r?r.person||'':''; cPhone.value=r?r.phone||'':''; cEmail.value=r?r.email||'':'';
       cWebsite.value=r?r.website||'':''; cDesc.value=r?r.description||'':''; cStatus.value=r?r.status||'published':'published';
+      cRodzaj.value=(r&&r.rodzaj)||'uslugi';
       cNip.value=r?r.nip||'':''; cRegon.value=r?r.regon||'':''; cKrs.value=r?r.krs||'':'';
       cFb.value=r?r.facebook||'':''; cLi.value=r?r.linkedin||'':'';
       cLat.value=(r&&r.lat!=null)?r.lat:''; cLng.value=(r&&r.lng!=null)?r.lng:'';
@@ -294,7 +297,7 @@
         phone:cPhone.value.trim()||null,email:cEmail.value.trim()||null,website:cWebsite.value.trim()||null,
         nip:cNip.value.trim()||null,regon:cRegon.value.trim()||null,krs:cKrs.value.trim()||null,
         facebook:cFb.value.trim()||null,linkedin:cLi.value.trim()||null,lat:num(cLat.value),lng:num(cLng.value),
-        description:cDesc.value.trim()||null,status:cStatus.value,updated_at:new Date().toISOString()};
+        description:cDesc.value.trim()||null,status:cStatus.value,rodzaj:cRodzaj.value||'uslugi',updated_at:new Date().toISOString()};
       const btn=document.getElementById('saveBtn');btn.disabled=true;btn.textContent='Zapisywanie…';
       const id=cId.value;
       const res=id?await db.from('czlonkowie').update(rec).eq('id',id):await db.from('czlonkowie').insert(rec);
@@ -364,6 +367,7 @@
         const dane=rows.map(r=>({
           ...r,
           status_pl: r.status==='published' ? 'widoczny' : (r.status==='oczekuje' ? 'do zatwierdzenia' : 'ukryty'),
+          rodzaj_pl: r.rodzaj==='geoinformatyka' ? 'geoinformatyka i oprogramowanie' : 'usługi geodezyjne',
           wspolrzedne: (r.lat!=null&&r.lng!=null) ? `${r.lat}, ${r.lng}` : '',
           opis: (r.description||'').replace(/\s*\n\s*/g,' | '),
           dodano: fmtDate(r.created_at),
@@ -371,6 +375,7 @@
         }));
         exportCSV(dane,[
           {key:'name',label:'Firma'},
+          {key:'rodzaj_pl',label:'Rodzaj członka'},
           {key:'person',label:'Osoba kontaktowa'},
           {key:'email',label:'E-mail'},
           {key:'phone',label:'Telefon'},

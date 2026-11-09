@@ -76,6 +76,14 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   „Opłaty/Faktury/Zaświadczenia” (`#szkolenia/lista osob ze szkolen GIG/`), dopisana 2.10.2026 jednorazowym importem:
   istniejące adresy dostały znacznik i uzupełnione puste pola, nowe mają `pochodzenie = 'szkolenia GIG 2021-2026'`.
 
+- **Z firm członkowskich** (od 9.11.2026): kategoria wpisów `firmy` w panelu Artykuły (pole Autor = nazwa firmy,
+  na stronie wpisu „Firma: …” i adnotacja, że Izba nie odpowiada za treść). Lista `/baza-wiedzy/z-firm-czlonkowskich/`
+  (ręczna strona + blok prerendera `firmy-lista`), sekcja w Bazie wiedzy (`bw-firmy`), pozycja w menu Baza wiedzy.
+- **Rodzaj członka** (`czlonkowie.rodzaj`, `backend/supabase_czlonkowie_rodzaj.sql`): `uslugi` (domyślnie) albo
+  `geoinformatyka` (geoinformatyka i oprogramowanie, art. 9 Statutu). Firmy `geoinformatyka` mają znacznik w katalogu
+  i NIE dostają zapytań z kalkulatora (filtr w kalkulatorze i w `zapytanie-wycena` v2). Sprzedawcy samego sprzętu
+  nie mieszczą się w art. 9 Statutu.
+
 ## Antyspam formularzy publicznych (od 24.10.2026, `backend/supabase_antyspam.sql`)
 - Trigger `gig_limit_wpisow` na `submissions_kontakt`, `submissions_newsletter`, `zapisy_szkolenia`, `wezel_ankiety`
   (tylko rola anon): 3/h i 10/dobę na e-mail, 12/h i 40/dobę na IP (z nagłówków PostgREST), 300/h na tabelę.

@@ -24,7 +24,7 @@ const SUPABASE_ANON = "sb_publishable_1KPF4mdln3C-cZHMIqAOFw_ZM8Go2Ji";
 // NIP/REGON/KRS — dokłada czlonkowie-enrich.js przez mergeEnrich()).
 // Współrzędne bierzemy z bazy, bo nowe firmy (lokalizowane w panelu) nie mają ich w enrich;
 // gdy enrich ma swoje, nadal wygrywa (mergeEnrich nadpisuje lat/lng).
-const FIELDS = ["name", "region", "person", "phone", "email", "address", "website", "description", "lat", "lng"];
+const FIELDS = ["name", "region", "person", "phone", "email", "address", "website", "description", "lat", "lng", "rodzaj"];
 
 function pick(row) {
   const o = {};

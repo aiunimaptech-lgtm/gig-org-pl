@@ -1,11 +1,12 @@
 // ============================================================
-// GIG — Edge Function: zapytanie-wycena (v1, 15.10.2026)
+// GIG — Edge Function: zapytanie-wycena (v2, 9.11.2026; v1 15.10.2026)
 // Kalkulator /ile-kosztuje-geodezja/: klient wysyła jedno zapytanie o wycenę do kilku
 // firm członkowskich z regionu. Każda firma dostaje osobny mail (Reply-To = klient),
 // klient dostaje potwierdzenie z listą firm i ich kontaktami.
 //
 // Publiczna (verify_jwt = false). Zabezpieczenia:
 //   - adresy firm bierzemy z tabeli czlonkowie po id (tylko opublikowani), nigdy z formularza,
+//   - v2: tylko firmy z rodzaj = 'uslugi'; geoinformatyka i oprogramowanie nie dostają zapytań o wycenę,
 //   - maks. 8 firm w zapytaniu, 3 zapytania na adres e-mail i 10 na IP w ciągu doby,
 //   - pułapka na roboty (pole `www` musi być puste) i minimalny czas wypełniania (6 s).
 // Zapis: tabela zapytania_wyceny (backend/supabase_zapytania_wyceny.sql), podgląd w /admin/wyceny.html.
@@ -123,7 +124,7 @@ Deno.serve(async (req) => {
   }
 
   const fq = await db.from("czlonkowie").select("id,name,person,email,phone,address,website,region")
-    .in("id", ids).eq("status", "published");
+    .in("id", ids).eq("status", "published").eq("rodzaj", "uslugi");
   if (fq.error) return json({ error: "Błąd serwera. Spróbuj za chwilę." }, 500);
   const firmy = (fq.data ?? []).filter((f) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(f.email ?? "").trim()));
   if (!firmy.length) return json({ error: "Wybrane firmy nie są dostępne. Odśwież stronę." }, 400);
