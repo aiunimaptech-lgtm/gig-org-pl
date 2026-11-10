@@ -107,7 +107,7 @@
       document.getElementById('mName').textContent=r.name;
       document.getElementById('mReg').textContent=r.region||'';
       var rows=[], www=val(r.website);
-      if(r.rodzaj==='geoinformatyka') rows.push(['Rodzaj członka', 'Geoinformatyka i oprogramowanie']);
+      if(r.rodzaj==='geoinformatyka') rows.push(['Rodzaj członka', 'Technologie dla geodezji']);
       if(val(r.description)) rows.push(['Profil działalności', esc(r.description)]);
       if(val(r.address)) rows.push(['Adres', esc(r.address)]);
       if(val(r.person)) rows.push(['Osoba kontaktowa', esc(r.person)]);
@@ -143,7 +143,7 @@
         list.forEach(function(r,i){
           var msc=((String(r.address||'').match(/\d{2}-\d{3}\s*(.+)$/)||[])[1]||'').trim();
           var meta=[esc(reg), esc(msc)].filter(Boolean).join(' · ');
-          html+='<button class="card" data-reg="'+esc(reg)+'" data-i="'+i+'">'+(r.rodzaj==='geoinformatyka'?'<span class="rodzaj">Geoinformatyka i oprogramowanie</span>':'')+'<h3>'+esc(r.name)+'</h3>'+
+          html+='<button class="card" data-reg="'+esc(reg)+'" data-i="'+i+'">'+(r.rodzaj==='geoinformatyka'?'<span class="rodzaj">Technologie dla geodezji</span>':'')+'<h3>'+esc(r.name)+'</h3>'+
                 (meta?'<div class="who">'+meta+'</div>':'')+
                 (r.person?'<div class="who" style="margin-top:2px;color:#8a96a2">'+esc(r.person)+'</div>':'')+
                 '<span class="arrow">Zobacz szczegóły →</span></button>';

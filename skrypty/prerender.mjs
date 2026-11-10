@@ -256,7 +256,7 @@ async function main() {
       l.map((r) => {
         const msc = ((String(r.address || "").match(/\d{2}-\d{3}\s*(.+)$/) || [])[1] || "").trim();
         const meta = [esc(reg), esc(msc)].filter(Boolean).join(" · ");
-        return `<div class="card">${r.rodzaj === "geoinformatyka" ? '<span class="rodzaj">Geoinformatyka i oprogramowanie</span>' : ""}<h3>${esc(r.name)}</h3>${meta ? `<div class="who">${meta}</div>` : ""}` +
+        return `<div class="card">${r.rodzaj === "geoinformatyka" ? '<span class="rodzaj">Technologie dla geodezji</span>' : ""}<h3>${esc(r.name)}</h3>${meta ? `<div class="who">${meta}</div>` : ""}` +
           (r.person ? `<div class="who" style="margin-top:2px;color:#8a96a2">${esc(r.person)}</div>` : "") +
           (val(r.description) ? `<p class="who" style="margin-top:6px">${esc(skroc(r.description, 200))}</p>` : "") + `</div>`;
       }).join("") + `</div>`;

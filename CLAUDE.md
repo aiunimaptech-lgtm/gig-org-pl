@@ -80,9 +80,9 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   na stronie wpisu „Firma: …” i adnotacja, że Izba nie odpowiada za treść). Lista `/baza-wiedzy/z-firm-czlonkowskich/`
   (ręczna strona + blok prerendera `firmy-lista`), sekcja w Bazie wiedzy (`bw-firmy`), pozycja w menu Baza wiedzy.
 - **Rodzaj członka** (`czlonkowie.rodzaj`, `backend/supabase_czlonkowie_rodzaj.sql`): `uslugi` (domyślnie) albo
-  `geoinformatyka` (geoinformatyka i oprogramowanie, art. 9 Statutu). Firmy `geoinformatyka` mają znacznik w katalogu
-  i NIE dostają zapytań z kalkulatora (filtr w kalkulatorze i w `zapytanie-wycena` v2). Sprzedawcy samego sprzętu
-  nie mieszczą się w art. 9 Statutu.
+  `geoinformatyka` (technologie dla geodezji: sprzęt, oprogramowanie, geoinformatyka). Firmy `geoinformatyka` mają znacznik
+  „Technologie dla geodezji” w katalogu i NIE dostają zapytań z kalkulatora (filtr w kalkulatorze i w `zapytanie-wycena` v2).
+  Prezydium (10.11.2026): sprzedawcy sprzętu i oprogramowania mogą być członkami; publicznie tego nie podkreślamy.
 
 ## Antyspam formularzy publicznych (od 24.10.2026, `backend/supabase_antyspam.sql`)
 - Trigger `gig_limit_wpisow` na `submissions_kontakt`, `submissions_newsletter`, `zapisy_szkolenia`, `wezel_ankiety`
