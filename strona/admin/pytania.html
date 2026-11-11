@@ -437,6 +437,7 @@
               ${Object.keys(P_STATUS).map(k => `<option value="${k}"${k === p.status ? ' selected' : ''}>${esc(P_STATUS[k])}</option>`).join('')}</select></div>
             <div class="form-group"><label for="pytNotatka">Notatka biura</label><textarea id="pytNotatka" class="form-control" rows="4">${esc(p.notatka || '')}</textarea></div>
             <button type="button" class="btn btn-primary btn-sm" id="pytZapisz">Zapisz zmiany</button>
+            <button type="button" class="btn btn-danger btn-sm" id="pytUsun" title="Trwale usuwa pytanie i dane pytającego. Opublikowana odpowiedź zostaje.">Usuń pytanie</button>
 
             <div class="py-h" style="margin-top:20px;">Odpowiedź</div>
             ${op ? `<div class="py-mini" style="margin:0 0 6px;">Powiązana odpowiedź: <strong>${esc(op.tytul)}</strong> (${esc(O_STATUS[op.status] || op.status)})</div>` : ''}
@@ -462,6 +463,15 @@
       na('pytMail', () => pMail(p));
       na('pytOtworzOdp', () => { closeModal('pytModal'); oEdytuj(op.id); });
       na('pytUtworzOdp', () => pUtworzOdpowiedz(p));
+      /* Trwałe usunięcie pytania (spam, pomyłka, prośba pytającego o usunięcie danych). Odpowiedź w tabeli opinie zostaje. */
+      na('pytUsun', async () => {
+        if (!confirm('Usunąć pytanie ' + p.numer + '? Znikną treść i dane pytającego. Tej operacji nie można cofnąć.' + (op ? ' Powiązana odpowiedź zostanie w zakładce Odpowiedzi.' : ''))) return;
+        const { error } = await db.from('pytania').delete().eq('id', p.id);
+        if (error) { console.error(error); toast('Nie udało się usunąć pytania', 'error'); return; }
+        toast('Pytanie usunięte', 'success');
+        closeModal('pytModal');
+        await load();
+      });
       openModal('pytModal');
     }
 
