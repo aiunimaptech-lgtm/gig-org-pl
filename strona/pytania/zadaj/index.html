@@ -203,7 +203,7 @@
   (function () {
     "use strict";
     var CFG = window.GIG_CFG || {}, S = window.GIG_PYTANIA || {};
-    var T0 = Date.now(), MIN_CZAS = 4500;            // funkcja odrzuca po cichu zgłoszenia szybsze niż 4 s
+    var T0 = Date.now(), MIN_CZAS = 20500;           // funkcja odrzuca po cichu zgłoszenia szybsze niż 20 s (formularz czeka z wysyłką)
     var BIURO = 'Napisz do nas: <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.';
     var form = document.getElementById("pfForm"), msg = document.getElementById("pfMsg"), btn = document.getElementById("pfBtn");
     var par = new URLSearchParams(location.search);

@@ -1,5 +1,5 @@
 // ============================================================
-// GIG: Edge Function pytanie-zglos (v4, 11.11.2026)
+// GIG: Edge Function pytanie-zglos (v6, 11.11.2026)
 // „Zapytaj Izbę” (Geodezja pyta, Izba odpowiada): przyjmuje pytanie z formularza /pytania/zadaj/,
 // zapisuje je w tabeli `pytania` (backend/supabase_pytania.sql) i wysyła dwa maile:
 // powiadomienie do biura (Reply-To = pytający) oraz potwierdzenie z numerem do pytającego.
@@ -8,19 +8,20 @@
 //   rodzaj ('pytanie' | 'problem' | 'postulat'), tresc (10 do 5000 znaków), temat, rola, wojewodztwo,
 //   imie, email, organizacja, nip, podpis_zakres ('anonim' | 'osoba' | 'organizacja' | 'oba'),
 //   podpis_osoba, podpis_organizacja, tylko_dla_mnie, nie_ujawniac, zgoda (true),
-//   www (pułapka, musi być puste), czas (ms od wejścia na stronę, liczba, co najmniej 4000).
+//   www (pułapka, musi być puste), czas (ms od wejścia na stronę, liczba, co najmniej 20000).
 // Wyjście: { ok: true, numer, czlonek: true | false, czlonek_do_potwierdzenia: true | false }
 //   albo { error: "komunikat po polsku" }.
 //
 // Zabezpieczenia:
-//   - pułapka na roboty: pole `www` niepuste, brak pola `czas` albo czas poniżej 4 s
+//   - pułapka na roboty: pole `www` niepuste, brak pola `czas` albo czas poniżej 20 s
 //     -> odpowiedź { ok: true, numer: null }, nic nie zapisujemy i nic nie wysyłamy,
-//   - limity (liczone w tabeli pytania, zrodlo = 'formularz'): łącznie 6 zgłoszeń na godzinę i 20 na dobę,
-//     3 na adres e-mail i 4 na IP w ciągu doby (v4: spodziewamy się ok. 1 pytania tygodniowo). IP z nagłówka cf-connecting-ip (ustawia go Cloudflare,
+//   - limity (liczone w tabeli pytania, zrodlo = 'formularz'): łącznie 3 zgłoszenia na godzinę i 6 na dobę,
+//     3 na adres e-mail i 1 na IP w ciągu doby (v6, decyzja prezesa: spodziewamy się ok. 1 pytania tygodniowo). IP z nagłówka cf-connecting-ip (ustawia go Cloudflare,
 //     klient go nie podstawi), zapasowo OSTATNI element x-forwarded-for (pierwszy pochodzi od klienta).
 //     Zgłoszenie bez adresu IP odrzucamy,
-//   - v4: treść z więcej niż 2 linkami, link w polach imię, organizacja lub podpis oraz powtórzona treść
-//     (taka sama w ciągu 7 dni) -> po cichu { ok: true, numer: null }, bez zapisu i bez maili,
+//   - v5: treść z jakimkolwiek linkiem albo adresem strony -> 400 z prośbą o usunięcie linku (człowiek poprawi, robot odpadnie);
+//     link w polach imię, organizacja lub podpis oraz powtórzona treść (taka sama w ciągu 7 dni)
+//     -> po cichu { ok: true, numer: null }, bez zapisu i bez maili,
 //   - strona nie pisze do tabeli sama: anon nie ma do `pytania` żadnych praw, zapis idzie stąd (service_role).
 //
 // Członek Izby: NIP członków jest publiczny w katalogu, więc sam NIP nie wystarcza.
@@ -47,7 +48,7 @@ const DOMYSLNI = [BIURO, "prezydium@gig.org.pl", "dawid.sienkiewicz@gig.org.pl"]
 const PANEL = "https://gig.org.pl/admin/pytania.html";
 const LOGO = "https://gig.org.pl/_assets/img/gig-logo-email.png";
 const RED = "#cc0a2b", DARK = "#16202a";
-const MIN_CZAS = 4000, LIMIT_EMAIL = 3, LIMIT_IP = 4, LIMIT_GODZ = 6, LIMIT_DOBA = 20, MAX_LINKOW = 2, MIN_TRESC = 10, MAX_TRESC = 5000;
+const MIN_CZAS = 20000, LIMIT_EMAIL = 3, LIMIT_IP = 1, LIMIT_GODZ = 3, LIMIT_DOBA = 6, MIN_TRESC = 10, MAX_TRESC = 5000;
 
 const adresyZSekretu = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 const NOTIFY: string[] = (() => {
@@ -187,10 +188,12 @@ Deno.serve(async (req) => {
   if (zOrg && !podpisOrg) return json({ error: "Podaj nazwę organizacji do podpisu albo wybierz inny sposób podpisu." }, 400);
   if (b.zgoda !== true) return json({ error: "Zaznacz wymaganą zgodę, żeby wysłać zgłoszenie." }, 400);
 
-  // v4: reklamy i linki. Robot dostaje "sukces", niczego nie zapisujemy i nie wysyłamy.
-  const LINK = /https?:\/\/|www\.|\[url|<a\s/gi;
-  if ((tresc.match(LINK) ?? []).length > MAX_LINKOW
-    || [imie, organizacja, podpisOsoba, podpisOrg, temat, rola].some((x) => /https?:\/\/|www\./i.test(x))) {
+  // v5: żadnych linków ani adresów stron w treści (adresy e-mail są dozwolone).
+  const LINK = /https?:\/\/|www\.|\[url|<a\s|\b[a-z0-9-]+\.(pl|com|net|org|eu|info|biz|ru|xyz|top|online|site|shop|io)\b(?!\s*@)/i;
+  if (LINK.test(tresc.replace(/[^\s@]+@[^\s@]+/g, " "))) {
+    return json({ error: "Usuń z treści linki i adresy stron internetowych. Przepis albo dokument opisz słowami, np. podając numer artykułu." }, 400);
+  }
+  if ([imie, organizacja, podpisOsoba, podpisOrg, temat, rola].some((x) => /https?:\/\/|www\./i.test(x))) {
     console.error("pytanie-zglos: odrzucono po cichu (linki)");
     return json({ ok: true, numer: null });
   }
@@ -224,7 +227,7 @@ Deno.serve(async (req) => {
     const lI = await db.from("pytania").select("id", { count: "exact", head: true })
       .eq("zrodlo", "formularz").eq("ip", ip).gte("created_at", doba);
     if (lI.error) throw new Error("limit IP: " + lI.error.message);
-    if ((lI.count ?? 0) >= LIMIT_IP) return json({ error: "Przekroczono dzienny limit pytań. Spróbuj jutro albo napisz do biura Izby: biuro@gig.org.pl." }, 429);
+    if ((lI.count ?? 0) >= LIMIT_IP) return json({ error: "Z tego połączenia internetowego wysłano już dziś pytanie. Kolejne wyślij jutro albo napisz do biura Izby: biuro@gig.org.pl." }, 429);
 
     // v4: ta sama treść wysłana ponownie w ciągu 7 dni (robot albo podwójne kliknięcie): po cichu, bez zapisu
     const tydz = new Date(Date.now() - 7 * 86400000).toISOString();
