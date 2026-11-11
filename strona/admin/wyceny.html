@@ -79,6 +79,10 @@
             <div class="search-box"><span class="search-icon">⌕</span>
               <input type="text" class="form-control" id="szukaj" placeholder="Szukaj: klient, e-mail, miejscowość, firma…"></div>
             <select id="fUsluga" class="form-control" style="max-width:230px;"><option value="">Wszystkie usługi</option></select>
+            <select id="fOkres" class="form-control" style="max-width:190px;" title="Okres: dotyczy listy i podsumowania u góry">
+              <option value="">Cały okres</option><option value="30" selected>Ostatnie 30 dni</option><option value="90">Ostatnie 90 dni</option>
+              <option value="rok">Bieżący rok</option><option value="12m">Ostatnie 12 miesięcy</option>
+            </select>
             <select id="fStatus" class="form-control" style="max-width:170px;">
               <option value="">Wszystkie statusy</option><option value="new">Nowe</option><option value="read">Przeczytane</option>
               <option value="archiwum">Archiwum</option><option value="spam">Spam</option>
@@ -117,18 +121,28 @@
     const firmyTxt = z => (z.firmy || []).filter(f => f.ok).map(f => f.nazwa);
 
     function podsumuj(){
-      const d30 = Date.now() - 30 * 86400000;
-      const ost = dane.filter(z => new Date(z.created_at).getTime() >= d30 && z.status !== 'spam');
+      const ost = dane.filter(z => wOkresie(z) && z.status !== 'spam');
+      const sel = document.getElementById('fOkres');
+      const okres = sel.value ? sel.selectedOptions[0].textContent.toLowerCase() : 'cały okres';
       const k = (t, v) => `<div class="k"><div class="t">${t}</div><div class="v">${v}</div></div>`;
       const firm = new Set(ost.flatMap(z => (z.firmy || []).filter(f => f.ok).map(f => f.id))).size;
       document.getElementById('podsumowanie').innerHTML =
-        k('Zapytania (30 dni)', ost.length) + k('Wysłanych maili do firm', ost.reduce((s, z) => s + (z.wyslano_do || 0), 0)) +
+        k('Zapytania (' + okres + ')', ost.length) + k('Wysłanych maili do firm', ost.reduce((s, z) => s + (z.wyslano_do || 0), 0)) +
         k('Firm, które dostały zapytania', firm) + k('Nowe', dane.filter(z => z.status === 'new').length);
     }
+    /* Okres wybrany w filtrze: 30 albo 90 dni, bieżący rok, ostatnie 12 miesięcy; puste = wszystko. */
+    function odKiedy(){
+      const v = document.getElementById('fOkres').value, d = new Date();
+      if (v === '30' || v === '90') return Date.now() - Number(v) * 86400000;
+      if (v === 'rok') return new Date(d.getFullYear(), 0, 1).getTime();
+      if (v === '12m') { d.setFullYear(d.getFullYear() - 1); return d.getTime(); }
+      return 0;
+    }
+    const wOkresie = z => new Date(z.created_at).getTime() >= odKiedy();
     function filtruj(){
       const f = document.getElementById('szukaj').value.toLowerCase().trim();
       const u = document.getElementById('fUsluga').value, st = document.getElementById('fStatus').value;
-      return dane.filter(z => (!u || z.usluga === u) && (!st || z.status === st) &&
+      return dane.filter(z => wOkresie(z) && (!u || z.usluga === u) && (!st || z.status === st) &&
         (!f || [z.imie, z.email, z.telefon, z.miejscowosc, z.wojewodztwo, z.opis, ...firmyTxt(z)].some(v => (v || '').toLowerCase().includes(f))));
     }
     function render(){
@@ -214,6 +228,7 @@
       document.getElementById('szukaj').addEventListener('input', render);
       document.getElementById('fUsluga').addEventListener('change', render);
       document.getElementById('fStatus').addEventListener('change', render);
+      document.getElementById('fOkres').addEventListener('change', () => { podsumuj(); render(); });
       document.getElementById('expCsv').addEventListener('click', () => {
         const rows = filtruj().map(z => ({ data: fmtDate(z.created_at), klient: z.imie, email: z.email, telefon: z.telefon || '',
           usluga: z.usluga_nazwa || z.usluga, wojewodztwo: z.wojewodztwo, miejscowosc: z.miejscowosc || '',
