@@ -181,6 +181,7 @@
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-outline btn-sm" data-st="archiwum">Do archiwum</button>
           <button class="btn btn-ghost btn-sm" data-st="spam">Oznacz jako spam</button>
+          <button class="btn btn-primary btn-sm" id="zwNapisz" title="Wiadomość do klienta, np. z pytaniem, czy dostał odpowiedź od firm">↩ Napisz do klienta</button>
           <button class="btn btn-outline btn-sm" id="zwPrzeslij" title="Wysyła treść zapytania na wskazany adres e-mail">✉ Prześlij dalej</button>
           <button class="btn btn-danger btn-sm" id="zwUsun" title="Trwale usuwa zapytanie i dane klienta">Usuń zapytanie</button>
         </div>`;
@@ -201,6 +202,21 @@
         gigKreatorMaila({ odbiorcy: [{ email: adres, name: '' }], rodzaj: 'kontakt',
           temat: 'Zapytanie o wycenę: ' + (z.usluga_nazwa || z.usluga) + ', ' + (z.miejscowosc || ''),
           cytat: linie.join('\n'), opis: 'przesłanie zapytania klienta ' + esc(z.imie || z.email || '') });
+      });
+      /* Wiadomość do klienta (np. pytanie, czy firmy odpowiedziały). Gotowy tekst można zmienić przed wysłaniem. */
+      document.getElementById('zwNapisz').addEventListener('click', () => {
+        if (!z.email) { toast('To zapytanie nie ma adresu e-mail klienta', 'error'); return; }
+        const firmy = firmyTxt(z);
+        closeModal('zwModal');
+        gigKreatorMaila({ odbiorcy: [{ email: z.email, name: z.imie || '' }], rodzaj: 'kontakt',
+          temat: 'Twoje zapytanie o wycenę: ' + (z.usluga_nazwa || z.usluga) + ', ' + (z.miejscowosc || ''),
+          opis: 'zapytanie z ' + esc(fmtDate(z.created_at)) });
+        if (typeof gigMailQuill !== 'undefined' && gigMailQuill) {
+          gigMailQuill.setText('Dzień dobry,\n\n' + fmtDate(z.created_at).slice(0, 10) + ' wysłał(a) Pan(i) przez kalkulator na stronie Geodezyjnej Izby Gospodarczej zapytanie o wycenę (' +
+            (z.usluga_nazwa || z.usluga) + ', ' + (z.miejscowosc || '') + ')' + (firmy.length ? ' do firm: ' + firmy.join(', ') : '') + '.\n\n' +
+            'Chcielibyśmy zapytać, czy otrzymał(a) Pan(i) odpowiedź od firm i czy udało się umówić wykonanie pracy. ' +
+            'Będziemy wdzięczni za krótką informację zwrotną: pomoże nam ona ulepszyć tę usługę.\n\nZ poważaniem\nBiuro Geodezyjnej Izby Gospodarczej\n');
+        }
       });
       document.getElementById('zwUsun').addEventListener('click', async () => {
         if (!confirm('Usunąć to zapytanie? Znikną dane klienta i lista firm. Tej operacji nie można cofnąć.')) return;
