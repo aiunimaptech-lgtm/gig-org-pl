@@ -1,5 +1,5 @@
 // ============================================================
-// GIG: Edge Function pytanie-zglos (v6, 11.11.2026)
+// GIG: Edge Function pytanie-zglos (v8, 11.11.2026)
 // „Zapytaj Izbę” (Geodezja pyta, Izba odpowiada): przyjmuje pytanie z formularza /pytania/zadaj/,
 // zapisuje je w tabeli `pytania` (backend/supabase_pytania.sql) i wysyła dwa maile:
 // powiadomienie do biura (Reply-To = pytający) oraz potwierdzenie z numerem do pytającego.
@@ -14,14 +14,29 @@
 //
 // Zabezpieczenia:
 //   - pułapka na roboty: pole `www` niepuste, brak pola `czas` albo czas poniżej 20 s
-//     -> odpowiedź { ok: true, numer: null }, nic nie zapisujemy i nic nie wysyłamy,
-//   - limity (liczone w tabeli pytania, zrodlo = 'formularz'): łącznie 3 zgłoszenia na godzinę i 6 na dobę,
-//     3 na adres e-mail i 1 na IP w ciągu doby (v6, decyzja prezesa: spodziewamy się ok. 1 pytania tygodniowo). IP z nagłówka cf-connecting-ip (ustawia go Cloudflare,
-//     klient go nie podstawi), zapasowo OSTATNI element x-forwarded-for (pierwszy pochodzi od klienta).
-//     Zgłoszenie bez adresu IP odrzucamy,
+//     -> odpowiedź { ok: true, numer: null }, pytania nie zapisujemy i nic nie wysyłamy,
+//   - limity (liczone w tabeli pytania, zrodlo = 'formularz'):
+//       łącznie: do 22.11.2026 włącznie (czas polski) 20 na godzinę i 40 na dobę, od 23.11.2026 6 na godzinę i 15 na dobę
+//       (decyzja prezesa z 11.11.2026: do Forum spodziewamy się więcej pytań),
+//       3 na adres e-mail na dobę, 6 na adres IP na dobę (v7: było 1; urzędy i biura wychodzą jednym adresem).
+//     IP z nagłówka cf-connecting-ip (ustawia go Cloudflare, klient go nie podstawi), zapasowo OSTATNI element
+//     x-forwarded-for (pierwszy pochodzi od klienta). Zgłoszenie bez adresu IP odrzucamy.
+//     Te same limity sprawdza ponownie trigger trg_pytania_limit (backend/supabase_pytania_kosz.sql) pod blokadą
+//     pg_advisory_xact_lock, bo liczenie tutaj i zapis nie są atomowe. Trigger zgłasza 'ZA_DUZO_ZGLOSZEN'
+//     (w polu details: limit_laczny, limit_email albo limit_ip), a funkcja zamienia to na 429.
+//     UWAGA: liczby limitów są w dwóch miejscach (stałe niżej i funkcja gig_pytania_limit w bazie), zmieniaj oba,
 //   - v5: treść z jakimkolwiek linkiem albo adresem strony -> 400 z prośbą o usunięcie linku (człowiek poprawi, robot odpadnie);
 //     link w polach imię, organizacja lub podpis oraz powtórzona treść (taka sama w ciągu 7 dni)
-//     -> po cichu { ok: true, numer: null }, bez zapisu i bez maili,
+//     -> po cichu { ok: true, numer: null }, bez zapisu pytania i bez maili,
+//   - v7: kosz. Każde zablokowane zgłoszenie (pułapka, za szybko, link, powtórzona treść, limity) trafia do tabeli
+//     `pytania_odrzucone` z powodem; panel pokazuje je w zakładce Kosz i pozwala przywrócić. Wpisy starsze niż 30 dni
+//     usuwa pg_cron. Zwykłych błędów walidacji (brak zgody, za krótka treść) nie zapisujemy. Zapis do kosza nigdy
+//     nie zmienia odpowiedzi funkcji,
+//   - v8: kosz trzyma też zastrzeżenia pytającego (nie ujawniać, tylko dla mnie), NIP, województwo, podpis i zgodę,
+//     żeby przywrócone pytanie ich nie zgubiło. Ochrona kosza przed zalaniem: powody dzielą się na grupę „roboty”
+//     (pulapka, za_szybko, link_w_podpisie) i „ludzie” (pozostałe); w każdej grupie najwyżej 200 wpisów na dobę
+//     i najwyżej 10 z jednego adresu IP. Zalew z pułapki nie zabiera więc miejsca zgłoszeniom zatrzymanym limitem.
+//     Przycinane teksty nie kończą się połową znaku (emoji), a samotne surogaty usuwamy, bo baza ich nie przyjmuje,
 //   - strona nie pisze do tabeli sama: anon nie ma do `pytania` żadnych praw, zapis idzie stąd (service_role).
 //
 // Członek Izby: NIP członków jest publiczny w katalogu, więc sam NIP nie wystarcza.
@@ -48,7 +63,19 @@ const DOMYSLNI = [BIURO, "prezydium@gig.org.pl", "dawid.sienkiewicz@gig.org.pl"]
 const PANEL = "https://gig.org.pl/admin/pytania.html";
 const LOGO = "https://gig.org.pl/_assets/img/gig-logo-email.png";
 const RED = "#cc0a2b", DARK = "#16202a";
-const MIN_CZAS = 20000, LIMIT_EMAIL = 3, LIMIT_IP = 1, LIMIT_GODZ = 3, LIMIT_DOBA = 6, MIN_TRESC = 10, MAX_TRESC = 5000;
+const MIN_CZAS = 20000, LIMIT_EMAIL = 3, LIMIT_IP = 6, MIN_TRESC = 10, MAX_TRESC = 5000;
+// Limity łączne zależą od daty: 23.11.2026 00:00 czasu polskiego (CET) to 22.11.2026 23:00 UTC.
+const ZMIANA_LIMITOW = Date.parse("2026-11-22T23:00:00Z");
+const limityLaczne = () => Date.now() < ZMIANA_LIMITOW ? { godz: 20, doba: 40 } : { godz: 6, doba: 15 };
+// Kosz: limity zapisu na dobę, osobno w każdej z dwóch grup powodów (roboty i ludzie).
+const KOSZ_MAX_GRUPA = 200, KOSZ_MAX_IP = 10, KOSZ_MAX_TRESC = 3000;
+const KOSZ_ROBOTY = ["pulapka", "za_szybko", "link_w_podpisie"];
+const KOSZ_LUDZIE = ["link_w_tresci", "powtorzona_tresc", "limit_laczny", "limit_email", "limit_ip"];
+const KOMUNIKAT_LIMITU: Record<string, string> = {
+  limit_laczny: "Formularz przyjął dziś wyjątkowo dużo zgłoszeń. Spróbuj później albo napisz do biura Izby: biuro@gig.org.pl.",
+  limit_email: "Z tego adresu wysłano już dziś kilka pytań. Spróbuj jutro albo napisz do biura Izby: biuro@gig.org.pl.",
+  limit_ip: "Z tego połączenia internetowego wysłano już dziś kilka pytań. Kolejne wyślij jutro albo napisz do biura Izby: biuro@gig.org.pl.",
+};
 
 const adresyZSekretu = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 const NOTIFY: string[] = (() => {
@@ -86,12 +113,14 @@ const CORS = {
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 const esc = (s: unknown) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+// samotne surogaty UTF-16 (np. emoji rozcięte przez slice): Postgres odrzuca JSON z takim znakiem
+const bezSierot = (s: string) => s.replace(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]/g, "");
 // tekst wielowierszowy: bez znaków sterujących, z zachowaniem nowych linii
 const tekst = (v: unknown, max: number) =>
-  (typeof v === "string" ? v : typeof v === "number" ? String(v) : "")
-    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").trim().slice(0, max);
+  bezSierot((typeof v === "string" ? v : typeof v === "number" ? String(v) : "")
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, "").trim().slice(0, max));
 // pole jednowierszowe: białe znaki zwinięte do spacji
-const linia = (v: unknown, max: number) => tekst(v, max * 2).replace(/\s+/g, " ").slice(0, max).trim();
+const linia = (v: unknown, max: number) => bezSierot(tekst(v, max * 2).replace(/\s+/g, " ").slice(0, max)).trim();
 const EMAIL_RE = /^[^@\s<>(),;:"\\]+@[^@\s<>(),;:"\\]+\.[^@\s<>(),;:"\\]{2,}$/;
 const adresy = (s: unknown) => String(s ?? "").toLowerCase().split(/[\s,;]+/).filter((x) => x.includes("@"));
 const domena = (a: string) => a.slice(a.lastIndexOf("@") + 1);
@@ -141,6 +170,47 @@ async function wyslij(to: string[], subject: string, html: string, replyTo: stri
   return false;
 }
 
+// Klient bazy (service_role) tworzony przy pierwszym użyciu.
+// deno-lint-ignore no-explicit-any
+let _db: any = null;
+const baza = () => _db ??= createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+  { auth: { persistSession: false, autoRefreshToken: false } });
+
+// adres IP: cf-connecting-ip ustawia Cloudflare; w x-forwarded-for prawdziwy adres jest na końcu,
+// a początek może dopisać klient
+function adresIp(req: Request): string | null {
+  const xff = (req.headers.get("x-forwarded-for") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+  return ((req.headers.get("cf-connecting-ip") ?? "").trim() || xff[xff.length - 1] || "").slice(0, 60) || null;
+}
+
+// Kosz: zapis zablokowanego zgłoszenia do `pytania_odrzucone`. Pola bierzemy wprost z żądania (pułapka i czas
+// są sprawdzane przed walidacją), przycięte jak w formularzu. Błąd tylko w logu: odpowiedź funkcji się nie zmienia.
+async function doKosza(powod: string, b: Record<string, unknown>, ip: string | null): Promise<void> {
+  try {
+    const db = baza();
+    const doba = new Date(Date.now() - 86400000).toISOString();
+    // limity liczone w grupie powodów: zalew robotów nie blokuje zapisu zgłoszeń zatrzymanych limitem
+    const grupa = KOSZ_ROBOTY.includes(powod) ? KOSZ_ROBOTY : KOSZ_LUDZIE;
+    const licz = () => db.from("pytania_odrzucone").select("id", { count: "exact", head: true })
+      .in("powod", grupa).gte("created_at", doba);
+    const [lG, lI] = await Promise.all([licz(), ip ? licz().eq("ip", ip) : licz().is("ip", null)]);
+    if (lG.error) throw new Error(lG.error.message);
+    if (lI.error) throw new Error(lI.error.message);
+    if ((lG.count ?? 0) >= KOSZ_MAX_GRUPA) { console.error(`pytanie-zglos: kosz pełny (limit dobowy grupy, powód ${powod}), wpisu nie zapisano`); return; }
+    if ((lI.count ?? 0) >= KOSZ_MAX_IP) { console.error(`pytanie-zglos: kosz: limit dobowy na adres IP (powód ${powod}), wpisu nie zapisano`); return; }
+    const ins = await db.from("pytania_odrzucone").insert({
+      powod, rodzaj: linia(b.rodzaj, 40) || null, temat: linia(b.temat, 120) || null, rola: linia(b.rola, 80) || null,
+      tresc: tekst(b.tresc, KOSZ_MAX_TRESC).replace(/\r\n?/g, "\n") || null, imie: linia(b.imie, 120) || null,
+      email: linia(b.email, 160).toLowerCase() || null, organizacja: linia(b.organizacja, 200) || null, ip,
+      wojewodztwo: linia(b.wojewodztwo, 40) || null, nip: linia(b.nip, 40) || null,
+      podpis_zakres: linia(b.podpis_zakres, 40) || null, podpis_osoba: linia(b.podpis_osoba, 160) || null,
+      podpis_organizacja: linia(b.podpis_organizacja, 200) || null,
+      tylko_dla_mnie: b.tylko_dla_mnie === true, nie_ujawniac: b.nie_ujawniac === true, zgoda: b.zgoda === true,
+    });
+    if (ins.error) throw new Error(ins.error.message);
+  } catch (e) { console.error("pytanie-zglos: kosz:", (e as Error).message); }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "tylko POST" }, 405);
@@ -157,7 +227,11 @@ Deno.serve(async (req) => {
   // pułapka i czas wypełniania: roboty wypełniają wszystko i wysyłają od razu
   const czas = Number(b.czas);
   const pulapka = b.www != null && String(b.www).trim() !== "";
-  if (pulapka || !Number.isFinite(czas) || czas < MIN_CZAS) return json({ ok: true, numer: null });
+  const ip = adresIp(req);
+  if (pulapka || !Number.isFinite(czas) || czas < MIN_CZAS) {
+    await doKosza(pulapka ? "pulapka" : "za_szybko", b, ip);
+    return json({ ok: true, numer: null });
+  }
 
   const rodzaj = linia(b.rodzaj, 40) || "pytanie";
   const tresc = tekst(b.tresc, 20000).replace(/\r\n?/g, "\n");
@@ -191,20 +265,17 @@ Deno.serve(async (req) => {
   // v5: żadnych linków ani adresów stron w treści (adresy e-mail są dozwolone).
   const LINK = /https?:\/\/|www\.|\[url|<a\s|\b[a-z0-9-]+\.(pl|com|net|org|eu|info|biz|ru|xyz|top|online|site|shop|io)\b(?!\s*@)/i;
   if (LINK.test(tresc.replace(/[^\s@]+@[^\s@]+/g, " "))) {
+    await doKosza("link_w_tresci", b, ip);
     return json({ error: "Usuń z treści linki i adresy stron internetowych. Przepis albo dokument opisz słowami, np. podając numer artykułu." }, 400);
   }
   if ([imie, organizacja, podpisOsoba, podpisOrg, temat, rola].some((x) => /https?:\/\/|www\./i.test(x))) {
     console.error("pytanie-zglos: odrzucono po cichu (linki)");
+    await doKosza("link_w_podpisie", b, ip);
     return json({ ok: true, numer: null });
   }
 
   try {
-    const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      { auth: { persistSession: false, autoRefreshToken: false } });
-    // adres IP: cf-connecting-ip ustawia Cloudflare; w x-forwarded-for prawdziwy adres jest na końcu,
-    // a początek może dopisać klient
-    const xff = (req.headers.get("x-forwarded-for") ?? "").split(",").map((x) => x.trim()).filter(Boolean);
-    const ip = ((req.headers.get("cf-connecting-ip") ?? "").trim() || xff[xff.length - 1] || "").slice(0, 60) || null;
+    const db = baza();
     if (!ip) return json({ error: "Nie udało się przyjąć zgłoszenia z tego połączenia. Napisz do biura Izby: biuro@gig.org.pl." }, 400);
 
     // limity (tylko zgłoszenia z formularza; wpisy dodane w panelu się nie liczą)
@@ -216,25 +287,31 @@ Deno.serve(async (req) => {
     const lD = await db.from("pytania").select("id", { count: "exact", head: true })
       .eq("zrodlo", "formularz").gte("created_at", doba);
     if (lD.error) throw new Error("limit dobowy: " + lD.error.message);
-    if ((lG.count ?? 0) >= LIMIT_GODZ || (lD.count ?? 0) >= LIMIT_DOBA) {
-      console.error(`pytanie-zglos: limit łączny (godzina ${lG.count}, doba ${lD.count})`);
-      return json({ error: "Formularz przyjął dziś wyjątkowo dużo zgłoszeń. Spróbuj później albo napisz do biura Izby: biuro@gig.org.pl." }, 429);
+    const LL = limityLaczne();
+    if ((lG.count ?? 0) >= LL.godz || (lD.count ?? 0) >= LL.doba) {
+      console.error(`pytanie-zglos: limit łączny (godzina ${lG.count}/${LL.godz}, doba ${lD.count}/${LL.doba})`);
+      await doKosza("limit_laczny", b, ip);
+      return json({ error: KOMUNIKAT_LIMITU.limit_laczny }, 429);
     }
     const lE = await db.from("pytania").select("id", { count: "exact", head: true })
       .eq("zrodlo", "formularz").eq("email", email).gte("created_at", doba);
     if (lE.error) throw new Error("limit e-mail: " + lE.error.message);
-    if ((lE.count ?? 0) >= LIMIT_EMAIL) return json({ error: "Z tego adresu wysłano już dziś kilka pytań. Spróbuj jutro albo napisz do biura Izby: biuro@gig.org.pl." }, 429);
+    if ((lE.count ?? 0) >= LIMIT_EMAIL) { await doKosza("limit_email", b, ip); return json({ error: KOMUNIKAT_LIMITU.limit_email }, 429); }
     const lI = await db.from("pytania").select("id", { count: "exact", head: true })
       .eq("zrodlo", "formularz").eq("ip", ip).gte("created_at", doba);
     if (lI.error) throw new Error("limit IP: " + lI.error.message);
-    if ((lI.count ?? 0) >= LIMIT_IP) return json({ error: "Z tego połączenia internetowego wysłano już dziś pytanie. Kolejne wyślij jutro albo napisz do biura Izby: biuro@gig.org.pl." }, 429);
+    if ((lI.count ?? 0) >= LIMIT_IP) { await doKosza("limit_ip", b, ip); return json({ error: KOMUNIKAT_LIMITU.limit_ip }, 429); }
 
     // v4: ta sama treść wysłana ponownie w ciągu 7 dni (robot albo podwójne kliknięcie): po cichu, bez zapisu
     const tydz = new Date(Date.now() - 7 * 86400000).toISOString();
     const lT = await db.from("pytania").select("id", { count: "exact", head: true })
       .eq("tresc", tresc).gte("created_at", tydz);
     if (lT.error) throw new Error("powtórzona treść: " + lT.error.message);
-    if ((lT.count ?? 0) > 0) { console.error("pytanie-zglos: odrzucono po cichu (powtórzona treść)"); return json({ ok: true, numer: null }); }
+    if ((lT.count ?? 0) > 0) {
+      console.error("pytanie-zglos: odrzucono po cichu (powtórzona treść)");
+      await doKosza("powtorzona_tresc", b, ip);
+      return json({ ok: true, numer: null });
+    }
 
     // rozpoznanie członka: po adresie e-mail albo po NIP-ie (tylko opublikowani w katalogu)
     const cq = await db.from("czlonkowie").select("id,name,email,nip").eq("status", "published");
@@ -270,6 +347,14 @@ Deno.serve(async (req) => {
       czlonek_gig: czlonekGig, czlonek_id: czlonek?.id ?? null, czlonek_sposob: sposob, czlonek_potwierdzony: potwierdzony,
       zgoda_at: new Date().toISOString(), ip, notatka,
     }).select("id,numer").single();
+    // v7: trigger trg_pytania_limit przeliczył limity pod blokadą i odrzucił zapis (zgłoszenia równoległe)
+    if (ins.error && /ZA_DUZO_ZGLOSZEN/.test(ins.error.message ?? "")) {
+      const szczegol = String(ins.error.details ?? "").trim();
+      const powod = KOMUNIKAT_LIMITU[szczegol] ? szczegol : "limit_laczny";
+      console.error(`pytanie-zglos: limit z triggera (${powod})`);
+      await doKosza(powod, b, ip);
+      return json({ error: KOMUNIKAT_LIMITU[powod] }, 429);
+    }
     if (ins.error || !ins.data) throw new Error("zapis: " + (ins.error?.message ?? "brak wiersza"));
     const numer = String(ins.data.numer);
     const R = RODZAJE[rodzaj];

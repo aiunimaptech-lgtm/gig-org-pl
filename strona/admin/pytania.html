@@ -38,6 +38,10 @@
     .py-stopka{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%;}
     .py-stopka .py-prawo{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
     a.btn.wylaczony{opacity:.45;pointer-events:none;}
+    .py-pasek{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 14px;}
+    .py-pasek .btn{margin-left:auto;}
+    .py-powod{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;background:#eef1f4;color:#44525e;}
+    .py-powod.limit{background:#fff3e0;color:#b26a00;}
     @media (max-width: 900px){ .py-kol{grid-template-columns:1fr;} .py-tresc-kom{max-width:none;} }
   </style>
 </head>
@@ -94,10 +98,12 @@
         </div>
       </header>
       <main class="admin-content">
+        <div class="py-alert zolty py-pasek" id="koszPasek" style="display:none;"></div>
         <div class="card tabs-root" id="tabsRoot"><div class="card-body">
           <div class="tabs">
             <button class="tab-btn" data-tab="pytania">Pytania <span class="nav-badge" id="tabLiczPytania" style="display:none">0</span></button>
             <button class="tab-btn" data-tab="odpowiedzi">Odpowiedzi</button>
+            <button class="tab-btn" data-tab="kosz">Kosz <span class="nav-badge" id="tabLiczKosz" style="display:none">0</span></button>
           </div>
 
           <div class="tab-pane" data-tab="pytania">
@@ -139,6 +145,23 @@
               <tbody id="oRows"><tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
             </table></div>
           </div>
+
+          <div class="tab-pane" data-tab="kosz">
+            <p class="py-opis">Zgłoszenia z formularza zatrzymane przez zabezpieczenia: pułapka na roboty, wysyłka w mniej niż 20 sekund, linki, powtórzona treść
+              i limity. Pytający nie dostał numeru ani potwierdzenia, a biuro nie dostało maila. Jeśli wpis wygląda na prawdziwe pytanie, przywróć go do kolejki.</p>
+            <div class="toolbar">
+              <div class="search-box"><span class="search-icon">⌕</span>
+                <input type="text" class="form-control" id="kSzukaj" placeholder="Szukaj: treść, e-mail, IP…"></div>
+              <select id="kPowod" class="form-control" style="max-width:260px;"></select>
+              <button class="btn btn-danger btn-sm" id="kOproznij" style="margin-left:auto;">Opróżnij kosz</button>
+            </div>
+            <div class="table-wrap"><table class="admin-table">
+              <thead><tr><th>Data</th><th>Powód</th><th>E-mail</th><th>Rola</th><th>Treść</th><th>IP</th><th></th></tr></thead>
+              <tbody id="kRows"><tr><td colspan="7" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table></div>
+            <p class="py-mini" id="kWiecej" style="margin-top:10px;display:none;"></p>
+            <p class="py-mini" style="margin-top:10px;">Kosz opróżnia się sam: wpisy starsze niż 30 dni są usuwane.</p>
+          </div>
         </div></div>
       </main>
     </div>
@@ -152,6 +175,26 @@
         <button class="modal-close" data-modal-close="pytModal">×</button>
       </div>
       <div class="modal-body" id="pytTresc"></div>
+    </div>
+  </div>
+
+  <!-- Okno wpisu z kosza -->
+  <div class="modal-overlay" id="koszModal">
+    <div class="modal-box" style="max-width:760px;">
+      <div class="modal-header">
+        <div class="modal-title">Zablokowane zgłoszenie</div>
+        <button class="modal-close" data-modal-close="koszModal">×</button>
+      </div>
+      <div class="modal-body" id="koszTresc"></div>
+      <div class="modal-footer">
+        <div class="py-stopka">
+          <button class="btn btn-danger btn-sm" id="koszUsun">Usuń</button>
+          <div class="py-prawo">
+            <button class="btn btn-ghost" data-modal-close="koszModal">Zamknij</button>
+            <button class="btn btn-primary" id="koszPrzywroc">Przywróć jako pytanie</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -287,7 +330,19 @@
     const SLUG_ZAJETE = ['zadaj', 'odpowiedz'];   // prawdziwe katalogi /pytania/zadaj/ i /pytania/odpowiedz/
     const SLUG_TYMCZ = /^pytanie-p-\d{4}-\d+(-\d+)?$/;   // adres tymczasowy szkicu utworzonego z pytania (z numeru)
 
-    let pytania = [], opinie = [], quill = null;
+    /* Kosz: powody zablokowania zgłoszenia (tabela pytania_odrzucone, backend/supabase_pytania_kosz.sql). */
+    const K_POWOD = {
+      pulapka: 'pułapka na roboty', za_szybko: 'wysłane za szybko (poniżej 20 s)',
+      link_w_tresci: 'link w treści', link_w_podpisie: 'link w danych lub podpisie',
+      powtorzona_tresc: 'powtórzona treść', limit_laczny: 'limit łączny formularza',
+      limit_email: 'limit na adres e-mail', limit_ip: 'limit na adres IP'
+    };
+    const K_MAX_TRESC = 3000;   // tyle znaków treści trzyma kosz
+
+    const K_LIMIT = 1000;       // tyle najnowszych wpisów kosza wczytuje panel
+    let pytania = [], opinie = [], kosz = [], quill = null;
+    let koszRazem = 0;           // liczba wszystkich wpisów w koszu (może przekraczać K_LIMIT)
+    let koszBiezacy = null;      // wpis z kosza otwarty w oknie
     let opBiezaca = null;        // edytowany wiersz opinie albo null przy nowym
     let slugReczny = false;      // biuro samo zmieniło slug: przestajemy podpowiadać z tytułu
     const $ = id => document.getElementById(id);
@@ -560,6 +615,170 @@
       pRender(); loadSidebarBadges();
     }
 
+    /* ───────────── KOSZ ───────────── */
+    const kPowodTxt = k => K_POWOD[k.powod] || k.powod || '';
+    const kPowodZnak = k => `<span class="py-powod${String(k.powod || '').startsWith('limit_') ? ' limit' : ''}">${esc(kPowodTxt(k))}</span>`;
+
+    function kFiltruj() {
+      const f = $('kSzukaj').value.toLowerCase().trim(), pw = $('kPowod').value;
+      return kosz.filter(k => (!pw || k.powod === pw) &&
+        (!f || [k.tresc, k.email, k.imie, k.organizacja, k.ip, k.rola, k.temat].some(v => (v || '').toLowerCase().includes(f))));
+    }
+    /* Pasek nad zakładkami: wzmożony ruch w ostatniej dobie (co najmniej 5 zablokowanych albo choć jeden limit łączny). */
+    function kPasek() {
+      const od = Date.now() - 86400000;
+      const doba = kosz.filter(k => new Date(k.created_at).getTime() >= od);
+      const laczny = doba.filter(k => k.powod === 'limit_laczny').length;
+      const pasek = $('koszPasek');
+      if (doba.length < 5 && !laczny) { pasek.style.display = 'none'; pasek.innerHTML = ''; return; }
+      const n = doba.length, n10 = n % 10, n100 = n % 100;
+      const slowo = n === 1 ? 'zgłoszenie' : (n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14) ? 'zgłoszenia' : 'zgłoszeń');
+      pasek.innerHTML = `<span>W ostatniej dobie zablokowano ${n} ${slowo} (w tym ${laczny} po przekroczeniu limitu łącznego). Zobacz Kosz.</span>
+        <button type="button" class="btn btn-outline btn-sm" id="koszPasekBtn">Otwórz Kosz</button>`;
+      pasek.style.display = '';
+      $('koszPasekBtn').addEventListener('click', () => zakladka('kosz'));
+    }
+    function kRender() {
+      const tl = $('tabLiczKosz');
+      const razem = Math.max(koszRazem, kosz.length);
+      tl.textContent = razem; tl.style.display = razem ? '' : 'none';
+      $('kOproznij').disabled = !kosz.length;
+      const wiecej = $('kWiecej');
+      wiecej.textContent = razem > kosz.length
+        ? 'Pokazano ' + kosz.length + ' najnowszych wpisów z ' + razem + '. Wyszukiwarka i filtr obejmują tylko pokazane; starsze zobaczysz po usunięciu albo przywróceniu nowszych.'
+        : '';
+      wiecej.style.display = razem > kosz.length ? '' : 'none';
+      kPasek();
+      const rows = kFiltruj(), tb = $('kRows');
+      if (!rows.length) { tb.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:#6b7f84;">${kosz.length ? 'Brak wpisów dla tego filtra.' : 'Kosz jest pusty.'}</td></tr>`; return; }
+      tb.innerHTML = rows.map(k => `<tr>
+        <td style="white-space:nowrap;">${fmtDate(k.created_at)}</td>
+        <td>${kPowodZnak(k)}</td>
+        <td style="word-break:break-all;">${esc(k.email || '')}</td>
+        <td>${esc(k.rola || '')}</td>
+        <td class="py-tresc-kom">${esc(skroc(k.tresc, 110))}</td>
+        <td style="white-space:nowrap;">${esc(k.ip || '')}</td>
+        <td class="actions"><button class="btn btn-ghost btn-xs" data-k="${esc(k.id)}">Otwórz</button></td>
+      </tr>`).join('');
+      tb.querySelectorAll('[data-k]').forEach(b => b.addEventListener('click', () => kPokaz(b.dataset.k)));
+    }
+    function kPokaz(id) {
+      const k = kosz.find(x => x.id === id); if (!k) return;
+      koszBiezacy = k;
+      const w = (n, v) => v ? `<dt>${esc(n)}</dt><dd>${esc(v)}</dd>` : '';
+      const tresc = (k.tresc || '').trim();
+      const pd = kPodpis(k);
+      const podpisTxt = k.podpis_zakres
+        ? (P_PODPIS[pd.zakres] || pd.zakres) + (pd.zakres !== 'anonim' ? ': ' + [pd.osoba, pd.org].filter(Boolean).join(', ') : '') +
+          (pd.zakres !== k.podpis_zakres ? ' (w formularzu: ' + k.podpis_zakres + ', niepełne dane)' : '')
+        : '';
+      $('koszTresc').innerHTML = `
+        ${k.tylko_dla_mnie ? '<div class="py-alert czerwony">TYLKO DLA PYTAJĄCEGO: pytający zaznaczył odpowiedź tylko dla siebie, bez publikacji. Opcja przysługuje członkom Izby; członkostwa nie sprawdzono.</div>' : ''}
+        ${k.nie_ujawniac ? '<div class="py-alert czerwony">NIE UJAWNIAĆ: pytający zastrzegł, żeby nie ujawniać jego danych ani szczegółów, po których można go rozpoznać.</div>' : ''}
+        <div class="py-alert zolty" style="font-weight:600;">Powód zablokowania: ${esc(kPowodTxt(k))}. Dane pochodzą wprost z formularza i nie były sprawdzane.</div>
+        <div class="py-h">Treść</div>
+        <div class="py-oryg">${tresc ? esc(tresc) : '<span class="py-mini">(brak treści)</span>'}</div>
+        ${tresc.length >= K_MAX_TRESC ? '<div class="py-mini">Kosz przechowuje najwyżej ' + K_MAX_TRESC + ' znaków treści, dalsza część mogła zostać obcięta.</div>' : ''}
+        <dl class="py-dane">
+          ${w('Zablokowano', fmtDate(k.created_at))}
+          ${w('Rodzaj', P_RODZAJ[k.rodzaj] || k.rodzaj)}
+          ${w('Temat', k.temat)}
+          ${w('Kto pyta', k.rola)}
+          ${w('Województwo', k.wojewodztwo)}
+          ${w('Imię i nazwisko', k.imie)}
+          ${w('E-mail', k.email)}
+          ${w('Firma lub urząd', k.organizacja)}
+          ${w('NIP', k.nip ? k.nip + ' (członkostwa nie sprawdzono)' : '')}
+          ${w('Podpis przy publikacji', podpisTxt)}
+          ${w('Zgoda z formularza', k.zgoda ? 'zaznaczona' : '')}
+          ${w('Adres IP', k.ip)}
+        </dl>`;
+      $('koszPrzywroc').disabled = !tresc;
+      $('koszPrzywroc').title = tresc ? '' : 'Wpis bez treści nie może trafić do kolejki pytań';
+      openModal('koszModal');
+    }
+    /* Podpis z wpisu kosza w postaci, którą przyjmie tabela pytania: nieznany zakres albo brak danych do podpisu = anonim. */
+    function kPodpis(k) {
+      const zakres = Object.hasOwn(P_PODPIS, k.podpis_zakres || '') ? k.podpis_zakres : 'anonim';
+      const zOs = zakres === 'osoba' || zakres === 'oba', zOrg = zakres === 'organizacja' || zakres === 'oba';
+      const osoba = zOs ? (k.podpis_osoba || '').trim() : '', org = zOrg ? (k.podpis_organizacja || '').trim() : '';
+      if ((zOs && !osoba) || (zOrg && !org)) return { zakres: 'anonim', osoba: '', org: '' };
+      return { zakres, osoba, org };
+    }
+    /* Przywrócenie: nowy wiersz w kolejce pytań (panel nie podlega limitom formularza), potem usunięcie z kosza.
+       Przenosi zastrzeżenia pytającego (nie ujawniać, tylko dla mnie), NIP, województwo, podpis i datę zgody.
+       Członkostwa nie rozpoznaje (robi to tylko funkcja pytanie-zglos): biuro sprawdza je ręcznie.
+       Maile do biura i do pytającego NIE są wysyłane; pytający nie zna numeru, więc trzeba do niego napisać. */
+    async function kPrzywroc() {
+      const k = koszBiezacy; if (!k) return;
+      const tresc = (k.tresc || '').trim();
+      if (!tresc) { toast('Wpis nie ma treści, nie można go przywrócić', 'error'); return; }
+      const btn = $('koszPrzywroc'); btn.disabled = true;
+      const pd = kPodpis(k);
+      const nipCyfry = String(k.nip || '').replace(/\D/g, '');
+      const uwagi = ['Przywrócone z kosza (powód: ' + kPowodTxt(k) + ').'];
+      if (k.nip) uwagi.push(nipCyfry.length === 10
+        ? 'Podano NIP ' + nipCyfry + ': sprawdź członkostwo ręcznie.'
+        : 'Podano NIP w nieprawidłowej postaci: ' + k.nip + '.');
+      if (k.tylko_dla_mnie) uwagi.push('Pytający zaznaczył odpowiedź tylko dla siebie, bez publikacji. Członkostwa nie sprawdzono: nie publikuj, dopóki go nie potwierdzisz.');
+      if (k.podpis_zakres && pd.zakres !== k.podpis_zakres) uwagi.push('Podpis z formularza (' + k.podpis_zakres + ') był niepełny, ustawiono anonimowo.');
+      if (!k.zgoda) uwagi.push('Kosz nie ma zapisanej zgody z formularza.');
+      const rec = {
+        zrodlo: 'formularz', rodzaj: Object.hasOwn(P_RODZAJ, k.rodzaj || '') ? k.rodzaj : 'pytanie',
+        temat: k.temat || null, rola: k.rola || null, wojewodztwo: k.wojewodztwo || null, tresc,
+        imie: k.imie || null, email: k.email || null, organizacja: k.organizacja || null, ip: k.ip || null,
+        nip: nipCyfry.length === 10 ? nipCyfry : null,
+        podpis_zakres: pd.zakres, podpis_osoba: pd.osoba || null, podpis_organizacja: pd.org || null,
+        tylko_dla_mnie: k.tylko_dla_mnie === true, nie_ujawniac: k.nie_ujawniac === true,
+        zgoda_at: k.zgoda ? k.created_at : null,
+        notatka: uwagi.join(' ')
+      };
+      const { data, error } = await db.from('pytania').insert(rec).select('*').single();
+      if (error) { btn.disabled = false; toast(bladBazy(error, 'Nie udało się przywrócić pytania'), 'error', 6000); return; }
+      pytania.unshift(data);
+      const u = await db.from('pytania_odrzucone').delete().eq('id', k.id);
+      btn.disabled = false;
+      if (u.error) { console.error(u.error); toast('Pytanie ' + data.numer + ' dodane, ale wpis został w koszu. Usuń go ręcznie.', 'error', 7000); }
+      else {
+        kosz = kosz.filter(x => x.id !== k.id);
+        koszRazem = Math.max(0, koszRazem - 1);
+        toast('Przywrócono jako pytanie ' + data.numer + '. Pytający nie dostał potwierdzenia: napisz do niego.' +
+          (k.nie_ujawniac || k.tylko_dla_mnie ? ' Uwaga: pytanie ma zastrzeżenia pytającego.' : ''), 'success', 7000);
+      }
+      koszBiezacy = null;
+      closeModal('koszModal');
+      pRender(); kRender(); loadSidebarBadges();
+    }
+    async function kUsun() {
+      const k = koszBiezacy; if (!k) return;
+      if (!confirm('Usunąć ten wpis z kosza? Tej operacji nie można cofnąć.')) return;
+      const { error } = await db.from('pytania_odrzucone').delete().eq('id', k.id);
+      if (error) { toast(bladBazy(error, 'Nie udało się usunąć wpisu'), 'error', 6000); return; }
+      kosz = kosz.filter(x => x.id !== k.id);
+      koszRazem = Math.max(0, koszRazem - 1);
+      koszBiezacy = null;
+      closeModal('koszModal');
+      toast('Wpis usunięty z kosza', 'success');
+      kRender();
+    }
+    /* Usuwa wpisy wczytane do panelu (po id), żeby nie skasować zgłoszeń, które wpadły po otwarciu strony. */
+    async function kOproznij() {
+      if (!kosz.length) return;
+      const czesc = koszRazem > kosz.length;   // w bazie jest więcej wpisów, niż wczytał panel
+      if (!confirm('Opróżnić kosz? Zniknie ' + kosz.length + ' zablokowanych zgłoszeń' +
+        (czesc ? ' (najnowsze z ' + koszRazem + '; starsze zostaną i pokażą się po tej operacji)' : '') +
+        '. Tej operacji nie można cofnąć.')) return;
+      const btn = $('kOproznij'); btn.disabled = true;
+      const ids = kosz.map(k => k.id);
+      for (let i = 0; i < ids.length; i += 100) {
+        const { error } = await db.from('pytania_odrzucone').delete().in('id', ids.slice(i, i + 100));
+        if (error) { toast(bladBazy(error, 'Nie udało się opróżnić kosza'), 'error', 6000); await load(); return; }
+      }
+      await load();
+      if (kosz.length) toast('Usunięto ' + ids.length + ' wpisów. W koszu są jeszcze wpisy (' + Math.max(koszRazem, kosz.length) + '): opróżnij ponownie, jeśli też mają zniknąć.', 'success', 8000);
+      else toast('Kosz opróżniony', 'success');
+    }
+
     /* ───────────── ODPOWIEDZI ───────────── */
     const ilePytan = id => pytania.filter(p => p.opinia_id === id).length;
 
@@ -756,14 +975,19 @@
 
     /* ───────────── START ───────────── */
     async function load() {
-      const [rp, ro] = await Promise.all([
+      const [rp, ro, rk, rl] = await Promise.all([
         db.from('pytania').select('*').order('created_at', { ascending: false }),
-        db.from('opinie').select('*').order('updated_at', { ascending: false })
+        db.from('opinie').select('*').order('updated_at', { ascending: false }),
+        db.from('pytania_odrzucone').select('*').order('created_at', { ascending: false }).limit(K_LIMIT),
+        db.from('pytania_odrzucone').select('id', { count: 'exact', head: true })
       ]);
+      if (rk.error) { toast(bladBazy(rk.error, 'Błąd ładowania kosza'), 'error', 6000); }
+      kosz = rk.data || [];
+      koszRazem = rl.error ? kosz.length : (rl.count || 0);
       if (rp.error) { toast(bladBazy(rp.error, 'Błąd ładowania pytań'), 'error', 6000); }
       if (ro.error) { toast(bladBazy(ro.error, 'Błąd ładowania odpowiedzi'), 'error', 6000); }
       pytania = rp.data || []; opinie = ro.data || [];
-      pRender(); oRender(); loadSidebarBadges();
+      pRender(); oRender(); kRender(); loadSidebarBadges();
     }
 
     function zakladka(nazwa) {
@@ -780,11 +1004,19 @@
       /* zakładka z adresu jako parametr, nie #: highlightNav gasi pozycję menu, gdy adres ma hash */
       const par = new URLSearchParams(location.search);
       if (par.get('zakladka') === 'odpowiedzi') zakladka('odpowiedzi');
+      if (par.get('zakladka') === 'kosz') zakladka('kosz');
 
       $('pSzukaj').addEventListener('input', pRender);
       ['pStatus', 'pZrodlo', 'pCzlonkowie'].forEach(i => $(i).addEventListener('change', pRender));
       $('oSzukaj').addEventListener('input', oRender);
       $('oStatus').addEventListener('change', oRender);
+      $('kPowod').innerHTML = '<option value="">Wszystkie powody</option>' +
+        Object.keys(K_POWOD).map(k => `<option value="${esc(k)}">${esc(K_POWOD[k])}</option>`).join('');
+      $('kSzukaj').addEventListener('input', kRender);
+      $('kPowod').addEventListener('change', kRender);
+      $('kOproznij').addEventListener('click', kOproznij);
+      $('koszPrzywroc').addEventListener('click', kPrzywroc);
+      $('koszUsun').addEventListener('click', kUsun);
 
       $('btnDodajPytanie').addEventListener('click', () => { zakladka('pytania'); npOtworz(); });
       $('npZapisz').addEventListener('click', npZapisz);

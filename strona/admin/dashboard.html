@@ -178,6 +178,17 @@
         ile('wizytowki_weryfikacja', ['status', 'zgloszono']),
       ]);
 
+      /* Zapytaj Izbę: zgłoszenia zablokowane przez antyspam w ostatniej dobie (tabela pytania_odrzucone).
+         Wiersz na liście tylko przy wzmożonym ruchu: co najmniej 5 wpisów albo choć jeden limit łączny. */
+      let koszDoba = 0, koszLaczny = 0;
+      try {
+        const { data } = await db.from('pytania_odrzucone').select('powod')
+          .gte('created_at', new Date(Date.now() - 86400000).toISOString()).limit(1000);
+        koszDoba = (data || []).length;
+        koszLaczny = (data || []).filter(k => k.powod === 'limit_laczny').length;
+      } catch (_) { /* brak tabeli albo sieci: pulpit działa bez tego wiersza */ }
+      const koszAlarm = koszDoba >= 5 || koszLaczny > 0;
+
       /* ── skrzynka zadań ── */
       /* `pilne: false` = sprawa w toku, o której warto wiedzieć, ale nikt nie czeka
          na ruch biura w tej minucie. Dostaje spokojniejszy kolor. */
@@ -206,6 +217,9 @@
         { ile: wezelNowe, pilne: true, href: 'wezel.html',
           tytul: 'Nowe ankiety cenowe w Węźle Jakości',
           opis: 'Przejrzyj stawki i zweryfikuj ankietę' },
+        { ile: koszAlarm ? koszDoba : 0, pilne: koszLaczny > 0, href: 'pytania.html?zakladka=kosz',
+          tytul: 'Zablokowane zgłoszenia w „Zapytaj Izbę” (ostatnia doba)',
+          opis: `W tym ${koszLaczny} po przekroczeniu limitu łącznego. Zobacz Kosz` },
         { ile: uchOpiniaWToku, pilne: false, href: 'uchwaly.html',
           tytul: 'Prezydium opiniuje kandydatów',
           opis: 'Możesz przypomnieć osobom bez opinii albo zakończyć etap' },

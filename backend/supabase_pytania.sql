@@ -11,8 +11,9 @@
 --
 -- Skąd biorą się pytania:
 --   formularz  /pytania/zadaj/ -> Edge Function `pytanie-zglos` (walidacja, pułapka na roboty,
---              limity 3 na e-mail i 10 na IP na dobę, rozpoznanie członka, maile). Strona NIE pisze
---              do tabeli bezpośrednio.
+--              limity, rozpoznanie członka, maile). Strona NIE pisze do tabeli bezpośrednio.
+--              Aktualne limity, trigger trg_pytania_limit i kosz zablokowanych zgłoszeń:
+--              backend/supabase_pytania_kosz.sql.
 --   szkolenie  pytania z uwag zgłoszeń na szkolenia i ze spotkań (np. Forum GIG z GGK), wybierane
 --              ręcznie w panelu; zapis_id wiąże wiersz ze zgłoszeniem (najwyżej jedno pytanie
 --              na zgłoszenie), zrodlo_opis trzyma tytuł wydarzenia.

@@ -86,11 +86,15 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
 
 - **Zapytaj Izbę** (od 11.11.2026; `backend/supabase_pytania.sql`): lista `/pytania/`, formularz `/pytania/zadaj/`, odpowiedź
   `/pytania/<slug>/` (szablon `strona/pytania/odpowiedz/index.html`, wspólny kod `_assets/js/pytania.js`, słownik `pytania-slownik.js`),
-  „Głos Izby” `/stanowiska/` (statyczna). Formularz → Edge Function `pytanie-zglos` v3 (pułapka, limity, rozpoznanie członka: sam NIP
+  „Głos Izby” `/stanowiska/` (statyczna). Formularz → Edge Function `pytanie-zglos` v8 (pułapka, min. 20 s, bez linków w treści, limity, rozpoznanie członka: sam NIP
   nie wystarcza; powiadomienie do biuro@, prezydium@ i dawid.sienkiewicz@gig.org.pl albo wg sekretu `NOTIFY_PYTANIA`; potwierdzenie do pytającego)
   → tabela `pytania` (tylko panel). Teksty w tabeli `opinie` (anon czyta tylko `opublikowana`). Panel `/admin/pytania.html`: kolejka pytań,
   „Utwórz odpowiedź”, edytor z listą kontrolną anonimizacji, publikacja; w panelu Zapisy przycisk „Do pytań (Zapytaj Izbę)”.
   Prerender: blok `pytania-lista`, strony odpowiedzi, mapa strony, llms.txt. Menu: `skrypty/menu_zapytaj_izbe.py` (idempotentny).
+  Limity (stałe w funkcji ORAZ trigger `trg_pytania_limit` w bazie, zmieniaj w obu miejscach): 3 na e-mail i 6 na IP na dobę; łącznie
+  20/h i 40/dobę do 22.11.2026, od 23.11.2026 6/h i 15/dobę. Zablokowane zgłoszenia trafiają do kosza `pytania_odrzucone`
+  (`backend/supabase_pytania_kosz.sql`; zakładka „Kosz” w panelu z przywracaniem; cron `gig-pytania-kosz` usuwa wpisy starsze niż 30 dni;
+  pasek ostrzegawczy w panelu i wiersz na Pulpicie przy 5 wpisach z doby albo limicie łącznym).
   Zasady: pytania anonimowe (podpis na życzenie), adnotacja „Opinia autora, nie jest wiążącą interpretacją prawa.”, teksty wspólne
   podpisuje „Zespół Ekspercki GIG”, członkowie mają pierwszeństwo i odpowiedź indywidualną. Decyzje i plan dalszych etapów:
   `#szkolenia/2026-11-19 GUGIK dyskusja/08 Zapytaj Izbe - propozycja sekcji pytan i odpowiedzi.md` (pkt 15 i 16).
