@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Pytania (Zapytaj Izbę) - Panel GIG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+  <link rel="stylesheet" href="/admin/_admin.css">
+  <style>
+    .py-mini{font-size:12px;color:#6b7f84;line-height:1.5;margin-top:3px;}
+    .py-opis{font-size:13px;color:#6b7f84;margin:0 0 14px;line-height:1.55;}
+    .py-tresc-kom{max-width:340px;}
+    .py-czl{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;}
+    .py-czl.ok{background:#e6f5ec;color:#1d7a45;}
+    .py-czl.czeka{background:#fff3e0;color:#b26a00;}
+    .py-flaga{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;background:#fdecef;color:#cc0a2b;white-space:nowrap;}
+    .py-kol{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:22px;}
+    .py-oryg{background:#f7f9fb;border:1px solid #e3e9ee;border-radius:10px;padding:14px 16px;white-space:pre-wrap;font-size:14.5px;line-height:1.55;color:#16202a;max-height:340px;overflow:auto;}
+    .py-dane{margin:0;}
+    .py-dane dt{font-size:12px;color:#6b7f84;font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-top:10px;}
+    .py-dane dd{margin:2px 0 0;font-size:14.5px;color:#16202a;white-space:pre-wrap;word-break:break-word;}
+    .py-h{font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#6b7f84;margin:0 0 8px;}
+    .py-alert{border-radius:10px;padding:10px 14px;font-size:13.5px;line-height:1.5;margin:0 0 10px;font-weight:700;}
+    .py-alert.czerwony{background:#fdecef;color:#a10822;border:1px solid #f5c2cb;}
+    .py-alert.zolty{background:#fff8e6;color:#7a5200;border:1px solid #f1dca6;}
+    .py-alert.zielony{background:#e6f5ec;color:#1d5c38;border:1px solid #bfe3cd;font-weight:600;}
+    .py-akcje{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;}
+    .py-lista-kontr{border:1px solid #e3e9ee;border-radius:10px;padding:12px 16px;background:#fbfcfd;margin:6px 0 4px;}
+    .py-lista-kontr label{display:flex;gap:9px;align-items:flex-start;font-size:13.5px;font-weight:600;color:#16202a;margin:7px 0;cursor:pointer;text-transform:none;letter-spacing:0;}
+    .py-lista-kontr input{margin-top:3px;flex:0 0 auto;}
+    .py-pod{font-weight:400;color:#7a8794;}
+    .py-check, .form-group label.py-check{display:flex;gap:8px;align-items:center;font-size:13.5px;font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0;color:#16202a;}
+    #opEdytor{background:#fff;min-height:220px;}
+    #opEdytor .ql-editor{min-height:220px;}
+    .py-stopka{display:flex;gap:8px;flex-wrap:wrap;align-items:center;width:100%;}
+    .py-stopka .py-prawo{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;}
+    a.btn.wylaczony{opacity:.45;pointer-events:none;}
+    @media (max-width: 900px){ .py-kol{grid-template-columns:1fr;} .py-tresc-kom{max-width:none;} }
+  </style>
+</head>
+<body>
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="sidebar-logo">
+        <a class="logo-badge" href="dashboard.html">
+          <span class="logo-icon">GIG</span>
+          <span class="logo-text">Panel GIG<span>Geodezyjna Izba Gospodarcza</span></span>
+        </a>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="dashboard.html"><span class="nav-icon">🏠</span> Pulpit</a>
+        <div class="nav-section">Zgłoszenia ze strony</div>
+        <a href="formularze.html#kontakt"><span class="nav-icon">📨</span> Kontakt <span class="nav-badge" id="navBadgeKontakt" style="display:none">0</span></a>
+        <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
+        <a href="zapisy.html"><span class="nav-icon">📝</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
+        <a href="wyceny.html"><span class="nav-icon">💬</span> Zapytania o wycenę <span class="nav-badge" id="navBadgeWyceny" style="display:none">0</span></a>
+        <a href="pytania.html" class="active"><span class="nav-icon">❓</span> Pytania (Zapytaj Izbę) <span class="nav-badge" id="navBadgePytania" style="display:none">0</span></a>
+        <div class="nav-section">Sprawy Izby</div>
+        <a href="czlonkowie.html"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
+        <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
+        <a href="konsultacje.html"><span class="nav-icon">🗳</span> Konsultacje <span class="nav-badge" id="navBadgeKonsultacje" style="display:none">0</span></a>
+        <a href="wizytowki.html"><span class="nav-icon">🪪</span> Wizytówki członków <span class="nav-badge" id="navBadgeWizytowki" style="display:none">0</span></a>
+        <a href="wezel.html"><span class="nav-icon">📊</span> Węzeł Jakości <span class="nav-badge" id="navBadgeWezel" style="display:none">0</span></a>
+        <a href="ankiety.html"><span class="nav-icon">⭐</span> Ankiety po szkoleniach</a>
+        <div class="nav-section">Treści na stronie</div>
+        <a href="artykuly.html"><span class="nav-icon">📰</span> Artykuły</a>
+        <a href="szkolenia.html"><span class="nav-icon">🎓</span> Szkolenia</a>
+        <div class="nav-section">Wysyłka maili</div>
+        <a href="baza-email.html"><span class="nav-icon">📇</span> Baza e-mail</a>
+        <a href="wysylki.html"><span class="nav-icon">📣</span> Wysyłki</a>
+        <a href="dmarc.html"><span class="nav-icon">🛡</span> DMARC</a>
+        <div class="nav-section">Strona</div>
+        <a href="/" target="_blank"><span class="nav-icon">↗</span> Zobacz stronę</a>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="sidebar-user">
+          <span class="user-avatar" id="userAvatar">A</span>
+          <div class="user-info"><div class="user-name" id="userName">admin</div><div class="user-role">Administrator</div></div>
+          <button class="btn-logout" data-action="logout" title="Wyloguj">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="admin-main">
+      <header class="admin-topbar">
+        <div class="topbar-title">Pytania (Zapytaj Izbę)</div>
+        <div class="topbar-actions">
+          <a class="btn btn-ghost btn-sm" href="/pytania/" target="_blank">↗ Strona z odpowiedziami</a>
+          <button class="btn btn-outline btn-sm" id="btnDodajPytanie">+ Dodaj pytanie ręcznie</button>
+          <button class="btn btn-primary btn-sm" id="btnNowaOdp">+ Nowa odpowiedź</button>
+        </div>
+      </header>
+      <main class="admin-content">
+        <div class="card tabs-root" id="tabsRoot"><div class="card-body">
+          <div class="tabs">
+            <button class="tab-btn" data-tab="pytania">Pytania <span class="nav-badge" id="tabLiczPytania" style="display:none">0</span></button>
+            <button class="tab-btn" data-tab="odpowiedzi">Odpowiedzi</button>
+          </div>
+
+          <div class="tab-pane" data-tab="pytania">
+            <p class="py-opis">Kolejka pytań z formularza <a href="/pytania/zadaj/" target="_blank">/pytania/zadaj/</a>, ze szkoleń (przycisk w Zapisach) i dopisanych ręcznie.
+              Dane pytających widzi tylko biuro. Członkowie Izby mają pierwszeństwo i zawsze dostają odpowiedź indywidualną.</p>
+            <div class="toolbar">
+              <div class="search-box"><span class="search-icon">⌕</span>
+                <input type="text" class="form-control" id="pSzukaj" placeholder="Szukaj: numer, treść, e-mail, organizacja…"></div>
+              <select id="pStatus" class="form-control" style="max-width:190px;">
+                <option value="">Wszystkie statusy</option><option value="otwarte">Otwarte (nowe i w opracowaniu)</option>
+                <option value="nowe">Nowe</option><option value="w_opracowaniu">W opracowaniu</option>
+                <option value="odpowiedziano">Odpowiedziano</option><option value="zamkniete">Zamknięte</option>
+              </select>
+              <select id="pZrodlo" class="form-control" style="max-width:170px;">
+                <option value="">Wszystkie źródła</option><option value="formularz">Formularz</option>
+                <option value="szkolenie">Szkolenie lub spotkanie</option><option value="mail">Mail</option><option value="inne">Inne</option>
+              </select>
+              <label class="py-check"><input type="checkbox" id="pCzlonkowie"> tylko członkowie</label>
+            </div>
+            <div class="table-wrap"><table class="admin-table">
+              <thead><tr><th>Numer</th><th>Data</th><th>Źródło</th><th>Rola</th><th>Temat</th><th>Treść</th><th>Status</th><th></th></tr></thead>
+              <tbody id="pRows"><tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table></div>
+          </div>
+
+          <div class="tab-pane" data-tab="odpowiedzi">
+            <p class="py-opis">Teksty publikowane na stronie: odpowiedzi na pytania, opracowania i stanowiska Izby. Tu nie ma danych pytających.
+              Opublikowany tekst jest od razu widoczny pod swoim adresem, a wersja dla wyszukiwarek powstaje w ciągu godziny.</p>
+            <div class="toolbar">
+              <div class="search-box"><span class="search-icon">⌕</span>
+                <input type="text" class="form-control" id="oSzukaj" placeholder="Szukaj: tytuł, temat, autor…"></div>
+              <select id="oStatus" class="form-control" style="max-width:190px;">
+                <option value="">Wszystkie statusy</option><option value="szkic">Szkice</option>
+                <option value="opublikowana">Opublikowane</option><option value="archiwalna">Archiwalne</option>
+              </select>
+            </div>
+            <div class="table-wrap"><table class="admin-table">
+              <thead><tr><th>Tytuł</th><th>Rodzaj</th><th>Temat</th><th>Autor</th><th>Status</th><th>Publikacja</th><th>Pytań</th><th></th></tr></thead>
+              <tbody id="oRows"><tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Ładowanie…</td></tr></tbody>
+            </table></div>
+          </div>
+        </div></div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Okno pytania -->
+  <div class="modal-overlay" id="pytModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title" id="pytTytul">Pytanie</div>
+        <button class="modal-close" data-modal-close="pytModal">×</button>
+      </div>
+      <div class="modal-body" id="pytTresc"></div>
+    </div>
+  </div>
+
+  <!-- Okno: dodaj pytanie ręcznie -->
+  <div class="modal-overlay" id="nowePytModal">
+    <div class="modal-box" style="max-width:760px;">
+      <div class="modal-header">
+        <div class="modal-title">Dodaj pytanie ręcznie</div>
+        <button class="modal-close" data-modal-close="nowePytModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="grid-2">
+          <div class="form-group"><label for="npZrodlo">Źródło</label>
+            <select id="npZrodlo" class="form-control"><option value="mail">Mail</option><option value="inne">Inne (telefon, spotkanie, rozmowa)</option></select></div>
+          <div class="form-group"><label for="npZrodloOpis">Opis źródła <span class="py-pod">(np. nazwa spotkania; nieobowiązkowe)</span></label>
+            <input type="text" id="npZrodloOpis" class="form-control" maxlength="200"></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label for="npRodzaj">Rodzaj zgłoszenia</label>
+            <select id="npRodzaj" class="form-control"><option value="pytanie">Pytanie</option><option value="problem">Problem</option><option value="postulat">Postulat</option></select></div>
+          <div class="form-group"><label for="npTemat">Temat</label><select id="npTemat" class="form-control"></select></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label for="npRola">Kto pyta</label><select id="npRola" class="form-control"></select></div>
+          <div class="form-group"><label for="npWoj">Województwo</label><select id="npWoj" class="form-control"></select></div>
+        </div>
+        <div class="form-group"><label for="npTresc">Treść pytania</label><textarea id="npTresc" class="form-control" rows="6"></textarea></div>
+        <div class="grid-2">
+          <div class="form-group"><label for="npImie">Imię i nazwisko</label><input type="text" id="npImie" class="form-control" maxlength="200"></div>
+          <div class="form-group"><label for="npEmail">E-mail</label><input type="email" id="npEmail" class="form-control" maxlength="200"></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label for="npOrg">Firma lub urząd</label><input type="text" id="npOrg" class="form-control" maxlength="300"></div>
+          <div class="form-group"><label for="npNip">NIP</label><input type="text" id="npNip" class="form-control" maxlength="20"></div>
+        </div>
+        <div class="form-group"><label class="py-check"><input type="checkbox" id="npCzlonek"> pytający jest członkiem GIG (sprawdzone przez biuro)</label></div>
+        <div class="form-group"><label for="npNotatka">Notatka biura</label><textarea id="npNotatka" class="form-control" rows="2"></textarea></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" data-modal-close="nowePytModal">Anuluj</button>
+        <button class="btn btn-primary" id="npZapisz">Dodaj pytanie</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edytor odpowiedzi -->
+  <div class="modal-overlay" id="opModal">
+    <div class="modal-box modal-szeroki">
+      <div class="modal-header">
+        <div class="modal-title" id="opTytulOkna">Nowa odpowiedź</div>
+        <button class="modal-close" data-modal-close="opModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="opInfo"></div>
+        <div id="opPowiazane"></div>
+        <div class="grid-2">
+          <div class="form-group"><label for="opRodzaj">Rodzaj</label><select id="opRodzaj" class="form-control"></select></div>
+          <div class="form-group"><label>Status</label><div style="padding-top:6px;" id="opStatusZnak"></div></div>
+        </div>
+        <div class="form-group"><label for="opTytul">Tytuł</label><input type="text" id="opTytul" class="form-control" maxlength="300"></div>
+        <div class="form-group"><label for="opSlug">Adres (slug) <span class="py-pod" id="opSlugOpis"></span></label>
+          <input type="text" id="opSlug" class="form-control" maxlength="120" autocomplete="off" spellcheck="false"></div>
+        <div class="form-group"><label for="opPytanie">Pytanie w wersji publicznej <span class="py-pod">(zredagowane przez biuro, bez danych pozwalających rozpoznać sprawę)</span></label>
+          <textarea id="opPytanie" class="form-control" rows="5"></textarea></div>
+        <div class="grid-2">
+          <div class="form-group"><label for="opPytajacy">Pytający <span class="py-pod">(rola albo podpis wybrany przez pytającego)</span></label>
+            <input type="text" id="opPytajacy" class="form-control" maxlength="300" list="opRoleLista"><datalist id="opRoleLista"></datalist></div>
+          <div class="form-group"><label for="opZrodlo">Źródło <span class="py-pod">(np. „z formularza”, „z Forum GIG z GGK 19.11.2026”)</span></label>
+            <input type="text" id="opZrodlo" class="form-control" maxlength="300"></div>
+        </div>
+        <div class="grid-2">
+          <div class="form-group"><label for="opWydarzenie">Wydarzenie <span class="py-pod">(nazwa do filtra na stronie; puste, gdy z formularza)</span></label>
+            <input type="text" id="opWydarzenie" class="form-control" maxlength="300" list="opWydarzeniaLista"><datalist id="opWydarzeniaLista"></datalist></div>
+          <div class="form-group"><label for="opTemat">Temat</label><select id="opTemat" class="form-control"></select></div>
+        </div>
+        <div class="form-group"><label for="opSkrot">W skrócie <span class="py-pod">(2-3 zdania, widoczne na karcie i u góry odpowiedzi)</span></label>
+          <textarea id="opSkrot" class="form-control" rows="3"></textarea></div>
+        <div class="form-group"><label>Treść odpowiedzi</label><div id="opEdytor"></div></div>
+        <div class="form-group"><label for="opPodstawa">Podstawa prawna <span class="py-pod">(jedna pozycja w linii)</span></label>
+          <textarea id="opPodstawa" class="form-control" rows="3"></textarea></div>
+        <div class="grid-2">
+          <div class="form-group"><label for="opAutor">Autor <span class="py-pod">(nazwisko i funkcja; puste = Zespół Ekspercki GIG)</span></label>
+            <input type="text" id="opAutor" class="form-control" maxlength="300">
+            <label class="py-check" style="margin-top:8px;"><input type="checkbox" id="opGosc"> autor gościnny</label></div>
+          <div class="form-group"><label for="opStan">Stan prawny na</label><input type="date" id="opStan" class="form-control"></div>
+        </div>
+        <p class="mail-hint" style="margin:0 0 12px;">Na stronie przy tekście zawsze pojawia się adnotacja: „Opinia autora, nie jest wiążącą interpretacją prawa.”</p>
+
+        <div class="py-h">Lista kontrolna przed publikacją</div>
+        <div class="py-lista-kontr" id="opLista">
+          <label><input type="checkbox"> Usunięte imiona i nazwiska</label>
+          <label><input type="checkbox"> Usunięte nazwy firm, urzędów, powiatów i gmin</label>
+          <label><input type="checkbox"> Usunięte numery działek, KW, zgłoszeń i NIP</label>
+          <label><input type="checkbox"> Usunięte daty i szczegóły pozwalające rozpoznać sprawę</label>
+          <label><input type="checkbox"> Zarzuty wobec osób zamienione na opis praktyki</label>
+          <label><input type="checkbox"> Podpis zgodny z wyborem pytającego, a autor zaakceptował tekst</label>
+          <label><input type="checkbox"> Adres (slug) nie zawiera nazwisk, nazw firm, urzędów, miejscowości ani numerów działek</label>
+        </div>
+        <p class="mail-hint" id="opListaOpis"></p>
+      </div>
+      <div class="modal-footer">
+        <div class="py-stopka">
+          <button class="btn btn-danger btn-sm" id="opUsun">Usuń</button>
+          <a class="btn btn-ghost btn-sm" id="opPodglad" target="_blank" rel="noopener">↗ Podgląd</a>
+          <div class="py-prawo">
+            <button class="btn btn-ghost btn-sm" id="opArchiwizuj">Archiwizuj</button>
+            <button class="btn btn-outline btn-sm" id="opWycofaj">Wycofaj z publikacji</button>
+            <button class="btn btn-outline" id="opZapisz">Zapisz szkic</button>
+            <button class="btn btn-primary" id="opOpublikuj">Opublikuj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/_assets/js/pytania-slownik.js"></script>
+  <script src="/admin/_admin.js"></script>
+  <script>
+    /* Zapytaj Izbę: kolejka pytań (tabela pytania, dane osobowe, tylko panel) i teksty
+       publikowane (tabela opinie, czyta je strona /pytania/). Definicje: backend/supabase_pytania.sql.
+       Baza nie ma triggera updated_at, więc każdy UPDATE wpisuje go stąd. */
+    const SL = window.GIG_PYTANIA || { TEMATY: [], ROLE: [], RODZAJE: {}, WOJEWODZTWA: [] };
+    const P_STATUS = { nowe: 'nowe', w_opracowaniu: 'w opracowaniu', odpowiedziano: 'odpowiedziano', zamkniete: 'zamknięte' };
+    const P_BADGE  = { nowe: 'badge-new', w_opracowaniu: 'badge-draft', odpowiedziano: 'badge-replied', zamkniete: 'badge-read' };
+    const P_ZRODLO = { formularz: 'formularz', szkolenie: 'szkolenie', mail: 'mail', inne: 'inne' };
+    const P_RODZAJ = { pytanie: 'pytanie', problem: 'problem', postulat: 'postulat' };
+    const P_PODPIS = { anonim: 'anonimowo (tylko rola)', osoba: 'imię i nazwisko', organizacja: 'nazwa firmy lub urzędu', oba: 'imię i nazwisko oraz firma lub urząd' };
+    const O_STATUS = { szkic: 'szkic', opublikowana: 'opublikowana', archiwalna: 'archiwalna' };
+    const O_BADGE  = { szkic: 'badge-draft', opublikowana: 'badge-published', archiwalna: 'badge-archived' };
+    const SLUG_ZAJETE = ['zadaj', 'odpowiedz'];   // prawdziwe katalogi /pytania/zadaj/ i /pytania/odpowiedz/
+    const SLUG_TYMCZ = /^pytanie-p-\d{4}-\d+(-\d+)?$/;   // adres tymczasowy szkicu utworzonego z pytania (z numeru)
+
+    let pytania = [], opinie = [], quill = null;
+    let opBiezaca = null;        // edytowany wiersz opinie albo null przy nowym
+    let slugReczny = false;      // biuro samo zmieniło slug: przestajemy podpowiadać z tytułu
+    const $ = id => document.getElementById(id);
+    const teraz = () => new Date().toISOString();
+    const skroc = (t, n) => { const s = String(t || '').replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n).trimEnd() + '…' : s; };
+    const dzien = iso => iso ? new Date(iso).toLocaleDateString('pl-PL', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '';
+
+    function slugify(s) {
+      return String(s || '').toLowerCase().trim()
+        .replace(/ą/g, 'a').replace(/ć/g, 'c').replace(/ę/g, 'e').replace(/ł/g, 'l').replace(/ń/g, 'n')
+        .replace(/ó/g, 'o').replace(/ś/g, 's').replace(/[żź]/g, 'z')
+        .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80).replace(/-+$/, '');
+    }
+    /* Slug nadany automatycznie (tymczasowy albo wprost z tytułu) w tekście jeszcze niepublikowanym:
+       dalej podąża za tytułem, żeby do adresu nie trafiły dane z niezredagowanej treści. */
+    function slugAuto(o) {
+      if (!o || o.opublikowano_at) return false;
+      const s = o.slug || '', t = slugify(o.tytul);
+      return SLUG_TYMCZ.test(s) || s === t || s.replace(/-\d+$/, '') === t;
+    }
+    /* Slug wolny wśród wczytanych opinii (ostatecznie pilnuje tego unikalny indeks w bazie). */
+    function wolnySlug(baza, pomijId) {
+      let s = baza || 'odpowiedz-gig';
+      if (SLUG_ZAJETE.includes(s)) s += '-gig';
+      const zajety = x => opinie.some(o => o.slug === x && o.id !== pomijId);
+      if (!zajety(s)) return s;
+      for (let i = 2; i < 200; i++) if (!zajety(s + '-' + i)) return s + '-' + i;
+      return s + '-' + Date.now();
+    }
+    function opcje(lista, wybrana, pusta) {
+      const l = lista.slice();
+      if (wybrana && !l.includes(wybrana)) l.push(wybrana);   // wartość spoza słownika zostaje do wyboru
+      return (pusta != null ? `<option value="">${esc(pusta)}</option>` : '') +
+        l.map(x => `<option value="${esc(x)}"${x === wybrana ? ' selected' : ''}>${esc(x)}</option>`).join('');
+    }
+    function bladBazy(e, domyslny) {
+      console.error(e);
+      const m = (e && e.message) || '';
+      if (e && e.code === '23505' && /slug/.test(m + (e.details || ''))) return 'Taki adres (slug) już istnieje. Zmień go.';
+      if (e && e.code === '23505' && /zapis/.test(m + (e.details || ''))) return 'Pytanie z tego zgłoszenia jest już w kolejce.';
+      if (e && e.code === '23514' && /slug/.test(m)) return 'Adres (slug) może mieć tylko małe litery a-z, cyfry i łącznik; nie może to być „zadaj” ani „odpowiedz”.';
+      if (e && e.code === '42501') return 'Brak uprawnień. Zaloguj się ponownie.';
+      return domyslny + (m ? ': ' + m : '');
+    }
+
+    /* ───────────── PYTANIA ───────────── */
+    function czlonekZnak(p) {
+      if (!p.czlonek_gig) return '';
+      return p.czlonek_potwierdzony ? '<span class="py-czl ok">członek GIG</span>' : '<span class="py-czl czeka">członek do potwierdzenia</span>';
+    }
+    function flagiZnak(p) {
+      return (p.tylko_dla_mnie ? ' <span class="py-flaga">tylko dla pytającego</span>' : '') +
+             (p.nie_ujawniac ? ' <span class="py-flaga">nie ujawniać</span>' : '');
+    }
+    const pierwszenstwo = p => (p.czlonek_gig && p.czlonek_potwierdzony && p.status === 'nowe') ? 1 : 0;
+
+    function pFiltruj() {
+      const f = $('pSzukaj').value.toLowerCase().trim(), st = $('pStatus').value, zr = $('pZrodlo').value, cz = $('pCzlonkowie').checked;
+      return pytania.filter(p =>
+        (!st || (st === 'otwarte' ? (p.status === 'nowe' || p.status === 'w_opracowaniu') : p.status === st)) &&
+        (!zr || p.zrodlo === zr) && (!cz || p.czlonek_gig) &&
+        (!f || [p.numer, p.tresc, p.email, p.imie, p.organizacja, p.nip, p.temat, p.rola, p.zrodlo_opis, p.notatka]
+          .some(v => (v || '').toLowerCase().includes(f))))
+        .sort((a, b) => (pierwszenstwo(b) - pierwszenstwo(a)) || String(b.created_at || '').localeCompare(String(a.created_at || '')));
+    }
+    function pRender() {
+      const rows = pFiltruj(), tb = $('pRows');
+      const nowe = pytania.filter(p => p.status === 'nowe').length, tl = $('tabLiczPytania');
+      tl.textContent = nowe; tl.style.display = nowe ? '' : 'none';
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak pytań.</td></tr>'; return; }
+      tb.innerHTML = rows.map(p => `<tr>
+        <td style="white-space:nowrap;"><strong>${esc(p.numer)}</strong>${p.rodzaj && p.rodzaj !== 'pytanie' ? `<div class="py-mini">${esc(P_RODZAJ[p.rodzaj] || p.rodzaj)}</div>` : ''}</td>
+        <td style="white-space:nowrap;">${fmtDate(p.created_at)}</td>
+        <td>${esc(P_ZRODLO[p.zrodlo] || p.zrodlo)}${p.zrodlo_opis ? `<div class="py-mini">${esc(skroc(p.zrodlo_opis, 60))}</div>` : ''}</td>
+        <td>${esc(p.rola || '')}</td>
+        <td>${esc(p.temat || '')}</td>
+        <td class="py-tresc-kom">${esc(skroc(p.tresc, 110))}<div class="py-mini">${czlonekZnak(p)}${flagiZnak(p)}</div></td>
+        <td><span class="badge ${P_BADGE[p.status] || 'badge-read'}">${esc(P_STATUS[p.status] || p.status)}</span>${p.opinia_id ? '<div class="py-mini">ma odpowiedź</div>' : ''}</td>
+        <td class="actions"><button class="btn btn-ghost btn-xs" data-p="${esc(p.id)}">Otwórz</button></td>
+      </tr>`).join('');
+      tb.querySelectorAll('[data-p]').forEach(b => b.addEventListener('click', () => pPokaz(b.dataset.p)));
+    }
+
+    async function pZmien(id, zmiany, komunikat) {
+      const { error } = await db.from('pytania').update({ ...zmiany, updated_at: teraz() }).eq('id', id);
+      if (error) { toast(bladBazy(error, 'Nie udało się zapisać'), 'error', 6000); return false; }
+      const p = pytania.find(x => x.id === id); if (p) Object.assign(p, zmiany);
+      if (komunikat) toast(komunikat, 'success');
+      pRender(); oRender(); loadSidebarBadges();
+      return true;
+    }
+
+    /* Podpis do publikacji: wybór pytającego; anonim albo brak danych = sama rola. */
+    function podpisPubliczny(p) {
+      const os = (p.podpis_osoba || '').trim(), org = (p.podpis_organizacja || '').trim();
+      let t = '';
+      if (p.podpis_zakres === 'osoba') t = os;
+      else if (p.podpis_zakres === 'organizacja') t = org;
+      else if (p.podpis_zakres === 'oba') t = [os, org].filter(Boolean).join(', ');
+      return t || (p.rola || '').trim() || null;
+    }
+
+    function pPokaz(id) {
+      const p = pytania.find(x => x.id === id); if (!p) return;
+      const w = (k, v) => v ? `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>` : '';
+      const op = p.opinia_id ? opinie.find(o => o.id === p.opinia_id) : null;
+      const podpisTxt = (P_PODPIS[p.podpis_zakres] || p.podpis_zakres || '') +
+        (p.podpis_zakres !== 'anonim' ? ': ' + (podpisPubliczny(p) || '') : '');
+      $('pytTytul').textContent = 'Pytanie ' + p.numer;
+      $('pytTresc').innerHTML = `
+        ${p.tylko_dla_mnie ? (p.czlonek_potwierdzony
+          ? '<div class="py-alert czerwony">TYLKO DLA PYTAJĄCEGO: członek poprosił o odpowiedź indywidualną, bez publikacji na stronie.</div>'
+          : '<div class="py-alert czerwony">Pytający zaznaczył odpowiedź tylko dla siebie, bez publikacji. Opcja obowiązuje dopiero po potwierdzeniu członkostwa; do tego czasu nie publikuj.</div>') : ''}
+        ${p.nie_ujawniac ? '<div class="py-alert czerwony">NIE UJAWNIAĆ: pytający zastrzegł, żeby nie ujawniać jego danych ani szczegółów, po których można go rozpoznać.</div>' : ''}
+        ${p.czlonek_gig && !p.czlonek_potwierdzony ? '<div class="py-alert zolty">Podany NIP należy do członka Izby, ale adres e-mail tego nie potwierdza (NIP-y członków są jawne w katalogu). Sprawdź i potwierdź członkostwo albo oznacz, że to nie członek.</div>' : ''}
+        <div class="py-kol">
+          <div>
+            <div class="py-h">Oryginał pytania (tylko biuro)</div>
+            <div class="py-oryg">${esc(p.tresc)}</div>
+            <dl class="py-dane">
+              ${w('Zgłoszono', fmtDate(p.created_at))}
+              ${w('Źródło', (P_ZRODLO[p.zrodlo] || p.zrodlo) + (p.zrodlo_opis ? ': ' + p.zrodlo_opis : ''))}
+              ${w('Rodzaj', P_RODZAJ[p.rodzaj] || p.rodzaj)}
+              ${w('Kto pyta', p.rola)}
+              ${w('Województwo', p.wojewodztwo)}
+              ${w('Imię i nazwisko', p.imie)}
+              ${w('E-mail', p.email)}
+              ${w('Firma lub urząd', p.organizacja)}
+              ${w('NIP', p.nip)}
+              ${w('Podpis przy publikacji', podpisTxt)}
+              ${w('Zgoda na przetwarzanie', p.zgoda_at ? fmtDate(p.zgoda_at) : '')}
+            </dl>
+          </div>
+          <div>
+            <div class="py-h">Członkostwo</div>
+            <div>${czlonekZnak(p) || '<span class="py-mini">nie rozpoznano członka Izby</span>'}
+              ${p.czlonek_gig && p.czlonek_sposob ? `<span class="py-mini"> (dopasowanie: ${esc(p.czlonek_sposob)})</span>` : ''}</div>
+            ${p.czlonek_potwierdzony && p.czlonek_sposob === 'e-mail' ? '<div class="py-mini" style="margin-top:4px;">Adres e-mail jest w publicznym katalogu Członków, a nadawca nie był weryfikowany. Odpowiedź wysyłaj wyłącznie na ten adres.</div>' : ''}
+            <div class="py-akcje" style="margin-top:8px;">
+              ${p.czlonek_gig && !p.czlonek_potwierdzony ? '<button type="button" class="btn btn-outline btn-xs" id="pytPotwierdz">Potwierdź członkostwo</button>' : ''}
+              ${p.czlonek_gig ? '<button type="button" class="btn btn-ghost btn-xs" id="pytNieCzlonek">To nie członek</button>' : '<button type="button" class="btn btn-ghost btn-xs" id="pytJestCzlonek">Oznacz jako członka GIG</button>'}
+            </div>
+
+            <div class="py-h" style="margin-top:20px;">Obsługa</div>
+            <div class="form-group"><label for="pytTemat">Temat</label><select id="pytTemat" class="form-control">${opcje(SL.TEMATY, p.temat || '', '(bez tematu)')}</select></div>
+            <div class="form-group"><label for="pytStatus">Status</label><select id="pytStatus" class="form-control">
+              ${Object.keys(P_STATUS).map(k => `<option value="${k}"${k === p.status ? ' selected' : ''}>${esc(P_STATUS[k])}</option>`).join('')}</select></div>
+            <div class="form-group"><label for="pytNotatka">Notatka biura</label><textarea id="pytNotatka" class="form-control" rows="4">${esc(p.notatka || '')}</textarea></div>
+            <button type="button" class="btn btn-primary btn-sm" id="pytZapisz">Zapisz zmiany</button>
+
+            <div class="py-h" style="margin-top:20px;">Odpowiedź</div>
+            ${op ? `<div class="py-mini" style="margin:0 0 6px;">Powiązana odpowiedź: <strong>${esc(op.tytul)}</strong> (${esc(O_STATUS[op.status] || op.status)})</div>` : ''}
+            <div class="py-akcje" style="margin-top:0;">
+              ${p.email ? '<button type="button" class="btn btn-outline btn-sm" id="pytMail">✉ Odpowiedz mailem</button>' : ''}
+              ${op ? '<button type="button" class="btn btn-primary btn-sm" id="pytOtworzOdp">Otwórz odpowiedź</button>'
+                   : '<button type="button" class="btn btn-primary btn-sm" id="pytUtworzOdp">Utwórz odpowiedź</button>'}
+            </div>
+            ${p.email ? '' : '<div class="py-mini">Brak adresu e-mail: odpowiedź indywidualna tylko inną drogą.</div>'}
+          </div>
+        </div>`;
+      const na = (elId, fn) => { const el = $(elId); if (el) el.addEventListener('click', fn); };
+      na('pytPotwierdz', async () => { if (await pZmien(p.id, { czlonek_potwierdzony: true }, 'Członkostwo potwierdzone')) pPokaz(p.id); });
+      na('pytNieCzlonek', async () => {
+        if (await pZmien(p.id, { czlonek_gig: false, czlonek_potwierdzony: false, czlonek_id: null, czlonek_sposob: 'biuro: nie członek', tylko_dla_mnie: false }, 'Oznaczono: nie członek')) pPokaz(p.id);
+      });
+      na('pytJestCzlonek', async () => {
+        if (await pZmien(p.id, { czlonek_gig: true, czlonek_potwierdzony: true, czlonek_sposob: 'biuro' }, 'Oznaczono jako członka GIG')) pPokaz(p.id);
+      });
+      na('pytZapisz', async () => {
+        await pZmien(p.id, { temat: $('pytTemat').value || null, status: $('pytStatus').value, notatka: $('pytNotatka').value.trim() || null }, 'Zapisano');
+      });
+      na('pytMail', () => pMail(p));
+      na('pytOtworzOdp', () => { closeModal('pytModal'); oEdytuj(op.id); });
+      na('pytUtworzOdp', () => pUtworzOdpowiedz(p));
+      openModal('pytModal');
+    }
+
+    /* Odpowiedź indywidualna. Funkcja wyslij-mail (bez zmian) dobiera stopkę po polu rodzaj:
+       'kontakt' = odpowiedź na wiadomość z formularza na gig.org.pl (bez kontakt_id nic nie
+       archiwizuje), a pole szkolenie = stopka uczestnika szkolenia. Dla pytań z maila i innych
+       żadna stopka nie pasuje, więc otwieramy zwykły program pocztowy. */
+    function pMail(p) {
+      const temat = 'Re: Pytanie ' + p.numer;
+      if (p.zrodlo === 'mail' || p.zrodlo === 'inne') {
+        location.href = 'mailto:' + encodeURIComponent(p.email).replace(/%40/g, '@') + '?subject=' + encodeURIComponent(temat);
+        return;
+      }
+      closeModal('pytModal');
+      gigKreatorMaila({
+        odbiorcy: [{ email: p.email, name: p.imie || '' }],
+        temat, cytat: p.tresc || '',
+        rodzaj: p.zrodlo === 'szkolenie' ? '' : 'kontakt',
+        szkolenie: p.zrodlo === 'szkolenie' ? (p.zrodlo_opis || '') : '',
+        opis: esc(p.numer) + (p.czlonek_gig && p.czlonek_potwierdzony ? ' · członek GIG' : ''),
+        poWyslaniu: async () => {
+          const dopisek = 'Odpowiedź mailem: ' + dzien(teraz());
+          await pZmien(p.id, { notatka: [p.notatka, dopisek].filter(Boolean).join('\n'),
+            status: p.status === 'nowe' ? 'w_opracowaniu' : p.status });
+        }
+      });
+    }
+
+    async function pUtworzOdpowiedz(p) {
+      if (p.tylko_dla_mnie && !confirm('Pytający poprosił o odpowiedź tylko dla siebie, bez publikacji.\n\nUtworzyć mimo to szkic odpowiedzi (np. do wysłania mailem)? Nie publikuj go bez zgody pytającego.')) return;
+      const btn = $('pytUtworzOdp'); btn.disabled = true;
+      const tytul = skroc(p.tresc, 90) || ('Pytanie ' + p.numer);
+      const rec = {
+        slug: wolnySlug(slugify('pytanie ' + p.numer)),   // adres tymczasowy: treść oryginału może zawierać nazwy i numery działek
+        rodzaj: 'odpowiedz', tytul,
+        pytanie_publiczne: p.tresc,
+        pytajacy: podpisPubliczny(p),
+        zrodlo: p.zrodlo === 'formularz' ? 'z formularza' : (p.zrodlo_opis ? 'z: ' + p.zrodlo_opis : null),
+        wydarzenie: p.zrodlo === 'szkolenie' ? (p.zrodlo_opis || null) : null,
+        temat: p.temat || null,
+        status: 'szkic'
+      };
+      const { data, error } = await db.from('opinie').insert(rec).select('*').single();
+      if (error) { btn.disabled = false; toast(bladBazy(error, 'Nie udało się utworzyć szkicu'), 'error', 6000); return; }
+      opinie.unshift(data);
+      await pZmien(p.id, { opinia_id: data.id, status: 'w_opracowaniu' });
+      closeModal('pytModal');
+      toast('Utworzono szkic odpowiedzi. Zredaguj pytanie, tytuł i adres (slug) przed publikacją.', 'success', 5000);
+      oEdytuj(data.id);
+    }
+
+    function npOtworz() {
+      $('npZrodlo').value = 'mail'; $('npRodzaj').value = 'pytanie';
+      ['npZrodloOpis', 'npTresc', 'npImie', 'npEmail', 'npOrg', 'npNip', 'npNotatka'].forEach(i => { $(i).value = ''; });
+      $('npTemat').innerHTML = opcje(SL.TEMATY, '', '(bez tematu)');
+      $('npRola').innerHTML = opcje(SL.ROLE, '', '(nie podano)');
+      $('npWoj').innerHTML = opcje(SL.WOJEWODZTWA, '', '(nie podano)');
+      $('npCzlonek').checked = false;
+      openModal('nowePytModal');
+    }
+    async function npZapisz() {
+      const tresc = $('npTresc').value.trim();
+      if (tresc.length < 10) { toast('Wpisz treść pytania', 'error'); return; }
+      const email = $('npEmail').value.trim().toLowerCase();
+      if (email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { toast('Adres e-mail wygląda na błędny', 'error'); return; }
+      const nip = $('npNip').value.replace(/\D/g, '');
+      if (nip && nip.length !== 10) { toast('NIP powinien mieć 10 cyfr', 'error'); return; }
+      const czl = $('npCzlonek').checked;
+      const rec = {
+        zrodlo: $('npZrodlo').value, zrodlo_opis: $('npZrodloOpis').value.trim() || null,
+        rodzaj: $('npRodzaj').value, temat: $('npTemat').value || null, rola: $('npRola').value || null,
+        wojewodztwo: $('npWoj').value || null, tresc,
+        imie: $('npImie').value.trim() || null, email: email || null,
+        organizacja: $('npOrg').value.trim() || null, nip: nip || null,
+        podpis_zakres: 'anonim',
+        czlonek_gig: czl, czlonek_potwierdzony: czl, czlonek_sposob: czl ? 'biuro' : null,
+        notatka: $('npNotatka').value.trim() || null
+      };
+      const btn = $('npZapisz'); btn.disabled = true;
+      const { data, error } = await db.from('pytania').insert(rec).select('*').single();
+      btn.disabled = false;
+      if (error) { toast(bladBazy(error, 'Nie udało się dodać pytania'), 'error', 6000); return; }
+      pytania.unshift(data);
+      closeModal('nowePytModal');
+      toast('Dodano pytanie ' + data.numer, 'success');
+      pRender(); loadSidebarBadges();
+    }
+
+    /* ───────────── ODPOWIEDZI ───────────── */
+    const ilePytan = id => pytania.filter(p => p.opinia_id === id).length;
+
+    function oFiltruj() {
+      const f = $('oSzukaj').value.toLowerCase().trim(), st = $('oStatus').value;
+      return opinie.filter(o => (!st || o.status === st) &&
+        (!f || [o.tytul, o.temat, o.autor, o.slug, o.wydarzenie, o.pytanie_publiczne].some(v => (v || '').toLowerCase().includes(f))));
+    }
+    function oRender() {
+      const rows = oFiltruj(), tb = $('oRows');
+      if (!rows.length) { tb.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#6b7f84;">Brak tekstów.</td></tr>'; return; }
+      tb.innerHTML = rows.map(o => `<tr>
+        <td><strong>${esc(o.tytul || '(bez tytułu)')}</strong><div class="py-mini">/pytania/${esc(o.slug)}/</div></td>
+        <td>${esc(SL.RODZAJE[o.rodzaj] || o.rodzaj)}</td>
+        <td>${esc(o.temat || '')}</td>
+        <td>${esc(o.autor || 'Zespół Ekspercki GIG')}${o.autor_gosc ? '<div class="py-mini">autor gościnny</div>' : ''}</td>
+        <td><span class="badge ${O_BADGE[o.status] || 'badge-read'}">${esc(O_STATUS[o.status] || o.status)}</span></td>
+        <td style="white-space:nowrap;">${o.opublikowano_at ? fmtDate(o.opublikowano_at) : ''}</td>
+        <td>${ilePytan(o.id)}</td>
+        <td class="actions"><button class="btn btn-ghost btn-xs" data-o="${esc(o.id)}">✎ Edytuj</button></td>
+      </tr>`).join('');
+      tb.querySelectorAll('[data-o]').forEach(b => b.addEventListener('click', () => oEdytuj(b.dataset.o)));
+    }
+
+    const listaZaznaczona = () => [...document.querySelectorAll('#opLista input')].every(c => c.checked);
+
+    /* Stan przycisków edytora zależy od statusu tekstu i od listy kontrolnej.
+       Zapis zmian w tekście już opublikowanym też wymaga listy: zmiana od razu jest na stronie. */
+    function oPrzyciski() {
+      const st = opBiezaca ? opBiezaca.status : 'szkic', gotowe = listaZaznaczona();
+      const pub = st === 'opublikowana';
+      $('opStatusZnak').innerHTML = `<span class="badge ${O_BADGE[st]}">${esc(O_STATUS[st])}</span>` +
+        (opBiezaca && opBiezaca.opublikowano_at ? ` <span class="py-mini">pierwsza publikacja: ${esc(fmtDate(opBiezaca.opublikowano_at))}</span>` : '');
+      $('opZapisz').textContent = pub ? 'Zapisz zmiany' : (st === 'archiwalna' ? 'Zapisz' : 'Zapisz szkic');
+      $('opZapisz').disabled = pub && !gotowe;
+      $('opOpublikuj').style.display = pub ? 'none' : '';
+      $('opOpublikuj').disabled = !gotowe;
+      $('opWycofaj').style.display = (opBiezaca && st !== 'szkic') ? '' : 'none';
+      $('opWycofaj').textContent = pub ? 'Wycofaj z publikacji' : 'Przywróć do szkiców';
+      $('opArchiwizuj').style.display = pub ? '' : 'none';
+      $('opUsun').style.display = (opBiezaca && st === 'szkic') ? '' : 'none';
+      const pod = $('opPodglad');
+      if (pub) { pod.href = '/pytania/' + encodeURIComponent(opBiezaca.slug) + '/'; pod.classList.remove('wylaczony'); pod.title = ''; }
+      else { pod.removeAttribute('href'); pod.classList.add('wylaczony'); pod.title = 'Podgląd działa po publikacji'; }
+      $('opListaOpis').textContent = pub
+        ? (gotowe ? '' : 'Tekst jest opublikowany: zaznacz wszystkie pola listy, żeby zapisać zmiany (od razu trafią na stronę).')
+        : (gotowe ? '' : 'Przycisk „Opublikuj” włączy się po zaznaczeniu wszystkich pól listy.');
+      const zablok = !!(opBiezaca && opBiezaca.opublikowano_at);
+      $('opSlug').readOnly = zablok;
+      $('opSlugOpis').textContent = zablok ? '(zablokowany po publikacji, żeby nie zrywać linków)' : '(podpowiadany z tytułu; tylko a-z, cyfry i łącznik)';
+    }
+
+    function oEdytuj(id) {
+      const o = id ? opinie.find(x => x.id === id) : null;
+      opBiezaca = o || null;
+      slugReczny = !!o && !slugAuto(o);   // slug nadany ręcznie albo opublikowany zostaje, jak jest
+      $('opTytulOkna').textContent = o ? 'Edycja: ' + skroc(o.tytul, 60) : 'Nowa odpowiedź';
+      $('opInfo').innerHTML = '';
+      $('opRodzaj').innerHTML = Object.keys(SL.RODZAJE).map(k => `<option value="${esc(k)}">${esc(SL.RODZAJE[k])}</option>`).join('');
+      $('opRodzaj').value = o ? o.rodzaj : 'odpowiedz';
+      $('opTytul').value = o ? (o.tytul || '') : '';
+      $('opSlug').value = o ? (o.slug || '') : '';
+      $('opPytanie').value = o ? (o.pytanie_publiczne || '') : '';
+      $('opPytajacy').value = o ? (o.pytajacy || '') : '';
+      $('opZrodlo').value = o ? (o.zrodlo || '') : '';
+      $('opWydarzenie').value = o ? (o.wydarzenie || '') : '';
+      $('opTemat').innerHTML = opcje(SL.TEMATY, o ? (o.temat || '') : '', '(bez tematu)');
+      $('opSkrot').value = o ? (o.w_skrocie || '') : '';
+      $('opPodstawa').value = o ? (o.podstawa_prawna || '') : '';
+      $('opAutor').value = o ? (o.autor || '') : '';
+      $('opGosc').checked = !!(o && o.autor_gosc);
+      $('opStan').value = o ? (o.stan_prawny_na || '') : '';
+      quill.root.innerHTML = o ? (o.tresc_html || '') : '';
+      $('opRoleLista').innerHTML = SL.ROLE.map(r => `<option value="${esc(r)}">`).join('');
+      $('opWydarzeniaLista').innerHTML = [...new Set(opinie.map(x => x.wydarzenie).concat(pytania.filter(p => p.zrodlo === 'szkolenie').map(p => p.zrodlo_opis)).filter(Boolean))]
+        .map(w => `<option value="${esc(w)}">`).join('');
+      document.querySelectorAll('#opLista input').forEach(c => { c.checked = false; });
+      oPowiazane();
+      oPrzyciski();
+      openModal('opModal');
+    }
+
+    /* Pytania spięte z tekstem: numery i zastrzeżenia pytających, bez danych osobowych. */
+    function oPowiazane() {
+      const box = $('opPowiazane');
+      const lista = opBiezaca ? pytania.filter(p => p.opinia_id === opBiezaca.id) : [];
+      if (!lista.length) { box.innerHTML = ''; return; }
+      box.innerHTML = '<div class="py-alert zolty" style="font-weight:600;">Powiązane pytania: ' + lista.map(p =>
+        `<a href="#" data-pp="${esc(p.id)}">${esc(p.numer)}</a>` +
+        ` (podpis: ${esc(p.podpis_zakres === 'anonim' ? 'anonimowo' : (podpisPubliczny(p) || 'anonimowo'))}` +
+        (p.tylko_dla_mnie ? '; <strong>TYLKO DLA PYTAJĄCEGO, nie publikować bez zgody</strong>' : '') +
+        (p.nie_ujawniac ? '; <strong>nie ujawniać</strong>' : '') + ')').join(', ') + '</div>';
+      box.querySelectorAll('[data-pp]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); closeModal('opModal'); pPokaz(a.dataset.pp); }));
+    }
+
+    function oZbierz() {
+      const tekst = (quill.root.innerText || '').trim();
+      return {
+        rodzaj: $('opRodzaj').value,
+        tytul: $('opTytul').value.trim(),
+        slug: $('opSlug').value.trim(),
+        pytanie_publiczne: $('opPytanie').value.trim() || null,
+        pytajacy: $('opPytajacy').value.trim() || null,
+        zrodlo: $('opZrodlo').value.trim() || null,
+        wydarzenie: $('opWydarzenie').value.trim() || null,
+        temat: $('opTemat').value || null,
+        w_skrocie: $('opSkrot').value.trim() || null,
+        tresc_html: tekst ? quill.root.innerHTML : null,
+        podstawa_prawna: $('opPodstawa').value.split(/\n/).map(l => l.trim()).filter(Boolean).join('\n') || null,
+        autor: $('opAutor').value.trim() || null,
+        autor_gosc: $('opGosc').checked,
+        stan_prawny_na: $('opStan').value || null
+      };
+    }
+
+    /* Zapis edytora. nowyStatus: null = bez zmiany statusu (dla nowego: szkic). */
+    async function oZapisz(nowyStatus) {
+      const rec = oZbierz();
+      const docelowy = nowyStatus || (opBiezaca ? opBiezaca.status : 'szkic');
+      if (!rec.tytul) { toast('Podaj tytuł', 'error'); return false; }
+      if (!rec.slug) rec.slug = wolnySlug(slugify(rec.tytul), opBiezaca && opBiezaca.id);
+      /* adres tymczasowy (z numeru pytania) przy publikacji zamieniamy na adres z tytułu */
+      if (docelowy === 'opublikowana' && SLUG_TYMCZ.test(rec.slug) && !(opBiezaca && opBiezaca.opublikowano_at) && slugify(rec.tytul))
+        rec.slug = wolnySlug(slugify(rec.tytul), opBiezaca && opBiezaca.id);
+      if (!/^[a-z0-9-]+$/.test(rec.slug)) { toast('Adres (slug) może mieć tylko małe litery a-z, cyfry i łącznik', 'error', 6000); return false; }
+      if (SLUG_ZAJETE.includes(rec.slug)) { toast('Adres „' + rec.slug + '” jest zajęty przez stronę serwisu. Wybierz inny.', 'error', 6000); return false; }
+      if (opBiezaca && opBiezaca.opublikowano_at) rec.slug = opBiezaca.slug;   // po publikacji adres się nie zmienia
+      if (docelowy === 'opublikowana') {
+        if (!listaZaznaczona()) { toast('Zaznacz wszystkie pola listy kontrolnej', 'error'); return false; }
+        if (!rec.tresc_html) { toast('Wpisz treść przed publikacją', 'error'); return false; }
+        if (rec.rodzaj === 'odpowiedz' && !rec.pytanie_publiczne) { toast('Wpisz pytanie w wersji publicznej', 'error'); return false; }
+        const zastrzezone = opBiezaca ? pytania.filter(p => p.opinia_id === opBiezaca.id && p.tylko_dla_mnie) : [];
+        if (zastrzezone.length && (!opBiezaca || opBiezaca.status !== 'opublikowana') &&
+            !confirm('Pytanie ' + zastrzezone.map(p => p.numer).join(', ') + ' ma zastrzeżenie „tylko dla pytającego”.\n\nOpublikować mimo to? Zrób to tylko za zgodą pytającego.')) return false;
+      }
+      rec.status = docelowy;
+      rec.updated_at = teraz();
+      const pierwszaPublikacja = docelowy === 'opublikowana' && !(opBiezaca && opBiezaca.opublikowano_at);
+      if (pierwszaPublikacja) rec.opublikowano_at = teraz();
+
+      const przyciski = ['opZapisz', 'opOpublikuj', 'opWycofaj', 'opArchiwizuj', 'opUsun'].map($);
+      przyciski.forEach(b => { b.disabled = true; });
+      const res = opBiezaca
+        ? await db.from('opinie').update(rec).eq('id', opBiezaca.id).select('*').single()
+        : await db.from('opinie').insert(rec).select('*').single();
+      przyciski.forEach(b => { b.disabled = false; });
+      if (res.error) { toast(bladBazy(res.error, 'Nie udało się zapisać'), 'error', 7000); oPrzyciski(); return false; }
+
+      const byloPub = !!(opBiezaca && opBiezaca.status === 'opublikowana');
+      const i = opinie.findIndex(x => x.id === res.data.id);
+      if (i >= 0) opinie[i] = res.data; else opinie.unshift(res.data);
+      opBiezaca = res.data; slugReczny = !slugAuto(res.data);
+      $('opSlug').value = res.data.slug;
+      $('opTytulOkna').textContent = 'Edycja: ' + skroc(res.data.tytul, 60);
+
+      if (docelowy === 'opublikowana' && !byloPub) {
+        /* powiązane pytania: odpowiedziano */
+        const ids = pytania.filter(p => p.opinia_id === res.data.id && p.status !== 'odpowiedziano').map(p => p.id);
+        if (ids.length) {
+          const u = await db.from('pytania').update({ status: 'odpowiedziano', updated_at: teraz() }).in('id', ids);
+          if (u.error) { console.error(u.error); toast('Tekst opublikowany, ale nie udało się zmienić statusu pytań', 'error', 6000); }
+          else pytania.forEach(p => { if (ids.includes(p.id)) p.status = 'odpowiedziano'; });
+        }
+        const adres = 'https://gig.org.pl/pytania/' + res.data.slug + '/';
+        $('opInfo').innerHTML = `<div class="py-alert zielony">Opublikowano. Tekst jest od razu widoczny pod adresem
+          <a href="/pytania/${esc(encodeURIComponent(res.data.slug))}/" target="_blank" rel="noopener">${esc(adres)}</a>,
+          a wersja dla wyszukiwarek pojawi się na stronie w ciągu godziny.` +
+          (ids.length ? ' Powiązane pytania dostały status „odpowiedziano”; pytającym warto wysłać link.' : '') + '</div>';
+        document.querySelector('#opModal .modal-body').scrollTop = 0;
+        toast('Opublikowano', 'success');
+      } else {
+        if (docelowy !== 'opublikowana') $('opInfo').innerHTML = '';
+        toast(nowyStatus === 'szkic' && byloPub ? 'Wycofano z publikacji' : (nowyStatus === 'archiwalna' ? 'Przeniesiono do archiwum' : 'Zapisano'), 'success');
+      }
+      oPowiazane(); oPrzyciski(); pRender(); oRender(); loadSidebarBadges();
+      return true;
+    }
+
+    async function oUsun() {
+      if (!opBiezaca || opBiezaca.status !== 'szkic') return;
+      const n = ilePytan(opBiezaca.id);
+      if (!confirm('Usunąć szkic „' + skroc(opBiezaca.tytul, 80) + '”? Tej operacji nie można cofnąć.' +
+        (n ? '\n\nPowiązane pytania (' + n + ') zostaną w kolejce bez odpowiedzi.' : ''))) return;
+      const id = opBiezaca.id;
+      const { error } = await db.from('opinie').delete().eq('id', id).eq('status', 'szkic');
+      if (error) { toast(bladBazy(error, 'Nie udało się usunąć'), 'error', 6000); return; }
+      opinie = opinie.filter(o => o.id !== id);
+      pytania.forEach(p => { if (p.opinia_id === id) p.opinia_id = null; });   // baza: on delete set null
+      opBiezaca = null;
+      closeModal('opModal');
+      toast('Szkic usunięty', 'success');
+      pRender(); oRender();
+    }
+
+    /* ───────────── START ───────────── */
+    async function load() {
+      const [rp, ro] = await Promise.all([
+        db.from('pytania').select('*').order('created_at', { ascending: false }),
+        db.from('opinie').select('*').order('updated_at', { ascending: false })
+      ]);
+      if (rp.error) { toast(bladBazy(rp.error, 'Błąd ładowania pytań'), 'error', 6000); }
+      if (ro.error) { toast(bladBazy(ro.error, 'Błąd ładowania odpowiedzi'), 'error', 6000); }
+      pytania = rp.data || []; opinie = ro.data || [];
+      pRender(); oRender(); loadSidebarBadges();
+    }
+
+    function zakladka(nazwa) {
+      const b = document.querySelector(`#tabsRoot .tab-btn[data-tab="${nazwa}"]`);
+      if (b) b.click();
+    }
+
+    (async () => {
+      if (!await requireAuth()) return;
+      quill = new Quill('#opEdytor', { theme: 'snow',
+        modules: { toolbar: [['bold', 'italic', 'underline'], [{ header: [2, 3, false] }], ['link', 'blockquote'], [{ list: 'ordered' }, { list: 'bullet' }], ['clean']] } });
+
+      initTabs('#tabsRoot');
+      /* zakładka z adresu jako parametr, nie #: highlightNav gasi pozycję menu, gdy adres ma hash */
+      const par = new URLSearchParams(location.search);
+      if (par.get('zakladka') === 'odpowiedzi') zakladka('odpowiedzi');
+
+      $('pSzukaj').addEventListener('input', pRender);
+      ['pStatus', 'pZrodlo', 'pCzlonkowie'].forEach(i => $(i).addEventListener('change', pRender));
+      $('oSzukaj').addEventListener('input', oRender);
+      $('oStatus').addEventListener('change', oRender);
+
+      $('btnDodajPytanie').addEventListener('click', () => { zakladka('pytania'); npOtworz(); });
+      $('npZapisz').addEventListener('click', npZapisz);
+      $('btnNowaOdp').addEventListener('click', () => { zakladka('odpowiedzi'); oEdytuj(null); });
+
+      $('opTytul').addEventListener('input', () => {
+        if (!slugReczny && !(opBiezaca && opBiezaca.opublikowano_at)) $('opSlug').value = slugify($('opTytul').value);
+      });
+      $('opSlug').addEventListener('input', () => { slugReczny = true; });
+      $('opSlug').addEventListener('blur', () => { if (!$('opSlug').readOnly) $('opSlug').value = slugify($('opSlug').value); });
+      $('opLista').addEventListener('change', oPrzyciski);
+      $('opZapisz').addEventListener('click', () => oZapisz(null));
+      $('opOpublikuj').addEventListener('click', () => oZapisz('opublikowana'));
+      $('opWycofaj').addEventListener('click', () => {
+        const pub = opBiezaca && opBiezaca.status === 'opublikowana';
+        if (pub && !confirm('Wycofać tekst z publikacji? Zniknie ze strony, a adres przestanie działać do ponownej publikacji.')) return;
+        oZapisz('szkic');
+      });
+      $('opArchiwizuj').addEventListener('click', () => {
+        if (!confirm('Przenieść tekst do archiwum? Zniknie ze strony.')) return;
+        oZapisz('archiwalna');
+      });
+      $('opUsun').addEventListener('click', oUsun);
+
+      await load();
+      /* ?pytanie=<id> (link z Zapisów): od razu okno tego pytania */
+      if (par.get('pytanie') && pytania.some(p => p.id === par.get('pytanie'))) pPokaz(par.get('pytanie'));
+    })();
+  </script>
+</body>
+</html>

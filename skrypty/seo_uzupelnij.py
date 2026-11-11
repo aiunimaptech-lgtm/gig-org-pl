@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Uzupełnia podstawy SEO na stronach z mapy strony (poza /wpis/, które robi prerender.mjs).
+"""Uzupełnia podstawy SEO na stronach z mapy strony (poza /wpis/ i /pytania/<slug>/, które robi prerender.mjs).
 
 Dopisuje tylko to, czego brakuje: opis meta, tagi Open Graph / Twitter (z pełnymi
 adresami obrazków), H1 dla czytników i robotów tam, gdzie strona z WordPressa go nie ma
@@ -76,6 +76,9 @@ def main():
     locs = re.findall(r'<loc>%s/([^<]*)</loc>' % re.escape(SITE), io.open(os.path.join(ROOT, 'sitemap.xml'), encoding='utf-8').read())
     for loc in locs:
         if loc.startswith('wpis/'):
+            continue
+        # strony odpowiedzi /pytania/<slug>/ buduje prerender.mjs (nadpisałby dopiski); /pytania/ i /pytania/zadaj/ zostają
+        if loc.startswith('pytania/') and loc not in ('pytania/', 'pytania/zadaj/'):
             continue
         p = os.path.join(ROOT, loc.replace('/', os.sep), 'index.html')
         if not os.path.exists(p):

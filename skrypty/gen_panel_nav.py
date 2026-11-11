@@ -26,6 +26,8 @@ MENU = [
     ('Zgłoszenia ze strony', 'formularze.html#kontakt',   '\U0001f4e8', 'Kontakt',             'navBadgeKontakt'),
     ('Zgłoszenia ze strony', 'formularze.html#newsletter', '✉',    'Newsletter',          'navBadgeNewsletter'),
     ('Zgłoszenia ze strony', 'zapisy.html',                '\U0001f4dd', 'Zapisy na szkolenia', 'navBadgeZapisy'),
+    ('Zgłoszenia ze strony', 'wyceny.html',                '\U0001f4ac', 'Zapytania o wycenę',  'navBadgeWyceny'),
+    ('Zgłoszenia ze strony', 'pytania.html',               '❓',     'Pytania (Zapytaj Izbę)', 'navBadgePytania'),
     ('Sprawy Izby',         'czlonkowie.html',                 '\U0001f3e2', 'Członkowie',     'navBadgeCzlonkowie'),
     ('Sprawy Izby',         'uchwaly.html',               '⚖',     'Uchwały Rady',        'navBadgeUchwaly'),
     ('Sprawy Izby',         'konsultacje.html',           '\U0001f5f3', 'Konsultacje',         'navBadgeKonsultacje'),

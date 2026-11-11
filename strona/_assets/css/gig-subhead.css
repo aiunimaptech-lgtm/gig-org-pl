@@ -23,5 +23,7 @@ header.site-head .nav .nav-item:last-child .nav-sub{left:auto;right:0;}
 header.site-head .nav .nav-sub a{display:block;font-size:14px;font-weight:600;color:#B3001E;padding:8px 13px;border-radius:10px;white-space:nowrap;}
 header.site-head .nav .nav-sub a:hover{background:#f7eef0;color:#cc0a2b;}
 @media(max-width:1180px){header.site-head .nav>a,header.site-head .nav .nav-item>a{padding:7px 9px;font-size:14px;}}
+/* 7 pozycji głównych (doszło „Zapytaj Izbę”): na wąskich laptopach ciaśniej, żeby menu nie łamało się na dwa wiersze */
+@media(max-width:1100px){header.site-head .nav{gap:2px;}header.site-head .nav>a,header.site-head .nav .nav-item>a{padding:7px 5px;font-size:13.5px;}header.site-head .head-in{gap:10px;}}
 @media(max-width:900px){header.site-head .nav{display:none;}}
 @media(max-width:560px){header.site-head .head-phone{display:none;}}

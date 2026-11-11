@@ -84,6 +84,17 @@ newslettera, formularza kontaktowego i artykułów (aktualności/biuletyn).
   „Technologie dla geodezji” w katalogu i NIE dostają zapytań z kalkulatora (filtr w kalkulatorze i w `zapytanie-wycena` v2).
   Prezydium (10.11.2026): sprzedawcy sprzętu i oprogramowania mogą być członkami; publicznie tego nie podkreślamy.
 
+- **Zapytaj Izbę** (od 11.11.2026; `backend/supabase_pytania.sql`): lista `/pytania/`, formularz `/pytania/zadaj/`, odpowiedź
+  `/pytania/<slug>/` (szablon `strona/pytania/odpowiedz/index.html`, wspólny kod `_assets/js/pytania.js`, słownik `pytania-slownik.js`),
+  „Głos Izby” `/stanowiska/` (statyczna). Formularz → Edge Function `pytanie-zglos` v3 (pułapka, limity, rozpoznanie członka: sam NIP
+  nie wystarcza; powiadomienie do biuro@, prezydium@ i dawid.sienkiewicz@gig.org.pl albo wg sekretu `NOTIFY_PYTANIA`; potwierdzenie do pytającego)
+  → tabela `pytania` (tylko panel). Teksty w tabeli `opinie` (anon czyta tylko `opublikowana`). Panel `/admin/pytania.html`: kolejka pytań,
+  „Utwórz odpowiedź”, edytor z listą kontrolną anonimizacji, publikacja; w panelu Zapisy przycisk „Do pytań (Zapytaj Izbę)”.
+  Prerender: blok `pytania-lista`, strony odpowiedzi, mapa strony, llms.txt. Menu: `skrypty/menu_zapytaj_izbe.py` (idempotentny).
+  Zasady: pytania anonimowe (podpis na życzenie), adnotacja „Opinia autora, nie jest wiążącą interpretacją prawa.”, teksty wspólne
+  podpisuje „Zespół Ekspercki GIG”, członkowie mają pierwszeństwo i odpowiedź indywidualną. Decyzje i plan dalszych etapów:
+  `#szkolenia/2026-11-19 GUGIK dyskusja/08 Zapytaj Izbe - propozycja sekcji pytan i odpowiedzi.md` (pkt 15 i 16).
+
 ## Antyspam formularzy publicznych (od 24.10.2026, `backend/supabase_antyspam.sql`)
 - Trigger `gig_limit_wpisow` na `submissions_kontakt`, `submissions_newsletter`, `zapisy_szkolenia`, `wezel_ankiety`
   (tylko rola anon): 3/h i 10/dobę na e-mail, 12/h i 40/dobę na IP (z nagłówków PostgREST), 300/h na tabelę.

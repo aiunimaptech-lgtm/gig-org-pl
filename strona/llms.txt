@@ -13,6 +13,7 @@ Składka członkowska: 40 zł miesięcznie (firma jednoosobowa), 80 zł (do 5 os
 - [Ile kosztuje geodeta? Usługi geodezyjne i zapytanie o wycenę](https://gig.org.pl/ile-kosztuje-geodezja/): z czego składa się cena podziału, mapy do celów projektowych, wznowienia granic, wytyczenia; zapytanie do firm z regionu
 - [Węzeł Jakości: ankieta cenowa](https://gig.org.pl/wezel-jakosci/)
 - [Baza wiedzy](https://gig.org.pl/baza-wiedzy/)
+- [Zapytaj Izbę: pytania i odpowiedzi ekspertów](https://gig.org.pl/pytania/): odpowiedzi na pytania z praktyki geodezyjnej; pytanie może zadać każdy
 - [Z firm członkowskich](https://gig.org.pl/baza-wiedzy/z-firm-czlonkowskich/): informacje firm członkowskich Izby
 - [Kontakt](https://gig.org.pl/kontakt/)
 
@@ -34,6 +35,12 @@ Składka członkowska: 40 zł miesięcznie (firma jednoosobowa), 80 zł (do 5 os
 - [Żegnamy Alfonsa Jacko](https://gig.org.pl/zegnamy-alfonsa-jacko/): 3 kwietnia, 2026
 - [Zawiłości geodezyjne: Rozumienie procedury przyjęcia granic przy podziale nieruchomości](https://gig.org.pl/zawilosci-geodezyjne-rozumienie-procedury-przyjecia-granic-przy-podziale-nieruchomosci/): 24 stycznia, 2025
 - [XXXII Walne Sprawozdawczo – Wyborcze Zgromadzenie Członków GIG](https://gig.org.pl/xxxii-walne-sprawozdawczo-wyborcze-zgromadzenie-czlonkow-gig/): 24 stycznia, 2025
+
+## Pytania i odpowiedzi
+- [Czy podział kilku nieruchomości można objąć jednym zgłoszeniem i jednym operatem?](https://gig.org.pl/pytania/kilka-nieruchomosci-w-jednej-pracy-geodezyjnej/): Podziały nieruchomości
+- [Znaku granicznego nie odnaleziono, a punkt oznaczono palikiem: czy to wznowienie znaku?](https://gig.org.pl/pytania/znaku-nie-ma-palik-wznowienie-czy-wyznaczenie/): Granice i wznowienia
+- [Kiedy granica jest sporna i co z tego wynika dla ewidencji oraz podziału działki?](https://gig.org.pl/pytania/granica-sporna-ewidencja-i-podzial-dzialki/): Granice i wznowienia
+- [Kiedy stabilizować punkty graniczne ustalone i punkty z podziału w trybie rolnym?](https://gig.org.pl/pytania/podzial-rolny-kiedy-stabilizowac-punkty/): Podziały nieruchomości
 
 ## Opcjonalnie
 - [Mapa strony](https://gig.org.pl/sitemap.xml)

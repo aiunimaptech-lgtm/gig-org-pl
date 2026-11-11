@@ -43,6 +43,10 @@
        pod pozycją, żeby nie wystawać w prawo poza pasek */
     "li[data-gig-dd] > .mfn-submenu{top:100% !important;margin-top:0 !important;}" +
     "li[data-gig-dd].gig-dd-right > .mfn-submenu{left:auto !important;right:0 !important;}" +
+    /* 7 pozycji głównych (doszło „Zapytaj Izbę”): węższe odstępy, żeby menu desktop zostało
+       w jednym wierszu, a numer telefonu obok nie łamał się na dwie linie */
+    "ul.mfn-header-mainmenu{flex-wrap:nowrap !important;}" +
+    "ul.mfn-header-mainmenu > li > a.mfn-menu-link{padding-left:10px !important;padding-right:10px !important;white-space:nowrap;}" +
     /* sticky: nagłówek BeTheme (strona główna + podstrony mirror) — po scrollu staje się
        biały, przyklejony na górze; czerwone menu i kolorowe logo czytelne na białym.
        Bez animacji transform — żeby nagłówek nigdy nie mógł „utknąć" poza ekranem. */

@@ -85,6 +85,7 @@ async function loadSidebarBadges() {
     { table: 'konsultacje',            id: 'navBadgeKonsultacje', status: 'projekt' }, // szkice zapytan do wyslania
     { table: 'wezel_ankiety',          id: 'navBadgeWezel' },                        // nowe ankiety cenowe
     { table: 'zapytania_wyceny',       id: 'navBadgeWyceny' },                       // zapytania o wycenę z kalkulatora
+    { table: 'pytania',                id: 'navBadgePytania', status: 'nowe' },      // Zapytaj Izbę: pytania czekające na biuro
     { table: 'czlonkowie',             id: 'navBadgeCzlonkowie', status: 'oczekuje' }, // zgloszenia czlonkowskie do zatwierdzenia
     { table: 'wizytowki_weryfikacja',  id: 'navBadgeWizytowki', status: 'zgloszono' }, // wizytowki od czlonkow do zatwierdzenia
   ];

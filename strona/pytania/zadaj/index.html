@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zadaj pytanie albo zgłoś problem | Zapytaj Izbę | GIG</title>
+  <meta name="description" content="Zadaj pytanie ekspertom Geodezyjnej Izby Gospodarczej, zgłoś problem z praktyki albo zaproponuj zmianę przepisu. Pytania publikujemy po redakcji, anonimowo albo z wybranym podpisem.">
+  <link rel="canonical" href="https://gig.org.pl/pytania/zadaj/">
+  <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+  <style>:root{--red:#cc0a2b;--ink:#16202a;--muted:#6b7884;--line:#e6ebef;--bg:#f4f6f8;}*{box-sizing:border-box;}[hidden]{display:none!important;}body{margin:0;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.6;}a{color:var(--red);text-decoration:none;}a:hover{text-decoration:underline;}.wrap{max-width:1140px;margin:0 auto;padding:0 22px;}
+    .site-head{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.97);backdrop-filter:blur(6px);z-index:40;}.head-in{display:flex;align-items:center;justify-content:space-between;min-height:72px;gap:16px;}.head-in img{height:42px;width:auto;display:block;}.nav{display:flex;gap:22px;flex-wrap:wrap;}.nav a{color:var(--ink);font-weight:600;font-size:15px;}.nav a:hover,.nav a.active{color:var(--red);text-decoration:none;}
+    .btn{display:inline-block;background:var(--red);color:#fff;font-weight:700;padding:13px 26px;border-radius:10px;border:0;cursor:pointer;font-family:inherit;font-size:16px;}.btn:hover{filter:brightness(.93);text-decoration:none;color:#fff;}.btn[disabled]{opacity:.6;cursor:default;filter:none;}
+    .pyt-hero{background:linear-gradient(180deg,#fff,var(--bg));padding:34px 0 26px;border-bottom:1px solid var(--line);}
+    .a-crumbs{font-size:13px;color:var(--muted);margin-bottom:12px;}.a-crumbs a{color:var(--muted);}.a-crumbs a:hover{color:var(--red);}
+    .pyt-hero h1{font-size:clamp(26px,4.2vw,38px);line-height:1.15;margin:0 0 10px;}
+    .pyt-hero .lead{color:var(--muted);max-width:72ch;margin:0;font-size:16.5px;}
+    .pf-main{max-width:820px;margin:0 auto;padding:26px 22px 20px;}
+    .pf-form fieldset{border:1px solid var(--line);border-radius:14px;padding:20px 22px 8px;margin:0 0 20px;min-width:0;}
+    .pf-form legend{font-weight:700;font-size:17px;padding:0 8px;}
+    .pole{margin:0 0 16px;}
+    .pole>label,.pole>.et{display:block;font-weight:600;font-size:14.5px;margin:0 0 5px;}
+    .pole .opc{font-weight:400;color:var(--muted);}
+    .pole .wym{color:var(--red);}
+    .pole input[type=text],.pole input[type=email],.pole select,.pole textarea{width:100%;font:inherit;font-size:16px;padding:10px 12px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);}
+    .pole textarea{min-height:190px;resize:vertical;line-height:1.55;}
+    .pole input:focus,.pole select:focus,.pole textarea:focus{outline:2px solid rgba(204,10,43,.25);border-color:var(--red);}
+    .pole .zle{border-color:var(--red)!important;}
+    .podp{font-size:13.5px;color:var(--muted);margin:5px 0 0;}
+    .licz{float:right;font-size:12.5px;color:var(--muted);}
+    .rzad{display:grid;grid-template-columns:1fr 1fr;gap:0 18px;}@media(max-width:640px){.rzad{grid-template-columns:1fr;}}
+    .opcje{display:flex;flex-direction:column;gap:8px;}
+    .opcje.wiersz{flex-direction:row;flex-wrap:wrap;gap:8px 10px;}
+    .opcja{display:flex;gap:10px;align-items:flex-start;font-size:15px;font-weight:400;cursor:pointer;}
+    .opcja input{margin:4px 0 0;width:17px;height:17px;flex:none;accent-color:var(--red);}
+    .opcje.wiersz .opcja{border:1.5px solid var(--line);border-radius:10px;padding:9px 14px;font-weight:600;}
+    .opcje.wiersz .opcja:has(input:checked){border-color:var(--red);background:#fff7f8;}
+    .pf-czl{font-size:14.5px;border-radius:10px;padding:10px 14px;margin:0 0 16px;}
+    .pf-czl.ok{background:#eaf7ee;border:1px solid #bfe5c9;color:#17612b;}
+    .pf-czl.info{background:var(--bg);border:1px solid var(--line);color:#4b5662;}
+    .pf-czl a{font-weight:700;}
+    .pf-msg{border-radius:10px;padding:12px 16px;margin:0 0 16px;font-size:15px;background:#fdecef;border:1px solid #f3c4cc;color:#8f0019;}
+    .pf-msg:empty{display:none;}
+    .pf-wyslij{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:0 0 10px;}
+    .pf-wyslij small{color:var(--muted);font-size:13.5px;flex:1 1 260px;}
+    .pf-ok{border:1px solid #bfe5c9;background:#f2fbf4;border-radius:14px;padding:26px 26px 20px;margin:0 0 20px;}
+    .pf-ok h2{margin:0 0 8px;font-size:23px;color:#17612b;}
+    .pf-ok .nr{font-size:18px;margin:0 0 12px;}.pf-ok .nr b{font-size:21px;}
+    .pf-ok p{margin:0 0 12px;}
+    .site-foot{background:var(--ink);color:rgba(255,255,255,.75);margin-top:44px;padding:40px 0 26px;}.foot-in{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;}.site-foot strong{color:#fff;}.site-foot a{color:#fff;}.foot-soc a{display:inline-block;margin-left:14px;}@media(max-width:760px){.nav{display:none;}}
+  </style>
+  <link rel="stylesheet" href="/_assets/css/gig-subhead.css">
+<!--GIG-SEO--><meta property="og:type" content="website">
+<meta property="og:site_name" content="Geodezyjna Izba Gospodarcza">
+<meta property="og:title" content="Zadaj pytanie albo zgłoś problem: Zapytaj Izbę">
+<meta property="og:url" content="https://gig.org.pl/pytania/zadaj/">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:description" content="Zadaj pytanie ekspertom Geodezyjnej Izby Gospodarczej, zgłoś problem z praktyki albo zaproponuj zmianę przepisu. Pytania publikujemy po redakcji, anonimowo albo z wybranym podpisem.">
+<meta property="og:image" content="https://gig.org.pl/_assets/img/gig-og.png">
+<meta name="twitter:card" content="summary_large_image"><!--/GIG-SEO-->
+</head>
+<body>
+  <header class="site-head"><div class="wrap head-in"><a class="logo" href="/"><img src="/wp-content/uploads/2026/04/gig-logo-new-poziom-dark.svg" alt="Geodezyjna Izba Gospodarcza"></a><nav class="nav"><a href="/">Home</a><span class="nav-item"><a href="/o-nas/">O nas</a><span class="nav-sub"><a href="/czlonkowie/">Członkowie</a></span></span><span class="nav-item"><a href="/baza-wiedzy/aktualnosci-gig/">Aktualności</a><span class="nav-sub"><a href="/nadchodzace-wydarzenia/">Nadchodzące wydarzenia</a></span></span><span class="nav-item"><a href="/baza-wiedzy/">Baza wiedzy</a><span class="nav-sub"><a href="/baza-wiedzy/artykuly/">Artykuły</a><a href="https://sluzbageodezyjna.gugik.gov.pl/" target="_blank" rel="noopener">Służba geodezyjna</a><a href="https://znajdzgeodete.gugik.gov.pl/" target="_blank" rel="noopener">Znajdź geodetę</a><a href="/biuletyn-gig/">Biuletyn</a><a href="/baza-wiedzy/z-firm-czlonkowskich/">Z firm członkowskich</a></span></span><span class="nav-item"><a href="/pytania/" class="active">Zapytaj Izbę</a><span class="nav-sub"><a href="/pytania/">Pytania i odpowiedzi</a><a href="/pytania/zadaj/" class="active">Zadaj pytanie</a><a href="/stanowiska/">Głos Izby</a></span></span><a href="/szkolenia/">Szkolenia</a><span class="nav-item"><a href="/kontakt/">Kontakt</a><span class="nav-sub"><a href="/dolacz-do-nas/">Dołącz do nas</a></span></span></nav><a class="head-phone" href="tel:+48228273843"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z"/></svg> +48 22 / 827 38 43</a></div></header>
+
+  <main>
+    <section class="pyt-hero"><div class="wrap">
+      <div class="a-crumbs"><a href="/baza-wiedzy/">Baza wiedzy</a> › <a href="/pytania/">Zapytaj Izbę</a> › Zadaj pytanie</div>
+      <h1>Zadaj pytanie albo zgłoś problem</h1>
+      <p class="lead">Pytać może każdy: geodeta, urzędnik, inwestor. Biuro Izby redaguje pytanie, ekspert przygotowuje odpowiedź i publikujemy ją na stronie, anonimowo albo z podpisem, który wybierzesz. Pola oznaczone <span style="color:#cc0a2b">*</span> są obowiązkowe.</p>
+    </div></section>
+
+    <div class="pf-main">
+      <div class="pf-ok" id="pfOk" hidden tabindex="-1">
+        <h2>Dziękujemy, zgłoszenie przyjęte</h2>
+        <p class="nr">Numer zgłoszenia: <b id="pfNumer"></b></p>
+        <div id="pfDalej"></div>
+        <p><a href="/pytania/">← Wróć do: Zapytaj Izbę</a></p>
+      </div>
+
+      <form class="pf-form" id="pfForm" novalidate>
+        <div style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true"><label>Nie wypełniaj <input type="text" id="gigWww" name="gig-www" tabindex="-1" autocomplete="off"></label></div>
+
+        <fieldset>
+          <legend>Twoje zgłoszenie</legend>
+          <div class="pole">
+            <span class="et" id="etRodzaj">Co zgłaszasz? <span class="wym">*</span></span>
+            <div class="opcje wiersz" role="radiogroup" aria-labelledby="etRodzaj">
+              <label class="opcja"><input type="radio" name="rodzaj" value="pytanie" checked> Pytanie</label>
+              <label class="opcja"><input type="radio" name="rodzaj" value="problem"> Problem z praktyki</label>
+              <label class="opcja"><input type="radio" name="rodzaj" value="postulat"> Propozycja zmiany przepisu</label>
+            </div>
+          </div>
+          <div class="pole">
+            <label for="tresc"><span id="etTresc">Treść pytania</span> <span class="wym">*</span><span class="licz" id="trescLicz">0 / 4900</span></label>
+            <textarea id="tresc" name="tresc" maxlength="4900" required aria-describedby="trescPodp"></textarea>
+            <p class="podp" id="trescPodp">Nie podawaj nazwisk, numerów działek ani ksiąg wieczystych: nie są nam potrzebne.</p>
+          </div>
+          <div class="rzad">
+            <div class="pole">
+              <label for="temat">Temat <span class="wym">*</span></label>
+              <select id="temat" name="temat" required><option value="">wybierz</option></select>
+            </div>
+            <div class="pole">
+              <label for="wojewodztwo">Województwo <span class="opc">(opcjonalnie)</span></label>
+              <select id="wojewodztwo" name="wojewodztwo"><option value="">nie podaję</option></select>
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>O Tobie</legend>
+          <div class="rzad">
+            <div class="pole">
+              <label for="rola">Kim jesteś? <span class="wym">*</span></label>
+              <select id="rola" name="rola" required><option value="">wybierz</option></select>
+            </div>
+            <div class="pole">
+              <label for="email">E-mail <span class="wym">*</span></label>
+              <input type="email" id="email" name="email" required autocomplete="email" maxlength="200" aria-describedby="emailPodp">
+              <p class="podp" id="emailPodp">Nie publikujemy. Na ten adres wyślemy potwierdzenie i informację o odpowiedzi.</p>
+            </div>
+          </div>
+          <div class="rzad">
+            <div class="pole">
+              <label for="imie">Imię i nazwisko <span class="opc">(opcjonalnie)</span></label>
+              <input type="text" id="imie" name="imie" autocomplete="name" maxlength="200">
+            </div>
+            <div class="pole">
+              <label for="organizacja">Firma lub urząd <span class="opc">(opcjonalnie)</span></label>
+              <input type="text" id="organizacja" name="organizacja" autocomplete="organization" maxlength="300">
+            </div>
+          </div>
+          <div class="pole" style="max-width:300px">
+            <label for="nip">NIP firmy <span class="opc">(opcjonalnie)</span></label>
+            <input type="text" id="nip" name="nip" inputmode="numeric" maxlength="13" autocomplete="off" aria-describedby="nipPodp">
+            <p class="podp" id="nipPodp">Po NIP-ie rozpoznajemy firmy członkowskie GIG.</p>
+          </div>
+          <div class="pf-czl" id="pfCzl" role="status" hidden></div>
+          <div class="pole" id="poleTylko" hidden>
+            <label class="opcja"><input type="checkbox" id="tylko_dla_mnie" name="tylko_dla_mnie"> <span>Proszę o odpowiedź tylko dla mnie, bez publikacji<span id="tylkoDopisek" hidden> (uwzględnimy po potwierdzeniu członkostwa)</span></span></label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend>Publikacja</legend>
+          <div class="pole">
+            <span class="et" id="etPodpis">Podpis przy publikacji pytania</span>
+            <div class="opcje" role="radiogroup" aria-labelledby="etPodpis">
+              <label class="opcja"><input type="radio" name="podpis_zakres" value="anonim" checked> Anonimowo (pokażemy tylko, kim jesteś, np. „geodeta wykonawca”)</label>
+              <label class="opcja"><input type="radio" name="podpis_zakres" value="osoba"> Imię i nazwisko</label>
+              <label class="opcja"><input type="radio" name="podpis_zakres" value="organizacja"> Firma lub urząd</label>
+              <label class="opcja"><input type="radio" name="podpis_zakres" value="oba"> Imię i nazwisko oraz firma lub urząd</label>
+            </div>
+          </div>
+          <div class="rzad">
+            <div class="pole" id="polePodpisOsoba" hidden>
+              <label for="podpis_osoba">Podpis: imię i nazwisko <span class="wym">*</span></label>
+              <input type="text" id="podpis_osoba" name="podpis_osoba" maxlength="200">
+            </div>
+            <div class="pole" id="polePodpisOrg" hidden>
+              <label for="podpis_organizacja">Podpis: firma lub urząd <span class="wym">*</span></label>
+              <input type="text" id="podpis_organizacja" name="podpis_organizacja" maxlength="300">
+            </div>
+          </div>
+          <div class="pole">
+            <label class="opcja"><input type="checkbox" id="nie_ujawniac" name="nie_ujawniac"> Nie ujawniajcie mojej firmy ani urzędu także przy przekazaniu sprawy do GUGiK lub WINGiK</label>
+          </div>
+          <div class="pole">
+            <label class="opcja"><input type="checkbox" id="zgoda" name="zgoda" required> <span>Zgadzam się na przetwarzanie danych w celu udzielenia odpowiedzi i na publikację pytania po redakcji: anonimowo albo z podpisem, który wybrałem. <span class="wym">*</span></span></label>
+          </div>
+        </fieldset>
+
+        <div class="pf-msg" id="pfMsg" role="alert" aria-live="assertive"></div>
+        <div class="pf-wyslij">
+          <button type="submit" class="btn" id="pfBtn">Wyślij zgłoszenie</button>
+          <small>Administratorem danych jest Geodezyjna Izba Gospodarcza, ul. Czackiego 3/5, 00-043 Warszawa. Kontakt: <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</small>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-foot"><div class="wrap foot-in">
+    <div>
+      <strong>Geodezyjna Izba Gospodarcza</strong><br>
+      ul. Czackiego 3/5, 00-043 Warszawa<br>
+      tel. 22 827 38 43 · <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a><br>
+      eDoręczenia: AE:PL-54372-78798-CHRDS-30
+    </div>
+    <div class="foot-soc">
+      <a href="https://www.facebook.com/gigorgpl" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://www.linkedin.com/company/gig-geodezyjna-izba-gospodarcza" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div></footer>
+
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/_assets/js/pytania-slownik.js"></script>
+  <script>
+  /* Formularz „Zapytaj Izbę”: wysyłka do Edge Function `pytanie-zglos` (zapis + maile po stronie funkcji).
+     Parametry adresu: ?rodzaj=problem|postulat|pytanie (ustawia rodzaj), ?zrodlo=forum (pierwsza linia treści „[z Forum]”). */
+  (function () {
+    "use strict";
+    var CFG = window.GIG_CFG || {}, S = window.GIG_PYTANIA || {};
+    var T0 = Date.now(), MIN_CZAS = 4500;            // funkcja odrzuca po cichu zgłoszenia szybsze niż 4 s
+    var BIURO = 'Napisz do nas: <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.';
+    var form = document.getElementById("pfForm"), msg = document.getElementById("pfMsg"), btn = document.getElementById("pfBtn");
+    var par = new URLSearchParams(location.search);
+    var zForum = (par.get("zrodlo") || "").toLowerCase() === "forum";
+
+    function el(id) { return document.getElementById(id); }
+    function val(id) { return (el(id).value || "").trim(); }
+    function esc(s) { return (s == null ? "" : String(s)).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+    function wybrane(nazwa) { var r = form.querySelector('input[name="' + nazwa + '"]:checked'); return r ? r.value : ""; }
+    function opcje(sel, lista) {
+      (lista || []).forEach(function (t) { var o = document.createElement("option"); o.value = t; o.textContent = t; sel.appendChild(o); });
+    }
+    opcje(el("temat"), S.TEMATY); opcje(el("rola"), S.ROLE); opcje(el("wojewodztwo"), S.WOJEWODZTWA);
+
+    /* ---------- rodzaj zgłoszenia ---------- */
+    var ET_TRESC = { pytanie: "Treść pytania", problem: "Opis problemu", postulat: "Propozycja zmiany przepisu i uzasadnienie" };
+    function poRodzaju() { el("etTresc").textContent = ET_TRESC[wybrane("rodzaj")] || ET_TRESC.pytanie; }
+    var rodzajZAdresu = (par.get("rodzaj") || "").toLowerCase();
+    if (ET_TRESC[rodzajZAdresu]) form.querySelector('input[name="rodzaj"][value="' + rodzajZAdresu + '"]').checked = true;
+    Array.prototype.forEach.call(form.querySelectorAll('input[name="rodzaj"]'), function (r) { r.addEventListener("change", poRodzaju); });
+    poRodzaju();
+
+    /* ---------- licznik znaków ---------- */
+    var tresc = el("tresc");
+    function licz() { el("trescLicz").textContent = tresc.value.length + " / " + tresc.maxLength; }
+    tresc.addEventListener("input", licz); licz();
+
+    /* ---------- podpis przy publikacji ---------- */
+    function poPodpisie() {
+      var z = wybrane("podpis_zakres");
+      var os = z === "osoba" || z === "oba", org = z === "organizacja" || z === "oba";
+      el("polePodpisOsoba").hidden = !os; el("polePodpisOrg").hidden = !org;
+      if (os && !val("podpis_osoba")) el("podpis_osoba").value = val("imie");
+      if (org && !val("podpis_organizacja")) el("podpis_organizacja").value = val("organizacja");
+    }
+    Array.prototype.forEach.call(form.querySelectorAll('input[name="podpis_zakres"]'), function (r) { r.addEventListener("change", poPodpisie); });
+    poPodpisie();
+
+    /* ---------- członek GIG: sprawdzenie na żywo (ta sama funkcja bazy co w /zapisy/) ----------
+       Formularz uznaje za pewne tylko to, co uzna funkcja pytanie-zglos: adres e-mail członka z katalogu
+       albo NIP + firmowa domena adresu. Sam NIP (jawny w katalogu) to "do potwierdzenia" przez biuro,
+       a sama domena bez NIP-u nie daje nic poza podpowiedzią, żeby podać NIP.
+       czlonek: "pewny" | "do_potwierdzenia" | null */
+    var czlonek = null, domenaCzl = false, nrSpr = 0, zegar = null, boxCzl = el("pfCzl");
+    function nipCyfry() { return val("nip").replace(/\D/g, ""); }
+    function rysujCzl() {
+      el("poleTylko").hidden = !czlonek;
+      if (!czlonek) el("tylko_dla_mnie").checked = false;
+      el("tylkoDopisek").hidden = czlonek !== "do_potwierdzenia";
+      if (czlonek === "pewny") {
+        boxCzl.className = "pf-czl ok";
+        boxCzl.textContent = "Rozpoznaliśmy firmę członkowską GIG: pierwszeństwo i odpowiedź indywidualna.";
+        boxCzl.hidden = false;
+      } else if (czlonek === "do_potwierdzenia") {
+        boxCzl.className = "pf-czl info";
+        boxCzl.textContent = "Ten NIP należy do firmy członkowskiej GIG. Adresu e-mail nie rozpoznaliśmy jako firmowego, więc biuro potwierdzi członkostwo. Po potwierdzeniu zgłoszenie dostanie pierwszeństwo i odpowiedź indywidualną. Podaj adres firmowy, jeśli go masz.";
+        boxCzl.hidden = false;
+      } else if (domenaCzl) {
+        boxCzl.className = "pf-czl info";
+        boxCzl.textContent = "Adres wygląda na firmowy adres członka Izby. Podaj NIP firmy, a zgłoszenie dostanie pierwszeństwo i odpowiedź indywidualną.";
+        boxCzl.hidden = false;
+      } else if (val("rola") === "geodeta wykonawca") {
+        boxCzl.className = "pf-czl info";
+        boxCzl.innerHTML = 'Członkowie Izby mają pierwszeństwo i zawsze dostają odpowiedź indywidualną. <a href="/dolacz-do-nas/">Dołącz</a>';
+        boxCzl.hidden = false;
+      } else { boxCzl.hidden = true; boxCzl.textContent = ""; }
+    }
+    function rpcCzlonek(nip, mail) {
+      return fetch(CFG.SUPABASE_URL + "/rest/v1/rpc/gig_dopasuj_czlonka", {
+        method: "POST",
+        headers: { apikey: CFG.SUPABASE_ANON, Authorization: "Bearer " + CFG.SUPABASE_ANON, "Content-Type": "application/json" },
+        body: JSON.stringify({ p_nip: nip || null, p_email: mail || null, p_nazwa: null, p_nip2: null })
+      }).then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+        .then(function (d) { var w = Array.isArray(d) ? d[0] : d; return w && w.id ? { id: w.id, sposob: String(w.sposob || "") } : null; });
+    }
+    function ustawCzl(stan, dom) { czlonek = stan; domenaCzl = !!dom; rysujCzl(); }
+    function sprawdzCzlonka() {
+      var nip = nipCyfry(), mail = val("email").toLowerCase();
+      if (nip.length !== 10) nip = "";
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)) mail = "";
+      var nr = ++nrSpr;
+      if (!nip && !mail) { ustawCzl(null, false); return; }
+      rpcCzlonek(nip, mail).then(function (w) {
+        if (nr !== nrSpr) return;                    // nowsze sprawdzenie w toku
+        if (!w) return ustawCzl(null, false);
+        if (w.sposob === "e-mail") return ustawCzl("pewny", false);
+        if (w.sposob === "domena e-mail") return ustawCzl(null, true);
+        if (w.sposob !== "NIP") return ustawCzl(null, false);
+        if (!mail) return ustawCzl("do_potwierdzenia", false);
+        /* NIP trafiony: pewny tylko wtedy, gdy sam adres e-mail wskazuje tę samą firmę */
+        return rpcCzlonek("", mail).then(function (w2) {
+          if (nr !== nrSpr) return;
+          var zgodny = w2 && w2.id === w.id && (w2.sposob === "e-mail" || w2.sposob === "domena e-mail");
+          ustawCzl(zgodny ? "pewny" : "do_potwierdzenia", false);
+        });
+      }).catch(function (e) { console.warn("czlonek:", e); if (nr === nrSpr) ustawCzl(null, false); });
+    }
+    function zaChwile() { clearTimeout(zegar); zegar = setTimeout(sprawdzCzlonka, 500); }
+    el("nip").addEventListener("input", function () { var n = nipCyfry().length; if (n === 10 || n === 0) zaChwile(); else if (czlonek || domenaCzl) { nrSpr++; ustawCzl(null, false); } });
+    el("nip").addEventListener("change", zaChwile);
+    el("email").addEventListener("change", zaChwile);
+    el("rola").addEventListener("change", rysujCzl);
+
+    /* ---------- wysyłka ---------- */
+    function blad(html, pole) {
+      msg.innerHTML = html;
+      if (pole) { pole.classList.add("zle"); try { pole.focus(); } catch (e) {} }
+      else msg.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+    function czysc() {
+      msg.innerHTML = "";
+      Array.prototype.forEach.call(form.querySelectorAll(".zle"), function (p) { p.classList.remove("zle"); });
+    }
+    function czekaj(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+    function odblokuj() { btn.disabled = false; btn.textContent = "Wyślij zgłoszenie"; }
+
+    /* stan: "pewny" | "do_potwierdzenia" | null (wg odpowiedzi funkcji, nie wg podpowiedzi na żywo) */
+    function sukces(numer, stan, tylko) {
+      el("pfNumer").textContent = numer;
+      el("pfDalej").innerHTML = stan === "pewny"
+        ? '<p>Rozpoznaliśmy firmę członkowską GIG. Zgłoszenie ma pierwszeństwo, a odpowiedź indywidualną wyślemy na podany adres e-mail.</p>'
+        : stan === "do_potwierdzenia"
+        ? '<p>Potwierdzenie wysłaliśmy na podany adres e-mail. Podany NIP należy do firmy członkowskiej Izby, ale adresu e-mail nie rozpoznaliśmy jako firmowego. Biuro potwierdzi członkostwo, a wtedy zgłoszenie dostanie pierwszeństwo i odpowiedź indywidualną.</p>' +
+          (tylko ? '<p>Prośbę o odpowiedź bez publikacji przekazaliśmy biuru. Uwzględnimy ją po potwierdzeniu członkostwa.</p>' : '')
+        : '<p>Potwierdzenie wysłaliśmy na podany adres e-mail. Odpowiedzi publikujemy na stronie <a href="/pytania/">Zapytaj Izbę</a>. Damy znać, gdy pojawi się odpowiedź na Twoje zgłoszenie.</p>' +
+          (tylko ? '<p>Opcja „tylko dla mnie” jest dla członków Izby, a członkostwa nie rozpoznaliśmy. Jeśli pytanie nie powinno być publikowane, napisz do nas: <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a>.</p>' : '') +
+          '<p>Członkowie Izby mają pierwszeństwo i zawsze dostają odpowiedź indywidualną. <a href="/dolacz-do-nas/">Dołącz do Izby</a></p>';
+      form.hidden = true;
+      var ok = el("pfOk"); ok.hidden = false;
+      try { ok.focus(); } catch (e) {}
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    form.addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      czysc();
+      var tekst = val("tresc"), mail = val("email"), nip = nipCyfry(), zakres = wybrane("podpis_zakres") || "anonim";
+      if (tekst.length < 10) return blad("Opisz pytanie albo problem (co najmniej 10 znaków).", tresc);
+      if (!val("temat")) return blad("Wybierz temat. Jeśli żaden nie pasuje, wybierz „Inne”.", el("temat"));
+      if (!val("rola")) return blad("Wybierz, kim jesteś.", el("rola"));
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(mail)) return blad("Podaj poprawny adres e-mail.", el("email"));
+      if (nip && nip.length !== 10) return blad("NIP powinien mieć 10 cyfr. Możesz też zostawić to pole puste.", el("nip"));
+      if ((zakres === "osoba" || zakres === "oba") && !val("podpis_osoba")) return blad("Wpisz imię i nazwisko do podpisu albo wybierz publikację anonimową.", el("podpis_osoba"));
+      if ((zakres === "organizacja" || zakres === "oba") && !val("podpis_organizacja")) return blad("Wpisz nazwę firmy lub urzędu do podpisu albo wybierz publikację anonimową.", el("podpis_organizacja"));
+      if (!el("zgoda").checked) return blad("Zaznacz zgodę na przetwarzanie danych i publikację pytania po redakcji.", el("zgoda"));
+
+      var dane = {
+        rodzaj: wybrane("rodzaj") || "pytanie",
+        tresc: (zForum ? "[z Forum]\n" : "") + tekst,
+        temat: val("temat"), rola: val("rola"), wojewodztwo: val("wojewodztwo") || null,
+        imie: val("imie") || null, email: mail, organizacja: val("organizacja") || null, nip: nip || null,
+        podpis_zakres: zakres,
+        podpis_osoba: (zakres === "osoba" || zakres === "oba") ? val("podpis_osoba") : null,
+        podpis_organizacja: (zakres === "organizacja" || zakres === "oba") ? val("podpis_organizacja") : null,
+        tylko_dla_mnie: !!czlonek && el("tylko_dla_mnie").checked,
+        nie_ujawniac: el("nie_ujawniac").checked,
+        zgoda: true,
+        www: el("gigWww").value || ""
+      };
+
+      btn.disabled = true; btn.textContent = "Wysyłam…";
+      var minelo = Date.now() - T0;
+      if (minelo < MIN_CZAS) await czekaj(MIN_CZAS - minelo);
+      dane.czas = Date.now() - T0;
+
+      var odp, j = null;
+      try {
+        odp = await fetch(CFG.SUPABASE_URL + "/functions/v1/pytanie-zglos", {
+          method: "POST",
+          headers: { apikey: CFG.SUPABASE_ANON, Authorization: "Bearer " + CFG.SUPABASE_ANON, "Content-Type": "application/json" },
+          body: JSON.stringify(dane)
+        });
+        try { j = await odp.json(); } catch (e2) { j = null; }
+      } catch (e) {
+        console.warn("pytanie-zglos:", e);
+        odblokuj();
+        return blad("Nie udało się wysłać zgłoszenia: brak połączenia z serwerem. Spróbuj ponownie za chwilę. " + BIURO);
+      }
+      if (odp.ok && j && j.ok && j.numer) {
+        sukces(j.numer, j.czlonek === true ? "pewny" : (j.czlonek_do_potwierdzenia === true ? "do_potwierdzenia" : null), dane.tylko_dla_mnie);
+        return;
+      }
+      odblokuj();
+      if (j && j.error) return blad(esc(j.error) + (odp.status === 429 || odp.status >= 500 ? " " + BIURO : ""));
+      /* { ok: true, numer: null } = funkcja nic nie zapisała; inne odpowiedzi = awaria */
+      blad("Nie udało się zapisać zgłoszenia. Spróbuj ponownie za chwilę. " + BIURO);
+    });
+  })();
+  </script>
+<script defer src="/_assets/js/gig-site.js"></script>
+</body>
+</html>

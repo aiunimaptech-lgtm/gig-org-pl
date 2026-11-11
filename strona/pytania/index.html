@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zapytaj Izbę: geodezja pyta, Izba odpowiada | GIG</title>
+  <meta name="description" content="Odpowiedzi ekspertów Geodezyjnej Izby Gospodarczej na pytania geodetów, urzędników i inwestorów: granice, podziały, zgłoszenia prac, EGiB, zamówienia publiczne. Zadaj swoje pytanie.">
+  <link rel="canonical" href="https://gig.org.pl/pytania/">
+  <link rel="icon" href="/wp-content/uploads/2026/04/favicon.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"></noscript>
+  <style>:root{--red:#cc0a2b;--ink:#16202a;--muted:#6b7884;--line:#e6ebef;--bg:#f4f6f8;}*{box-sizing:border-box;}[hidden]{display:none!important;}body{margin:0;font-family:Inter,-apple-system,'Segoe UI',Roboto,Arial,sans-serif;color:var(--ink);background:#fff;line-height:1.6;}a{color:var(--red);text-decoration:none;}a:hover{text-decoration:underline;}.wrap{max-width:1140px;margin:0 auto;padding:0 22px;}
+    .site-head{border-bottom:1px solid var(--line);position:sticky;top:0;background:rgba(255,255,255,.97);backdrop-filter:blur(6px);z-index:40;}.head-in{display:flex;align-items:center;justify-content:space-between;min-height:72px;gap:16px;}.head-in img{height:42px;width:auto;display:block;}.nav{display:flex;gap:22px;flex-wrap:wrap;}.nav a{color:var(--ink);font-weight:600;font-size:15px;}.nav a:hover,.nav a.active{color:var(--red);text-decoration:none;}
+    .btn{display:inline-block;background:var(--red);color:#fff;font-weight:700;padding:11px 22px;border-radius:10px;border:0;cursor:pointer;font-family:inherit;font-size:15px;}.btn:hover{filter:brightness(.93);text-decoration:none;color:#fff;}
+    .bw-loading{color:var(--muted);padding:10px 2px;}
+    /* hero */
+    .pyt-hero{background:linear-gradient(180deg,#fff,var(--bg));padding:34px 0 28px;border-bottom:1px solid var(--line);}
+    .a-crumbs{font-size:13px;color:var(--muted);margin-bottom:12px;}.a-crumbs a{color:var(--muted);}.a-crumbs a:hover{color:var(--red);}
+    .pyt-hero h1{font-size:clamp(28px,4.6vw,42px);line-height:1.15;margin:0 0 10px;}
+    .pyt-hero .lead{color:var(--muted);max-width:70ch;margin:0 0 20px;font-size:16.5px;}
+    .pyt-akcje{display:flex;gap:12px;flex-wrap:wrap;align-items:stretch;}
+    .pyt-szukaj{flex:1 1 320px;min-width:0;font:inherit;font-size:16px;padding:11px 14px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);}
+    .pyt-szukaj:focus,.pyt-filtry select:focus{outline:2px solid rgba(204,10,43,.25);border-color:var(--red);}
+    .pyt-czl{margin:14px 0 0;font-size:14.5px;color:#4b5662;}.pyt-czl a{font-weight:700;}
+    /* filtry */
+    .pyt-filtry{padding:22px 0 4px;}
+    .pyt-chipy{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;}
+    .pyt-chip{font:inherit;font-size:13.5px;font-weight:600;padding:7px 13px;border-radius:20px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer;}
+    .pyt-chip:hover{border-color:var(--red);color:var(--red);}
+    .pyt-chip[aria-pressed="true"]{background:var(--red);border-color:var(--red);color:#fff;}
+    .pyt-wybory{display:flex;gap:14px;flex-wrap:wrap;align-items:center;}
+    .pyt-wybory label{font-size:13.5px;font-weight:600;color:#4b5662;display:inline-flex;align-items:center;gap:8px;}
+    .pyt-wybory select{font:inherit;font-size:14.5px;padding:8px 10px;border:1.5px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);max-width:100%;}
+    .pyt-licznik{margin-left:auto;font-size:13.5px;color:var(--muted);}
+    /* karty */
+    .pyt-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;padding:18px 0 8px;}
+    @media(max-width:980px){.pyt-grid{grid-template-columns:repeat(2,1fr);}}@media(max-width:640px){.pyt-grid{grid-template-columns:1fr;}}
+    .pyt-grid .bw-loading,.pyt-brak{grid-column:1/-1;}
+    .pyt-card{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-top:4px solid var(--red);border-radius:12px;padding:16px 18px 16px;box-shadow:0 6px 18px rgba(20,40,60,.06);transition:transform .15s,box-shadow .15s;color:var(--ink);}
+    .pyt-card:hover{transform:translateY(-3px);box-shadow:0 16px 34px rgba(20,40,60,.14);text-decoration:none;}
+    .pyt-card.pyt-opracowanie{border-top-color:#1f4e79;}.pyt-card.pyt-stanowisko{border-top-color:var(--ink);}
+    .pyt-card[hidden]{display:none;}
+    .pyt-top{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 8px;}
+    .pyt-badge{display:inline-block;font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 10px;border-radius:20px;}
+    .pyt-b-odpowiedz{background:#fdecef;color:#b3001e;}.pyt-b-opracowanie{background:#e8f1fb;color:#1f4e79;}.pyt-b-stanowisko{background:var(--ink);color:#fff;}
+    .pyt-temat{font-size:12.5px;font-weight:600;color:var(--muted);}
+    .pyt-card h3{font-size:17px;line-height:1.35;margin:0 0 8px;color:var(--ink);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
+    .pyt-skrot{font-size:14px;color:#4b5662;margin:0 0 14px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;}
+    .pyt-meta{margin-top:auto;padding-top:10px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:2px;font-size:13px;color:var(--muted);}
+    .pyt-autor{color:var(--ink);font-weight:600;}.pyt-autor em{font-style:normal;font-weight:600;font-size:11.5px;color:#1f4e79;background:#e8f1fb;border-radius:20px;padding:1px 8px;margin-left:4px;white-space:nowrap;}
+    /* jak to działa */
+    .pyt-jak{margin:34px 0 0;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:24px 26px;}
+    .pyt-jak h2{font-size:20px;margin:0 0 16px;}
+    .pyt-kroki{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin:0;padding:0;list-style:none;counter-reset:krok;}
+    @media(max-width:900px){.pyt-kroki{grid-template-columns:repeat(2,1fr);}}@media(max-width:520px){.pyt-kroki{grid-template-columns:1fr;}}
+    .pyt-kroki li{counter-increment:krok;font-size:14.5px;color:#4b5662;}
+    .pyt-kroki li::before{content:counter(krok);display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;background:var(--red);color:#fff;font-weight:700;font-size:14px;margin:0 0 8px;}
+    .pyt-kroki b{display:block;color:var(--ink);font-size:15.5px;margin:0 0 2px;}
+    .pyt-glos{margin:18px 0 0;font-weight:700;}
+    .site-foot{background:var(--ink);color:rgba(255,255,255,.75);margin-top:54px;padding:40px 0 26px;}.foot-in{display:flex;justify-content:space-between;gap:30px;flex-wrap:wrap;}.site-foot strong{color:#fff;}.site-foot a{color:#fff;}.foot-soc a{display:inline-block;margin-left:14px;}@media(max-width:760px){.nav{display:none;}.pyt-licznik{margin-left:0;width:100%;}}
+  </style>
+  <link rel="stylesheet" href="/_assets/css/gig-subhead.css">
+<!--GIG-SEO--><meta property="og:type" content="website">
+<meta property="og:site_name" content="Geodezyjna Izba Gospodarcza">
+<meta property="og:title" content="Zapytaj Izbę: geodezja pyta, Izba odpowiada">
+<meta property="og:url" content="https://gig.org.pl/pytania/">
+<meta property="og:locale" content="pl_PL">
+<meta property="og:description" content="Odpowiedzi ekspertów Geodezyjnej Izby Gospodarczej na pytania geodetów, urzędników i inwestorów: granice, podziały, zgłoszenia prac, EGiB, zamówienia publiczne. Zadaj swoje pytanie.">
+<meta property="og:image" content="https://gig.org.pl/_assets/img/gig-og.png">
+<meta name="twitter:card" content="summary_large_image"><!--/GIG-SEO-->
+</head>
+<body>
+  <header class="site-head"><div class="wrap head-in"><a class="logo" href="/"><img src="/wp-content/uploads/2026/04/gig-logo-new-poziom-dark.svg" alt="Geodezyjna Izba Gospodarcza"></a><nav class="nav"><a href="/">Home</a><span class="nav-item"><a href="/o-nas/">O nas</a><span class="nav-sub"><a href="/czlonkowie/">Członkowie</a></span></span><span class="nav-item"><a href="/baza-wiedzy/aktualnosci-gig/">Aktualności</a><span class="nav-sub"><a href="/nadchodzace-wydarzenia/">Nadchodzące wydarzenia</a></span></span><span class="nav-item"><a href="/baza-wiedzy/">Baza wiedzy</a><span class="nav-sub"><a href="/baza-wiedzy/artykuly/">Artykuły</a><a href="https://sluzbageodezyjna.gugik.gov.pl/" target="_blank" rel="noopener">Służba geodezyjna</a><a href="https://znajdzgeodete.gugik.gov.pl/" target="_blank" rel="noopener">Znajdź geodetę</a><a href="/biuletyn-gig/">Biuletyn</a><a href="/baza-wiedzy/z-firm-czlonkowskich/">Z firm członkowskich</a></span></span><span class="nav-item"><a href="/pytania/" class="active">Zapytaj Izbę</a><span class="nav-sub"><a href="/pytania/" class="active">Pytania i odpowiedzi</a><a href="/pytania/zadaj/">Zadaj pytanie</a><a href="/stanowiska/">Głos Izby</a></span></span><a href="/szkolenia/">Szkolenia</a><span class="nav-item"><a href="/kontakt/">Kontakt</a><span class="nav-sub"><a href="/dolacz-do-nas/">Dołącz do nas</a></span></span></nav><a class="head-phone" href="tel:+48228273843"><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.3 1l-2.2 2.2z"/></svg> +48 22 / 827 38 43</a></div></header>
+
+  <main>
+    <section class="pyt-hero"><div class="wrap">
+      <div class="a-crumbs"><a href="/baza-wiedzy/">Baza wiedzy</a> › Zapytaj Izbę</div>
+      <h1>Geodezja pyta, Izba odpowiada</h1>
+      <p class="lead">Odpowiedzi ekspertów Izby na pytania z praktyki: z formularza, ze szkoleń i ze spotkań z administracją geodezyjną.</p>
+      <div class="pyt-akcje">
+        <input class="pyt-szukaj" id="pytSzukaj" type="search" placeholder="Szukaj w odpowiedziach, np. wznowienie znaków, operat, art. 39" aria-label="Szukaj w odpowiedziach" autocomplete="off">
+        <a class="btn" href="/pytania/zadaj/">Zadaj pytanie / zgłoś problem</a>
+      </div>
+      <p class="pyt-czl">Członkowie GIG mają pierwszeństwo i zawsze dostają odpowiedź indywidualną. <a href="/dolacz-do-nas/">Dołącz do Izby</a></p>
+    </div></section>
+
+    <div class="wrap">
+      <div class="pyt-filtry" id="pytFiltry" hidden>
+        <div class="pyt-chipy" id="pytTematy" role="group" aria-label="Temat"></div>
+        <div class="pyt-wybory">
+          <label>Rodzaj <select id="pytRodzaj"><option value="">wszystkie</option></select></label>
+          <label id="pytWydarzenieEt" hidden>Wydarzenie <select id="pytWydarzenie"><option value="">wszystkie</option></select></label>
+          <span class="pyt-licznik" id="pytLicznik" aria-live="polite"></span>
+        </div>
+      </div>
+
+      <div class="pyt-grid" id="pytania-lista"><!--PRERENDER:pytania-lista--><a class="pyt-card pyt-odpowiedz" href="/pytania/kilka-nieruchomosci-w-jednej-pracy-geodezyjnej/" data-rodzaj="odpowiedz" data-temat="Podziały nieruchomości" data-wydarzenie="Warsztaty GIG „Procedury geodezyjno-prawne określania granic gruntów”, 8.10.2026" data-szukaj="czy podział kilku nieruchomości można objąć jednym zgłoszeniem i jednym operatem? czy w jednej pracy geodezyjnej, na jednym zgłoszeniu i jednej mapie z projektem podziału, można opracować podział kilku nieruchomości? kiedy kilka działek da się dzielić razem, a kiedy potrzebne są odrębne prace? zasada brzmi: jedno zgłoszenie, jedna mapa z projektem podziału, jedna nieruchomość objęta jednym postępowaniem. kilka przylegających działek tej samej nieruchomości można dzielić razem, ale działki tej samej księgi oddalone od siebie to już odrębne podziały. gdy zmienia się tylko układ działek, a nie ich liczba, bezpieczniej najpierw połączyć działki w ewidencji, a dopiero potem zgłosić podział. zespół ekspercki gig podziały nieruchomości"><div class="pyt-top"><span class="pyt-badge pyt-b-odpowiedz">Odpowiedź</span><span class="pyt-temat">Podziały nieruchomości</span></div><h3>Czy podział kilku nieruchomości można objąć jednym zgłoszeniem i jednym operatem?</h3><p class="pyt-skrot">Zasada brzmi: jedno zgłoszenie, jedna mapa z projektem podziału, jedna nieruchomość objęta jednym postępowaniem. Kilka przylegających działek tej samej nieruchomości można dzielić razem, ale działki tej samej księgi…</p><div class="pyt-meta"><span class="pyt-autor">Zespół Ekspercki GIG</span><span class="pyt-zrodlo">z warsztatów GIG o granicach gruntów 8.10.2026</span><span class="pyt-data">11 listopada 2026</span></div></a><a class="pyt-card pyt-odpowiedz" href="/pytania/znaku-nie-ma-palik-wznowienie-czy-wyznaczenie/" data-rodzaj="odpowiedz" data-temat="Granice i wznowienia" data-wydarzenie="Warsztaty GIG „Procedury geodezyjno-prawne określania granic gruntów”, 8.10.2026" data-szukaj="znaku granicznego nie odnaleziono, a punkt oznaczono palikiem: czy to wznowienie znaku? geodeta nie odnalazł znaku granicznego i oznaczył położenie punktu palikiem drewnianym. czy taką czynność można nazwać wznowieniem znaku granicznego i tak ją zaprotokołować, czy jest to wyznaczenie punktu granicznego? nie. wznowienie polega na fizycznym odtworzeniu znaku z trwałego materiału, więc „wznowienie palikiem” jest sprzecznością samą w sobie. punkt formalnie zastabilizowany się wznawia, a niestabilizowany wyznacza. gdy strony chcą tylko zamarkowania, protokół opisuje fakty i zawiera pouczenie, że palik znakiem nie jest. zespół ekspercki gig granice i wznowienia"><div class="pyt-top"><span class="pyt-badge pyt-b-odpowiedz">Odpowiedź</span><span class="pyt-temat">Granice i wznowienia</span></div><h3>Znaku granicznego nie odnaleziono, a punkt oznaczono palikiem: czy to wznowienie znaku?</h3><p class="pyt-skrot">Nie. Wznowienie polega na fizycznym odtworzeniu znaku z trwałego materiału, więc „wznowienie palikiem” jest sprzecznością samą w sobie. Punkt formalnie zastabilizowany się wznawia, a niestabilizowany wyznacza. Gdy…</p><div class="pyt-meta"><span class="pyt-autor">Zespół Ekspercki GIG</span><span class="pyt-zrodlo">z warsztatów GIG o granicach gruntów 8.10.2026</span><span class="pyt-data">11 listopada 2026</span></div></a><a class="pyt-card pyt-odpowiedz" href="/pytania/granica-sporna-ewidencja-i-podzial-dzialki/" data-rodzaj="odpowiedz" data-temat="Granice i wznowienia" data-wydarzenie="Warsztaty GIG „Procedury geodezyjno-prawne określania granic gruntów”, 8.10.2026" data-szukaj="kiedy granica jest sporna i co z tego wynika dla ewidencji oraz podziału działki? kiedy granicę należy uznać za sporną? co w takiej sytuacji trafia do ewidencji gruntów i budynków, czy spór blokuje podział działki i czy punkty spornej granicy można stabilizować? granica jest sporna, gdy obecni wskazują różne przebiegi albo ktoś kwestionuje przebieg wskazany przez drugą stronę lub przez geodetę. spór nie przerywa czynności: granica zostaje ustalona według § 33 ust. 2 albo 3 i trafia do bazy jako ustalona. spór formalnie nie blokuje też podziału, choć organ może zawiesić postępowanie do czasu rozgraniczenia. § 33 ust. 2 i 3 rozporządzenia w sprawie ewidencji gruntów i budynków zespół ekspercki gig granice i wznowienia"><div class="pyt-top"><span class="pyt-badge pyt-b-odpowiedz">Odpowiedź</span><span class="pyt-temat">Granice i wznowienia</span></div><h3>Kiedy granica jest sporna i co z tego wynika dla ewidencji oraz podziału działki?</h3><p class="pyt-skrot">Granica jest sporna, gdy obecni wskazują różne przebiegi albo ktoś kwestionuje przebieg wskazany przez drugą stronę lub przez geodetę. Spór nie przerywa czynności: granica zostaje ustalona według § 33 ust. 2 albo 3 i…</p><div class="pyt-meta"><span class="pyt-autor">Zespół Ekspercki GIG</span><span class="pyt-zrodlo">z warsztatów GIG o granicach gruntów 8.10.2026</span><span class="pyt-data">11 listopada 2026</span></div></a><a class="pyt-card pyt-odpowiedz" href="/pytania/podzial-rolny-kiedy-stabilizowac-punkty/" data-rodzaj="odpowiedz" data-temat="Podziały nieruchomości" data-wydarzenie="Warsztaty GIG „Procedury geodezyjno-prawne określania granic gruntów”, 8.10.2026" data-szukaj="kiedy stabilizować punkty graniczne ustalone i punkty z podziału w trybie rolnym? kiedy można trwale zastabilizować punkty graniczne po ustaleniu przebiegu granic? czy przy podziale w trybie rolnym nowe punkty graniczne wolno stabilizować już w trakcie prac? od 31 grudnia 2024 r. przy ustaleniu punkty tylko się oznacza, a trwale stabilizuje się punkty ustalone bezspornie, po ich ujawnieniu w ewidencji i za zgodą uczestników. przy podziale rolnym stabilizacja w trakcie prac nie ma podstawy: najpierw mapa, weryfikacja i aktualizacja ewidencji, potem wyznaczenie nowych punktów na odrębne zgłoszenie. zespół ekspercki gig podziały nieruchomości"><div class="pyt-top"><span class="pyt-badge pyt-b-odpowiedz">Odpowiedź</span><span class="pyt-temat">Podziały nieruchomości</span></div><h3>Kiedy stabilizować punkty graniczne ustalone i punkty z podziału w trybie rolnym?</h3><p class="pyt-skrot">Od 31 grudnia 2024 r. przy ustaleniu punkty tylko się oznacza, a trwale stabilizuje się punkty ustalone bezspornie, po ich ujawnieniu w ewidencji i za zgodą uczestników. Przy podziale rolnym stabilizacja w trakcie prac…</p><div class="pyt-meta"><span class="pyt-autor">Zespół Ekspercki GIG</span><span class="pyt-zrodlo">z warsztatów GIG o granicach gruntów 8.10.2026</span><span class="pyt-data">11 listopada 2026</span></div></a><!--/PRERENDER:pytania-lista--></div>
+
+      <section class="pyt-jak" aria-labelledby="pytJakH">
+        <h2 id="pytJakH">Jak to działa</h2>
+        <ol class="pyt-kroki">
+          <li><b>Pytanie</b>Wysyłasz pytanie, problem z praktyki albo propozycję zmiany przepisu. Pytać może każdy.</li>
+          <li><b>Redakcja</b>Biuro Izby redaguje pytanie i usuwa z niego dane osobowe oraz szczegóły pozwalające rozpoznać sprawę.</li>
+          <li><b>Ekspert</b>Odpowiedź przygotowuje ekspert Izby i podpisuje ją nazwiskiem i funkcją.</li>
+          <li><b>Publikacja</b>Odpowiedź trafia na tę stronę, żeby skorzystali z niej inni. Członkowie GIG dostają też odpowiedź indywidualną.</li>
+        </ol>
+        <p class="pyt-glos"><a href="/stanowiska/">Głos Izby: stanowiska i postulaty →</a></p>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-foot"><div class="wrap foot-in">
+    <div>
+      <strong>Geodezyjna Izba Gospodarcza</strong><br>
+      ul. Czackiego 3/5, 00-043 Warszawa<br>
+      tel. 22 827 38 43 · <a href="mailto:biuro@gig.org.pl">biuro@gig.org.pl</a><br>
+      eDoręczenia: AE:PL-54372-78798-CHRDS-30
+    </div>
+    <div class="foot-soc">
+      <a href="https://www.facebook.com/gigorgpl" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://www.linkedin.com/company/gig-geodezyjna-izba-gospodarcza" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div></footer>
+
+  <script src="/_assets/js/gig-config.js"></script>
+  <script src="/_assets/js/pytania-slownik.js"></script>
+  <script src="/_assets/js/pytania.js"></script>
+  <script>
+  /* Lista odpowiedzi „Zapytaj Izbę”. Karty rysuje GIG_PYT.karta() (ten sam kod co w prerenderze).
+     Filtry działają na kartach w DOM-ie (atrybuty data-rodzaj, data-temat, data-wydarzenie,
+     data-szukaj), więc działają także na wersji zapisanej w HTML-u, gdy baza nie odpowiada. */
+  (function () {
+    "use strict";
+    var P = window.GIG_PYT, S = window.GIG_PYTANIA || {};
+    var box = document.getElementById("pytania-lista");
+    if (!box || !P) return;
+    var esc = P.esc;
+    var filtry = document.getElementById("pytFiltry"), chipy = document.getElementById("pytTematy");
+    var selRodzaj = document.getElementById("pytRodzaj"), selWyd = document.getElementById("pytWydarzenie");
+    var etWyd = document.getElementById("pytWydarzenieEt"), licznik = document.getElementById("pytLicznik");
+    var szukaj = document.getElementById("pytSzukaj");
+    var stan = { temat: "", rodzaj: "", wydarzenie: "", q: "" };
+    var PUSTO = '<div class="bw-loading">Pierwsze odpowiedzi pojawią się tu wkrótce. <a href="/pytania/zadaj/">Zadaj pytanie.</a></div>';
+
+    function karty() { return Array.prototype.slice.call(box.querySelectorAll(".pyt-card")); }
+    function unikalne(lista) {
+      var w = [];
+      lista.forEach(function (x) { if (x && w.indexOf(x) < 0) w.push(x); });
+      return w;
+    }
+    function odmiana(n) {
+      if (n === 1) return "1 pozycja";
+      var d = n % 10, s = n % 100;
+      return n + ((d >= 2 && d <= 4 && (s < 12 || s > 14)) ? " pozycje" : " pozycji");
+    }
+
+    /* chipy tematów i listy wyboru: tylko wartości, które występują w kartach */
+    function zbudujFiltry() {
+      var k = karty();
+      if (!k.length) { filtry.hidden = true; return; }
+      var tematy = unikalne(k.map(function (c) { return c.getAttribute("data-temat") || ""; }));
+      var kolejnosc = S.TEMATY || [];
+      tematy.sort(function (a, b) {
+        var ia = kolejnosc.indexOf(a), ib = kolejnosc.indexOf(b);
+        return (ia < 0 ? 999 : ia) - (ib < 0 ? 999 : ib) || a.localeCompare(b, "pl");
+      });
+      if (tematy.indexOf(stan.temat) < 0) stan.temat = "";
+      chipy.innerHTML = [""].concat(tematy).map(function (t) {
+        return '<button type="button" class="pyt-chip" data-temat="' + esc(t) + '" aria-pressed="' + (t === stan.temat) + '">' +
+          (t ? esc(t) : "Wszystkie") + '</button>';
+      }).join("");
+      chipy.hidden = !tematy.length;
+
+      var rodzaje = unikalne(k.map(function (c) { return c.getAttribute("data-rodzaj") || ""; }));
+      var porz = Object.keys(P.RODZAJE);
+      rodzaje.sort(function (a, b) { return porz.indexOf(a) - porz.indexOf(b); });
+      if (rodzaje.indexOf(stan.rodzaj) < 0) stan.rodzaj = "";
+      selRodzaj.innerHTML = '<option value="">wszystkie</option>' + rodzaje.map(function (r) {
+        return '<option value="' + esc(r) + '"' + (r === stan.rodzaj ? " selected" : "") + '>' + esc(P.RODZAJE[r] || r) + '</option>';
+      }).join("");
+
+      var wyd = unikalne(k.map(function (c) { return c.getAttribute("data-wydarzenie") || ""; }));
+      if (wyd.indexOf(stan.wydarzenie) < 0) stan.wydarzenie = "";
+      selWyd.innerHTML = '<option value="">wszystkie</option>' + wyd.map(function (w) {
+        return '<option value="' + esc(w) + '"' + (w === stan.wydarzenie ? " selected" : "") + '>' + esc(w) + '</option>';
+      }).join("");
+      etWyd.hidden = !wyd.length;
+      filtry.hidden = false;
+    }
+
+    function filtruj() {
+      var k = karty(), slowa = stan.q.toLowerCase().split(/\s+/).filter(Boolean), widac = 0;
+      k.forEach(function (c) {
+        var tekst = ((c.getAttribute("data-szukaj") || "") + " " + (c.textContent || "")).toLowerCase();
+        var ok = (!stan.temat || c.getAttribute("data-temat") === stan.temat) &&
+                 (!stan.rodzaj || c.getAttribute("data-rodzaj") === stan.rodzaj) &&
+                 (!stan.wydarzenie || c.getAttribute("data-wydarzenie") === stan.wydarzenie) &&
+                 slowa.every(function (s) { return tekst.indexOf(s) > -1; });
+        c.hidden = !ok;
+        if (ok) widac++;
+      });
+      var brak = box.querySelector(".pyt-brak");
+      if (k.length && !widac) {
+        if (!brak) { brak = document.createElement("div"); brak.className = "bw-loading pyt-brak"; box.appendChild(brak); }
+        brak.innerHTML = 'Nic nie znaleźliśmy dla tych filtrów. Zmień je albo <a href="/pytania/zadaj/">zadaj pytanie</a>.';
+      } else if (brak) { brak.parentNode.removeChild(brak); }
+      licznik.textContent = k.length ? (widac === k.length ? odmiana(k.length) : widac + " z " + k.length) : "";
+    }
+
+    chipy.addEventListener("click", function (e) {
+      var b = e.target.closest ? e.target.closest(".pyt-chip") : null;
+      if (!b) return;
+      stan.temat = b.getAttribute("data-temat") || "";
+      Array.prototype.forEach.call(chipy.querySelectorAll(".pyt-chip"), function (x) {
+        x.setAttribute("aria-pressed", String((x.getAttribute("data-temat") || "") === stan.temat));
+      });
+      filtruj();
+    });
+    selRodzaj.addEventListener("change", function () { stan.rodzaj = selRodzaj.value; filtruj(); });
+    selWyd.addEventListener("change", function () { stan.wydarzenie = selWyd.value; filtruj(); });
+    szukaj.addEventListener("input", function () { stan.q = szukaj.value.trim(); filtruj(); });
+
+    /* wersja z HTML-a (prerender) działa od razu, zanim odpowie baza */
+    zbudujFiltry(); filtruj();
+
+    P.pobierzListe().then(function (lista) {
+      box.innerHTML = (lista && lista.length) ? lista.map(P.karta).join("") : PUSTO;
+      zbudujFiltry(); filtruj();
+    }).catch(function (e) {
+      console.warn("pytania:", e);
+      /* baza nie odpowiada: zostaje wersja z HTML-a; bez niej krótki komunikat */
+      if (!box.querySelector(".pyt-card")) {
+        box.innerHTML = '<div class="bw-loading">Lista odpowiedzi jest chwilowo niedostępna. Spróbuj ponownie za chwilę albo <a href="/pytania/zadaj/">zadaj pytanie</a>.</div>';
+      }
+    });
+  })();
+  </script>
+<script defer src="/_assets/js/gig-site.js"></script>
+</body>
+</html>

@@ -14,6 +14,8 @@
 //   strona/baza-wiedzy/index.html    po 3 najnowsze aktualności, artykuły i wpisy z firm członkowskich
 //   strona/baza-wiedzy/z-firm-czlonkowskich/index.html  wszystkie wpisy kategorii „firmy”
 //   strona/wpis/<slug>/index.html    pełna strona każdego wpisu z panelu (+ JSON-LD Article)
+//   strona/pytania/index.html        karty opublikowanych opinii („Zapytaj Izbę”)
+//   strona/pytania/<slug>/index.html pełna strona każdej opinii (+ JSON-LD Article)
 //   strona/sitemap.xml, strona/llms.txt
 //
 // Bezpieczeństwo: wszystko albo nic. Gdy którekolwiek zapytanie do bazy się nie
@@ -26,6 +28,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "strona");
 const SITE = "https://gig.org.pl";
@@ -209,22 +212,62 @@ function stronaWpisu(szablon, a) {
   return h;
 }
 
+/* ---------- Zapytaj Izbę: opinie ---------- */
+/* Kartę i treść strony składa ten sam plik, którego używa przeglądarka (strona/_assets/js/pytania.js,
+   CommonJS), więc HTML z prerendera jest identyczny z rysowanym przez skrypt strony. */
+const PYT_ZAREZERWOWANE = new Set(["zadaj", "odpowiedz"]); // prawdziwe katalogi w strona/pytania/
+/* ten sam tekst co PUSTO w strona/pytania/index.html */
+const PYT_PUSTO = '<div class="bw-loading">Pierwsze odpowiedzi pojawią się tu wkrótce. <a href="/pytania/zadaj/">Zadaj pytanie.</a></div>';
+const isoData = (v, zapas) => { const d = new Date(v || ""); return isNaN(d) ? zapas : d.toISOString(); };
+function stronaPytania(P, szablon, o) {
+  const url = `${SITE}/pytania/${o.slug}/`;
+  const opis = P.opis(o);
+  const autor = P.czysty(o.autor);
+  const gig = { "@type": "Organization", name: "Geodezyjna Izba Gospodarcza", url: SITE };
+  const opublikowano = isoData(o.opublikowano_at || o.created_at, new Date().toISOString());
+  const zmieniono = isoData(o.updated_at, opublikowano);
+  const ld = {
+    "@context": "https://schema.org", "@type": "Article",
+    headline: skroc(o.tytul, 110), description: opis, url, mainEntityOfPage: url, inLanguage: "pl",
+    datePublished: opublikowano, dateModified: zmieniono > opublikowano ? zmieniono : opublikowano,
+    author: autor && autor !== P.ZESPOL && o.rodzaj !== "stanowisko"
+      ? { "@type": "Person", name: autor.split(",")[0].trim(), description: autor } : gig,
+    publisher: { ...gig, logo: { "@type": "ImageObject", url: SITE + "/_assets/img/gig-logo-email.png" } },
+    ...(P.czysty(o.temat) ? { about: { "@type": "Thing", name: P.czysty(o.temat) } } : {}),
+  };
+  // Zamiany przez funkcje: w treści z bazy mogą być znaki „$”, które replace() traktuje specjalnie.
+  let h = szablon
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${esc(o.tytul)} | Zapytaj Izbę | Geodezyjna Izba Gospodarcza</title>`)
+    .replace(/<meta name="description" content="[^"]*">/, () => `<meta name="description" content="${esc(opis)}">`)
+    .replace(/<link rel="canonical" href="[^"]*">/, () => `<link rel="canonical" href="${url}">`)
+    .replace(/<meta property="og:type" content="article">/, () =>
+      `<meta property="og:type" content="article">\n  <meta property="og:title" content="${esc(o.tytul)}">\n  <meta property="og:description" content="${esc(opis)}">\n  <meta property="og:url" content="${url}">` +
+      `\n  <meta name="gig-prerender" content="pytanie">`)
+    .replace('<div class="a-state" id="gigLoading">Ładowanie…</div>', () => `<div data-prerender="pytanie">${P.strona(o)}</div>`);
+  h = h.replace("</head>", () => "  " + jsonLd(ld) + "\n</head>");
+  if (!h.includes('data-prerender="pytanie"') || !h.includes('name="gig-prerender"') || !h.includes(`<link rel="canonical" href="${url}">`))
+    throw new Error("szablon /pytania/odpowiedz/ ma inną budowę niż oczekiwana");
+  return h;
+}
+
 /* ---------- główny przebieg ---------- */
 async function main() {
   const cfg = konfiguracja(await czytaj("_assets/js/gig-config.js"));
-  let szk, czl, art;
+  let szk, czl, art, opi;
   try {
-    [szk, czl, art] = await Promise.all([
+    [szk, czl, art, opi] = await Promise.all([
       pobierz(cfg, "szkolenia", "select=*&status=eq.published&order=date_start.asc"),
       pobierz(cfg, "czlonkowie", "select=name,region,person,address,website,description,rodzaj&status=eq.published&order=region.asc,name.asc"),
       pobierz(cfg, "articles", "select=title,slug,excerpt,content,category,published_at,created_at,updated_at,image_url,author&status=eq.published&order=published_at.desc.nullslast"),
+      pobierz(cfg, "opinie", "select=*&status=eq.opublikowana&order=opublikowano_at.desc.nullslast"),
     ]);
   } catch (e) {
     console.log("Baza niedostępna, niczego nie zmieniam:", e.message);
     return;
   }
-  if (!Array.isArray(czl) || czl.length < 20 || !Array.isArray(szk) || !Array.isArray(art)) {
-    console.log(`Podejrzane dane (członków: ${czl?.length}, szkoleń: ${szk?.length}, wpisów: ${art?.length}), niczego nie zmieniam.`);
+  if (!Array.isArray(czl) || czl.length < 20 || !Array.isArray(szk) || !Array.isArray(art) || !Array.isArray(opi)) {
+    // pusta lista opinii jest poprawna (sekcja „Zapytaj Izbę” może nie mieć jeszcze odpowiedzi)
+    console.log(`Podejrzane dane (członków: ${czl?.length}, szkoleń: ${szk?.length}, wpisów: ${art?.length}, opinii: ${opi?.length}), niczego nie zmieniam.`);
     return;
   }
 
@@ -356,17 +399,36 @@ async function main() {
     doZapisu.push([`wpis/${a.slug}/index.html`, stronaWpisu(szablon, a)]);
   }
 
-  // 5) Mapa strony: dotychczasowe adresy + wpisy z panelu
+  // 4a) Zapytaj Izbę: lista kart i strona każdej opublikowanej opinii
+  const P = createRequire(import.meta.url)(path.join(ROOT, "_assets", "js", "pytania.js"));
+  const slugiPyt = new Set();
+  const opinie = opi.filter((o) => o && o.tytul && typeof o.slug === "string" && /^[a-z0-9-]+$/.test(o.slug) &&
+    !PYT_ZAREZERWOWANE.has(o.slug) && !slugiPyt.has(o.slug) && slugiPyt.add(o.slug));
+  let hp = await czytaj("pytania/index.html");
+  hp = blok(hp, "pytania-lista", opinie.length ? opinie.map(P.karta).join("") : PYT_PUSTO,
+    (h, c) => h.replace('<div class="pyt-grid" id="pytania-lista"><div class="bw-loading">Ładowanie…</div></div>', () => `<div class="pyt-grid" id="pytania-lista">${c}</div>`));
+  doZapisu.push(["pytania/index.html", hp]);
+  const szablonPyt = await czytaj("pytania/odpowiedz/index.html");
+  for (const o of opinie) doZapisu.push([`pytania/${o.slug}/index.html`, stronaPytania(P, szablonPyt, o)]);
+
+  // 5) Mapa strony: dotychczasowe adresy + wpisy z panelu + odpowiedzi „Zapytaj Izbę”
+  //    (stałe /pytania/ i /pytania/zadaj/ zostają; /pytania/<slug>/ zawsze z bazy)
+  const PYT_STALE = [SITE + "/pytania/", SITE + "/pytania/zadaj/"];
   const stara = await czytaj("sitemap.xml");
   const adresy = [...stara.matchAll(/<url>\s*<loc>([^<]+)<\/loc>(?:\s*<lastmod>([^<]+)<\/lastmod>)?/g)]
-    .map((m) => ({ loc: m[1], lastmod: m[2] || "" })).filter((u) => !u.loc.includes("/wpis/"));
+    .map((m) => ({ loc: m[1], lastmod: m[2] || "" })).filter((u) => !u.loc.includes("/wpis/"))
+    .filter((u) => !u.loc.startsWith(SITE + "/pytania/") || PYT_STALE.includes(u.loc));
   if (adresy.length < 10) throw new Error("obecna mapa strony wygląda na uszkodzoną");
   const dzisIso = new Date().toISOString().slice(0, 10);
+  for (const loc of PYT_STALE) if (!adresy.some((u) => u.loc === loc)) adresy.push({ loc, lastmod: dzisIso });
+  const dataOpinii = (o) => String(o.updated_at || o.opublikowano_at || dzisIso).slice(0, 10);
+  const najOpi = opinie.reduce((m, o) => (dataOpinii(o) > m ? dataOpinii(o) : m), "");
+  adresy.forEach((u) => { if (u.loc === PYT_STALE[0] && najOpi > u.lastmod) u.lastmod = najOpi; });
   const najSzk = szk.reduce((m, r) => (r.updated_at && r.updated_at > m ? r.updated_at : m), "");
   adresy.forEach((u) => { if (u.loc === SITE + "/szkolenia/" && najSzk) u.lastmod = najSzk.slice(0, 10); });
   const wpisy = art.filter((a) => slugi.has(a.slug)).map((a) => ({ loc: `${SITE}/wpis/${a.slug}/`, lastmod: String(a.updated_at || a.published_at || dzisIso).slice(0, 10) }));
   const mapa = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-    adresy.concat(wpisy).map((u) => `  <url><loc>${u.loc}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}</url>`).join("\n") + `\n</urlset>\n`;
+    adresy.concat(wpisy, opinie.map((o) => ({ loc: `${SITE}/pytania/${o.slug}/`, lastmod: dataOpinii(o) }))).map((u) => `  <url><loc>${u.loc}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}</url>`).join("\n") + `\n</urlset>\n`;
   doZapisu.push(["sitemap.xml", mapa]);
 
   // 6) llms.txt: skrót strony dla modeli językowych (https://llmstxt.org)
@@ -390,6 +452,7 @@ async function main() {
     lin("Ile kosztuje geodeta? Usługi geodezyjne i zapytanie o wycenę", SITE + "/ile-kosztuje-geodezja/", "z czego składa się cena podziału, mapy do celów projektowych, wznowienia granic, wytyczenia; zapytanie do firm z regionu"),
     lin("Węzeł Jakości: ankieta cenowa", SITE + "/wezel-jakosci/"),
     lin("Baza wiedzy", SITE + "/baza-wiedzy/"),
+    lin("Zapytaj Izbę: pytania i odpowiedzi ekspertów", SITE + "/pytania/", "odpowiedzi na pytania z praktyki geodezyjnej; pytanie może zadać każdy"),
     lin("Z firm członkowskich", SITE + "/baza-wiedzy/z-firm-czlonkowskich/", "informacje firm członkowskich Izby"),
     lin("Kontakt", SITE + "/kontakt/"),
     "",
@@ -401,6 +464,10 @@ async function main() {
     "## Artykuły i aktualności",
     ...najnowsze(zPanelu("artykuly").concat(zPanelu("aktualnosci")), statArt.concat(statAkt), 30)
       .map((d) => lin(d.title, d.href.startsWith("http") ? d.href : SITE + d.href, d.date)),
+    "",
+    "## Pytania i odpowiedzi",
+    ...(opinie.length ? opinie.map((o) => lin(P.czysty(o.tytul), `${SITE}/pytania/${o.slug}/`, P.czysty(o.temat)))
+      : [lin("Zapytaj Izbę", SITE + "/pytania/", "pierwsze odpowiedzi pojawią się wkrótce")]),
     "",
     "## Opcjonalnie",
     lin("Mapa strony", SITE + "/sitemap.xml"),
@@ -423,8 +490,19 @@ async function main() {
       }
     } catch { /* brak pliku: nie nasz katalog */ }
   }
+  // To samo dla odpowiedzi „Zapytaj Izbę” (nigdy nie ruszamy /pytania/zadaj/ ani /pytania/odpowiedz/).
+  for (const e of await fs.readdir(path.join(ROOT, "pytania"), { withFileTypes: true })) {
+    if (!e.isDirectory() || slugiPyt.has(e.name) || PYT_ZAREZERWOWANE.has(e.name)) continue;
+    const p = path.join(ROOT, "pytania", e.name, "index.html");
+    try {
+      if ((await fs.readFile(p, "utf8")).includes('<meta name="gig-prerender" content="pytanie">')) {
+        await fs.rm(path.join(ROOT, "pytania", e.name), { recursive: true });
+        zmienione.push(`pytania/${e.name}/ (usunięty)`);
+      }
+    } catch { /* brak pliku: nie nasz katalog */ }
+  }
 
-  console.log(`Szkoleń: ${szk.length} (nadchodzących ${nadchodzace.length}), członków: ${czl.length}, wpisów: ${art.length}.`);
+  console.log(`Szkoleń: ${szk.length} (nadchodzących ${nadchodzace.length}), członków: ${czl.length}, wpisów: ${art.length}, opinii: ${opinie.length}.`);
   console.log(zmienione.length ? "Zmienione pliki:\n  " + zmienione.join("\n  ") : "Bez zmian.");
 }
 

@@ -8,6 +8,14 @@
     {
       "source": "/wpis/:slug+",
       "destination": "/wpis/index.html"
+    },
+    {
+      "source": "/pytania/:slug/",
+      "destination": "/pytania/odpowiedz/index.html"
+    },
+    {
+      "source": "/pytania/:slug",
+      "destination": "/pytania/odpowiedz/index.html"
     }
   ],
   "redirects": [

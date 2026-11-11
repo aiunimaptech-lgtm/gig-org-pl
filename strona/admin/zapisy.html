@@ -64,6 +64,7 @@
         <a href="formularze.html#newsletter"><span class="nav-icon">✉</span> Newsletter <span class="nav-badge" id="navBadgeNewsletter" style="display:none">0</span></a>
         <a href="zapisy.html" class="active"><span class="nav-icon">📝</span> Zapisy na szkolenia <span class="nav-badge" id="navBadgeZapisy" style="display:none">0</span></a>
         <a href="wyceny.html"><span class="nav-icon">💬</span> Zapytania o wycenę <span class="nav-badge" id="navBadgeWyceny" style="display:none">0</span></a>
+        <a href="pytania.html"><span class="nav-icon">❓</span> Pytania (Zapytaj Izbę) <span class="nav-badge" id="navBadgePytania" style="display:none">0</span></a>
         <div class="nav-section">Sprawy Izby</div>
         <a href="czlonkowie.html"><span class="nav-icon">🏢</span> Członkowie <span class="nav-badge" id="navBadgeCzlonkowie" style="display:none">0</span></a>
         <a href="uchwaly.html"><span class="nav-icon">⚖</span> Uchwały Rady <span class="nav-badge" id="navBadgeUchwaly" style="display:none">0</span></a>
@@ -637,6 +638,7 @@
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
           <button type="button" class="btn btn-outline btn-sm" id="zapEdytuj">✎ Edytuj dane</button>
           <button type="button" class="btn btn-outline btn-sm" id="zapOdpowiedz">↩ Odpowiedz</button>
+          ${doPytanPrzycisk(r)}
           ${r.telefon?`<a class="btn btn-ghost btn-sm" href="tel:${esc((r.telefon||'').replace(/\s/g,''))}">☎ Zadzwoń</a>`:''}
           <button type="button" class="btn btn-danger btn-sm" id="zapUsun" style="margin-left:auto;">🗑 Usuń zgłoszenie</button>
         </div>`;
@@ -648,7 +650,9 @@
         if (await usunZgloszenie(r.id)) { closeModal('zapModal'); load(); }
       });
       document.getElementById('zapEdytuj').addEventListener('click', () => edytuj(r));
-      const kl = document.getElementById('zapLinkListy');
+      const dp = document.getElementById('zapDoPytan');
+      if (dp) dp.addEventListener('click', () => doPytan(r));
+      const kl =document.getElementById('zapLinkListy');
       if (kl) kl.addEventListener('click', async () => {
         try { await navigator.clipboard.writeText(location.origin + '/uczestnicy/?t=' + encodeURIComponent(r.uczestnicy_token)); toast('Skopiowano link do formularza', 'success'); }
         catch (_) { toast('Przeglądarka nie pozwoliła skopiować', 'error'); }
@@ -771,6 +775,54 @@
       t = t.replace(/^Pytanie \/ problem:\s*/, '').trim();
       return { rep, tresc: t };
     }
+
+    /* Zapytaj Izbę: pytanie z pola „Uwagi” można przenieść do kolejki pytań (tabela pytania,
+       panel pytania.html). Jedno zgłoszenie = najwyżej jedno pytanie (unikalny zapis_id),
+       więc pamiętamy, które zgłoszenia już tam są: zapis_id -> id pytania. */
+    let PYT_ZAPISY = new Map();
+    async function wczytajPytaniaZapisow(){
+      try {
+        const { data, error } = await db.from('pytania').select('id,zapis_id').not('zapis_id', 'is', null);
+        if (error) { console.error(error); return; }
+        PYT_ZAPISY = new Map((data || []).map(x => [x.zapis_id, x.id]));
+      } catch (e) { console.error(e); }
+    }
+    function doPytanPrzycisk(r){
+      if (PYT_ZAPISY.has(r.id))
+        return `<a class="btn btn-ghost btn-sm" href="pytania.html?pytanie=${encodeURIComponent(PYT_ZAPISY.get(r.id))}" title="Otwórz to pytanie w kolejce Zapytaj Izbę">✓ Już w pytaniach</a>`;
+      if (!rozbierzUwagi(r.uwagi).tresc) return '';
+      return '<button type="button" class="btn btn-outline btn-sm" id="zapDoPytan" title="Dodaj pytanie z pola Uwagi do kolejki Zapytaj Izbę">Do pytań (Zapytaj Izbę)</button>';
+    }
+    async function doPytan(r){
+      const u = rozbierzUwagi(r.uwagi);
+      if (!u.tresc) { toast('To zgłoszenie nie ma pytania w polu Uwagi'); return; }
+      const btn = document.getElementById('zapDoPytan');
+      if (btn) btn.disabled = true;
+      const osoba = (Array.isArray(r.uczestnicy_lista) && r.uczestnicy_lista[0] && r.uczestnicy_lista[0].imie)
+        || (r.uczestnicy || '').split(/\n|,/).map(x => x.trim()).filter(Boolean)[0] || null;
+      const nip = String(r.nabywca_nip || '').replace(/\D/g, '');
+      const czl = r.czlonek_gig === true;
+      const { data, error } = await db.from('pytania').insert({
+        zrodlo: 'szkolenie', zrodlo_opis: r.szkolenie || null, zapis_id: r.id,
+        tresc: u.tresc, rola: u.rep || null,
+        imie: osoba, email: (r.email || '').trim().toLowerCase() || null,
+        organizacja: r.nabywca_nazwa || null, nip: nip || null,
+        podpis_zakres: 'anonim',
+        czlonek_gig: czl, czlonek_id: czl ? (r.czlonek_id || null) : null, czlonek_potwierdzony: czl,
+        czlonek_sposob: czl ? (r.czlonek_sposob || 'zapis na szkolenie') : null
+      }).select('id,numer').single();
+      if (error) {
+        console.error(error);
+        if (error.code === '23505') { await wczytajPytaniaZapisow(); toast('To pytanie jest już w kolejce pytań'); pokaz(r.id); return; }
+        if (btn) btn.disabled = false;
+        toast('Nie udało się dodać pytania: ' + (error.message || ''), 'error', 6000);
+        return;
+      }
+      PYT_ZAPISY.set(r.id, data.id);
+      toast('Dodano do pytań: ' + data.numer, 'success');
+      loadSidebarBadges();
+      pokaz(r.id);
+    }
     function pytaniaPdf(){
       if (!window.pdfMake) { toast('Moduł PDF się nie załadował, odśwież stronę', 'error'); return; }
       const lista = filtruj().filter(r => r.status !== 'cancelled')
@@ -862,6 +914,7 @@
       if (szk.error) console.error(szk.error);
       (szk.data || []).forEach(x => { SZKOLENIA[kluczSzk(x.title)] = x; zapamietajNazwe(x.title, true); });
       dane.forEach(r => zapamietajNazwe(r.szkolenie, false));
+      await wczytajPytaniaZapisow();   // które zgłoszenia mają już pytanie w kolejce Zapytaj Izbę
 
       const sel = document.getElementById('fSzkolenie');
       const biezacyKlucz = sel.value || kluczSzk(szkolenieZUrl);
