@@ -167,8 +167,36 @@
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-outline btn-sm" data-st="archiwum">Do archiwum</button>
           <button class="btn btn-ghost btn-sm" data-st="spam">Oznacz jako spam</button>
+          <button class="btn btn-outline btn-sm" id="zwPrzeslij" title="Wysyła treść zapytania na wskazany adres e-mail">✉ Prześlij dalej</button>
+          <button class="btn btn-danger btn-sm" id="zwUsun" title="Trwale usuwa zapytanie i dane klienta">Usuń zapytanie</button>
         </div>`;
       document.querySelectorAll('#zwTresc [data-st]').forEach(b => b.addEventListener('click', async () => { await status(id, b.dataset.st); closeModal('zwModal'); }));
+      /* Przesłanie zapytania na dowolny adres (np. do firmy, która nie dostała go z kalkulatora):
+         kreator maila z treścią zapytania jako cytatem; nadawca może dopisać własny wstęp. */
+      document.getElementById('zwPrzeslij').addEventListener('click', () => {
+        const adres = (prompt('Na jaki adres e-mail przesłać to zapytanie?') || '').trim().toLowerCase();
+        if (!adres) return;
+        if (!/^[^@\s]+@[^@\s]+\.[^@\s]{2,}$/.test(adres)) { toast('To nie wygląda na adres e-mail', 'error'); return; }
+        const linie = ['Zapytanie o wycenę z kalkulatora na gig.org.pl (' + fmtDate(z.created_at) + ')', '',
+          'Usługa: ' + (z.usluga_nazwa || z.usluga),
+          'Lokalizacja: ' + (z.miejscowosc || '') + ', woj. ' + (z.wojewodztwo || ''),
+          ...(z.parametry || []).map(p => p.etykieta + ': ' + p.wartosc),
+          z.termin ? 'Termin: ' + z.termin : '', z.opis ? 'Opis: ' + z.opis : '', '',
+          'Klient: ' + (z.imie || ''), 'E-mail: ' + (z.email || ''), z.telefon ? 'Telefon: ' + z.telefon : ''].filter((l, i, t) => l !== '' || t[i - 1] !== '');
+        closeModal('zwModal');
+        gigKreatorMaila({ odbiorcy: [{ email: adres, name: '' }], rodzaj: 'kontakt',
+          temat: 'Zapytanie o wycenę: ' + (z.usluga_nazwa || z.usluga) + ', ' + (z.miejscowosc || ''),
+          cytat: linie.join('\n'), opis: 'przesłanie zapytania klienta ' + esc(z.imie || z.email || '') });
+      });
+      document.getElementById('zwUsun').addEventListener('click', async () => {
+        if (!confirm('Usunąć to zapytanie? Znikną dane klienta i lista firm. Tej operacji nie można cofnąć.')) return;
+        const { error } = await db.from('zapytania_wyceny').delete().eq('id', id);
+        if (error) { console.error(error); toast('Nie udało się usunąć zapytania', 'error'); return; }
+        toast('Zapytanie usunięte', 'success');
+        closeModal('zwModal');
+        dane = dane.filter(x => x.id !== id);
+        podsumuj(); render(); loadSidebarBadges();
+      });
       openModal('zwModal');
     }
     async function load(){
